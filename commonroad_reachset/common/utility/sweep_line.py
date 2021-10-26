@@ -23,8 +23,8 @@ class SweepLine:
         p_lon = x (CART) = s (CLCS)
         p_lat = y (CART) = d (CLCS)
 
-        It is assumed that the line is swept from left to right. The left edge
-        of a rectangle is typed 'ENTER', and the right edge 'EXIT'.
+        It is assumed that the line is swept from left to right. The left edge of a rectangle
+        is typed 'ENTER', and the right edge 'EXIT'.
         """
 
         def __init__(self, type_vent, p_lon, p_lat_low, p_lat_high):
@@ -35,54 +35,44 @@ class SweepLine:
 
         def __eq__(self, other: object) -> bool:
             if isinstance(other, SweepLine.Event):
-                if (
-                        self.type == other.type
-                        and self.p_lon == other.p_lon
-                        and self.p_lat_low == other.p_lat_low
-                        and self.p_lat_high == other.p_lat_high
-                ):
+                if self.type == other.type and self.p_lon == other.p_lon and \
+                        self.p_lat_low == other.p_lat_low and self.p_lat_high == other.p_lat_high:
                     return True
 
             return False
 
         def __repr__(self) -> str:
-            return (
-                f"Event(type={self.type}, p_lon={self.p_lon}, "
-                f"p_lat_low={self.p_lat_low}, p_lat_high={self.p_lat_high})"
-            )
+            return f"Event(type={self.type}, p_lon={self.p_lon}, " \
+                   f"p_lat_low={self.p_lat_low}, p_lat_high={self.p_lat_high})"
 
     @classmethod
-    def obtain_vertical_segments_from_rectangles(
-            cls,
-            list_rectangles: List[ReachPolygon],
-    ) -> List[ReachLine]:
+    def obtain_vertical_segments_from_rectangles(cls, list_rectangles: List[ReachPolygon], ) -> List[ReachLine]:
         """Returns a list of vertical segments for the input rectangles.
 
         Steps:
             1. create a segment tree with min/max lateral position of rectangles
-            2. create events of line sweeping: left = ENTER, right = EXIT
-            3. create vertical segments with events
+            2. create events of line sweeping from rectangles: left edge = ENTER, right edge = EXIT
+            3. create vertical segments with the events
         """
         if not list_rectangles:
             return []
 
         # Step 1
-        (
-            p_lat_min_rectangles,
-            p_lat_max_rectangles,
-        ) = cls.compute_extremum_lateral_positions_of_rectangles(list_rectangles)
+        p_lat_min_rectangles, p_lat_max_rectangles = \
+            cls.compute_extremum_lateral_positions_of_rectangles(list_rectangles)
         cls.tree = CounterSegmentTree(p_lat_min_rectangles, p_lat_max_rectangles)
+
         # Step 2
         list_events = cls.create_event_list(list_rectangles)
+
         # Step 3
         list_segments_vertical = cls.create_vertical_segments_from_events(list_events)
 
         return list_segments_vertical
 
     @staticmethod
-    def compute_extremum_lateral_positions_of_rectangles(
-            list_rectangles: List[ReachPolygon],
-    ) -> Tuple[int, int]:
+    def compute_extremum_lateral_positions_of_rectangles(list_rectangles: List[ReachPolygon]) -> Tuple[int, int]:
+        """Returns the minimum and maximum lateral positions of the given list of rectangles."""
         p_lat_min_rectangles = min([rectangle.p_lat_min for rectangle in list_rectangles])
         p_lat_max_rectangles = max([rectangle.p_lat_max for rectangle in list_rectangles])
 
@@ -94,22 +84,10 @@ class SweepLine:
         list_events = []
 
         for rectangle in list_rectangles:
-            list_events.append(
-                cls.Event(
-                    cls.EventType.ENTER,
-                    rectangle.p_lon_min,
-                    rectangle.p_lat_min,
-                    rectangle.p_lat_max,
-                )
-            )
-            list_events.append(
-                cls.Event(
-                    cls.EventType.EXIT,
-                    rectangle.p_lon_max,
-                    rectangle.p_lat_min,
-                    rectangle.p_lat_max,
-                )
-            )
+            list_events.append(cls.Event(cls.EventType.ENTER, rectangle.p_lon_min,
+                                         rectangle.p_lat_min, rectangle.p_lat_max))
+            list_events.append(cls.Event(cls.EventType.EXIT, rectangle.p_lon_max,
+                                         rectangle.p_lat_min, rectangle.p_lat_max))
 
         list_events = cls.sort_events(list_events)
 
@@ -121,25 +99,28 @@ class SweepLine:
 
     @classmethod
     def compare_events(cls, event1: Event, event2: Event):
-        """Custom comparison function of events.
+        """Custom comparison function for events.
 
-        Comparisons are made in sequence on:
+        Events are ordered in the following order:
             1. longitudinal position of rectangles
             2. type of the event
             3. lower lateral position
         """
         if event1.p_lon < event2.p_lon:
             return -1
+
         elif event1.p_lon > event2.p_lon:
             return 1
 
         if event1.type == cls.EventType.ENTER and event2.type == cls.EventType.EXIT:
             return -1
+
         elif event1.type == cls.EventType.EXIT and event2.type == cls.EventType.ENTER:
             return 1
 
         if event1.p_lat_low < event2.p_lat_low:
             return -1
+
         elif event1.p_lat_low > event2.p_lat_low:
             return 1
 
@@ -147,13 +128,14 @@ class SweepLine:
 
     @classmethod
     def create_vertical_segments_from_events(cls, list_events: "Event") -> List[ReachLine]:
-        """Creates a list of vertical segments from list of events."""
+        """Creates a list of vertical segments from the list of events."""
         list_segments_vertical = []
 
         for event in list_events:
             if event.type == cls.EventType.ENTER:
                 list_segments_vertical += cls.create_vertical_segments_from_event(event)
                 cls.tree.activate(event.p_lat_low, event.p_lat_high)
+
             else:
                 cls.tree.deactivate(event.p_lat_low, event.p_lat_high)
                 list_segments_vertical += cls.create_vertical_segments_from_event(event)
@@ -164,8 +146,7 @@ class SweepLine:
     def create_vertical_segments_from_event(cls, event: Event) -> List[ReachLine]:
         """Returns a list of vertical segments with the tree and event.
 
-        For each event, query the tree to get the nonactive intervals, which is
-        the desired vertical segment.
+        For each event, query the tree to get the nonactive intervals, which is the desired vertical segment.
         """
         list_segments = []
 
@@ -176,16 +157,12 @@ class SweepLine:
             p_lon = event.p_lon
 
             segment = ReachLine(p_lon, p_lat_low, p_lon, p_lat_high)
-
             list_segments.append(segment)
 
         return list_segments
 
     @classmethod
-    def create_rectangles_from_vertical_segments(
-            cls,
-            list_segments: List[ReachLine],
-    ) -> List[ReachPolygon]:
+    def create_rectangles_from_vertical_segments(cls, list_segments: List[ReachLine]) -> List[ReachPolygon]:
         """Returns a list of rectangles from the given vertical segments.
 
         This is done with a sweep line algorithm.
@@ -197,12 +174,12 @@ class SweepLine:
         """
         # Step 1
         cls.tree = cls.create_tree_from_segments(list_segments)
+
         # Step 2
         dict_p_lon_to_list_rectangles = cls.create_p_lon_to_rectangles_dictionary(list_segments)
+
         # Step 3
-        list_rectangles_final = cls.merge_rectangles_with_same_lateral_coordinates(
-            dict_p_lon_to_list_rectangles
-        )
+        list_rectangles_final = cls.merge_rectangles_with_same_lateral_coordinates(dict_p_lon_to_list_rectangles)
 
         return list_rectangles_final
 
@@ -217,9 +194,7 @@ class SweepLine:
         return tree
 
     @classmethod
-    def create_p_lon_to_rectangles_dictionary(
-            cls, list_segments: List[ReachLine]
-    ) -> Dict[int, List[ReachPolygon]]:
+    def create_p_lon_to_rectangles_dictionary(cls, list_segments: List[ReachLine]) -> Dict[int, List[ReachPolygon]]:
         """Create a dictionary that maps p_lon to a list of rectangles whose
         left edge is aligned with p_lon.
 
@@ -233,17 +208,19 @@ class SweepLine:
         """
         if not list_segments:
             return {}
+
         dict_p_lon_to_list_rectangles = defaultdict(list)
+
         # Step 1
         dict_p_lon_to_list_tuples_p_lat = defaultdict(list)
         for segment in list_segments:
             p_lon_min, p_lat_min, _, p_lat_max = segment.bounds
             dict_p_lon_to_list_tuples_p_lat[p_lon_min].append((p_lat_min, p_lat_max))
+
         # Step 2
         list_p_lon = list(dict_p_lon_to_list_tuples_p_lat.keys())
         for p_lon_min, p_lon_max in zip(list_p_lon[:-1], list_p_lon[1:]):
             list_tuples_p_lat = dict_p_lon_to_list_tuples_p_lat[p_lon_min]
-
             for tuple_p_lat in list_tuples_p_lat:
                 cls.tree.toggle(tuple_p_lat[0], tuple_p_lat[1])
 
@@ -253,15 +230,13 @@ class SweepLine:
                 p_lat_min = stack_interval_active.pop()
 
                 dict_p_lon_to_list_rectangles[p_lon_min].append(
-                    ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max)
-                )
+                    ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max))
 
         return dict_p_lon_to_list_rectangles
 
     @classmethod
     def merge_rectangles_with_same_lateral_coordinates(
-            cls, dict_p_lon_to_list_rectangles: Dict[int, List[ReachPolygon]]
-    ) -> List[ReachPolygon]:
+            cls, dict_p_lon_to_list_rectangles: Dict[int, List[ReachPolygon]]) -> List[ReachPolygon]:
         """Return a list of rectangles with possible merging.
 
         Iterate through pairs of lists of rectangles, if there is a right
@@ -282,13 +257,8 @@ class SweepLine:
                     if cls.rectangles_have_same_p_lat(rectangle_left, rectangle_right):
                         list_rectangles_right.remove(rectangle_right)
                         list_rectangles_right.append(
-                            ReachPolygon.from_rectangle_vertices(
-                                rectangle_left.p_lon_min,
-                                rectangle_left.p_lat_min,
-                                rectangle_right.p_lon_max,
-                                rectangle_left.p_lat_max,
-                            )
-                        )
+                            ReachPolygon.from_rectangle_vertices(rectangle_left.p_lon_min, rectangle_left.p_lat_min,
+                                                                 rectangle_right.p_lon_max, rectangle_left.p_lat_max))
                         add_to_list = False
                         break
 
@@ -302,7 +272,5 @@ class SweepLine:
 
     @staticmethod
     def rectangles_have_same_p_lat(rectangle1: ReachPolygon, rectangle2: ReachPolygon) -> bool:
-        return (
-                rectangle1.p_lat_min == rectangle2.p_lat_min
-                and rectangle1.p_lat_max == rectangle2.p_lat_max
-        )
+        return rectangle1.p_lat_min == rectangle2.p_lat_min and rectangle1.p_lat_max == rectangle2.p_lat_max
+

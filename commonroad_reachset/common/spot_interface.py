@@ -22,19 +22,19 @@ class SPOTInterface:
         self.dt = config.planning.dt
         self.step_t = int(self.dt * 10)
         self.time_start = config.planning.time_step_start
-        self.time_horizon = config.planning.time_steps_computation + config.spot.time_steps_computation_extra
+        self.time_horizon = config.planning.time_steps_computation + config.sonia.time_steps_computation_extra
         self.time_end = self.time_start + self.time_horizon
 
         self.spot_scenario_id = 1
         self.field_of_view = np.empty([0, 2], float)
-        self.num_threads = config.spot.num_threads
+        self.num_threads = config.sonia.num_threads
 
         # list for storing the prediction result
         self.list_structs_obstacles_predicted = None
         # whether you want to print the velocity intervals of obstacles predicted by SPOT
-        self.print_predicted_velocity_intervals = config.spot.print_predicted_velocity_intervals
+        self.print_predicted_velocity_intervals = config.sonia.print_predicted_velocity_intervals
         # whether you want to print some computation info from SPOT
-        self.print_operation_status = config.spot.print_operation_status
+        self.print_operation_status = config.sonia.print_operation_status
 
         # ================    register scenario for spot prediction
         self.register_scenario()
@@ -46,9 +46,9 @@ class SPOTInterface:
                 0: {  # 0 means that all obstacles will be affected
                     "a_max": config.vehicle.other.a_lon_max,
                     "v_max": config.vehicle.other.v_lon_max,
-                    "compute_occ_m1": config.spot.compute_assumption_m1,
-                    "compute_occ_m2": config.spot.compute_assumption_m2,
-                    "compute_occ_m3": config.spot.compute_assumption_m3,
+                    "compute_occ_m1": config.sonia.compute_assumption_m1,
+                    "compute_occ_m2": config.sonia.compute_assumption_m2,
+                    "compute_occ_m3": config.sonia.compute_assumption_m3,
                     "onlyInLane": True,
                     "constr_no_lane_change": False
                 }

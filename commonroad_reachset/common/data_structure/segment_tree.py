@@ -9,7 +9,6 @@ class TreeNodeStatus(Enum):
     PARTIAL: segment partially activated (subset of [low, high])
     NONACTIVE: segment not activated (none within [low, high])
     """
-
     ACTIVE = auto()
     PARTIAL = auto()
     NONACTIVE = auto()
@@ -18,9 +17,8 @@ class TreeNodeStatus(Enum):
 class CounterTreeNode:
     """Each node represents a segment on the axis.
 
-    Each segment is defined with an interval [low, high]. The counter represents
-    the number of times it has been activated. Its potential left and right
-    children have intervals [low, mid] and [mid, high], respectively.
+    Each segment is defined with an interval [low, high]. The counter represents the number of times it has
+    been activated. Its potential left and right children have intervals [low, mid] and [mid, high], respectively.
     """
 
     def __init__(self, low: int, high: int) -> None:
@@ -73,17 +71,15 @@ class CounterTreeNode:
     def all_children_are_active(self) -> bool:
         """Returns true if both the left and right children are active."""
         return (self.child_left and self.child_left.status == TreeNodeStatus.ACTIVE) and (
-                self.child_right and self.child_right.status == TreeNodeStatus.ACTIVE
-        )
+                self.child_right and self.child_right.status == TreeNodeStatus.ACTIVE)
 
     def all_children_are_non_active(self) -> bool:
         """Returns true if both the left and right children are non-active."""
         return (not self.child_left or self.child_left.status == TreeNodeStatus.NONACTIVE) and (
-                not self.child_right or self.child_right.status == TreeNodeStatus.NONACTIVE
-        )
+                not self.child_right or self.child_right.status == TreeNodeStatus.NONACTIVE)
 
     def enclosed_by_interval(self, low: int, high: int) -> bool:
-        """Returns true if the node is fully enclosed in [low, high]."""
+        """Returns whether the node is fully enclosed by the interval [low, high]."""
         return low <= self.low and self.high <= high
 
 
@@ -97,24 +93,26 @@ class CounterSegmentTree:
         """Each tree has a root node."""
         if low > high:
             raise Exception("<CounterSegmentTree> Low is greater than high.")
+
         self.node_root = CounterTreeNode(low, high)
 
     def activate(self, low: int, high: int):
         """Activates the root node."""
         if low > high:
             raise Exception("<CounterSegmentTree> Low is greater than high.")
+
         self._activate_node(low, high, self.node_root)
 
     def _activate_node(self, low: int, high, node: CounterTreeNode):
         """Activates a node (segment).
 
-        When activating a node with an interval [low, high], if it fully covers
-        the node, the node's counter gets incremented by 1; if it does not fully
-        covers the node, the child nodes are created (if needed), whose counter
-        will be incremented.
+        When activating a node with an interval [low, high], if it fully covers the node, the node's counter
+        gets incremented by 1; if it does not fully covers the node, the child nodes are created (if needed),
+        whose counter will be incremented.
         """
         if node.enclosed_by_interval(low, high):
             node.activate()
+
         else:
             self._create_and_activate_children(low, high, node)
 
@@ -125,11 +123,13 @@ class CounterSegmentTree:
         if low < node.mid:
             if not node.child_left:
                 node.child_left = node.create_left_child()
+
             self._activate_node(low, high, node.child_left)
 
         if node.mid < high:
             if not node.child_right:
                 node.child_right = node.create_right_child()
+
             self._activate_node(low, high, node.child_right)
 
     def deactivate(self, low: int, high: int):
@@ -140,6 +140,7 @@ class CounterSegmentTree:
         """Deactivation is the opposite operation of activation."""
         if node.enclosed_by_interval(low, high):
             node.deactivate()
+
         else:
             self._deactivate_children(low, high, node)
 
@@ -161,8 +162,10 @@ class CounterSegmentTree:
         """Returns a list of active nodes."""
         if node.status == TreeNodeStatus.ACTIVE:
             return [node]
+
         elif node.status == TreeNodeStatus.NONACTIVE:
             return []
+
         else:
             list_nodes_active_left = list()
             list_nodes_active_right = list()
@@ -178,8 +181,8 @@ class CounterSegmentTree:
     def get_stack_of_active_intervals(self):
         """Returns the stack of currently active intervals.
 
-        Stack is in the form of [low1, high1, low2, high2, ..]. When pushing into
-        the stack, intervals are merged where application (e.g. low2 == high1).
+        Stack is in the form of [low1, high1, low2, high2, ..]. When pushing into the stack, intervals are
+        merged where application (e.g. low2 == high1).
         [5, 10] => push TreeNode(low = 10, high = 15) => [5 ,15]
         """
         stack_intervals = []
@@ -189,6 +192,7 @@ class CounterSegmentTree:
             # the node to be pushed has a low value as the last value in stack
             if stack_intervals and stack_intervals[-1] == node.low:
                 stack_intervals.pop()
+
             else:
                 stack_intervals.append(node.low)
 
@@ -202,6 +206,7 @@ class CounterSegmentTree:
         def visit_node(node: CounterTreeNode):
             if node.status == TreeNodeStatus.ACTIVE:
                 print(f"Active Node: [{node.low}, {node.high}]")
+
             else:
                 if node.child_left:
                     visit_node(node.child_left)
@@ -253,13 +258,12 @@ class CounterSegmentTree:
         else:
             self._get_non_active_intervals_in_children(low, high, node, stack)
 
-    def _get_non_active_intervals_in_children(
-            self, low: int, high: int, node: CounterTreeNode, stack: List
-    ):
+    def _get_non_active_intervals_in_children(self, low: int, high: int, node: CounterTreeNode, stack: List):
         """Stacks the complement interval from the child nodes."""
         if low < node.mid:
             if node.child_left:
                 self._get_non_active_intervals(low, high, node.child_left, stack)
+
             else:
                 # child not defined, so is definitely empty
                 low_interval = max(low, node.low)
@@ -269,6 +273,7 @@ class CounterSegmentTree:
         if node.mid < high:
             if node.child_right:
                 self._get_non_active_intervals(low, high, node.child_right, stack)
+
             else:
                 # child not defined, so is definitely empty
                 low_interval = max(low, node.mid)
@@ -288,6 +293,7 @@ class CounterSegmentTree:
         if stack and stack[-1] == low:
             # if new low equals last high, pop last high and don't push new low
             stack.pop()
+
         else:
             stack.append(low)
 
@@ -297,9 +303,8 @@ class CounterSegmentTree:
 class ToggleTreeNode:
     """Each node represents a segment on the axis.
 
-    Each segment is defined with an interval [low, high]. The node only has a
-    state, which is not based on counter. Its potential left and right
-    children have intervals [low, mid] and [mid, high], respectively.
+    Each segment is defined with an interval [low, high]. The node only has a state, which is not based on
+    counter. Its potential left and right children have intervals [low, mid] and [mid, high], respectively.
     """
 
     def __init__(self, low: int, high: int, status=TreeNodeStatus.NONACTIVE) -> None:
@@ -327,13 +332,16 @@ class ToggleTreeNode:
         return ToggleTreeNode(self.mid, self.high, status)
 
     def toggle(self):
+        """Toggles the node."""
         if self.status == TreeNodeStatus.ACTIVE:
             self.status = TreeNodeStatus.NONACTIVE
+
         elif self.status == TreeNodeStatus.NONACTIVE:
             self.status = TreeNodeStatus.ACTIVE
 
         if self.child_left:
             self.child_left.toggle()
+
         if self.child_right:
             self.child_right.toggle()
 
@@ -351,17 +359,15 @@ class ToggleTreeNode:
     def all_children_are_non_active(self) -> bool:
         """Returns true if both the left and right children are non-active."""
         return (not self.child_left or self.child_left.status == TreeNodeStatus.NONACTIVE) and (
-                not self.child_right or self.child_right.status == TreeNodeStatus.NONACTIVE
-        )
+                not self.child_right or self.child_right.status == TreeNodeStatus.NONACTIVE)
 
     def all_children_are_active(self) -> bool:
         """Returns true if both the left and right children are active."""
         return (self.child_left and self.child_left.status == TreeNodeStatus.ACTIVE) and (
-                self.child_right and self.child_right.status == TreeNodeStatus.ACTIVE
-        )
+                self.child_right and self.child_right.status == TreeNodeStatus.ACTIVE)
 
     def enclosed_by_interval(self, low: int, high: int) -> bool:
-        """Returns true if the node is fully enclosed in [low, high]."""
+        """Returns whether the node is fully enclosed by the interval [low, high]."""
         return low <= self.low and self.high <= high
 
 
@@ -383,6 +389,7 @@ class ToggleSegmentTree:
         """Toggles the status of a node (segment)."""
         if node.enclosed_by_interval(low, high):
             node.toggle()
+
         else:
             self._create_and_toggle_children(low, high, node)
 
@@ -392,13 +399,16 @@ class ToggleSegmentTree:
         """Creates (if necessary) and toggles the child nodes."""
         if low >= node.high or high <= node.low:
             return
+
         else:
             if not node.child_left:
                 node.child_left = node.create_left_child(node.status)
+
             self._toggle_node(low, high, node.child_left)
 
             if not node.child_right:
                 node.child_right = node.create_right_child(node.status)
+
             self._toggle_node(low, high, node.child_right)
 
             if node.status == TreeNodeStatus.ACTIVE:
@@ -412,8 +422,10 @@ class ToggleSegmentTree:
         """Returns a list of active nodes."""
         if node.status == TreeNodeStatus.ACTIVE:
             return [node]
+
         elif node.status == TreeNodeStatus.NONACTIVE:
             return []
+
         else:
             list_nodes_active_left = list()
             list_nodes_full_right = list()
@@ -440,6 +452,7 @@ class ToggleSegmentTree:
             # the node to be pushed has a low value as the last value in stack
             if stack_intervals and stack_intervals[-1] == node.low:
                 stack_intervals.pop()
+
             else:
                 stack_intervals.append(node.low)
 
@@ -453,6 +466,7 @@ class ToggleSegmentTree:
         def visit_node(node: ToggleTreeNode):
             if node.status == TreeNodeStatus.ACTIVE:
                 print(f"Active Node: [{node.low}, {node.high}]")
+
             else:
                 if node.child_left:
                     visit_node(node.child_left)

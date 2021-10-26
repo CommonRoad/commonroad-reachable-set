@@ -1,8 +1,8 @@
+import os
 import copy
 import glob
-import os
-from collections import defaultdict
 from typing import Dict
+from collections import defaultdict
 
 import yaml
 from commonroad_reachset.common.data_structure.configuration import Configuration
@@ -16,15 +16,14 @@ class ConfigurationBuilder:
     dict_config_overridden: dict = None
 
     @classmethod
-    def set_root_path(cls, path_root: str, path_to_config: str = "configurations/",
-                      dir_configs_default: str = "defaults"):
+    def set_root_path(cls, path_root: str,
+                      path_to_config: str = "configurations/", dir_configs_default: str = "defaults"):
         """Sets the path to the root directory.
 
         Args:
             path_root (str): root directory
             path_to_config (str): relative path of configurations to root path
-            dir_configs_default (str): directory under root folder containing
-            default config files.
+            dir_configs_default (str): directory under root folder containing default config files.
         """
         cls.path_root = path_root
         cls.path_config = os.path.join(path_root, path_to_config)
@@ -36,17 +35,14 @@ class ConfigurationBuilder:
 
         Args:
             path_to_config (str): relative path of configurations to root path
-            dir_configs_default (str): directory under root folder containing
-            default config files.
+            dir_configs_default (str): directory under root folder containing default config files.
         """
         cls.path_config = path_to_config
         cls.path_root = os.path.join(path_to_config, "../../")
         cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
 
     @classmethod
-    def build_configuration(
-            cls, name_scenario: str, idx_planning_problem: int = -1
-    ) -> Configuration:
+    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1) -> Configuration:
         """Builds configuration from default and scenario-specific config files.
 
         Steps:
@@ -58,11 +54,7 @@ class ConfigurationBuilder:
 
         Args:
             name_scenario (str): considered scenario
-            idx_planning_problem (int, optional): index of the planning problem.
-            Defaults to 0.
-
-        Returns:
-            Configuration: configuration containing all relevant information
+            idx_planning_problem (int, optional): index of the planning problem. Defaults to 0.
         """
         dict_config_default = cls.construct_default_config_dict()
 
@@ -74,9 +66,8 @@ class ConfigurationBuilder:
 
         config = Configuration(cls.dict_config_overridden)
 
-        scenario, planning_problem = util_general.load_scenario_and_planning_problem(
-            config, idx_planning_problem
-        )
+        scenario, planning_problem = \
+            util_general.load_scenario_and_planning_problem(config, idx_planning_problem)
 
         config.complete_configuration(scenario, planning_problem)
 
@@ -88,7 +79,6 @@ class ConfigurationBuilder:
 
         Collects all config files ending with 'yaml* under path_config_default.
         """
-
         dict_config_default = dict()
         for path_file in glob.glob(cls.path_config_default + "/*.yaml"):
             with open(path_file, "r") as file_config:
@@ -120,9 +110,6 @@ class ConfigurationBuilder:
         Args:
             dict_config_default (Dict): dictionary created from default config files
             name_scenario (str): considered scenario
-
-        Returns:
-            Dict: dictionary containing overridden entries
         """
         dict_config_overridden = copy.deepcopy(dict_config_default)
 
@@ -148,9 +135,6 @@ class ConfigurationBuilder:
         Args:
             dict1 (Dict): dictionary to be overridden
             dict2 (Dict): dictionary to provide new values
-
-        Returns:
-            Dict: Overridden dictionary
         """
         for key, val in dict2.items():
             if isinstance(val, Dict):

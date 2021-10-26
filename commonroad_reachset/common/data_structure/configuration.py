@@ -1,9 +1,8 @@
 from typing import Dict, Optional
 
-import pycrreachset as reach
+# import pycrreachset as reach
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
-from commonroad_route_planner.route import Route
 from commonroad_route_planner.route_planner import RoutePlanner
 
 from commonroad_reachset.common.utility import configugation as util_configuration
@@ -21,9 +20,7 @@ class Configuration:
         self.config_vehicle = VehicleConfiguration(dict_config)
         self.config_planning = PlanningConfiguration(dict_config)
         self.config_reachable_set = ReachableSetConfiguration(dict_config)
-        self.config_spot = SPOTConfiguration(dict_config)
-        self.config_semantic_model = SemanticModelConfiguration(dict_config)
-        self.config_traffic_rule = TrafficRuleConfiguration(dict_config)
+        self.config_sonia = SONIAConfiguration(dict_config)
         self.config_debug = DebugConfiguration(dict_config)
 
     @property
@@ -43,16 +40,8 @@ class Configuration:
         return self.config_reachable_set
 
     @property
-    def spot(self):
-        return self.config_spot
-
-    @property
-    def semantic_model(self):
-        return self.config_semantic_model
-
-    @property
-    def traffic_rule(self):
-        return self.config_traffic_rule
+    def sonia(self):
+        return self.config_sonia
 
     @property
     def debug(self):
@@ -65,78 +54,78 @@ class Configuration:
         self.vehicle.id_type_vehicle = planning_problem.planning_problem_id
         self.planning.complete_configuration(self)
 
-    def convert_to_cpp_configuration(self) -> reach.Configuration:
-        """Converts to configuration defined by the cpp side"""
-        config = reach.Configuration()
-
-        config.general.name_scenario = self.name_scenario
-        config.general.path_scenarios = self.general.path_scenarios
-
-        config.vehicle.ego.id_type_vehicle = self.vehicle.ego.id_type_vehicle
-        config.vehicle.ego.length = self.vehicle.ego.length
-        config.vehicle.ego.width = self.vehicle.ego.width
-        config.vehicle.ego.v_lon_min = self.vehicle.ego.v_lon_min
-        config.vehicle.ego.v_lon_max = self.vehicle.ego.v_lon_max
-        config.vehicle.ego.v_lat_min = self.vehicle.ego.v_lat_min
-        config.vehicle.ego.v_lat_max = self.vehicle.ego.v_lat_max
-        config.vehicle.ego.a_lon_min = self.vehicle.ego.a_lon_min
-        config.vehicle.ego.a_lon_max = self.vehicle.ego.a_lon_max
-        config.vehicle.ego.a_lat_min = self.vehicle.ego.a_lat_min
-        config.vehicle.ego.a_lat_max = self.vehicle.ego.a_lat_max
-        config.vehicle.ego.a_max = self.vehicle.ego.a_max
-        config.vehicle.ego.t_react = self.vehicle.ego.t_react
-        config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
-        config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
-
-        config.vehicle.other.id_type_vehicle = self.vehicle.other.id_type_vehicle
-        config.vehicle.other.length = self.vehicle.other.length
-        config.vehicle.other.width = self.vehicle.other.width
-        config.vehicle.other.v_lon_min = self.vehicle.other.v_lon_min
-        config.vehicle.other.v_lon_max = self.vehicle.other.v_lon_max
-        config.vehicle.other.v_lat_min = self.vehicle.other.v_lat_min
-        config.vehicle.other.v_lat_max = self.vehicle.other.v_lat_max
-        config.vehicle.other.a_lon_min = self.vehicle.other.a_lon_min
-        config.vehicle.other.a_lon_max = self.vehicle.other.a_lon_max
-        config.vehicle.other.a_lat_min = self.vehicle.other.a_lat_min
-        config.vehicle.other.a_lat_max = self.vehicle.other.a_lat_max
-        config.vehicle.other.a_max = self.vehicle.other.a_max
-        config.vehicle.other.t_react = self.vehicle.other.t_react
-        config.vehicle.other.radius_disc = self.vehicle.other.radius_disc
-        config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
-
-        config.planning.dt = self.planning.dt
-        config.planning.time_step_start = self.planning.time_step_start
-        config.planning.time_steps_computation = self.planning.time_steps_computation
-        config.planning.p_lon_initial = self.planning.p_lon_initial
-        config.planning.p_lat_initial = self.planning.p_lat_initial
-        config.planning.uncertainty_p_lon = self.planning.uncertainty_p_lon
-        config.planning.uncertainty_p_lat = self.planning.uncertainty_p_lat
-        config.planning.v_lon_initial = self.planning.v_lon_initial
-        config.planning.v_lat_initial = self.planning.v_lat_initial
-        config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
-        config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
-        config.planning.time_step_start = self.planning.time_step_initial
-        config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
-
-        if self.planning.coordinate_system == "CART":
-            config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
-        else:
-            config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
-
-        if self.planning.reference_point == "REAR":
-            config.planning.reference_point = reach.ReferencePoint.REAR
-        else:
-            config.planning.reference_point = reach.ReferencePoint.CENTER
-
-        config.reachable_set.size_grid = self.reachable_set.size_grid
-        config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
-        config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
-        config.reachable_set.num_threads = self.reachable_set.num_threads
-
-        config.debug.verbose_mode = self.debug.verbose_mode
-        config.debug.measure_time = self.debug.measure_time
-
-        return config
+    # def convert_to_cpp_configuration(self) -> reach.Configuration:
+    #     """Converts to configuration defined by the cpp side"""
+    #     config = reach.Configuration()
+    #
+    #     config.general.name_scenario = self.name_scenario
+    #     config.general.path_scenarios = self.general.path_scenarios
+    #
+    #     config.vehicle.ego.id_type_vehicle = self.vehicle.ego.id_type_vehicle
+    #     config.vehicle.ego.length = self.vehicle.ego.length
+    #     config.vehicle.ego.width = self.vehicle.ego.width
+    #     config.vehicle.ego.v_lon_min = self.vehicle.ego.v_lon_min
+    #     config.vehicle.ego.v_lon_max = self.vehicle.ego.v_lon_max
+    #     config.vehicle.ego.v_lat_min = self.vehicle.ego.v_lat_min
+    #     config.vehicle.ego.v_lat_max = self.vehicle.ego.v_lat_max
+    #     config.vehicle.ego.a_lon_min = self.vehicle.ego.a_lon_min
+    #     config.vehicle.ego.a_lon_max = self.vehicle.ego.a_lon_max
+    #     config.vehicle.ego.a_lat_min = self.vehicle.ego.a_lat_min
+    #     config.vehicle.ego.a_lat_max = self.vehicle.ego.a_lat_max
+    #     config.vehicle.ego.a_max = self.vehicle.ego.a_max
+    #     config.vehicle.ego.t_react = self.vehicle.ego.t_react
+    #     config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
+    #     config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
+    #
+    #     config.vehicle.other.id_type_vehicle = self.vehicle.other.id_type_vehicle
+    #     config.vehicle.other.length = self.vehicle.other.length
+    #     config.vehicle.other.width = self.vehicle.other.width
+    #     config.vehicle.other.v_lon_min = self.vehicle.other.v_lon_min
+    #     config.vehicle.other.v_lon_max = self.vehicle.other.v_lon_max
+    #     config.vehicle.other.v_lat_min = self.vehicle.other.v_lat_min
+    #     config.vehicle.other.v_lat_max = self.vehicle.other.v_lat_max
+    #     config.vehicle.other.a_lon_min = self.vehicle.other.a_lon_min
+    #     config.vehicle.other.a_lon_max = self.vehicle.other.a_lon_max
+    #     config.vehicle.other.a_lat_min = self.vehicle.other.a_lat_min
+    #     config.vehicle.other.a_lat_max = self.vehicle.other.a_lat_max
+    #     config.vehicle.other.a_max = self.vehicle.other.a_max
+    #     config.vehicle.other.t_react = self.vehicle.other.t_react
+    #     config.vehicle.other.radius_disc = self.vehicle.other.radius_disc
+    #     config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
+    #
+    #     config.planning.dt = self.planning.dt
+    #     config.planning.time_step_start = self.planning.time_step_start
+    #     config.planning.time_steps_computation = self.planning.time_steps_computation
+    #     config.planning.p_lon_initial = self.planning.p_lon_initial
+    #     config.planning.p_lat_initial = self.planning.p_lat_initial
+    #     config.planning.uncertainty_p_lon = self.planning.uncertainty_p_lon
+    #     config.planning.uncertainty_p_lat = self.planning.uncertainty_p_lat
+    #     config.planning.v_lon_initial = self.planning.v_lon_initial
+    #     config.planning.v_lat_initial = self.planning.v_lat_initial
+    #     config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
+    #     config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
+    #     config.planning.time_step_start = self.planning.time_step_initial
+    #     config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
+    #
+    #     if self.planning.coordinate_system == "CART":
+    #         config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
+    #     else:
+    #         config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
+    #
+    #     if self.planning.reference_point == "REAR":
+    #         config.planning.reference_point = reach.ReferencePoint.REAR
+    #     else:
+    #         config.planning.reference_point = reach.ReferencePoint.CENTER
+    #
+    #     config.reachable_set.size_grid = self.reachable_set.size_grid
+    #     config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
+    #     config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
+    #     config.reachable_set.num_threads = self.reachable_set.num_threads
+    #
+    #     config.debug.verbose_mode = self.debug.verbose_mode
+    #     config.debug.measure_time = self.debug.measure_time
+    #
+    #     return config
 
 
 class GeneralConfiguration:
@@ -241,7 +230,7 @@ class PlanningConfiguration:
         # related to specific planning problem
         self.time_step_initial = None
         self.id_lanelet_initial = None
-        self.route: Optional[Route] = None
+        self.route = None
         self.reference_path = None
         self.lanelet_network = None
 
@@ -249,7 +238,7 @@ class PlanningConfiguration:
         self.reference_point = dict_relevant["reference_point"]
         self.CLCS = None
 
-        self.use_spot = dict_relevant["use_spot"]
+        self.use_sonia = dict_relevant["use_sonia"]
 
     def complete_configuration(self, config: Configuration):
         scenario = config.scenario
@@ -266,7 +255,7 @@ class PlanningConfiguration:
             self.id_lanelet_initial = 0
 
         elif self.coordinate_system == "CVLN":
-            # plan a route from initial lanelet to goal lanelet
+            # plans a route from the initial lanelet to the goal lanelet
             route_planner = RoutePlanner(scenario, planning_problem)
             candidate_holder = route_planner.plan_routes()
             route = candidate_holder.retrieve_first_route()
@@ -290,12 +279,10 @@ class ReachableSetConfiguration:
         self.size_grid = dict_relevant["size_grid"]
         self.size_grid_2nd = dict_relevant["size_grid_2nd"]
         self.radius_terminal_split = dict_relevant["radius_terminal_split"]
-        self.prune_sets_not_reaching_last_time_step = dict_relevant["prune_sets_not_reaching_last_time_step"]
+        self.prune_nodes_not_reaching_final_time_step = dict_relevant["prune_nodes_not_reaching_final_time_step"]
 
         self.consider_traffic = dict_relevant["consider_traffic"]
         self.allow_overtaking = dict_relevant["allow_overtaking"]
-        self.num_maneuvers_desired = dict_relevant["num_maneuvers_desired"]
-        self.limit_extraction = dict_relevant["limit_extraction_ratio"] * self.num_maneuvers_desired
 
 
 class DebugConfiguration:
@@ -304,12 +291,11 @@ class DebugConfiguration:
 
         self.save_plots = dict_relevant["save_plots"]
         self.save_config = dict_relevant["save_config"]
-
-        self.verbose_mode = dict_relevant["verbose_mode"]
+        self.verbose_mode = dict_relevant["verbose"]
         self.measure_time = dict_relevant["measure_time"]
 
 
-class SPOTConfiguration:
+class SONIAConfiguration:
     def __init__(self, dict_config: Dict):
         dict_relevant = dict_config["config_spot"]
 
@@ -324,40 +310,3 @@ class SPOTConfiguration:
         self.print_predicted_velocity_intervals = dict_relevant['print_predicted_velocity_intervals']
         self.update_obstacle_parameters = dict_relevant["update_obstacle_parameters"]
         self.num_threads = dict_relevant['num_threads']
-
-
-class SemanticModelConfiguration:
-    def __init__(self, dict_config: Dict):
-        dict_relevant = dict_config["config_semantic_model"]
-
-        self.distance_lateral_max = dict_relevant["distance_lateral_max"]
-        self.length_aabb_max = dict_relevant["length_aabb_max"]
-        self.area_polygon_min = dict_relevant["area_polygon_min"]
-        self.consider_ego_shape = dict_relevant["consider_ego_shape"]
-        self.distance_vertices_polygon_max = dict_relevant["distance_vertices_polygon_max"]
-
-
-class TrafficRuleConfiguration:
-    def __init__(self, dict_config: Dict):
-        # traffic rule-related
-        dict_relevant = dict_config["config_traffic_rules"]
-
-        self.operating_mode = dict_relevant["operating_mode"]
-        self.country = dict_relevant["country"]
-
-        self.length_lane_merge = dict_relevant["length_lane_merge"]
-        self.fov_speed_limit = dict_relevant["fov_speed_limit"]
-
-        self.consider_speed_limit = dict_relevant["consider_speed_limit"]
-        self.consider_stop_sign = dict_relevant["consider_stop_sign"]
-        self.consider_traffic_light = dict_relevant["consider_traffic_light"]
-        self.prohibit_lane_change = dict_relevant["prohibit_lane_change"]
-        self.distance_drives_right_most = dict_relevant["distance_drives_right_most"]
-
-        self.braking_speed_limit = 43
-        self.road_condition_speed_limit = 50
-        self.emergency_profile = []
-        self.emergency_profile_num_steps_fb = 200
-        self.const_dist_offset = 0
-
-        self.activated_traffic_rules = dict_relevant["activated_traffic_rules"]

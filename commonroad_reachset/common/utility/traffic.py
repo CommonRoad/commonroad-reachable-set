@@ -26,7 +26,7 @@ def create_vehicle_from_obstacle(config: Configuration, road_network: RoadNetwor
     state_init = obstacle.initial_state
     dict_time_to_spot_prediction_occupancy = {}
     dict_time_to_spot_extrema = {}
-    use_spot = config.planning.use_spot
+    use_spot = config.planning.use_sonia
 
     if isinstance(obstacle, StaticObstacle):
         acceleration = jerk = 0

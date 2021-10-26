@@ -27,7 +27,7 @@ def test_sort_counterclockwise():
         (1, 0),
     ]
 
-    list_vertices_sorted = util_geometry.sort_counterclockwise(list_vertices)
+    list_vertices_sorted = util_geometry.sort_vertices_counterclockwise(list_vertices)
     assert list_vertices_sorted == list_vertices_sorted_expected
 
 

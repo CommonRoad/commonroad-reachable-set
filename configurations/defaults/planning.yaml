@@ -21,4 +21,4 @@ config_planning:
   reference_point: "CENTER"
 
   # use SPOT prediction
-  use_spot: yes
+  use_sonia: yes

@@ -48,7 +48,7 @@ def draw_scenario_with_reachable_sets(config, reach_interface, time_step_end: in
         if not plot_refined:
             list_nodes = reach_interface.reachable_set_at_time_step(time_step)
         else:
-            list_nodes = reach_interface.refined_reachable_set_at_time_step(time_step)
+            list_nodes = reach_interface.pruned_reachable_set_at_time_step(time_step)
 
         # draw nodes of reachable sets at current time step
         if config.planning.coordinate_system == "CART":
@@ -231,7 +231,7 @@ def create_figures(config: Configuration, reach_interface: reach.ReachableSetInt
         if not plot_refined:
             list_rectangles_drivable_area = reach_interface.reachable_set_at_time_step(time_step)
         else:
-            list_rectangles_drivable_area = reach_interface.refined_reachable_set_at_time_step(time_step)
+            list_rectangles_drivable_area = reach_interface.pruned_reachable_set_at_time_step(time_step)
 
         if reach_interface.config().planning.coordinate_system == reach.CoordinateSystem.CARTESIAN:
             for rectangle in list_rectangles_drivable_area:
@@ -285,7 +285,7 @@ def create_gifs(config: Configuration, reach_interface: reach.ReachableSetInterf
         if not plot_refined:
             list_nodes_reachable_set = reach_interface.reachable_set_at_time_step(frame)
         else:
-            list_nodes_reachable_set = reach_interface.refined_reachable_set_at_time_step(frame)
+            list_nodes_reachable_set = reach_interface.pruned_reachable_set_at_time_step(frame)
 
         if reach_interface.config().planning.coordinate_system == reach.CoordinateSystem.CARTESIAN:
             for node in list_nodes_reachable_set:

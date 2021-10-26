@@ -8,22 +8,15 @@ from shapely.geometry import Polygon
 class ReachNode:
     """Node within the reachability graph.
 
-    Constructed from a base set. Additionally, a node has a time step, an ID,
-    holds a list of parent nodes and child nodes. Each base set is a Cartesian
-    product of polygon_lon and polygon_lat. In Curvilinear coordinate system,
-    polygon_lon is a polygon in the longitudinal p-v domain, and polygon_lat
-    is a polygon in the lateral p-v domain; In Cartesian coordinate system,
-    they represent polygons in the x-v and y-v domains, respectively.
-    It stores the indices of all parent base sets from the previous time step
-    from which the current base set is reachable.
+    A node is constructed from a base set and has a time step, an ID, and holds a list of parent nodes
+    and child nodes. Each base set is a Cartesian product of polygon_lon and polygon_lat. In Curvilinear
+    coordinate system, polygon_lon is a polygon in the longitudinal p-v domain, and polygon_lat is a
+    polygon in the lateral p-v domain; In Cartesian coordinate system, they represent polygons in the
+    x-v and y-v domains, respectively. It stores the indices of all parent base sets from the previous time
+    step from which the current base set is reachable.
     """
-
     cnt_id = 0
-
-    def __init__(self, polygon_lon: Union[ReachPolygon, Polygon, None], polygon_lat: Union[ReachPolygon, Polygon, None],
-                 time_step: int = -1, set_propositions_persistent: Union[Set, FrozenSet] = None,
-                 set_propositions_temporary: Union[Set, FrozenSet] = None):
-
+    def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         self._polygon_lon = polygon_lon
         self._polygon_lat = polygon_lat
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
@@ -38,16 +31,13 @@ class ReachNode:
         # the node from which the current node is propagated
         self.source_propagation = None
 
-        self.set_propositions_persistent = set_propositions_persistent if set_propositions_persistent else set()
-        self.set_propositions_temporary = set_propositions_temporary if set_propositions_temporary else set()
-
     def __repr__(self):
-        return f"ReachNode(time_step={self.time_step}, id={self.id}, " \
-               f"propositions={self.set_propositions_persistent.union(self.set_propositions_temporary)})"
+        return f"ReachNode(time_step={self.time_step}, id={self.id})"
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ReachNode):
-            return self.id == other.id
+            return self._id == other._id
+
         else:
             return False
 

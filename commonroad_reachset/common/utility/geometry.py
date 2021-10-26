@@ -9,39 +9,33 @@ from skgeom import minkowski
 
 
 def linear_mapping(polygon, tuple_coefficients: Tuple):
-    """Linear mapping of polygon.
+    """Returns the linear mapping of polygon.
 
-    Computing the zero-input response of the system, see Söntges T-ITS 2018,
-    Sec. IV.A.
+    Computing the zero-input response of the system, see Söntges T-ITS 2018, Sec. IV.A.
     """
     list_vertices = polygon.vertices
     a11, a12, a21, a22 = tuple_coefficients
 
-    list_vertices_mapped = [
-        (a11 * vertex[0] + a12 * vertex[1], a21 * vertex[0] + a22 * vertex[1])
-        for vertex in list_vertices
-    ]
+    list_vertices_mapped = [(a11 * vertex[0] + a12 * vertex[1], a21 * vertex[0] + a22 * vertex[1])
+                            for vertex in list_vertices]
 
     return ReachPolygon(list_vertices_mapped)
 
 
 def minkowski_sum(polygon1: ReachPolygon, polygon2: ReachPolygon) -> ReachPolygon:
-    """Minkowski sum of two polygons.
+    """Returns the Minkowski sum of two polygons.
 
     Args:
         polygon1 (ReachPolygon): first polygon
         polygon2 (ReachPolygon): second polygon
-
-    Returns:
-        ReachPolygon: summed polygon
     """
     # shapely polygon requires identical initial and final vertices
     # scikit-geometry polygon requires different initial and final vertices
     # minkowski sum in scikit-geometry requires sorting counterclockwise
-    list_vertices = sort_counterclockwise([vertex for vertex in polygon1.vertices])
+    list_vertices = sort_vertices_counterclockwise([vertex for vertex in polygon1.vertices])
     sg_polygon_1 = sg.Polygon(list_vertices)
 
-    list_vertices = sort_counterclockwise([vertex for vertex in polygon2.vertices])
+    list_vertices = sort_vertices_counterclockwise([vertex for vertex in polygon2.vertices])
     sg_polygon_2 = sg.Polygon(list_vertices)
 
     result = minkowski.minkowski_sum(sg_polygon_1, sg_polygon_2)
@@ -50,7 +44,7 @@ def minkowski_sum(polygon1: ReachPolygon, polygon2: ReachPolygon) -> ReachPolygo
     return ReachPolygon(list_vertices_sum)
 
 
-def sort_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:
+def sort_vertices_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:
     """Sorts a list of vertices in the counterclockwise direction.
 
     Steps:
@@ -60,9 +54,6 @@ def sort_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:
 
     Args:
         list_vertices (List[Tuple]): the list of vertices to be sorted
-
-    Returns:
-        List[Tuple]: the sorted list of vertices
     """
     list_x = np.array([vertex[0] for vertex in list_vertices])
     list_y = np.array([vertex[1] for vertex in list_vertices])
@@ -72,11 +63,8 @@ def sort_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:
 
     r = np.sqrt((list_x - x_mean) ** 2 + (list_y - y_mean) ** 2)
 
-    list_angles = np.where(
-        (list_y - y_mean) > 0,
-        np.arccos((list_x - x_mean) / r),
-        2 * np.pi - np.arccos((list_x - x_mean) / r),
-    )
+    list_angles = np.where((list_y - y_mean) > 0, np.arccos((list_x - x_mean) / r),
+                           2 * np.pi - np.arccos((list_x - x_mean) / r))
 
     mask = np.argsort(list_angles)
 
@@ -88,8 +76,7 @@ def sort_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:
 
 
 def create_adjacency_dictionary(
-        list_rectangles_1: List[ReachPolygon], list_rectangles_2: List[ReachPolygon]
-) -> Dict[int, List[int]]:
+        list_rectangles_1: List[ReachPolygon], list_rectangles_2: List[ReachPolygon]) -> Dict[int, List[int]]:
     """Returns an adjacency dictionary.
 
     E.g.: {0:[1, 2], [1:[3, 4]]} = rectangle_0 from 1st list overlaps
@@ -100,12 +87,8 @@ def create_adjacency_dictionary(
 
     for idx_1, rectangle_1 in enumerate(list_rectangles_1):
         for idx_2, rectangle_2 in enumerate(list_rectangles_2):
-            if not (
-                    rectangle_1.p_lon_min > rectangle_2.p_lon_max
-                    or rectangle_1.p_lon_max < rectangle_2.p_lon_min
-                    or rectangle_1.p_lat_min > rectangle_2.p_lat_max
-                    or rectangle_1.p_lat_max < rectangle_2.p_lat_min
-            ):
+            if not (rectangle_1.p_lon_min > rectangle_2.p_lon_max or rectangle_1.p_lon_max < rectangle_2.p_lon_min
+                    or rectangle_1.p_lat_min > rectangle_2.p_lat_max or rectangle_1.p_lat_max < rectangle_2.p_lat_min):
                 dict_idx_to_list_idx[idx_1].append(idx_2)
 
     return dict_idx_to_list_idx
