@@ -1,0 +1,4 @@
+config_general:
+  # path are relative to the root directory
+  path_scenarios: scenarios/
+  path_output: evaluation/

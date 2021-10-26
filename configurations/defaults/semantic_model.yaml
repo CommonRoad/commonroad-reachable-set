@@ -1,0 +1,11 @@
+config_semantic_model:
+  # maximum lateral distance in semantic modeling
+  distance_lateral_max: 30
+  # maximum length of the axis-aligned bounding boxes enclosing the lanelet regions
+  length_aabb_max: 1.0
+  # minimum area a region polygon should have
+  area_polygon_min: 5
+  # whether to consider the shape of the ego vehicle (dilate lanelet polygons by disc radius)
+  consider_ego_shape: yes
+  # maximum distance between vertices of lanelet polygons (for interpolating)
+  distance_vertices_polygon_max: 2.0

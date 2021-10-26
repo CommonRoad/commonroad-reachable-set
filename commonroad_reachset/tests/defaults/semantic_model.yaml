@@ -1,0 +1,7 @@
+config_semantic_model:
+  # maximum lateral distance in semantic modeling
+  distance_lateral_max: 30
+  # maximum length of the axis-aligned bounding boxes enclosing the lanelet regions
+  length_aabb_max: 1.0
+  # minimum area a polygon should have
+  area_polygon_min: 1

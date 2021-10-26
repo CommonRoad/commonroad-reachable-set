@@ -1,0 +1,49 @@
+config_traffic_rules:
+  operating_mode: monitor # options: monitor, constraint, robustness
+  country: DEU
+
+  length_lane_merge: 10000
+  fov_speed_limit: 50
+  const_dist_offset: 0
+  emergency_profile: [ ]
+  emergency_profile_num_steps_fb: 200
+  braking_speed_limit: 43
+  road_condition_speed_limit: 50
+  distance_drives_right_most: 1.5
+
+  consider_speed_limit: 0
+  consider_stop_sign: 0
+  consider_traffic_light: 0
+  prohibit_lane_change: 0
+  activated_traffic_rule_sets: [ B_S0 ]
+
+  # clauses should be preceded and followed by a whitespace
+  # TPL: timed propositional logic
+  # CTL: computation tree logic, checked with PyNuSMV (uses True, False, .. in NuSMV 2.5.4)
+  # MTL metric temporal logic, checked with NuSMV (uses TRUE, FALSE, .. in NuSMV 2.6.0)
+  activated_traffic_rules:
+    default:
+      - TPL NoBackwardDrivingAllowed
+      - TPL NoOppositeDrivingAllowed
+      - TPL ConsiderLineMarking
+      - TPL ConsiderTrafficLight
+      - CTL TRUE
+      - MTL G (TRUE)
+
+    DEU_Test-1_1_T-1:
+      - TPL NoBackwardDrivingAllowed
+      - TPL NoOppositeDrivingAllowed
+      - TPL ConsiderLineMarking
+      - TPL ConsiderTrafficLight
+#      - CTL TRUE
+#      - MTL G (TRUE)
+      - CTL EF (InFrontOf_7)
+      - MTL G (F (InFrontOf_7 & AlignedWith_7))
+#      - CTL EF (Beside_7)
+#      - MTL G (F (Beside_7))
+#      - CTL EF (InFrontOf_7 & AlignedWith_7)
+#      - MTL G (Beside_7 -> F [1, 20] (InFrontOf_7 & AlignedWith_7))
+      #      - MTL G (F (G (! AlignedWith_7)))
+#      - CTL EF (InFrontOf_7 & AlignedWith_7)
+#      - MTL G (F (AlignedWith_7))
+#      - MTL G (F (InFrontOf_7 & AlignedWith_7 & X (InFrontOf_7 & AlignedWith_7)))

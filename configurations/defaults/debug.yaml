@@ -1,0 +1,6 @@
+config_debug:
+  save_plots: 0
+  save_config: 1
+
+  verbose_mode: 0
+  measure_time: 0

@@ -1,0 +1,24 @@
+config_planning:
+  dt: 0.1
+  time_step_start: 0
+  # time_steps_computation * dt = horizon. e.g. 20 * 0.1 = 2s
+  time_steps_computation: 30
+
+  # position uncertainty in two directions
+  uncertainty_p_lon: 0.01
+  uncertainty_p_lat: 0.01
+
+  uncertainty_v_lon: 0.01
+  uncertainty_v_lat: 0.01
+
+  v_lon_desired: 22.0
+
+  target_lanelet_ids: 3
+
+  # this can either be "CART" or "CVLN"
+  coordinate_system: "CVLN"
+  # this can either be "CENTER" or "REAR"
+  reference_point: "CENTER"
+
+  # use SPOT prediction
+  use_spot: yes
