@@ -1,8 +1,6 @@
 config_planning:
   dt: 0.1
   time_steps_computation: 40
-  coordinate_system: "CVLN"
-  use_spot: yes
 
 config_vehicle:
   ego:
@@ -12,5 +10,5 @@ config_vehicle:
 config_reachable_set:
   size_grid: 0.2
   size_grid_2nd: 0.05
-  radius_terminal_split: 0.5
+  radius_terminal_split: 0.7
   num_threads: 4

@@ -3,4 +3,4 @@ config_debug:
   save_config: 1
 
   verbose: 0
-  measure_time: 0
+  measure_time: 1

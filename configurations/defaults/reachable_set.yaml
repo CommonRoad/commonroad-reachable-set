@@ -6,13 +6,13 @@ config_reachable_set:
   # grid size for second time rectangle alignment (after collision check)
   size_grid_2nd: 0.05
   # threshold for terminating the split of reachable sets in collision checks
-  radius_terminal_split: 0.5
+  radius_terminal_split: 0.7
   # if set to false, static and dynamic obstacles will be omitted
-  consider_traffic: 1
+  consider_traffic: true
   # setting to true would allow propagating the reachable sets to lanelets
   # with opposite driving direction
-  allow_overtaking: 0
+  allow_overtaking: no
   # number of thread for reachable set computation
   num_threads: 4
   # flag whether to prune reach nodes not reaching the final time step
-  prune_nodes_not_reaching_final_time_step: 1
+  prune_nodes_not_reaching_final_time_step: true

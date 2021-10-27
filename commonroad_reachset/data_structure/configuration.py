@@ -49,6 +49,17 @@ class Configuration:
         self.vehicle.id_type_vehicle = planning_problem.planning_problem_id
         self.planning.complete_configuration(self)
 
+    def print_configuration_summary(self):
+        print("# ===== Configuration Summary ===== #")
+        print(f"# {self.scenario.scenario_id}")
+        print("# Planning:")
+        print(f"# \ttime steps: {self.planning.time_steps_computation}, "
+              f"coordinate system: {self.planning.coordinate_system}")
+        print("# Reachable set:")
+        print(f"# \tback end: {self.reachable_set.back_end}, "
+              f"prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
+        print("# ================================= #")
+
     # def convert_to_cpp_configuration(self) -> reach.Configuration:
     #     """Converts to configuration defined by the cpp side"""
     #     config = reach.Configuration()

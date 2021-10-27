@@ -75,7 +75,7 @@ class CollisionChecker:
         scenario_cc = self.create_scenario_with_road_boundaries(self.config)
         # parameter dictionary for inflation to consider the shape of the ego vehicle
         dict_param = {"minkowski_sum_circle": True,
-                      "minkowski_sum_circle_radius": self.config.vehicle.radius_disc,
+                      "minkowski_sum_circle_radius": self.config.vehicle.ego.radius_disc,
                       "resolution": 5}
         collision_checker = self.create_cartesian_collision_checker_from_scenario(scenario_cc, params=dict_param)
 

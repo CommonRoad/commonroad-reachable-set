@@ -55,7 +55,7 @@ class ReachableSetInterface:
         self._interface.compute_reachable_sets(time_step_start, time_step_end)
 
         if self.config.debug.measure_time:
-            print(f"\tComputation took: {time.time() - time_start:.3f}s")
+            print(f"\tComputation took: \t{time.time() - time_start:.3f}s")
 
 
 class PyReachableSetInterface:
@@ -166,8 +166,8 @@ class PyReachableSetInterface:
 
             cnt_nodes_after_pruning += len(list_nodes)
 
-        print(f"\t#nodes before pruning: {cnt_nodes_before_pruning}")
-        print(f"\t#nodes after pruning: {cnt_nodes_after_pruning}")
+        print(f"\t#nodes before pruning: \t{cnt_nodes_before_pruning}")
+        print(f"\t#nodes after pruning: \t{cnt_nodes_after_pruning}")
 
 # class CppReachableSetInterface:
 #     """"""Interface to work with reachable sets (C++ backend).""""""
