@@ -1,5 +1,5 @@
 import pytest
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 
 def test_creating_polygon_with_less_than_three_vertices_throws_exception():

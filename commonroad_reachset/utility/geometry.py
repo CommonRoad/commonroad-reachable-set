@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 import commonroad_dc.pycrcc as pycrcc
 import numpy as np
 import skgeom as sg
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 from skgeom import minkowski
 
 

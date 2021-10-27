@@ -1,5 +1,5 @@
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.data_structure.reach_node import ReachNode
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.reach.reach_node import ReachNode
 
 
 def test_project_to_position_domain():

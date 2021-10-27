@@ -5,7 +5,7 @@ from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
 from commonroad_route_planner.route_planner import RoutePlanner
 
-from commonroad_reachset.common.utility import configugation as util_configuration
+from commonroad_reachset.utility import configugation as util_configuration
 
 
 class Configuration:

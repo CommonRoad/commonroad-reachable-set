@@ -1,4 +1,4 @@
-from commonroad_reachset.common.data_structure.reach_node import ReachNode
+from commonroad_reachset.data_structure.reach.reach_node import ReachNode
 from shapely.geometry import Polygon
 
 

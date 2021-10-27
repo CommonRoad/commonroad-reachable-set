@@ -1,5 +1,5 @@
-from commonroad_reachset.common.collision_checker import CollisionChecker
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.collision_checker import CollisionChecker
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 
 def test_convert_reach_polygon_to_collision_object(collision_checker: CollisionChecker):

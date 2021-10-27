@@ -1,8 +1,8 @@
 import os
 import time
-from commonroad_reachset.common.configuration_builder import ConfigurationBuilder
-from commonroad_reachset.common.reachable_set_interface import PyReachableSetInterface
-# from commonroad_reachset.common.utility import visualization as util_visualization
+from commonroad_reachset.data_structure.configuration_builder import ConfigurationBuilder
+from commonroad_reachset.data_structure.reach.reachable_set_interface import PyReachableSetInterface
+from commonroad_reachset.utility import visualization as util_visualization
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     print(f"Computation time: {time.time() - time_start:.3f}s")
 
     # save computation results
-    # util_visualization.draw_scenario_with_reachable_sets(config, reach_interface, as_svg=False)
+    util_visualization.draw_scenario_with_reachable_sets(config, reach_interface, as_svg=False)
 
 
 if __name__ == "__main__":

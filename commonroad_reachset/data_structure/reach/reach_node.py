@@ -1,8 +1,6 @@
 import copy
-from typing import Union, Set, FrozenSet
 
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from shapely.geometry import Polygon
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 
 class ReachNode:
@@ -16,13 +14,14 @@ class ReachNode:
     step from which the current base set is reachable.
     """
     cnt_id = 0
+
     def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         self._polygon_lon = polygon_lon
         self._polygon_lat = polygon_lat
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
         self._bounds_lat = polygon_lat.bounds if polygon_lat else None
 
-        self._id = ReachNode.cnt_id
+        self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
         self.time_step = time_step
         self.list_nodes_parent = list()
@@ -36,7 +35,7 @@ class ReachNode:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ReachNode):
-            return self._id == other._id
+            return self.id == other.id
 
         else:
             return False
@@ -139,18 +138,12 @@ class ReachNode:
     def clone(self):
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
-                               self.time_step,
-                               copy.deepcopy(self.set_propositions_persistent),
-                               copy.deepcopy(self.set_propositions_temporary))
+                               self.time_step)
         node_clone.list_nodes_parent = copy.deepcopy(self.list_nodes_parent)
         node_clone.list_nodes_child = copy.deepcopy(self.list_nodes_child)
         node_clone.source_propagation = self.source_propagation
 
         return node_clone
-
-    @property
-    def id(self) -> int:
-        return self._id
 
     @classmethod
     def reset_class_id_counter(cls):

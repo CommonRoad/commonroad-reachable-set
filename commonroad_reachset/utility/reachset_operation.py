@@ -1,13 +1,12 @@
-import copy
 from math import ceil, floor
 from typing import List, Tuple
 
-from commonroad_reachset.common.collision_checker import CollisionChecker
-from commonroad_reachset.common.data_structure.configuration import Configuration
-from commonroad_reachset.common.data_structure.reach_node import ReachNode
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.utility import geometry as util_geometry
-from commonroad_reachset.common.utility.sweep_line import SweepLine
+from commonroad_reachset.data_structure.collision_checker import CollisionChecker
+from commonroad_reachset.data_structure.configuration import Configuration
+from commonroad_reachset.data_structure.reach.reach_node import ReachNode
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.utility import geometry as util_geometry
+from commonroad_reachset.utility.sweep_line import SweepLine
 
 
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:

@@ -1,10 +1,10 @@
 from typing import List, Tuple
 
-from commonroad_reachset.common.data_structure.configuration import Configuration
-from commonroad_reachset.common.data_structure.reach_node import ReachNode
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.collision_checker import CollisionChecker
-from commonroad_reachset.common.utility import reachset_operation
+from commonroad_reachset.data_structure.configuration import Configuration
+from commonroad_reachset.data_structure.reach.reach_node import ReachNode
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.collision_checker import CollisionChecker
+from commonroad_reachset.utility import reachset_operation
 
 
 class ReachabilityAnalysis:

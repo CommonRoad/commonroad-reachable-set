@@ -7,13 +7,13 @@ import pycrreachset as reach
 from commonroad.geometry.shape import ShapeGroup, Shape, Rectangle, Circle
 from commonroad_dc.collision.collision_detection.minkowski_sum import minkowski_sum_circle
 
-import commonroad_reachset.common.utility.geometry as util_geometry
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
+import commonroad_reachset.utility.geometry as util_geometry
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 
-def create_curvilinear_aabb_from_obstacle(obstacle, CLCS: pycrccosy.CurvilinearCoordinateSystem,
-                                          radius_disc: float, time_step: int = None, resolution: int = 5, ) \
-        -> List[pycrcc.RectAABB]:
+def create_curvilinear_aabb_from_obstacle(
+        obstacle, CLCS: pycrccosy.CurvilinearCoordinateSystem,
+        radius_disc: float, time_step: int = None, resolution: int = 5, ) -> List[pycrcc.RectAABB]:
     """Returns a list of axis-aligned bounding boxes from an obstacle in Curvilinear coordinate system.
 
     The shapes are dilated with the disc radius of the ego vehicle to consider its shape.
@@ -39,9 +39,8 @@ def create_curvilinear_aabb_from_obstacle(obstacle, CLCS: pycrccosy.CurvilinearC
     return list_aabb_CVLN
 
 
-def create_curvilinear_and_rasterized_aabb_from_shape(shape: Shape,
-                                                      CLCS: pycrccosy.CurvilinearCoordinateSystem) \
-        -> List[pycrcc.RectAABB]:
+def create_curvilinear_and_rasterized_aabb_from_shape(
+        shape: Shape, CLCS: pycrccosy.CurvilinearCoordinateSystem) -> List[pycrcc.RectAABB]:
     """Returns a list of axis-aligned and rasterized boxes from a CommonRoad shape in Curvilinear coordinate system.
 
     Since we use axis-aligned rectangles (bounding boxes) for collision checks in Curvilinear coordinate system,
@@ -167,8 +166,10 @@ def convert_to_cartesian_polygon(tuple_vertices, CLCS: pycrccosy.CurvilinearCoor
         if split_wrt_angle and np.abs(angle) > 0.2:
             p_lon_mid = (p_lon_min + p_lon_max) / 2
 
-            list_polygons_p_lon_min = convert_to_cartesian_polygon((p_lon_min, p_lat_min, p_lon_mid, p_lat_max), CLCS, True)
-            list_polygon_p_lon_max = convert_to_cartesian_polygon((p_lon_mid, p_lat_min, p_lon_max, p_lat_max), CLCS, True)
+            list_polygons_p_lon_min = convert_to_cartesian_polygon((p_lon_min, p_lat_min, p_lon_mid, p_lat_max), CLCS,
+                                                                   True)
+            list_polygon_p_lon_max = convert_to_cartesian_polygon((p_lon_mid, p_lat_min, p_lon_max, p_lat_max), CLCS,
+                                                                  True)
 
             return list_polygons_p_lon_min + list_polygon_p_lon_max
 

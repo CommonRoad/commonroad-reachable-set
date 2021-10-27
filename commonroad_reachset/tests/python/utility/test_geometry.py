@@ -1,5 +1,5 @@
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.utility import geometry as util_geometry
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.utility import geometry as util_geometry
 
 
 def test_linear_mapping():

@@ -1,4 +1,4 @@
-from commonroad_reachset.common.data_structure.segment_tree import CounterTreeNode
+from commonroad_reachset.data_structure.segment_tree import CounterTreeNode
 
 
 def test_new_tree_node_has_empty_children():

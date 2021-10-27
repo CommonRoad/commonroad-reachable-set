@@ -3,10 +3,10 @@ from collections import defaultdict
 
 # import pycrreachset as reach
 # from commonroad_reachset.common.collision_checker import CollisionChecker
-from commonroad_reachset.common.data_structure.configuration import Configuration
-from commonroad_reachset.common.data_structure.reach_node import ReachNode
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.continuous.reachability_analysis import ReachabilityAnalysis
+from commonroad_reachset.data_structure.configuration import Configuration
+from commonroad_reachset.data_structure.reach.reach_node import ReachNode
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.reach.reachability_analysis import ReachabilityAnalysis
 
 
 class PyReachableSetInterface:

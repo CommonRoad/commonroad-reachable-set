@@ -1,17 +1,15 @@
+import commonroad_dc.pycrccosy as pycrccosy
 from math import ceil
-
 import numpy as np
 
 np.seterr(divide='ignore', invalid='ignore')
-import commonroad_dc.pycrccosy as pycrccosy
 
 
 def compute_disc_radius_and_wheelbase(length, width, wheelbase: float = None):
     """Computes the radius of the discs to approximate the shape of vehicle.
     
-    If wheelbase is not given, it is assumed that the the front and rear axles
-    are positioned at length/6 and length * 5/6 of the shape, thus yielding a
-    wheelbase of 4*length/6.
+    If wheelbase is not given, it is assumed that the the front and rear axles are positioned at length/6
+    and length * 5/6 of the shape, thus yielding a wheelbase of 4*length/6.
 
     Args:
         width:
@@ -20,9 +18,7 @@ def compute_disc_radius_and_wheelbase(length, width, wheelbase: float = None):
         wheelbase is given, it is used to compute the radius of discs.
     """
 
-    assert (
-            length >= 0 and width >= 0
-    ), f"Invalid vehicle dimensions: length = {length}, width = {width}"
+    assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
 
     if np.isclose(length, 0.0) and np.isclose(width, 0.0):
         return 0.0, 0.0
@@ -40,9 +36,8 @@ def compute_disc_radius_and_wheelbase(length, width, wheelbase: float = None):
     return radius_disc, wheelbase
 
 
-def create_curvilinear_coordinate_system(
-        reference_path: np.ndarray, limit_projection_domain: float = 25.0, eps: float = 0.1
-) -> pycrccosy.CurvilinearCoordinateSystem:
+def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,
+                                         eps: float = 0.1) -> pycrccosy.CurvilinearCoordinateSystem:
     CLCS = pycrccosy.CurvilinearCoordinateSystem(reference_path, limit_projection_domain, eps)
 
     return CLCS
@@ -57,9 +52,8 @@ def compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: curvature of the polyline
     """
-    assert (
-            isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2
-    ), "Polyline malformed for curvature computation p={}".format(polyline)
+    assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2, \
+        "Polyline malformed for curvature computation p={}".format(polyline)
 
     x_d = np.gradient(polyline[:, 0])
     x_dd = np.gradient(x_d)
@@ -75,10 +69,9 @@ def compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
 def compute_initial_state_CVLN(config):
     """Computes the initial state of the ego vehicle given a planning problem.
 
-    For the transformation of the ego vehicle's velocity to the curvilinear
-    coordinate system, it is assumed that d*kappa_ref << 1 holds, where d is the
-    distance of the ego vehicle to the reference path and kappa_ref is the
-    curvature of the reference path
+    For the transformation of the ego vehicle's velocity to the curvilinear coordinate system, it is assumed
+    that d*kappa_ref << 1 holds, where d is the distance of the ego vehicle to the reference path and kappa_ref
+    is the curvature of the reference path
     """
     planning_problem = config.planning_problem
     x, y = planning_problem.initial_state.position
@@ -108,17 +101,9 @@ def compute_initial_state_CVLN(config):
 
 
 def compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
-    """Computes the orientation of a given polyline
-
-    :param polyline: polyline with 2D points
-    :return: orientation of polyline
-    """
-    assert (
-            isinstance(polyline, np.ndarray)
-            and len(polyline) > 1
-            and polyline.ndim == 2
-            and len(polyline[0, :]) == 2
-    ), "not a valid polyline. polyline = {}".format(polyline)
+    """Computes the orientation of a given polyline"""
+    assert isinstance(polyline, np.ndarray) and len(polyline) > 1 and polyline.ndim == 2 and len(polyline[0, :]) == 2, \
+        "not a valid polyline. polyline = {}".format(polyline)
 
     if len(polyline) < 2:
         raise NameError("Cannot create orientation from polyline of length < 2")
@@ -140,16 +125,11 @@ def compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
 
 
 def compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
-    """
-    Computes the path length of a given polyline
-
-    :param polyline: polyline with 2D points
-    :return: path length of the polyline
-    """
-    assert (
-            isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2
-    ), "Polyline malformed for path length computation p={}".format(polyline)
+    """Computes the path length of a given polyline"""
+    assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2, \
+        "Polyline malformed for path length computation p={}".format(polyline)
     distance = [0]
     for i in range(1, len(polyline)):
         distance.append(distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1]))
+
     return np.array(distance)

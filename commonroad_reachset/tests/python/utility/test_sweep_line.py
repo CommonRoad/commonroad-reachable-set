@@ -1,6 +1,6 @@
 import pytest
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.utility.sweep_line import SweepLine
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.utility.sweep_line import SweepLine
 
 
 def test_compute_extremum_lateral_positions_of_rectangles():

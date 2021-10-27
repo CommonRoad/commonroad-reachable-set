@@ -3,9 +3,9 @@ from enum import Enum, auto
 from functools import cmp_to_key
 from typing import Dict, List, Tuple, Union
 
-from commonroad_reachset.common.data_structure.reach_line import ReachLine
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.data_structure.segment_tree import CounterSegmentTree, ToggleSegmentTree
+from commonroad_reachset.data_structure.reach.reach_line import ReachLine
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.segment_tree import CounterSegmentTree, ToggleSegmentTree
 
 
 class SweepLine:

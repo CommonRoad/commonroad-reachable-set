@@ -4,12 +4,12 @@ import sys
 
 import pytest
 
-from commonroad_reachset.common.collision_checker import CollisionChecker
-from commonroad_reachset.common.configuration_builder import ConfigurationBuilder
+from commonroad_reachset.data_structure.collision_checker import CollisionChecker
+from commonroad_reachset.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reachset.continuous.continuous_reachability_analysis import \
     ContinuousReachabilityAnalysis
-from commonroad_reachset.common.data_structure.reach_node import ReachNode
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
+from commonroad_reachset.data_structure.reach.reach_node import ReachNode
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 sys.path.append(os.getcwd())
 

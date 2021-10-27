@@ -1,5 +1,5 @@
 import numpy as np
-from commonroad_reachset.common.data_structure.configuration import Configuration
+from commonroad_reachset.data_structure.configuration import Configuration
 from commonroad_reachset.continuous.continuous_reachability_analysis import ContinuousReachabilityAnalysis
 
 

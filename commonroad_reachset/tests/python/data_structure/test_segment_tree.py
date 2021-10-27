@@ -1,4 +1,4 @@
-from commonroad_reachset.common.data_structure.segment_tree import (
+from commonroad_reachset.data_structure.segment_tree import (
     CounterSegmentTree,
     CounterTreeNode,
     ToggleSegmentTree,

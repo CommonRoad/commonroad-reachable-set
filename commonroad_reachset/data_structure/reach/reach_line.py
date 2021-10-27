@@ -14,10 +14,3 @@ class ReachLine(LineString):
 
     def __repr__(self):
         return f"ReachLine({self.p_lon_min},{self.p_lon_max},{self.p_lat_min},{self.p_lat_max})"
-
-    @staticmethod
-    def from_line(line: LineString) -> "ReachLine":
-        return ReachLine(*line.bounds)
-
-    def clone(self) -> "ReachLine":
-        return ReachLine(*self.bounds)

@@ -5,8 +5,8 @@ from typing import Dict
 from collections import defaultdict
 
 import yaml
-from commonroad_reachset.common.data_structure.configuration import Configuration
-from commonroad_reachset.common.utility import general as util_general
+from commonroad_reachset.data_structure.configuration import Configuration
+from commonroad_reachset.utility import general as util_general
 
 
 class ConfigurationBuilder:

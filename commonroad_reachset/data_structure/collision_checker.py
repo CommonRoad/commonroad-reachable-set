@@ -8,9 +8,9 @@ from commonroad.scenario.obstacle import StaticObstacle
 from commonroad.scenario.scenario import Scenario
 from commonroad_dc.boundary import boundary
 from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
-from commonroad_reachset.common.data_structure.configuration import Configuration
-from commonroad_reachset.common.data_structure.reach_polygon import ReachPolygon
-from commonroad_reachset.common.utility.geometry import create_aabb_from_coordinates
+from commonroad_reachset.data_structure.configuration import Configuration
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.utility.geometry import create_aabb_from_coordinates
 
 
 class CollisionChecker:
@@ -74,11 +74,9 @@ class CollisionChecker:
         """
         scenario_cc = self.create_scenario_with_road_boundaries(self.config)
         # parameter dictionary for inflation to consider the shape of the ego vehicle
-        dict_param = {
-            "minkowski_sum_circle": True,
-            "minkowski_sum_circle_radius": self.config.vehicle.radius_disc,
-            "resolution": 5,
-        }
+        dict_param = {"minkowski_sum_circle": True,
+                      "minkowski_sum_circle_radius": self.config.vehicle.radius_disc,
+                      "resolution": 5}
         collision_checker = self.create_cartesian_collision_checker_from_scenario(scenario_cc, params=dict_param)
 
         return collision_checker
@@ -99,9 +97,7 @@ class CollisionChecker:
             scenario_cc.add_objects(scenario.obstacles)
 
         # add road boundary static object
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(
-            scenario_cc, method="triangulation"
-        )
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="triangulation")
         scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
