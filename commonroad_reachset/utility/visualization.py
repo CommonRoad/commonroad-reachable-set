@@ -10,7 +10,7 @@ from commonroad.geometry.shape import Polygon
 from commonroad.visualization.mp_renderer import MPRenderer
 
 from commonroad_reachset.data_structure.reach.reach_node import ReachNode
-from commonroad_reachset.data_structure.reach.reachable_set_interface import ReachableSetInterface
+from commonroad_reachset.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reachset.utility import coordinate_system as util_coordinate_system
 
 

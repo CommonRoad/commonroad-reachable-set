@@ -5,17 +5,17 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 
-#include "reachset/common/utility/shared_include.hpp"
-#include "reachset/common/utility/shared_using.hpp"
+#include "reachset/utility/shared_include.hpp"
+#include "reachset/utility/shared_using.hpp"
 #include "reachset/common/data_structure/reach_polygon.hpp"
 
 #include "reachset/common/data_structure/reach_node.hpp"
 #include "reachset/common/data_structure/configuration.hpp"
 
-#include "reachset/common/reachable_set_interface.hpp"
-#include "reachset/continuous/continuous_reachability_analysis.hpp"
+#include "reachset/data_structure/reach/reach_interface.hpp"
+#include "reachset/data_structure/reach/reach_analysis.hpp"
 
-#include "reachset/common/collision_checker.hpp"
+#include "reachset/data_structure/collision_checker.hpp"
 
 namespace py = pybind11;
 

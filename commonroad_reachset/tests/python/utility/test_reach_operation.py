@@ -5,7 +5,7 @@ import pytest
 from commonroad_reachset.data_structure.configuration import Configuration
 from commonroad_reachset.data_structure.reach.reach_node import ReachNode
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
-from commonroad_reachset.utility import reachset_operation
+from commonroad_reachset.utility import reach_operation
 from commonroad_reachset.continuous.continuous_reachability_analysis import ContinuousReachabilityAnalysis
 from shapely.geometry.point import Point
 

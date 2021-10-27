@@ -11,18 +11,18 @@ set(CRCCOSY_LIBRARY
 
 # set a variable to hold all relevant cpp source files of reachable sets
 set(REACH_SOURCE
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/data_structure/reach_polygon.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/data_structure/reach_node.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/data_structure/reach_segment.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/data_structure/configuration.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/data_structure/segment_tree.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/utility/reach_operation.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/utility/sweep_line.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/utility/miscellaneous.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/collision_checker.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/common/reachable_set_interface.cpp
+        src/data_structure/reach/reach_polygon.cpp
+        src/data_structure/reach/reach_node.cpp
+        src/data_structure/reach/reach_segment.cpp
+        src/data_structure/configuration.cpp
+        src/data_structure/segment_tree.cpp
+        src/utility/reach_operation.cpp
+        src/utility/sweep_line.cpp
+        src/utility/miscellaneous.cpp
+        src/data_structure/collision_checker.cpp
+        src/data_structure/reach/reach_interface.cpp
 
-        ${CMAKE_CURRENT_LIST_DIR}/src/continuous/continuous_reachability_analysis.cpp
+        src/data_structure/reach/reach_analysis.cpp
 
         ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/traffic_rule.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/position_interval.cpp
@@ -41,31 +41,13 @@ set(REACH_INCLUDE_DIR
 # ====
 # 1. create executables which uses the source files set above
 add_executable(playground_continuous
-        ${CMAKE_CURRENT_LIST_DIR}/src/playground_continuous.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/playground.cpp
         ${REACH_SOURCE})
 # 2. include directories
 target_include_directories(playground_continuous PRIVATE
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
 target_link_libraries(playground_continuous PRIVATE
-        yaml-cpp
-        ${CRDC_LIBRARY}
-        ${CRCCOSY_LIBRARY}
-        fcl
-        ccd
-        ${S11N_LIBRARY}
-        pybind11::embed)
-
-# ====
-# 1. create executables which uses the source files set above
-add_executable(playground_semantic
-        ${CMAKE_CURRENT_LIST_DIR}/src/playground_semantic.cpp
-        ${REACH_SOURCE})
-# 2. include directories
-target_include_directories(playground_semantic PRIVATE
-        ${REACH_INCLUDE_DIR})
-# 3. link to external libraries
-target_link_libraries(playground_semantic PRIVATE
         yaml-cpp
         ${CRDC_LIBRARY}
         ${CRCCOSY_LIBRARY}

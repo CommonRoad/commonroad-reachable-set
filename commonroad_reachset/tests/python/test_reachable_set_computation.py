@@ -1,5 +1,5 @@
 from commonroad_reachset.data_structure.configuration_builder import ConfigurationBuilder
-from commonroad_reachset.data_structure.reach.reachable_set_interface import PyReachableSetInterface
+from commonroad_reachset.data_structure.reach.reach_interface import PyReachableSetInterface
 from commonroad_reachset.continuous.continuous_reachability_analysis import \
     ContinuousReachabilityAnalysis
 

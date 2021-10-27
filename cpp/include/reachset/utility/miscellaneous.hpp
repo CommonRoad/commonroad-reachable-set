@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "reachset/common/utility/shared_include.hpp"
+#include "shared_include.hpp"
 #include "reachset/common/data_structure/configuration.hpp"
 
 #include "collision/collision_checker.h"
