@@ -3,7 +3,6 @@ config_vehicle:
     &physical_parameters # 1 = Ford Escord, 2 = BMW 320i, 3 = VW Vanagon, 4 = Semi-trailer truck
     id_type_vehicle: 2
 
-    # === overrides vehicle parameters
     # physical dimension
     length: 4.5
     width: 1.8
@@ -17,24 +16,10 @@ config_vehicle:
     # acceleration in m/s^2
     a_lon_min: -6.01
     a_lon_max: 4.01
-
     a_lat_min: -2.01
     a_lat_max: 2.01
-    # engine power
+    # maximum engine power
     a_max: 8.01
-
-    # jerk in m/s^3
-    j_lon_min: -10.0e+3
-    j_lon_max: 10.0e+3
-    j_lat_min: -10.0e+3
-    j_lat_max: 10.0e+3
-
-    # reaction time
-    t_react: 0.5
-
-    # field of view in meters
-    fov: 200
 
   other:
     <<: *physical_parameters
-    # dynamics_param: None

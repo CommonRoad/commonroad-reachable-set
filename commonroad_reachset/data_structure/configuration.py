@@ -20,7 +20,6 @@ class Configuration:
         self.config_vehicle = VehicleConfiguration(dict_config)
         self.config_planning = PlanningConfiguration(dict_config)
         self.config_reachable_set = ReachableSetConfiguration(dict_config)
-        self.config_sonia = SONIAConfiguration(dict_config)
         self.config_debug = DebugConfiguration(dict_config)
 
     @property
@@ -38,10 +37,6 @@ class Configuration:
     @property
     def reachable_set(self):
         return self.config_reachable_set
-
-    @property
-    def sonia(self):
-        return self.config_sonia
 
     @property
     def debug(self):
@@ -160,15 +155,6 @@ class VehicleConfiguration:
             self.a_lat_min = dict_relevant["a_lat_min"]
             self.a_max = dict_relevant["a_max"]
 
-            self.j_lon_min = dict_relevant["j_lon_min"]
-            self.j_lon_max = dict_relevant["j_lon_max"]
-            self.j_lat_min = dict_relevant["j_lat_min"]
-            self.j_lat_max = dict_relevant["j_lat_max"]
-
-            self.t_react = dict_relevant["t_react"]
-
-            self.fov = dict_relevant["fov"]
-
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width)
 
@@ -193,13 +179,6 @@ class VehicleConfiguration:
             self.a_lat_min = dict_relevant["a_lat_min"]
             self.a_max = dict_relevant["a_max"]
 
-            self.j_lon_min = dict_relevant["j_lon_min"]
-            self.j_lon_max = dict_relevant["j_lon_max"]
-            self.j_lat_min = dict_relevant["j_lat_min"]
-            self.j_lat_max = dict_relevant["j_lat_max"]
-
-            self.t_react = dict_relevant["t_react"]
-
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width)
 
@@ -223,7 +202,6 @@ class PlanningConfiguration:
 
         self.v_lon_initial = None
         self.v_lat_initial = None
-        self.v_lon_desired = dict_relevant["v_lon_desired"]
         self.uncertainty_v_lon = dict_relevant["uncertainty_v_lon"]
         self.uncertainty_v_lat = dict_relevant["uncertainty_v_lat"]
 
@@ -237,8 +215,6 @@ class PlanningConfiguration:
         self.coordinate_system = dict_relevant["coordinate_system"]
         self.reference_point = dict_relevant["reference_point"]
         self.CLCS = None
-
-        self.use_sonia = dict_relevant["use_sonia"]
 
     def complete_configuration(self, config: Configuration):
         scenario = config.scenario
@@ -275,6 +251,7 @@ class ReachableSetConfiguration:
     def __init__(self, dict_config: Dict):
         dict_relevant = dict_config["config_reachable_set"]
 
+        self.back_end = dict_relevant["back_end"]
         self.num_threads = dict_relevant["num_threads"]
         self.size_grid = dict_relevant["size_grid"]
         self.size_grid_2nd = dict_relevant["size_grid_2nd"]
@@ -293,20 +270,3 @@ class DebugConfiguration:
         self.save_config = dict_relevant["save_config"]
         self.verbose_mode = dict_relevant["verbose"]
         self.measure_time = dict_relevant["measure_time"]
-
-
-class SONIAConfiguration:
-    def __init__(self, dict_config: Dict):
-        dict_relevant = dict_config["config_spot"]
-
-        self.time_steps_computation_extra = dict_relevant['time_steps_computation_extra']
-
-        self.compute_assumption_m1 = dict_relevant['compute_assumption_m1']
-        self.compute_assumption_m2 = dict_relevant['compute_assumption_m2']
-        self.compute_assumption_m3 = dict_relevant['compute_assumption_m3']
-
-        self.consider_occlusion = dict_relevant['consider_occlusion']
-        self.print_operation_status = dict_relevant['print_operation_status']
-        self.print_predicted_velocity_intervals = dict_relevant['print_predicted_velocity_intervals']
-        self.update_obstacle_parameters = dict_relevant["update_obstacle_parameters"]
-        self.num_threads = dict_relevant['num_threads']

@@ -46,28 +46,30 @@ class ConfigurationBuilder:
         """Builds configuration from default and scenario-specific config files.
 
         Steps:
-            1. Load default config files
-            2. Override if scenario-specific config file exists
-            3. Build Configuration object
-            4. Load scenario and planning problems
-            5. Complete configuration with scenario and planning problem
+            1. (Optional) Set root path of the configuration builder
+            2. Load default config files
+            3. Override if scenario-specific config file exists
+            4. Build Configuration object
+            5. Load scenario and planning problems
+            6. Complete configuration with scenario and planning problem
 
         Args:
             name_scenario (str): considered scenario
             idx_planning_problem (int, optional): index of the planning problem. Defaults to 0.
         """
+        if not cls.path_root:
+            cls.set_root_path(os.path.join(os.getcwd(), ".."))
+
         dict_config_default = cls.construct_default_config_dict()
 
-        cls.dict_config_overridden = cls.override_with_scenario_config(
-            dict_config_default, name_scenario)
+        cls.dict_config_overridden = cls.override_with_scenario_config(dict_config_default, name_scenario)
 
         # convert to default dict
         cls.dict_config_overridden = defaultdict(lambda: None, cls.dict_config_overridden)
 
         config = Configuration(cls.dict_config_overridden)
 
-        scenario, planning_problem = \
-            util_general.load_scenario_and_planning_problem(config, idx_planning_problem)
+        scenario, planning_problem = util_general.load_scenario_and_planning_problem(config, idx_planning_problem)
 
         config.complete_configuration(scenario, planning_problem)
 

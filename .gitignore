@@ -8,3 +8,7 @@ cmake-build-debug/
 doc/html/
 
 *.so
+
+*.gif
+
+*.png

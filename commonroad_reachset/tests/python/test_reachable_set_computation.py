@@ -12,5 +12,5 @@ def test_reachable_set_computation(path_config):
 
     reachability_analysis = ContinuousReachabilityAnalysis(config)
     reach_manager = PyReachableSetInterface(reachability_analysis)
-    reach_manager.compute(1, 5)
+    reach_manager.compute_reachable_sets(1, 5)
     print("Reachable set computed.")
