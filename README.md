@@ -1,7 +1,7 @@
 ## CommonRoad Reachable Set
 
 ### System Requirements
-The software is written in C++ and Python 3.7 and tested on Ubuntu 18.04.
+The software is written in Python 3.7 and C++17, and has been tested on Ubuntu 18.04.
 
 
 ### Dependencies
@@ -14,13 +14,13 @@ C++ Libraries:
 * s11n_library
 * yaml-cpp
 
-The following header-only libraries are needed for the Python wrapper (can be found under external/):
+The following header-only libraries is needed for the Python wrapper (which can be found under external/):
 * pybind11
 
-Furthermore, the *CommonRoad-Drivability-Checker library* and the *CommonRoad-Curvilinear-Coordinatesystem library* are necessary.
+Furthermore, the [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker) and [CommonRoad Route Planner](https://gitlab.lrz.de/tum-cps/commonroad-route-planner) libraries are required.
 
 ### Running the Code
-After successfully compiling the C++ code, run `commonroad_reachset/continuous_reachable_set.py` and `commonroad_reachset/semantic_reachable_set.py`. The outputs will be stored in the `evaluation/` folder.
+After successfully compiling the C++ code, run `commonroad_reachset/compute_reachable_set.py` The outputs will be stored in the `output/` folder.
 
 ### Documentation
 
