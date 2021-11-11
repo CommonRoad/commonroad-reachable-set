@@ -1,9 +1,9 @@
 #pragma once
 
 #include "shared_include.hpp"
-#include "reachset/common/data_structure/reach_segment.hpp"
-#include "reachset/common/data_structure/reach_polygon.hpp"
-#include "reachset/common/data_structure/segment_tree.hpp"
+#include "reachset/data_structure/reach/reach_segment.hpp"
+#include "reachset/data_structure/reach/reach_polygon.hpp"
+#include "reachset/data_structure/segment_tree.hpp"
 
 namespace reach {
 struct SweepLine {

@@ -28,6 +28,8 @@ class ConfigurationBuilder:
         cls.path_root = path_root
         cls.path_config = os.path.join(path_root, path_to_config)
         cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
+        # path hotfix
+        cls.path_config_default = cls.path_config_default.replace("../", "")
 
     @classmethod
     def set_path_to_config(cls, path_to_config: str, dir_configs_default: str = "defaults"):

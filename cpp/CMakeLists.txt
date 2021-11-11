@@ -11,24 +11,24 @@ set(CRCCOSY_LIBRARY
 
 # set a variable to hold all relevant cpp source files of reachable sets
 set(REACH_SOURCE
-        src/data_structure/reach/reach_polygon.cpp
-        src/data_structure/reach/reach_node.cpp
-        src/data_structure/reach/reach_segment.cpp
-        src/data_structure/configuration.cpp
-        src/data_structure/segment_tree.cpp
-        src/utility/reach_operation.cpp
-        src/utility/sweep_line.cpp
-        src/utility/miscellaneous.cpp
-        src/data_structure/collision_checker.cpp
-        src/data_structure/reach/reach_interface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_node.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_segment.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/utility/miscellaneous.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/collision_checker.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_interface.cpp
 
-        src/data_structure/reach/reach_analysis.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_analysis.cpp
 
-        ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/traffic_rule.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/position_interval.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/region.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/semantic_model.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/semantic/semantic_reachability_analysis.cpp
+        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/traffic_rule.cpp
+        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/position_interval.cpp
+        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/region.cpp
+        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/semantic_model.cpp
+        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/semantic_reachability_analysis.cpp
         CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant include directories
@@ -62,7 +62,7 @@ add_executable(doctest_runner
         ${REACH_SOURCE}
         ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_polygon.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_base_set.cpp
+        # ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_base_set.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_node.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp

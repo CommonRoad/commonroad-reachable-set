@@ -1,4 +1,4 @@
-#include "reachset/common/data_structure/reach_segment.hpp"
+#include "reachset/data_structure/reach/reach_segment.hpp"
 
 using namespace reach;
 

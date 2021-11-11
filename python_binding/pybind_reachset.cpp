@@ -18,12 +18,12 @@ void export_reachable_set_interface(py::module& m) {
                            &ReachableSetInterface::map_time_to_reachable_set_refined)
             .def(py::init<ContinuousReachabilityAnalysisPtr&>(),
                  py::arg("reachability_analysis"))
-            .def(py::init<SemanticReachabilityAnalysisPtr&>(),
-                 py::arg("reachability_analysis"))
+          //   .def(py::init<SemanticReachabilityAnalysisPtr&>(),
+          //        py::arg("reachability_analysis"))
             .def("config", &ReachableSetInterface::config)
             .def("print_collision_checker_info", &ReachableSetInterface::print_collision_checker_info)
             .def("continuous", &ReachableSetInterface::continuous)
-            .def("semantic", &ReachableSetInterface::semantic)
+          //   .def("semantic", &ReachableSetInterface::semantic)
             .def("compute", &ReachableSetInterface::compute,
                  py::arg("time_step_start") = 1,
                  py::arg("time_step_end") = 0)

@@ -14,7 +14,7 @@ from commonroad_reachset.data_structure.reach.reach_analysis import Reachability
 class ReachableSetInterface:
     """Interface to work with reachable sets."""
 
-    def __init__(self, config: Configuration, back_end=None):
+    def __init__(self, config: Configuration, back_end="PYTHON"):
         self.config = config
 
         back_end = back_end or config.reachable_set.back_end

@@ -20,6 +20,6 @@ target_link_libraries(pycrreachset PRIVATE
 
 message(STATUS "Found python bindings for pycrreachset.")
 
-#set_target_properties(pycrreachset PROPERTIES COMPILE_DEFINITIONS "PY_WRAPPER_MODULE_GEOMETRY=1 ")
-#target_link_libraries(pycrreachset PRIVATE crccosy)
+# set_target_properties(pycrreachset PROPERTIES COMPILE_DEFINITIONS "PY_WRAPPER_MODULE_GEOMETRY=1 ")
+# target_link_libraries(pycrreachset PRIVATE crccosy)
 

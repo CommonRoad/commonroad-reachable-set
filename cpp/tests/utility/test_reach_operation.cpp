@@ -160,39 +160,39 @@ TEST_CASE("overlapping relationship of rectangles") {
 }
 
 
-TEST_CASE("create base set from position rectangles") {
-    auto rectangle_drivable_area = ReachPolygon::from_rectangle_coordinates(0, 0, 10, 10);
+// TEST_CASE("create base set from position rectangles") {
+//     auto rectangle_drivable_area = ReachPolygon::from_rectangle_coordinates(0, 0, 10, 10);
 
-    vector<ReachPolygonPtr> vec_polygons_lon = {
-            ReachPolygon::from_rectangle_coordinates(-5, 10, 5, 15),
-            ReachPolygon::from_rectangle_coordinates(5, 0, 15, 20)};
+//     vector<ReachPolygonPtr> vec_polygons_lon = {
+//             ReachPolygon::from_rectangle_coordinates(-5, 10, 5, 15),
+//             ReachPolygon::from_rectangle_coordinates(5, 0, 15, 20)};
 
-    vector<ReachPolygonPtr> vec_polygons_lat = {
-            ReachPolygon::from_rectangle_coordinates(-3, -5, 3, 5),
-            ReachPolygon::from_rectangle_coordinates(3, 0, 13, 12)};
-    auto vec_base_sets = {make_shared<ReachBaseSet>(vec_polygons_lon[0], vec_polygons_lat[0]),
-                          make_shared<ReachBaseSet>(vec_polygons_lon[1], vec_polygons_lat[1])};
-    vector<int> vec_idx_base_sets_adjacent{0, 1};
+//     vector<ReachPolygonPtr> vec_polygons_lat = {
+//             ReachPolygon::from_rectangle_coordinates(-3, -5, 3, 5),
+//             ReachPolygon::from_rectangle_coordinates(3, 0, 13, 12)};
+//     auto vec_base_sets = {make_shared<ReachBaseSet>(vec_polygons_lon[0], vec_polygons_lat[0]),
+//                           make_shared<ReachBaseSet>(vec_polygons_lon[1], vec_polygons_lat[1])};
+//     vector<int> vec_idx_base_sets_adjacent{0, 1};
 
-    auto base_set_adapted = adapt_base_set_to_drivable_area(rectangle_drivable_area,
-                                                            vec_base_sets,
-                                                            vec_idx_base_sets_adjacent);
-    vector<tuple<double, double>> vec_vertices_lon_expected = {{5,   10},
-                                                               {9.5, 0.5},
-                                                               {9.5, 14.5},
-                                                               {9.5, 19.5}};
+//     auto base_set_adapted = adapt_base_set_to_drivable_area(rectangle_drivable_area,
+//                                                             vec_base_sets,
+//                                                             vec_idx_base_sets_adjacent);
+//     vector<tuple<double, double>> vec_vertices_lon_expected = {{5,   10},
+//                                                                {9.5, 0.5},
+//                                                                {9.5, 14.5},
+//                                                                {9.5, 19.5}};
 
-    vector<tuple<double, double>> vec_vertices_lat_expected = {{2, -4},
-                                                               {5, 2},
-                                                               {5, 7},
-                                                               {5, 11.9}};
+//     vector<tuple<double, double>> vec_vertices_lat_expected = {{2, -4},
+//                                                                {5, 2},
+//                                                                {5, 7},
+//                                                                {5, 11.9}};
 
-    for (auto const& vertex: vec_vertices_lon_expected) {
-        CHECK(vertex_within_polygon(vertex, base_set_adapted->polygon_lon));
-    }
+//     for (auto const& vertex: vec_vertices_lon_expected) {
+//         CHECK(vertex_within_polygon(vertex, base_set_adapted->polygon_lon));
+//     }
 
-    for (auto const& vertex: vec_vertices_lat_expected) {
-        CHECK(vertex_within_polygon(vertex, base_set_adapted->polygon_lat));
-    }
-}
+//     for (auto const& vertex: vec_vertices_lat_expected) {
+//         CHECK(vertex_within_polygon(vertex, base_set_adapted->polygon_lat));
+//     }
+// }
 }

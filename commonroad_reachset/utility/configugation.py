@@ -1,4 +1,4 @@
-import commonroad_dc.pycrccosy as pycrccosy
+import  pycrccosy
 from math import ceil
 import numpy as np
 

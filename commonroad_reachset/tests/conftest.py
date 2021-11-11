@@ -16,7 +16,7 @@ sys.path.append(os.getcwd())
 
 @pytest.fixture
 def path_config():
-    return "/home/edmond/Softwares/commonroad/commonroad-reachable-set/commonroad_reachset/tests"
+    return "/home/julian/TUM/MasterThesis/CodeBase/cooperative-motion-planning/reach/commonroad_reachset/tests"
 
 
 @pytest.fixture

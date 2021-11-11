@@ -1,5 +1,5 @@
 #include "test_utility.hpp"
-#include "reachset/common/data_structure/segment_tree.hpp"
+#include "reachset/data_structure/segment_tree.hpp"
 
 using namespace reach;
 

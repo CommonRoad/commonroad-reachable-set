@@ -8,8 +8,8 @@ ConfigurationPtr create_mock_configuration() {
     auto config = make_shared<Configuration>();
 
     config->general().name_scenario = "DEU_Test-1_1_T-1";
-    config->general().path_scenarios = "/home/edmond/Softwares/commonroad/commonroad-reachable-set/scenarios/";
-    config->general().path_scenario = "/home/edmond/Softwares/commonroad/commonroad-reachable-set/python/configuration/";
+    config->general().path_scenarios = "/home/julian/TUM/MasterThesis/CodeBase/cooperative-motion-planning/reach/scenarios/";
+    config->general().path_scenario = "/home/julian/TUM/MasterThesis/CodeBase/cooperative-motion-planning/reach/configuration/";
 
     config->vehicle().ego.id_type_vehicle = 8;
     config->vehicle().ego.id_vehicle = 0;

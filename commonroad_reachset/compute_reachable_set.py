@@ -5,9 +5,9 @@ from commonroad_reachset.utility import visualization as util_visualization
 
 def main():
     # ==== Entry point of reachable set computation
-    # name_scenario = "DEU_Test-1_1_T-1"
+    name_scenario = "DEU_Test-1_1_T-1"
     # name_scenario = "ARG_Carcarana-1_1_T-1"
-    name_scenario = "ZAM_Tjunction-1_313_T-1"
+    # name_scenario = "ZAM_Tjunction-1_313_T-1"
     # build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
     config.print_configuration_summary()

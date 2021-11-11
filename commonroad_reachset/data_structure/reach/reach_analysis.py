@@ -20,11 +20,11 @@ class ReachabilityAnalysis:
         Computation of the reachable set of an LTI system requires the zero-state response
         and zero-input response of the system.
         """
-        self._polygon_zero_state_lon = reachset_operation.create_zero_state_polygon(self.config.planning.dt,
+        self._polygon_zero_state_lon = reach_operation.create_zero_state_polygon(self.config.planning.dt,
                                                                                     self.config.vehicle.ego.a_lon_min,
                                                                                     self.config.vehicle.ego.a_lon_max)
 
-        self._polygon_zero_state_lat = reachset_operation.create_zero_state_polygon(self.config.planning.dt,
+        self._polygon_zero_state_lat = reach_operation.create_zero_state_polygon(self.config.planning.dt,
                                                                                     self.config.vehicle.ego.a_lat_min,
                                                                                     self.config.vehicle.ego.a_lat_max)
 
@@ -50,7 +50,7 @@ class ReachabilityAnalysis:
 
         Constructed directly from the config file.
         """
-        tuple_vertices = reachset_operation.generate_tuple_vertices_position_rectangle_initial(self.config)
+        tuple_vertices = reach_operation.generate_tuple_vertices_position_rectangle_initial(self.config)
 
         return [ReachPolygon.from_rectangle_vertices(*tuple_vertices)]
 
@@ -61,7 +61,7 @@ class ReachabilityAnalysis:
         Vertices of the longitudinal and lateral polygons are constructed directly from the config file.
         """
         tuple_vertices_polygon_lon, tuple_vertices_polygon_lat = \
-            reachset_operation.generate_tuples_vertices_polygons_initial(self.config)
+            reach_operation.generate_tuples_vertices_polygons_initial(self.config)
 
         polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
         polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
@@ -89,19 +89,19 @@ class ReachabilityAnalysis:
         list_base_sets_propagated = self._propagate_reachable_set(reachable_set_previous)
 
         # Step 2
-        list_rectangles_projected = reachset_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
+        list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
 
         # Step 3
-        list_rectangles_repartitioned = reachset_operation.create_repartitioned_rectangles(
+        list_rectangles_repartitioned = reach_operation.create_repartitioned_rectangles(
             list_rectangles_projected, self.config.reachable_set.size_grid)
 
         # Step 4
-        list_rectangles_collision_free = reachset_operation.check_collision_and_split_rectangles(
+        list_rectangles_collision_free = reach_operation.check_collision_and_split_rectangles(
             self.collision_checker, time_step, list_rectangles_repartitioned,
             self.config.reachable_set.radius_terminal_split)
 
         # Step 5
-        drivable_area = reachset_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
+        drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
                                                                            self.config.reachable_set.size_grid_2nd)
 
         return drivable_area, list_base_sets_propagated
@@ -116,13 +116,13 @@ class ReachabilityAnalysis:
 
         for node in list_nodes:
             try:
-                polygon_lon_propagated = reachset_operation.propagate_polygon(node.polygon_lon,
+                polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
                                                                               self._polygon_zero_state_lon,
                                                                               self.config.planning.dt,
                                                                               self.config.vehicle.ego.v_lon_min,
                                                                               self.config.vehicle.ego.v_lon_max)
 
-                polygon_lat_propagated = reachset_operation.propagate_polygon(node.polygon_lat,
+                polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
                                                                               self._polygon_zero_state_lat,
                                                                               self.config.planning.dt,
                                                                               self.config.vehicle.ego.v_lat_min,
@@ -150,10 +150,10 @@ class ReachabilityAnalysis:
             return []
 
         # Step 1
-        list_base_sets_adapted = reachset_operation.adapt_base_sets_to_drivable_area(drivable_area,
+        list_base_sets_adapted = reach_operation.adapt_base_sets_to_drivable_area(drivable_area,
                                                                                      base_set_propagated)
         # Step 2
-        reachable_set_time_step_current = reachset_operation.create_nodes_of_reachable_set(time_step,
+        reachable_set_time_step_current = reach_operation.create_nodes_of_reachable_set(time_step,
                                                                                            list_base_sets_adapted)
 
         return reachable_set_time_step_current

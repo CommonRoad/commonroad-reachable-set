@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 #include "shared_include.hpp"
-#include "reachset/common/data_structure/configuration.hpp"
+#include "reachset/data_structure/configuration.hpp"
 
 #include "collision/collision_checker.h"
 #include "collision/narrowphase/rectangle_aabb.h"

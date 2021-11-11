@@ -1,7 +1,7 @@
 #pragma once
 
 #include "reach_analysis.hpp"
-#include "reachset/common/data_structure/configuration.hpp"
+#include "reachset/data_structure/configuration.hpp"
 #include "collision/collision_checker.h"
 
 using CollisionCheckerPtr = collision::CollisionCheckerPtr;
@@ -43,15 +43,15 @@ private:
 public:
     explicit ReachableSetInterface(ContinuousReachabilityAnalysisPtr& reachability_analysis);
 
-    explicit ReachableSetInterface(SemanticReachabilityAnalysisPtr& reachability_analysis);
+    // explicit ReachableSetInterface(SemanticReachabilityAnalysisPtr& reachability_analysis);
 
     /// Instantiates a reachable set interface with continuous reachability analysis.
     static ReachableSetInterface
     continuous(ConfigurationPtr const& config, CollisionCheckerPtr const& collision_checker);
 
     /// Instantiates a reachable set interface with semantic reachability analysis
-    static ReachableSetInterface semantic(ConfigurationPtr const& config, CollisionCheckerPtr const& collision_checker,
-                                          SemanticModelPtr const& semantic_model);
+    // static ReachableSetInterface semantic(ConfigurationPtr const& config, CollisionCheckerPtr const& collision_checker,
+    //                                       SemanticModelPtr const& semantic_model);
 
     int time_step_start{};
     int time_step_end{};
@@ -61,7 +61,7 @@ public:
 
     inline ConfigurationPtr config() const {
         if (_mode == ReachabilityMode::CONTINUOUS) return _reachability_analysis_continuous->config();
-        else if (_mode == ReachabilityMode::SEMANTIC) return _reachability_analysis_semantic->config();
+        // else if (_mode == ReachabilityMode::SEMANTIC) return _reachability_analysis_semantic->config();
         else throw std::logic_error("<ReachableSetInterface> Invalid mode.");
     }
 

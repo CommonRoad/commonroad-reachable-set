@@ -28,7 +28,7 @@ int main() {
     //string name_scenario = "USA_US101-15_1_T-1";
     //string name_scenario = "ARG_Carcarana-1_1_T-1";
     string name_scenario = "ZAM_Tjunction-1_313_T-1";
-    string path_root = "/home/edmond/Softwares/commonroad/commonroad-reachable-set/";
+    string path_root = "/home/julian/TUM/MasterThesis/CodeBase/cooperative-motion-planning/reach";
 
     // append path to interpreter
     py::module_ sys = py::module_::import("sys");

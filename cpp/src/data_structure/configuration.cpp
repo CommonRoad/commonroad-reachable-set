@@ -1,4 +1,4 @@
-#include "reachset/common/data_structure/configuration.hpp"
+#include "reachset/data_structure/configuration.hpp"
 #include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
