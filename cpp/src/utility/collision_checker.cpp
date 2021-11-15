@@ -111,7 +111,7 @@ GeometryPolygon reach::inflate_polygon(GeometryPolygon const& polygon, BufferCon
 
     bg::model::multi_polygon<GeometryPolygon> multi_polygon_output;
 
-    // compute_reachable_sets buffered polygon
+    // compute buffered polygon
     bg::buffer(multi_polygon_input, multi_polygon_output,
                buffer_config.distance_strategy, buffer_config.side_strategy,
                buffer_config.join_strategy, buffer_config.end_strategy, buffer_config.circle_strategy);

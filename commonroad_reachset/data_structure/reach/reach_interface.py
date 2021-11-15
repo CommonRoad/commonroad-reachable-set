@@ -56,7 +56,7 @@ class ReachableSetInterface:
 
     def compute_reachable_sets(self, time_step_start: int = 1, time_step_end: int = 0):
         """Computes reachable sets for the specified time steps."""
-        print(f"Computing reachable sets ...")
+        print(f"Computing reachable sets...")
         time_start = time.time()
         self._interface.compute_reachable_sets(time_step_start, time_step_end)
 

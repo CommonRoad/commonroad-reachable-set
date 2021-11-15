@@ -120,7 +120,7 @@ ReachPolygonPtr ReachPolygon::construct_halfspace_polygon(double const& a, doubl
             vec_vertices.emplace_back(make_tuple(x_min - margin, y_max + margin));
         }
     } else { // general case
-        // First compute two arbitrary vertices that are far away from the x coordinates, then compute_reachable_sets the slope of the
+        // First compute two arbitrary vertices that are far away from the x coordinates, then compute the slope of the
         // vector that is perpendicular to the vector connecting these two vertices to look for remaining two vertices
         // necessary for the polygon construction.
         margin = 100;

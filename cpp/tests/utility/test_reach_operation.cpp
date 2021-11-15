@@ -65,7 +65,7 @@ TEST_CASE("propagate polygon returns correct vertices") {
     }
 }
 
-TEST_CASE("compute_reachable_sets minimum positions of polygons") {
+TEST_CASE("compute minimum positions of polygons") {
     vector<ReachPolygonPtr> vec_base_sets_propagated{
             ReachPolygon::from_rectangle_coordinates(1, 1, 5, 5),
             ReachPolygon::from_rectangle_coordinates(-5, 5, 10, 10)};

@@ -9,7 +9,7 @@ using namespace reach;
 
 /// *Steps*:
 /// 1. prepare a bounding box to be intersected with halfspaces.
-/// 2. compute_reachable_sets coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to
+/// 2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to
 /// approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace is dependent on
 /// the given switching time (gamma).
 ReachPolygonPtr reach::create_zero_state_polygon(double const& dt, double const& a_min, double const& a_max) {
@@ -114,9 +114,9 @@ reach::generate_tuples_vertices_polygons_initial(ConfigurationPtr const& config)
 
 /// *Steps*:
 /// 1. make a copy
-/// 2. compute_reachable_sets the linear mapping (zero-input response) of the polygon
+/// 2. compute the linear mapping (zero-input response) of the polygon
 /// 3. convexify
-/// 4. compute_reachable_sets the minkowski sum of zero-input and zero-state responses
+/// 4. compute the minkowski sum of zero-input and zero-state responses
 /// 5. intersect with halfspaces to consider velocity limits
 ReachPolygonPtr reach::propagate_polygon(ReachPolygonPtr const& polygon, ReachPolygonPtr const& polygon_zero_state,
                                          double const& dt, double const& v_min, double const& v_max) {

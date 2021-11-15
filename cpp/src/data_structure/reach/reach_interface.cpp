@@ -37,7 +37,7 @@ void ReachableSetInterface::compute_at_time_step(int const& time_step) {
 void ReachableSetInterface::compute_drivable_area_at_time_step(int const& time_step) {
     // prepare
     auto reachable_set_time_step_previous = _map_time_to_reachable_set[time_step - 1];
-    // compute_reachable_sets
+    // compute
     auto[drivable_area, vec_base_sets_propagated] =
     reachability_analysis->compute_drivable_area_at_time_step(time_step,
                                                               reachable_set_time_step_previous);
@@ -51,7 +51,7 @@ void ReachableSetInterface::compute_reachable_set_at_time_step(int const& time_s
     auto reachable_set_time_step_previous = _map_time_to_reachable_set[time_step - 1];
     auto vec_base_sets_propagated = _map_time_to_vec_base_sets_propagated[time_step];
     auto drivable_area = _map_time_to_drivable_area[time_step];
-    // compute_reachable_sets
+    // compute
     auto reachable_set = reachability_analysis->compute_reachable_set_at_time_step(
             time_step, vec_base_sets_propagated, drivable_area);
     // store
