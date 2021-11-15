@@ -5,7 +5,6 @@ using namespace reach;
 
 void export_data_structures(py::module& m) {
     export_configuration(m);
-
     export_reach_polygon(m);
     export_reach_node(m);
 }

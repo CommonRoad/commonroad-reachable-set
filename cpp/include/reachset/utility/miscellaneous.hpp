@@ -14,5 +14,3 @@ reach::ConfigurationPtr create_mock_configuration();
 collision::TimeVariantCollisionObjectPtr create_tvo_from_specs(
         double const& length, double const& width, tuple<double, double> const& p_init, double const& v_init,
         double const& o_init, int const& time_steps);
-
-void print_collision_checker(collision::CollisionCheckerPtr const& cc);

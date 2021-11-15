@@ -1,19 +1,16 @@
 # set include & library paths variables for external commonroad libraries
 set(CRDC_INCLUDE
-        ${CRDC_DIR}/cpp/collision/include) # drivability checker
+        ${CRDC_DIR}/cpp/collision/include # drivability checker
+        ${CRDC_DIR}/cpp) # curvilinear collision checker
 set(CRDC_LIBRARY
-        ${CRDC_DIR}/commonroad_dc/libcrcc.a CACHE STRING "" FORCE)
-
-set(CRCCOSY_INCLUDE
-        ${CRCCOSY_DIR}/cpp) # curvilinear collision checker
-set(CRCCOSY_LIBRARY
-        ${CRCCOSY_DIR}/commonroad_dc/libcrccosy.a CACHE STRING "" FORCE)
+        ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
+        ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
+        CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant include directories
 set(REACH_INCLUDE_DIR
         ${CMAKE_CURRENT_LIST_DIR}/include
         ${CRDC_INCLUDE}
-        ${CRCCOSY_INCLUDE}
         ${EIGEN3_INCLUDE_DIR}
         CACHE STRING "" FORCE)
 
@@ -24,26 +21,25 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_segment.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_interface.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_analysis.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/miscellaneous.cpp
         CACHE STRING "" FORCE)
 # ====
 # 1. create executables which uses the source files set above
-add_executable(playground_continuous
+add_executable(playground
         ${CMAKE_CURRENT_LIST_DIR}/src/playground.cpp
         ${REACH_SOURCE})
 # 2. include directories
-target_include_directories(playground_continuous PRIVATE
+target_include_directories(playground PRIVATE
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
-target_link_libraries(playground_continuous PRIVATE
+target_link_libraries(playground PRIVATE
         yaml-cpp
         ${CRDC_LIBRARY}
-        ${CRCCOSY_LIBRARY}
         fcl
         ccd
         ${S11N_LIBRARY}

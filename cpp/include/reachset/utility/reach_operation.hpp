@@ -124,11 +124,6 @@ ReachNodePtr adapt_base_set_to_drivable_area(ReachPolygonPtr const& rectangle_dr
 
 /// Creates list of reachable set nodes of the current time step (continuous reachability analysis).
 std::vector<ReachNodePtr>
-create_reachable_set_nodes_continuous(int const& time_step, std::vector<ReachNodePtr> const& vec_base_sets_adapted,
-                                      int const& num_threads);
-
-/// Creates list of reachable set nodes of the current time step (semantic reachability analysis).
-std::vector<ReachNodePtr>
-create_reachable_set_nodes_semantic(int const& time_step, std::vector<ReachNodePtr> const& vec_base_sets_adapted,
-                                    std::set<std::string> const& propositions);
+create_reachable_set_nodes(int const& time_step, std::vector<ReachNodePtr> const& vec_base_sets_adapted,
+                           int const& num_threads);
 }

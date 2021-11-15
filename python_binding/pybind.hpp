@@ -15,7 +15,7 @@
 #include "reachset/data_structure/reach/reach_interface.hpp"
 #include "reachset/data_structure/reach/reach_analysis.hpp"
 
-#include "reachset/data_structure/collision_checker.hpp"
+#include "reachset/utility/collision_checker.hpp"
 
 namespace py = pybind11;
 
@@ -35,4 +35,4 @@ void export_reach_node(py::module& m);
 
 void export_reachable_set_interface(py::module& m);
 
-void export_continuous_reachability_analysis(py::module& m);
+void export_reachability_analysis(py::module& m);

@@ -77,21 +77,3 @@ TimeVariantCollisionObjectPtr create_tvo_from_specs(double const& length, double
 
     return tvo;
 }
-
-
-void print_collision_checker(CollisionCheckerPtr const& cc) {
-    auto vec_obstacles = cc->getObstacles();
-
-    for (auto const& obs: vec_obstacles) {
-        if (obs->getCollisionObjectClass() == collision::OBJ_CLASS_TVOBSTACLE) {
-            cout << "TVO:" << endl;
-            for (int i = 0; i < 40; ++i) {
-                auto obj_at_time = obs->timeSlice(i, obs);
-                auto aabb = obj_at_time->getAABB();
-                cout << aabb->r_x() << ", " << aabb->r_y() << endl;
-
-                cout << "\t" << i << ": " << aabb->center_x() << ", " << aabb->center_y() << endl;
-            }
-        }
-    }
-}

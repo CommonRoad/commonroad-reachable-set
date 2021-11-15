@@ -28,8 +28,6 @@ struct BufferConfig {
     explicit BufferConfig(double const& buffer_distance);
 };
 
-BufferConfig create_buffer_configuration(double& radius_disc_vehicle);
-
 /// Creates a collision checker with obstacles converted into curvilinear coordinate system.
 /// @param vec_polylines_static vector of polylines describing static obstacles
 /// @param map_time_step_to_vec_polylines_dynamic map from time step to vector of polylines describing dynamic obstacles
@@ -75,5 +73,9 @@ obtain_extremum_coordinates_of_polyline(Polyline const& polyline);
 collision::RectangleAABBPtr create_aabb_from_coordinates(double const& p_lon_min, double const& p_lat_min,
                                                          double const& p_lon_max, double const& p_lat_max);
 
+/// Prints vertices of a polygon
 void print_vertices_polygon(std::vector<Polyline> const& vec_polylines_static);
+
+/// Prints information of a collision checker
+void print_collision_checker(collision::CollisionCheckerPtr const& collision_checker);
 }

@@ -11,14 +11,13 @@ class ReachabilityAnalysis:
     def __init__(self, config: Configuration, collision_checker: CollisionChecker = None):
         self._config = config
         self._collision_checker = collision_checker or CollisionChecker(config)
-        self._time_step_start = self._config.planning.time_step_start
         self._initialize_zero_state_polygons()
 
     def _initialize_zero_state_polygons(self):
         """Initializes the zero-state polygons of the system.
 
         Computation of the reachable set of an LTI system requires the zero-state response
-        and zero-input response of the system.
+        and the zero-input response of the system.
         """
         self._polygon_zero_state_lon = reach_operation.create_zero_state_polygon(self.config.planning.dt,
                                                                                     self.config.vehicle.ego.a_lon_min,
@@ -66,7 +65,7 @@ class ReachabilityAnalysis:
         polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
         polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
 
-        return [ReachNode(polygon_lon, polygon_lat, self._time_step_start)]
+        return [ReachNode(polygon_lon, polygon_lat, self._config.planning.time_step_start)]
 
     def compute_drivable_area_at_time_step(self, time_step: int, reachable_set_previous: List[ReachNode]) \
             -> Tuple[List[ReachPolygon], List[ReachNode]]:

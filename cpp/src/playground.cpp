@@ -8,7 +8,7 @@
 #include "collision/collision_checker.h"
 #include "geometry/curvilinear_coordinate_system.h"
 #include "reachset/data_structure/reach/reach_interface.hpp"
-#include "reachset/data_structure/collision_checker.hpp"
+#include "reachset/utility/collision_checker.hpp"
 #include "reachset/utility/miscellaneous.hpp"
 
 using namespace reach;
@@ -37,7 +37,8 @@ int main() {
 
     // ======== configuration via python ConfigurationBuilder
     auto cls_ConfigurationBuilder_py =
-            py::module_::import("commonroad_reachset.data_structure.configuration_builder").attr("ConfigurationBuilder");
+            py::module_::import("commonroad_reachset.data_structure.configuration_builder").attr(
+                    "ConfigurationBuilder");
     cls_ConfigurationBuilder_py.attr("set_root_path")(path_root);
     auto obj_config_py = cls_ConfigurationBuilder_py.attr("build_configuration")(name_scenario);
     auto config = obj_config_py.attr("convert_to_cpp_configuration")().cast<ConfigurationPtr>();
@@ -51,23 +52,27 @@ int main() {
     auto cls_CollisionChecker_py = py::module_::import("commonroad_reachset.data_structure.collision_checker")
             .attr("CollisionChecker");
     auto obj_collision_checker_py = cls_CollisionChecker_py(obj_config_py);
-    auto collision_checker = create_curvilinear_collision_checker(
-            obj_collision_checker_py.attr("list_vertices_polygons_static").cast<vector<Polyline>>(),
-            obj_collision_checker_py.attr(
-                    "dict_time_to_list_vertices_polygons_dynamic").cast<map<int, vector<Polyline>>>(),
-            CLCS,
-            obj_config_py.attr("vehicle").attr("ego").attr("radius_disc").cast<double>(),
-            4);
+
+    auto vec_vertices_polygons_static =
+            obj_collision_checker_py.attr("list_vertices_polygons_static").cast<vector<Polyline>>();
+    auto map_time_to_vec_vertices_polygons_dynamic = obj_collision_checker_py.attr(
+            "dict_time_to_list_vertices_polygons_dynamic").cast<map<int, vector<Polyline>>>();
+    auto radius_disc = obj_config_py.attr("vehicle").attr("ego").attr("radius_disc").cast<double>();
+
+    auto collision_checker = create_curvilinear_collision_checker(vec_vertices_polygons_static,
+                                                                  map_time_to_vec_vertices_polygons_dynamic,
+                                                                  CLCS, radius_disc, 4);
 
     // ======== ReachableSetInterface
-    auto reach_interface = ReachableSetInterface::continuous(config, collision_checker);
+    auto reach_interface = ReachableSetInterface(config, collision_checker);
 
     auto start = high_resolution_clock::now();
-    reach_interface.compute();
+    cout << "Computing reachable sets..." << endl;
+    reach_interface.compute_reachable_sets();
     auto end = high_resolution_clock::now();
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
 
-    // ======== visualization of results
+    // //======== visualization of results
     //auto utils_visualization = py::module_::import("commonroad_reachset.utility.visualization");
     //utils_visualization.attr("draw_scenario_with_reach_cpp")(obj_config_py, reach_interface,
     //                                                         py::arg("save_gif") = true,

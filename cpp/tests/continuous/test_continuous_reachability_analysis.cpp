@@ -3,7 +3,7 @@
 TEST_SUITE("TestContinuousReachabilityAnalysis") {
 TEST_CASE("initialization") {
     auto config = Configuration::load_configuration("../../configurations/cpp.yaml");
-    auto continuous_reach = ContinuousReachabilityAnalysis(config);
+    auto continuous_reach = ReachabilityAnalysis(config);
     auto drivable_area = continuous_reach.initial_drivable_area();
 
     SUBCASE("has correct initial drivable area") {

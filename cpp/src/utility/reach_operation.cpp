@@ -9,7 +9,7 @@ using namespace reach;
 
 /// *Steps*:
 /// 1. prepare a bounding box to be intersected with halfspaces.
-/// 2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to
+/// 2. compute_reachable_sets coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to
 /// approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace is dependent on
 /// the given switching time (gamma).
 ReachPolygonPtr reach::create_zero_state_polygon(double const& dt, double const& a_min, double const& a_max) {
@@ -114,9 +114,9 @@ reach::generate_tuples_vertices_polygons_initial(ConfigurationPtr const& config)
 
 /// *Steps*:
 /// 1. make a copy
-/// 2. compute the linear mapping (zero-input response) of the polygon
+/// 2. compute_reachable_sets the linear mapping (zero-input response) of the polygon
 /// 3. convexify
-/// 4. compute the minkowski sum of zero-input and zero-state responses
+/// 4. compute_reachable_sets the minkowski sum of zero-input and zero-state responses
 /// 5. intersect with halfspaces to consider velocity limits
 ReachPolygonPtr reach::propagate_polygon(ReachPolygonPtr const& polygon, ReachPolygonPtr const& polygon_zero_state,
                                          double const& dt, double const& v_min, double const& v_max) {
@@ -178,7 +178,7 @@ tuple<double, double> reach::compute_minimum_positions_of_rectangles(vector<Reac
     auto p_lon_min_rectangles = std::numeric_limits<double>::infinity();
     auto p_lat_min_rectangles = std::numeric_limits<double>::infinity();
 
-    for (auto const& rectangle:vec_rectangles) {
+    for (auto const& rectangle: vec_rectangles) {
         p_lon_min_rectangles = std::min(p_lon_min_rectangles, rectangle->p_lon_min());
         p_lat_min_rectangles = std::min(p_lat_min_rectangles, rectangle->p_lat_min());
     }
@@ -311,7 +311,7 @@ collision::RectangleAABB reach::obtain_bounding_box_of_rectangles(vector<ReachPo
     auto center_lon = (p_lon_max + p_lon_min) / 2;
     auto center_lat = (p_lat_max + p_lat_min) / 2;
 
-    return collision::RectangleAABB(length / 2, width / 2, Eigen::Vector2d(center_lon, center_lat));
+    return collision::RectangleAABB{length / 2, width / 2, Eigen::Vector2d(center_lon, center_lat)};
 }
 
 RectangleAABBPtr reach::convert_reach_polygon_to_collision_aabb(ReachPolygonPtr const& rectangle) {
@@ -416,7 +416,8 @@ vector<ReachNodePtr> reach::adapt_base_sets_to_drivable_area(
     auto map_rectangle_adjacency = create_adjacency_map(vec_rectangles_drivable_area, vec_rectangles_base_sets);
 
     // Step 2
-#pragma omp parallel num_threads(num_threads)
+#pragma omp parallel num_threads(num_threads) default(none) shared(drivable_area, map_rectangle_adjacency, \
+vec_rectangles_drivable_area, vec_base_sets_propagated, reachable_set_time_step_current)
     {
         vector<ReachNodePtr> reachable_set_time_step_current_thread;
         reachable_set_time_step_current_thread.reserve(drivable_area.size());
@@ -528,14 +529,15 @@ ReachNodePtr reach::adapt_base_set_to_drivable_area(ReachPolygonPtr const& recta
 /// Each adapted base set is converted into a reachable set node. Also, the parent-child relationship with the nodes
 /// of the last time step is updated.
 vector<ReachNodePtr>
-reach::create_reachable_set_nodes_continuous(int const& time_step, vector<ReachNodePtr> const& vec_base_sets_adapted,
-                                             int const& num_threads) {
+reach::create_reachable_set_nodes(int const& time_step, vector<ReachNodePtr> const& vec_base_sets_adapted,
+                                  int const& num_threads) {
     vector<ReachNodePtr> vec_nodes_reachable_set_new;
     vec_nodes_reachable_set_new.reserve(vec_base_sets_adapted.size());
 
     omp_lock_t lock;
     omp_init_lock(&lock);
-#pragma omp parallel num_threads(num_threads)
+#pragma omp parallel num_threads(num_threads) \
+default(none) shared(vec_base_sets_adapted, time_step, lock, vec_nodes_reachable_set_new)
     {
         vector<ReachNodePtr> vec_nodes_reachable_set_thread;
         vec_nodes_reachable_set_thread.reserve(vec_base_sets_adapted.size());
@@ -559,28 +561,6 @@ reach::create_reachable_set_nodes_continuous(int const& time_step, vector<ReachN
                                            std::make_move_iterator(vec_nodes_reachable_set_thread.end()));
     }
     omp_destroy_lock(&lock);
-
-    return vec_nodes_reachable_set_new;
-}
-
-vector<ReachNodePtr>
-reach::create_reachable_set_nodes_semantic(int const& time_step, vector<ReachNodePtr> const& vec_base_sets_adapted,
-                                           set<string> const& propositions) {
-    vector<ReachNodePtr> vec_nodes_reachable_set_new;
-    vec_nodes_reachable_set_new.reserve(vec_base_sets_adapted.size());
-
-    for(auto const& base_set: vec_base_sets_adapted){
-        auto node_child = make_shared<ReachNode>(time_step, base_set->polygon_lon, base_set->polygon_lat);
-        node_child->set_propositions = propositions;
-
-        // update parent-child relationship
-        for(auto const& node_parent: base_set->vec_nodes_source){
-            node_child->add_parent_node(node_parent);
-            node_parent->add_child_node(node_child);
-        }
-
-        vec_nodes_reachable_set_new.emplace_back(node_child);
-    }
 
     return vec_nodes_reachable_set_new;
 }

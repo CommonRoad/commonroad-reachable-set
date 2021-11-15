@@ -24,13 +24,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0") # for profiling
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0") # for profiling
 
 if(NOT DEFINED CRDC_DIR) # path to drivability checker
-#    set(CRDC_DIR /home/julian/TUM/MasterThesis/CodeBase/commonroad-drivability-checker)
-    set(CRDC_DIR /home/edmond/Softwares/commonroad/commonroad-drivability-checker-tumcps)
-endif()
-
-if(NOT DEFINED CRCCOSY_DIR) # path to curvilinear coordinate system
-#    set(CRCCOSY_DIR /home/julian/TUM/MasterThesis/CodeBase/commonroad-drivability-checker)
-    set(CRCCOSY_DIR /home/edmond/Softwares/commonroad/commonroad-drivability-checker-tumcps)
+    message("Path to drivability checker (CRDC_DIR) is not set!")
 endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../) # output directory of built libraries

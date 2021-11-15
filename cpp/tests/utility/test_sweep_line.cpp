@@ -3,7 +3,7 @@
 using namespace reach;
 
 TEST_SUITE("TestSweepLine") {
-TEST_CASE("compute extremum lateral positions of rectangles") {
+TEST_CASE("compute_reachable_sets extremum lateral positions of rectangles") {
     auto vec_rectangles = {ReachPolygon::from_rectangle_coordinates(1, 1, 3, 3),
                            ReachPolygon::from_rectangle_coordinates(2, 2, 4, 4)};
 

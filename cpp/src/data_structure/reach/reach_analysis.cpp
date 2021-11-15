@@ -6,29 +6,28 @@
 
 using namespace reach;
 
-ContinuousReachabilityAnalysis::ContinuousReachabilityAnalysis(ConfigurationPtr config) : _config(std::move(config)) {
+ReachabilityAnalysis::ReachabilityAnalysis(ConfigurationPtr config) : _config(std::move(config)) {
     initialize_zero_state_polygons();
 }
 
-ContinuousReachabilityAnalysis::ContinuousReachabilityAnalysis(
-        ConfigurationPtr config, CollisionCheckerPtr collision_checker) :
+ReachabilityAnalysis::ReachabilityAnalysis(ConfigurationPtr config, CollisionCheckerPtr collision_checker) :
         _config(std::move(config)), _collision_checker(std::move(collision_checker)) {
     initialize_zero_state_polygons();
 }
 
 /// @note Computation of the reachable set of an LTI system requires the zero-state response and
-/// zero-input response of the system.
-void ContinuousReachabilityAnalysis::initialize_zero_state_polygons() {
-    this->_polygon_zero_state_lon = create_zero_state_polygon(_config->planning().dt,
-                                                              _config->vehicle().ego.a_lon_min,
-                                                              _config->vehicle().ego.a_lon_max);
+/// the zero-input response of the system.
+void ReachabilityAnalysis::initialize_zero_state_polygons() {
+    _polygon_zero_state_lon = create_zero_state_polygon(_config->planning().dt,
+                                                        _config->vehicle().ego.a_lon_min,
+                                                        _config->vehicle().ego.a_lon_max);
 
-    this->_polygon_zero_state_lat = create_zero_state_polygon(_config->planning().dt,
-                                                              _config->vehicle().ego.a_lat_min,
-                                                              _config->vehicle().ego.a_lat_max);
+    _polygon_zero_state_lat = create_zero_state_polygon(_config->planning().dt,
+                                                        _config->vehicle().ego.a_lat_min,
+                                                        _config->vehicle().ego.a_lat_max);
 }
 
-vector<ReachPolygonPtr> reach::ContinuousReachabilityAnalysis::initial_drivable_area() const {
+vector<ReachPolygonPtr> reach::ReachabilityAnalysis::initial_drivable_area() const {
     vector<ReachPolygonPtr> vec_polygon;
 
     auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(_config);
@@ -38,7 +37,7 @@ vector<ReachPolygonPtr> reach::ContinuousReachabilityAnalysis::initial_drivable_
 
 }
 
-std::vector<ReachNodePtr> ContinuousReachabilityAnalysis::initial_reachable_set() const {
+std::vector<ReachNodePtr> ReachabilityAnalysis::initial_reachable_set() const {
     vector<ReachNodePtr> vec_node;
 
     auto[tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] = generate_tuples_vertices_polygons_initial(_config);
@@ -56,12 +55,13 @@ std::vector<ReachNodePtr> ContinuousReachabilityAnalysis::initial_reachable_set(
 /// 4. Check for collision and split the repartitioned rectangles into collision-free rectangles.
 /// 5. Merge and repartition the collision-free rectangles again to reduce number of nodes.
 std::tuple<std::vector<ReachPolygonPtr>, std::vector<ReachNodePtr>>
-ContinuousReachabilityAnalysis::compute_drivable_area_at_time_step(
+ReachabilityAnalysis::compute_drivable_area_at_time_step(
         int const& time_step, vector<ReachNodePtr> const& reachable_set_time_step_previous) {
 
-    if (reachable_set_time_step_previous.empty())
+    if (reachable_set_time_step_previous.empty()) {
         return {{},
                 {}};
+    }
 
     // Step 1
     auto vec_base_sets_propagated = propagate_reachable_set(reachable_set_time_step_previous);
@@ -88,11 +88,12 @@ ContinuousReachabilityAnalysis::compute_drivable_area_at_time_step(
 }
 
 vector<ReachNodePtr>
-ContinuousReachabilityAnalysis::propagate_reachable_set(vector<ReachNodePtr> const& vec_nodes) {
+ReachabilityAnalysis::propagate_reachable_set(vector<ReachNodePtr> const& vec_nodes) {
     vector<ReachNodePtr> vec_base_sets_propagated;
     vec_base_sets_propagated.reserve(vec_nodes.size());
 
-#pragma omp parallel num_threads(_config->reachable_set().num_threads)
+#pragma omp parallel num_threads(_config->reachable_set().num_threads) \
+default(none) shared(vec_nodes, vec_base_sets_propagated)
     {
         vector<ReachNodePtr> vec_base_sets_propagated_thread;
         vec_base_sets_propagated_thread.reserve(vec_nodes.size());
@@ -132,7 +133,7 @@ ContinuousReachabilityAnalysis::propagate_reachable_set(vector<ReachNodePtr> con
 /// *Steps*:
 /// 1. create a list of new base sets cut down with rectangles of the drivable area.
 /// 2. create the list of nodes of the new reachable set.
-vector<ReachNodePtr> ContinuousReachabilityAnalysis::compute_reachable_set_at_time_step(
+vector<ReachNodePtr> ReachabilityAnalysis::compute_reachable_set_at_time_step(
         int const& time_step, vector<ReachNodePtr> const& vec_base_sets_propagated,
         vector<ReachPolygonPtr> const& drivable_area) {
     if (drivable_area.empty())
@@ -143,7 +144,7 @@ vector<ReachNodePtr> ContinuousReachabilityAnalysis::compute_reachable_set_at_ti
                                                                   _config->reachable_set().num_threads);
 
     // Step 2
-    auto reachable_set_time_step_current = create_reachable_set_nodes_continuous(time_step, vec_base_sets_adapted,
-                                                                                 _config->reachable_set().num_threads);
+    auto reachable_set_time_step_current = create_reachable_set_nodes(time_step, vec_base_sets_adapted,
+                                                                      _config->reachable_set().num_threads);
     return reachable_set_time_step_current;
 }

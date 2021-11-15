@@ -45,7 +45,7 @@ TEST_CASE("propagate polygon returns correct vertices") {
                                                   {30, 20,},
                                                   {10, 20}};
     auto polygon_lon = make_shared<ReachPolygon>(vec_vertices);
-    auto reachability_analysis = ContinuousReachabilityAnalysis(config);
+    auto reachability_analysis = ReachabilityAnalysis(config);
 
     auto polygon_lon_propagated = propagate_polygon(polygon_lon, reachability_analysis.polygon_zero_state_lon(),
                                                     config->planning().dt, config->vehicle().ego.v_lon_min,
@@ -65,7 +65,7 @@ TEST_CASE("propagate polygon returns correct vertices") {
     }
 }
 
-TEST_CASE("compute minimum positions of polygons") {
+TEST_CASE("compute_reachable_sets minimum positions of polygons") {
     vector<ReachPolygonPtr> vec_base_sets_propagated{
             ReachPolygon::from_rectangle_coordinates(1, 1, 5, 5),
             ReachPolygon::from_rectangle_coordinates(-5, 5, 10, 10)};

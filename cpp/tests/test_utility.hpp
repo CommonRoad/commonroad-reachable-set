@@ -11,7 +11,7 @@
 #include "reachset/utility/reach_operation.hpp"
 #include "reachset/utility/sweep_line.hpp"
 #include "reachset/utility/shared_using.hpp"
-#include "reachset/data_structure/collision_checker.hpp"
+#include "reachset/utility/collision_checker.hpp"
 
 #include "reachset/data_structure/reach/reach_analysis.hpp"
 
