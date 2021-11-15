@@ -9,6 +9,14 @@ set(CRCCOSY_INCLUDE
 set(CRCCOSY_LIBRARY
         ${CRCCOSY_DIR}/commonroad_dc/libcrccosy.a CACHE STRING "" FORCE)
 
+# set a variable to hold all relevant include directories
+set(REACH_INCLUDE_DIR
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        ${CRDC_INCLUDE}
+        ${CRCCOSY_INCLUDE}
+        ${EIGEN3_INCLUDE_DIR}
+        CACHE STRING "" FORCE)
+
 # set a variable to hold all relevant cpp source files of reachable sets
 set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
@@ -16,27 +24,12 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_segment.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/collision_checker.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_interface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_analysis.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/miscellaneous.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/collision_checker.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_interface.cpp
-
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_analysis.cpp
-
-        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/traffic_rule.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/position_interval.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/region.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/data_structure/semantic_model.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/src/semantic/semantic_reachability_analysis.cpp
-        CACHE STRING "" FORCE)
-
-# set a variable to hold all relevant include directories
-set(REACH_INCLUDE_DIR
-        ${CMAKE_CURRENT_LIST_DIR}/include
-        ${CRDC_INCLUDE}
-        ${CRCCOSY_INCLUDE}
-        ${EIGEN3_INCLUDE_DIR}
         CACHE STRING "" FORCE)
 # ====
 # 1. create executables which uses the source files set above

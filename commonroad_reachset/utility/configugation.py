@@ -1,5 +1,6 @@
-import  pycrccosy
 from math import ceil
+
+import commonroad_dc.pycrccosy as pycrccosy
 import numpy as np
 
 np.seterr(divide='ignore', invalid='ignore')

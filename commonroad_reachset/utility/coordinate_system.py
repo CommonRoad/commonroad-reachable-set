@@ -2,7 +2,7 @@ from typing import List, Union
 
 import commonroad_dc.pycrcc as pycrcc
 import numpy as np
-import pycrccosy
+import commonroad_dc.pycrccosy as pycrccosy
 import pycrreachset as reach
 from commonroad.geometry.shape import ShapeGroup, Shape, Rectangle, Circle
 from commonroad_dc.collision.collision_detection.minkowski_sum import minkowski_sum_circle

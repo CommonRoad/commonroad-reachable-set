@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-# import pycrreachset as reach
+import pycrreachset as reach
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
 from commonroad_route_planner.route_planner import RoutePlanner
@@ -60,78 +60,76 @@ class Configuration:
               f"prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
         print("# ================================= #")
 
-    # def convert_to_cpp_configuration(self) -> reach.Configuration:
-    #     """Converts to configuration defined by the cpp side"""
-    #     config = reach.Configuration()
-    #
-    #     config.general.name_scenario = self.name_scenario
-    #     config.general.path_scenarios = self.general.path_scenarios
-    #
-    #     config.vehicle.ego.id_type_vehicle = self.vehicle.ego.id_type_vehicle
-    #     config.vehicle.ego.length = self.vehicle.ego.length
-    #     config.vehicle.ego.width = self.vehicle.ego.width
-    #     config.vehicle.ego.v_lon_min = self.vehicle.ego.v_lon_min
-    #     config.vehicle.ego.v_lon_max = self.vehicle.ego.v_lon_max
-    #     config.vehicle.ego.v_lat_min = self.vehicle.ego.v_lat_min
-    #     config.vehicle.ego.v_lat_max = self.vehicle.ego.v_lat_max
-    #     config.vehicle.ego.a_lon_min = self.vehicle.ego.a_lon_min
-    #     config.vehicle.ego.a_lon_max = self.vehicle.ego.a_lon_max
-    #     config.vehicle.ego.a_lat_min = self.vehicle.ego.a_lat_min
-    #     config.vehicle.ego.a_lat_max = self.vehicle.ego.a_lat_max
-    #     config.vehicle.ego.a_max = self.vehicle.ego.a_max
-    #     config.vehicle.ego.t_react = self.vehicle.ego.t_react
-    #     config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
-    #     config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
-    #
-    #     config.vehicle.other.id_type_vehicle = self.vehicle.other.id_type_vehicle
-    #     config.vehicle.other.length = self.vehicle.other.length
-    #     config.vehicle.other.width = self.vehicle.other.width
-    #     config.vehicle.other.v_lon_min = self.vehicle.other.v_lon_min
-    #     config.vehicle.other.v_lon_max = self.vehicle.other.v_lon_max
-    #     config.vehicle.other.v_lat_min = self.vehicle.other.v_lat_min
-    #     config.vehicle.other.v_lat_max = self.vehicle.other.v_lat_max
-    #     config.vehicle.other.a_lon_min = self.vehicle.other.a_lon_min
-    #     config.vehicle.other.a_lon_max = self.vehicle.other.a_lon_max
-    #     config.vehicle.other.a_lat_min = self.vehicle.other.a_lat_min
-    #     config.vehicle.other.a_lat_max = self.vehicle.other.a_lat_max
-    #     config.vehicle.other.a_max = self.vehicle.other.a_max
-    #     config.vehicle.other.t_react = self.vehicle.other.t_react
-    #     config.vehicle.other.radius_disc = self.vehicle.other.radius_disc
-    #     config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
-    #
-    #     config.planning.dt = self.planning.dt
-    #     config.planning.time_step_start = self.planning.time_step_start
-    #     config.planning.time_steps_computation = self.planning.time_steps_computation
-    #     config.planning.p_lon_initial = self.planning.p_lon_initial
-    #     config.planning.p_lat_initial = self.planning.p_lat_initial
-    #     config.planning.uncertainty_p_lon = self.planning.uncertainty_p_lon
-    #     config.planning.uncertainty_p_lat = self.planning.uncertainty_p_lat
-    #     config.planning.v_lon_initial = self.planning.v_lon_initial
-    #     config.planning.v_lat_initial = self.planning.v_lat_initial
-    #     config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
-    #     config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
-    #     config.planning.time_step_start = self.planning.time_step_initial
-    #     config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
-    #
-    #     if self.planning.coordinate_system == "CART":
-    #         config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
-    #     else:
-    #         config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
-    #
-    #     if self.planning.reference_point == "REAR":
-    #         config.planning.reference_point = reach.ReferencePoint.REAR
-    #     else:
-    #         config.planning.reference_point = reach.ReferencePoint.CENTER
-    #
-    #     config.reachable_set.size_grid = self.reachable_set.size_grid
-    #     config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
-    #     config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
-    #     config.reachable_set.num_threads = self.reachable_set.num_threads
-    #
-    #     config.debug.verbose_mode = self.debug.verbose_mode
-    #     config.debug.measure_time = self.debug.measure_time
-    #
-    #     return config
+    def convert_to_cpp_configuration(self) -> reach.Configuration:
+        """Converts to configuration defined by the cpp side"""
+        config = reach.Configuration()
+
+        config.general.name_scenario = self.name_scenario
+        config.general.path_scenarios = self.general.path_scenarios
+
+        config.vehicle.ego.id_type_vehicle = self.vehicle.ego.id_type_vehicle
+        config.vehicle.ego.length = self.vehicle.ego.length
+        config.vehicle.ego.width = self.vehicle.ego.width
+        config.vehicle.ego.v_lon_min = self.vehicle.ego.v_lon_min
+        config.vehicle.ego.v_lon_max = self.vehicle.ego.v_lon_max
+        config.vehicle.ego.v_lat_min = self.vehicle.ego.v_lat_min
+        config.vehicle.ego.v_lat_max = self.vehicle.ego.v_lat_max
+        config.vehicle.ego.a_lon_min = self.vehicle.ego.a_lon_min
+        config.vehicle.ego.a_lon_max = self.vehicle.ego.a_lon_max
+        config.vehicle.ego.a_lat_min = self.vehicle.ego.a_lat_min
+        config.vehicle.ego.a_lat_max = self.vehicle.ego.a_lat_max
+        config.vehicle.ego.a_max = self.vehicle.ego.a_max
+        config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
+        config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
+
+        config.vehicle.other.id_type_vehicle = self.vehicle.other.id_type_vehicle
+        config.vehicle.other.length = self.vehicle.other.length
+        config.vehicle.other.width = self.vehicle.other.width
+        config.vehicle.other.v_lon_min = self.vehicle.other.v_lon_min
+        config.vehicle.other.v_lon_max = self.vehicle.other.v_lon_max
+        config.vehicle.other.v_lat_min = self.vehicle.other.v_lat_min
+        config.vehicle.other.v_lat_max = self.vehicle.other.v_lat_max
+        config.vehicle.other.a_lon_min = self.vehicle.other.a_lon_min
+        config.vehicle.other.a_lon_max = self.vehicle.other.a_lon_max
+        config.vehicle.other.a_lat_min = self.vehicle.other.a_lat_min
+        config.vehicle.other.a_lat_max = self.vehicle.other.a_lat_max
+        config.vehicle.other.a_max = self.vehicle.other.a_max
+        config.vehicle.other.radius_disc = self.vehicle.other.radius_disc
+        config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
+
+        config.planning.dt = self.planning.dt
+        config.planning.time_step_start = self.planning.time_step_start
+        config.planning.time_steps_computation = self.planning.time_steps_computation
+        config.planning.p_lon_initial = self.planning.p_lon_initial
+        config.planning.p_lat_initial = self.planning.p_lat_initial
+        config.planning.uncertainty_p_lon = self.planning.uncertainty_p_lon
+        config.planning.uncertainty_p_lat = self.planning.uncertainty_p_lat
+        config.planning.v_lon_initial = self.planning.v_lon_initial
+        config.planning.v_lat_initial = self.planning.v_lat_initial
+        config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
+        config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
+        config.planning.time_step_start = self.planning.time_step_initial
+        config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
+
+        if self.planning.coordinate_system == "CART":
+            config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
+        else:
+            config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
+
+        if self.planning.reference_point == "REAR":
+            config.planning.reference_point = reach.ReferencePoint.REAR
+        else:
+            config.planning.reference_point = reach.ReferencePoint.CENTER
+
+        config.reachable_set.size_grid = self.reachable_set.size_grid
+        config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
+        config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
+        config.reachable_set.num_threads = self.reachable_set.num_threads
+
+        config.debug.verbose_mode = self.debug.verbose_mode
+        config.debug.measure_time = self.debug.measure_time
+
+        return config
 
 
 class GeneralConfiguration:

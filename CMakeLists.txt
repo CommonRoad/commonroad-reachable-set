@@ -17,18 +17,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON) # c++ standard
 set(CMAKE_CXX_EXTENSIONS OFF) # turn off compiler extensions
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}") # enable parallel computation
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}") # enable parallel computation
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}") # enable parallel computation
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0") # for profiling
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0") # for profiling
 
 if(NOT DEFINED CRDC_DIR) # path to drivability checker
-    set(CRDC_DIR /home/julian/TUM/MasterThesis/CodeBase/commonroad-drivability-checker)
+#    set(CRDC_DIR /home/julian/TUM/MasterThesis/CodeBase/commonroad-drivability-checker)
+    set(CRDC_DIR /home/edmond/Softwares/commonroad/commonroad-drivability-checker-tumcps)
 endif()
 
 if(NOT DEFINED CRCCOSY_DIR) # path to curvilinear coordinate system
-    set(CRCCOSY_DIR /home/julian/TUM/MasterThesis/CodeBase/commonroad-drivability-checker)
+#    set(CRCCOSY_DIR /home/julian/TUM/MasterThesis/CodeBase/commonroad-drivability-checker)
+    set(CRCCOSY_DIR /home/edmond/Softwares/commonroad/commonroad-drivability-checker-tumcps)
 endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../) # output directory of built libraries
