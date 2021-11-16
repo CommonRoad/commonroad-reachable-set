@@ -14,9 +14,6 @@ private:
     std::map<int, std::vector<ReachNodePtr>> _map_time_to_vec_base_sets_propagated;
     std::map<int, std::vector<ReachNodePtr>> _map_time_to_reachable_set;
 
-    /// Computes drivable area and reachable set at the specified time step.
-    void compute_at_time_step(int const& time_step);
-
     /// Computes drivable area at the specified time step.
     /// Drivable area is computed based on reachable set of the last time step.
     void compute_drivable_area_at_time_step(int const& time_step);
@@ -61,6 +58,9 @@ public:
 
     // Computes reachable sets for the specified time range.
     void compute_reachable_sets(int const& step_start = 1, int step_end = 0);
+
+    /// Computes drivable area and reachable set at the specified time step.
+    void compute_at_time_step(int const& time_step);
 
     //// Adds a node to the pruned reachable sets.
     //void add_pruned_node(int const& time_step, ReachNodePtr const& node);

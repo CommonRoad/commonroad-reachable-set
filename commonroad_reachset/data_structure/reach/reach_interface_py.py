@@ -34,23 +34,23 @@ class PyReachableSetInterface:
         return self._reachability_analysis
 
     def drivable_area_at_time_step(self, time_step: int) -> List[ReachPolygon]:
-        assert time_step in self.dict_time_to_drivable_area, "<ReachableSetInterface> Input time step is not valid."
+        assert time_step in self.dict_time_to_drivable_area, "<PyReachableSetInterface> Input time step is not valid."
 
         return self.dict_time_to_drivable_area[time_step]
 
     def reachable_set_at_time_step(self, time_step: int) -> List[ReachNode]:
-        assert time_step in self.dict_time_to_drivable_area, "<ReachableSetInterface> Input time step is not valid."
+        assert time_step in self.dict_time_to_drivable_area, "<PyReachableSetInterface> Input time step is not valid."
 
         return self.dict_time_to_reachable_set[time_step]
 
     def pruned_reachable_set_at_time_step(self, time_step: int) -> List[ReachNode]:
-        assert time_step in self.dict_time_to_drivable_area, "<ReachableSetInterface> Input time step is not valid."
+        assert time_step in self.dict_time_to_drivable_area, "<PyReachableSetInterface> Input time step is not valid."
 
         return self.dict_time_to_reachable_set_pruned[time_step]
 
     def compute_reachable_sets(self, time_step_start: int = 1, time_step_end: int = 0):
         """Computes reachable sets for the specified time steps."""
-        assert time_step_start != 0, "<ReachableSetInterface> Time step should not start with 0."
+        assert time_step_start != 0, "<PyReachableSetInterface> Time step should not start with 0."
 
         if not time_step_end:
             time_step_end = self.time_step_end

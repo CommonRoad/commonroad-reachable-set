@@ -16,34 +16,6 @@ class ConfigurationBuilder:
     dict_config_overridden: dict = None
 
     @classmethod
-    def set_root_path(cls, path_root: str,
-                      path_to_config: str = "configurations/", dir_configs_default: str = "defaults"):
-        """Sets the path to the root directory.
-
-        Args:
-            path_root (str): root directory
-            path_to_config (str): relative path of configurations to root path
-            dir_configs_default (str): directory under root folder containing default config files.
-        """
-        cls.path_root = path_root
-        cls.path_config = os.path.join(path_root, path_to_config)
-        cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
-        # path hotfix
-        cls.path_config_default = cls.path_config_default.replace("../", "")
-
-    @classmethod
-    def set_path_to_config(cls, path_to_config: str, dir_configs_default: str = "defaults"):
-        """Sets the path to configuration.
-
-        Args:
-            path_to_config (str): relative path of configurations to root path
-            dir_configs_default (str): directory under root folder containing default config files.
-        """
-        cls.path_config = path_to_config
-        cls.path_root = os.path.join(path_to_config, "../../")
-        cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
-
-    @classmethod
     def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1) -> Configuration:
         """Builds configuration from default and scenario-specific config files.
 
@@ -76,6 +48,32 @@ class ConfigurationBuilder:
         config.complete_configuration(scenario, planning_problem)
 
         return config
+
+    @classmethod
+    def set_root_path(cls, path_root: str,
+                      path_to_config: str = "configurations/", dir_configs_default: str = "defaults"):
+        """Sets the path to the root directory.
+
+        Args:
+            path_root (str): root directory
+            path_to_config (str): relative path of configurations to root path
+            dir_configs_default (str): directory under root folder containing default config files.
+        """
+        cls.path_root = path_root
+        cls.path_config = os.path.join(path_root, path_to_config)
+        cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
+
+    @classmethod
+    def set_path_to_config(cls, path_to_config: str, dir_configs_default: str = "defaults"):
+        """Sets the path to configuration.
+
+        Args:
+            path_to_config (str): relative path of configurations to root path
+            dir_configs_default (str): directory under root folder containing default config files.
+        """
+        cls.path_config = path_to_config
+        cls.path_root = os.path.join(path_to_config, "../../")
+        cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
 
     @classmethod
     def construct_default_config_dict(cls) -> Dict:

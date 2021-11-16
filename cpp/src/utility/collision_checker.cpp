@@ -4,6 +4,7 @@
 using namespace reach;
 using namespace collision;
 using namespace geometry;
+using CurvilinearCoordinateSystemPtr = std::shared_ptr<geometry::CurvilinearCoordinateSystem>;
 
 BufferConfig::BufferConfig(double const& buffer_distance) :
         buffer_distance(buffer_distance),

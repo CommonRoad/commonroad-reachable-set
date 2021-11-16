@@ -36,14 +36,8 @@ class CollisionChecker:
             self._cpp_collision_checker = self._create_cartesian_collision_checker()
 
         elif self.config.planning.coordinate_system == "CVLN":
-            self.list_vertices_polygons_static, \
-            self.dict_time_to_list_vertices_polygons_dynamic = self.preprocess_obstacles()
+            self._cpp_collision_checker = self._create_curvilinear_collision_checker()
 
-            self._cpp_collision_checker = \
-                reach.create_curvilinear_collision_checker(self.list_vertices_polygons_static,
-                                                           self.dict_time_to_list_vertices_polygons_dynamic,
-                                                           self.config.planning.CLCS,
-                                                           self.config.vehicle.ego.radius_disc, 4)
         else:
             raise Exception("<CollisionChecker> Undefined coordinate system.")
 
@@ -135,7 +129,7 @@ class CollisionChecker:
         scenario = self.config.scenario
         # static obstacles
         list_obstacles_static = self.retrieve_static_obstacles(scenario, self.config.reachable_set.consider_traffic)
-        list_vertices_polygons_static = self.obtain_vertices_of_polygons_for_static_obstacles(list_obstacles_static)
+        list_vertices_polygons_static = self.obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static)
 
         # dynamic obstacles
         list_obstacles_dynamic = scenario.dynamic_obstacles
@@ -145,7 +139,7 @@ class CollisionChecker:
         return reach.create_curvilinear_collision_checker(list_vertices_polygons_static,
                                                           dict_time_to_list_vertices_polygons_dynamic,
                                                           self.config.planning.CLCS,
-                                                          self.config.vehicle.radius_disc, 4)
+                                                          self.config.vehicle.ego.radius_disc, 4)
 
     def preprocess_obstacles(self):
         """Creates a Curvilinear collision checker.
@@ -156,7 +150,7 @@ class CollisionChecker:
         scenario = self.config.scenario
         # static obstacles
         list_obstacles_static = self.retrieve_static_obstacles(scenario, self.config.reachable_set.consider_traffic)
-        list_vertices_polygons_static = self.obtain_vertices_of_polygons_for_static_obstacles(list_obstacles_static)
+        list_vertices_polygons_static = self.obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static)
 
         # dynamic obstacles
         list_obstacles_dynamic = scenario.dynamic_obstacles
@@ -183,11 +177,11 @@ class CollisionChecker:
         return list_obstacles_static
 
     @staticmethod
-    def obtain_vertices_of_polygons_for_static_obstacles(list_obstacles_static):
+    def obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static):
+        """Returns the vertices of polygons from a given list of static obstacles."""
         list_vertices_polygons_static = []
 
         for obstacle in list_obstacles_static:
-            # time_step = obstacle.initial_state.time_step
             occupancy = obstacle.occupancy_at_time(0)
             shape = occupancy.shape
 

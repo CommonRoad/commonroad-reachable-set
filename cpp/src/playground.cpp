@@ -46,7 +46,7 @@ int main() {
     // ======== CurvilinearCoordinateSystem
     auto CLCS = make_shared<geometry::CurvilinearCoordinateSystem>(
             obj_config_py.attr("planning").attr("reference_path").cast<geometry::EigenPolyline>(),
-            25.0, 0.1);
+                    25.0, 0.1);
 
     // ======== collision checker via python collision checker
     auto cls_CollisionChecker_py = py::module_::import("commonroad_reachset.data_structure.collision_checker")
@@ -66,12 +66,14 @@ int main() {
     // ======== ReachableSetInterface
     auto reach_interface = ReachableSetInterface(config, collision_checker);
 
+    //print_collision_checker(reach_interface.reachability_analysis->collision_checker());
+
     auto start = high_resolution_clock::now();
     cout << "Computing reachable sets..." << endl;
     reach_interface.compute_reachable_sets();
     auto end = high_resolution_clock::now();
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
-
+    collision_checker->timeSlice(10);
     // //======== visualization of results
     //auto utils_visualization = py::module_::import("commonroad_reachset.utility.visualization");
     //utils_visualization.attr("draw_scenario_with_reach_cpp")(obj_config_py, reach_interface,
