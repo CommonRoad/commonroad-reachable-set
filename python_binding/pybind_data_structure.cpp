@@ -24,7 +24,7 @@ void export_reach_polygon(py::module& m) {
             .def("p_lat_center", &ReachPolygon::p_lat_center)
             .def("vertices", [](ReachPolygon const& polygon) {
                 py::list list_tuples_vertices;
-                for (auto const& vertex :polygon.vertices()) {
+                for (auto const& vertex: polygon.vertices()) {
                     list_tuples_vertices.append(py::make_tuple(bg::get<0>(vertex), bg::get<1>(vertex)));
                 }
                 return list_tuples_vertices;
@@ -32,7 +32,7 @@ void export_reach_polygon(py::module& m) {
             .def("convexify", &ReachPolygon::convexify)
             .def("minkowski_sum", &ReachPolygon::minkowski_sum)
             .def("__repr__", [](ReachPolygon const& polygon) {
-                return "(" + std::to_string(polygon.p_lon_min()) + ", " + std::to_string(polygon.p_lon_min())
+                return "(" + std::to_string(polygon.p_lon_min()) + ", " + std::to_string(polygon.p_lat_min())
                        + ", " + std::to_string(polygon.p_lon_max()) + ", " + std::to_string(polygon.p_lat_max()) + ")";
             });
 }
@@ -53,8 +53,12 @@ void export_reach_node(py::module& m) {
             .def_readonly("id", &ReachNode::id)
             .def_readonly("time_step", &ReachNode::time_step)
             .def_readonly("polygon_lon", &ReachNode::polygon_lon)
-            .def_readonly("polygon_lon", &ReachNode::polygon_lat)
-            .def_readonly("set_propositions", &ReachNode::set_propositions);
+            .def_readonly("polygon_lat", &ReachNode::polygon_lat)
+            .def_readonly("set_propositions", &ReachNode::set_propositions)
+            .def("__repr__", [](ReachNode const& node) {
+                return "(" + std::to_string(node.p_lon_min()) + ", " + std::to_string(node.p_lat_min())
+                       + ", " + std::to_string(node.p_lon_max()) + ", " + std::to_string(node.p_lat_max()) + ")";
+            });
 }
 
 void export_configuration(py::module& m) {

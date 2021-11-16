@@ -1,6 +1,9 @@
 config_reachable_set:
-  # back end for computation, this can either be "CPP" or "PYTHON"
-  back_end: PYTHON
+  # mode for computation
+  # 1: computation with pure Python backend
+  # 2: computation with Python backend and C++ collision check
+  # 3: computation with C++ backend
+  mode: 1
   # grid size for rectangle alignment (before collision check)
   size_grid: 0.2
   # grid size for second time rectangle alignment (after collision check)
@@ -9,8 +12,7 @@ config_reachable_set:
   radius_terminal_split: 0.7
   # if set to false, static and dynamic obstacles will be omitted
   consider_traffic: true
-  # setting to true would allow propagating the reachable sets to lanelets
-  # with opposite driving direction
+  # setting to true would allow propagating the reachable sets to lanelets with opposite driving direction
   allow_overtaking: no
   # number of thread for reachable set computation
   num_threads: 4

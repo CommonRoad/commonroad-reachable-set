@@ -280,7 +280,7 @@ def create_curvilinear_collision_checker2(
         start_time: int,
         end_time: int,
         consider_traffic=True,
-        reduce_distance_to_road_boundary=0) -> pycrcc.CollisionChecker:
+        reduce_distance_to_road_boundary=0) -> pycrcc.CppCollisionChecker:
     scenario_cc: Scenario = Scenario(scenario.dt, scenario.scenario_id)
     scenario_cc.add_objects(lanelet_network_vehicle)
 
@@ -339,7 +339,7 @@ def create_curvilinear_collision_checker2(
         polygons_static, polygons_dynamic, bounding_boxes, cosy, vehicle_radius, reduce_distance_to_road_boundary,
         4)
 
-    cc = pycrcc.CollisionChecker()
+    cc = pycrcc.CppCollisionChecker()
     cc.add_collision_object(static_sg)
     cc.add_collision_object(tvo)
 

@@ -1,7 +1,6 @@
 from math import ceil, floor
 from typing import List, Tuple
 
-from commonroad_reachset.data_structure.collision_checker import CollisionChecker
 from commonroad_reachset.data_structure.configuration import Configuration
 from commonroad_reachset.data_structure.reach.reach_node import ReachNode
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
@@ -274,14 +273,14 @@ def undiscretized_rectangles(list_rectangles_discretized: List[ReachPolygon],
     return list_rectangles_undiscretized
 
 
-def check_collision_and_split_rectangles(collision_checker: CollisionChecker,
+def check_collision_and_split_rectangles(collision_checker,
                                          time_step: int,
                                          list_rectangles: List[ReachPolygon],
                                          radius_terminal_split: float) -> List[ReachPolygon]:
     """Check collision status of the rectangles and split them if colliding.
 
     Args:
-        collision_checker (CollisionChecker): collision checker in CART/CLCS
+        collision_checker (CppCollisionChecker): collision checker in CART/CLCS
         time_step (int): time step at which the collision is checked
         list_rectangles (List[ReachPolygon]): list of rectangles to be checked
         radius_terminal_split (float): radius to terminate splitting
@@ -300,7 +299,7 @@ def check_collision_and_split_rectangles(collision_checker: CollisionChecker,
     return list_rectangles_collision_free
 
 
-def create_collision_free_rectangles(time_step: int, collision_checker: CollisionChecker, rectangle: ReachPolygon,
+def create_collision_free_rectangles(time_step: int, collision_checker, rectangle: ReachPolygon,
                                      radius_terminal_squared: float) -> List[ReachPolygon]:
     """Recursively creates a list of collision-free rectangles.
 
@@ -309,7 +308,7 @@ def create_collision_free_rectangles(time_step: int, collision_checker: Collisio
 
     Args:
         time_step:
-        collision_checker (CollisionChecker): collision checker
+        collision_checker (CppCollisionChecker): collision checker
         rectangle (ReachPolygon): rectangle under examination
         radius_terminal_squared (float): squared terminal radius. it is squared for computation efficiency.
     """

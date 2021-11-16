@@ -13,14 +13,16 @@ class ReachableSetInterface:
     Both python and C++ backends are supported.
     """
 
-    def __init__(self, config: Configuration, back_end=None):
+    def __init__(self, config: Configuration):
         self.config = config
-        self.back_end = back_end or config.reachable_set.back_end
+        self.mode = config.reachable_set.mode
 
-        if self.back_end == "PYTHON":
+        # Python backend
+        if self.mode == 1 or self.mode == 2:
             self._interface = PyReachableSetInterface(config)
 
-        elif self.back_end == "CPP":
+        # C++ backend
+        elif self.mode == 3:
             try:
                 from commonroad_reachset.data_structure.reach.reach_interface_cpp import CppReachableSetInterface
 

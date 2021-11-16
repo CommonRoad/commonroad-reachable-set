@@ -73,6 +73,15 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
 
 
 def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterface, margin=20):
+    if reach_interface.config.reachable_set.mode == 3:
+        # using C++ backend
+        import pycrreachset as reach
+        backend = "CPP"
+
+    else:
+        # using Python backend
+        backend = "PYTHON"
+
     config = reach_interface.config
     x_min = y_min = np.infty
     x_max = y_max = -np.infty
@@ -109,7 +118,12 @@ def draw_reachable_sets(list_nodes: Union[List[ReachNode]], config, renderer, dr
 
     elif config.planning.coordinate_system == "CVLN":
         for node in list_nodes:
-            list_polygons_CART = util_coordinate_system.convert_to_cartesian_polygons(node.position_rectangle,
+            if isinstance(node, ReachNode):
+                position_rectangle = node.position_rectangle
+
+            else:
+                position_rectangle = node.position_rectangle()
+            list_polygons_CART = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
             if list_polygons_CART:
                 for polygon in list_polygons_CART:

@@ -13,7 +13,7 @@ from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reachset.utility.geometry import create_aabb_from_coordinates
 
 
-class CollisionChecker:
+class CppCollisionChecker:
     """Collision checker for the reachable sets.
 
     This handles collision checks in both Cartesian and Curvilinear coordinate systems.
@@ -21,22 +21,17 @@ class CollisionChecker:
 
     def __init__(self, config: Configuration):
         self.config = config
-        self._cpp_collision_checker = None
-        self._initialize_collision_checker()
+        self.collision_checker = None
 
-    @property
-    def collision_checker_cpp(self):
-        return self._cpp_collision_checker
+        self._initialize_collision_checker()
 
     def _initialize_collision_checker(self):
         """Initializes the collision checker based on the specified coordinate system"""
-        # self._cpp_collision_checker = self._custom_collision_checker()
-
         if self.config.planning.coordinate_system == "CART":
-            self._cpp_collision_checker = self._create_cartesian_collision_checker()
+            self.collision_checker = self._create_cartesian_collision_checker()
 
         elif self.config.planning.coordinate_system == "CVLN":
-            self._cpp_collision_checker = self._create_curvilinear_collision_checker()
+            self.collision_checker = self._create_curvilinear_collision_checker()
 
         else:
             raise Exception("<CollisionChecker> Undefined coordinate system.")
@@ -229,7 +224,7 @@ class CollisionChecker:
         rect_collision = self.convert_reach_polygon_to_collision_object(input_rectangle)
 
         # create a query window, decreases computation time
-        collision_checker = self._cpp_collision_checker.window_query(rect_collision)
+        collision_checker = self.collision_checker.window_query(rect_collision)
 
         # slice collision checker with time
         collision_checker_time_slice = collision_checker.time_slice(time_idx)

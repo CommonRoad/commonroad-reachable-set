@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from commonroad_reachset.data_structure.collision_checker import CollisionChecker
+from commonroad_reachset.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reachset.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reachset.continuous.continuous_reachability_analysis import \
     ContinuousReachabilityAnalysis
@@ -82,4 +82,4 @@ def collision_checker(path_config):
     ConfigurationBuilder.set_path_to_config(path_config)
     config = ConfigurationBuilder.build_configuration("DEU_Test-1_1_T-1")
 
-    return CollisionChecker(config)
+    return CppCollisionChecker(config)

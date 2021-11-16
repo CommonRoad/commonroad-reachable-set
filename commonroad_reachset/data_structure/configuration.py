@@ -3,9 +3,8 @@ from typing import Dict, Optional
 import pycrreachset as reach
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
-from commonroad_route_planner.route_planner import RoutePlanner
-
 from commonroad_reachset.utility import configugation as util_configuration
+from commonroad_route_planner.route_planner import RoutePlanner
 
 
 class Configuration:
@@ -53,11 +52,26 @@ class Configuration:
         print("# ===== Configuration Summary ===== #")
         print(f"# {self.scenario.scenario_id}")
         print("# Planning:")
-        print(f"# \ttime steps: {self.planning.time_steps_computation}, "
-              f"coordinate system: {self.planning.coordinate_system}")
+        text = None
+        if self.planning.coordinate_system == "CART":
+            text = "Cartesian"
+        elif self.planning.coordinate_system == "CVLN":
+            text = "Curvilinear"
+        else:
+            text = "Undefined"
+        print(f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {text}")
+
         print("# Reachable set:")
-        print(f"# \tback end: {self.reachable_set.back_end}, "
-              f"prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
+        text = None
+        if self.reachable_set.mode == 1:
+            text = "Python backend"
+        elif self.reachable_set.mode == 2:
+            text = "Python backend (C++ collision checker)"
+        elif self.reachable_set.mode == 3:
+            text = "C++ backend"
+        else:
+            text = "Undefined"
+        print(f"# \tback end: {text}, prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
         print("# ================================= #")
 
     def convert_to_cpp_configuration(self) -> reach.Configuration:
@@ -260,7 +274,7 @@ class ReachableSetConfiguration:
     def __init__(self, dict_config: Dict):
         dict_relevant = dict_config["config_reachable_set"]
 
-        self.back_end = dict_relevant["back_end"]
+        self.mode = dict_relevant["mode"]
         self.num_threads = dict_relevant["num_threads"]
         self.size_grid = dict_relevant["size_grid"]
         self.size_grid_2nd = dict_relevant["size_grid_2nd"]

@@ -1,16 +1,35 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
+from commonroad_reachset.data_structure.collision_checker_py import PyCollisionChecker
 from commonroad_reachset.data_structure.configuration import Configuration
 from commonroad_reachset.data_structure.reach.reach_node import ReachNode
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
-from commonroad_reachset.data_structure.collision_checker import CollisionChecker
 from commonroad_reachset.utility import reach_operation
 
 
 class ReachabilityAnalysis:
-    def __init__(self, config: Configuration, collision_checker: CollisionChecker = None):
-        self._config = config
-        self._collision_checker = collision_checker or CollisionChecker(config)
+    def __init__(self, config: Configuration):
+        self.config = config
+        self.mode = config.reachable_set.mode
+
+        # Python collision checker
+        if self.mode == 1:
+            self._collision_checker = PyCollisionChecker(config)
+
+        # C++ collision checker
+        elif self.mode == 2 or self.mode == 3:
+            try:
+                from commonroad_reachset.data_structure.collision_checker_cpp import CppCollisionChecker
+
+            except ImportError:
+                print("<ReachabilityAnalysis> Cannot import C++ collision checker.")
+
+            else:
+                self._collision_checker = CppCollisionChecker(config)
+
+        else:
+            raise Exception("<ReachabilityAnalysis> Specified backend is not valid.")
+
         self._initialize_zero_state_polygons()
 
     def _initialize_zero_state_polygons(self):
@@ -20,19 +39,15 @@ class ReachabilityAnalysis:
         and the zero-input response of the system.
         """
         self._polygon_zero_state_lon = reach_operation.create_zero_state_polygon(self.config.planning.dt,
-                                                                                    self.config.vehicle.ego.a_lon_min,
-                                                                                    self.config.vehicle.ego.a_lon_max)
+                                                                                 self.config.vehicle.ego.a_lon_min,
+                                                                                 self.config.vehicle.ego.a_lon_max)
 
         self._polygon_zero_state_lat = reach_operation.create_zero_state_polygon(self.config.planning.dt,
-                                                                                    self.config.vehicle.ego.a_lat_min,
-                                                                                    self.config.vehicle.ego.a_lat_max)
+                                                                                 self.config.vehicle.ego.a_lat_min,
+                                                                                 self.config.vehicle.ego.a_lat_max)
 
     @property
-    def config(self) -> Configuration:
-        return self._config
-
-    @property
-    def collision_checker(self) -> CollisionChecker:
+    def collision_checker(self):
         return self._collision_checker
 
     @property
@@ -65,7 +80,7 @@ class ReachabilityAnalysis:
         polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
         polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
 
-        return [ReachNode(polygon_lon, polygon_lat, self._config.planning.time_step_start)]
+        return [ReachNode(polygon_lon, polygon_lat, self.config.planning.time_step_start)]
 
     def compute_drivable_area_at_time_step(self, time_step: int, reachable_set_previous: List[ReachNode]) \
             -> Tuple[List[ReachPolygon], List[ReachNode]]:
@@ -101,7 +116,7 @@ class ReachabilityAnalysis:
 
         # Step 5
         drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
-                                                                           self.config.reachable_set.size_grid_2nd)
+                                                                        self.config.reachable_set.size_grid_2nd)
 
         return drivable_area, list_base_sets_propagated
 
@@ -116,16 +131,16 @@ class ReachabilityAnalysis:
         for node in list_nodes:
             try:
                 polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
-                                                                              self._polygon_zero_state_lon,
-                                                                              self.config.planning.dt,
-                                                                              self.config.vehicle.ego.v_lon_min,
-                                                                              self.config.vehicle.ego.v_lon_max)
+                                                                           self._polygon_zero_state_lon,
+                                                                           self.config.planning.dt,
+                                                                           self.config.vehicle.ego.v_lon_min,
+                                                                           self.config.vehicle.ego.v_lon_max)
 
                 polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
-                                                                              self._polygon_zero_state_lat,
-                                                                              self.config.planning.dt,
-                                                                              self.config.vehicle.ego.v_lat_min,
-                                                                              self.config.vehicle.ego.v_lat_max)
+                                                                           self._polygon_zero_state_lat,
+                                                                           self.config.planning.dt,
+                                                                           self.config.vehicle.ego.v_lat_min,
+                                                                           self.config.vehicle.ego.v_lat_max)
             except (ValueError, RuntimeError):
                 pass
 
@@ -150,9 +165,9 @@ class ReachabilityAnalysis:
 
         # Step 1
         list_base_sets_adapted = reach_operation.adapt_base_sets_to_drivable_area(drivable_area,
-                                                                                     base_set_propagated)
+                                                                                  base_set_propagated)
         # Step 2
         reachable_set_time_step_current = reach_operation.create_nodes_of_reachable_set(time_step,
-                                                                                           list_base_sets_adapted)
+                                                                                        list_base_sets_adapted)
 
         return reachable_set_time_step_current

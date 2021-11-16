@@ -1,8 +1,8 @@
-from commonroad_reachset.data_structure.collision_checker import CollisionChecker
+from commonroad_reachset.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 
-def test_convert_reach_polygon_to_collision_object(collision_checker: CollisionChecker):
+def test_convert_reach_polygon_to_collision_object(collision_checker: CppCollisionChecker):
     tuple_vertices = (60, 2, 65, 6)
     rect_input = ReachPolygon.from_rectangle_vertices(*tuple_vertices)
 

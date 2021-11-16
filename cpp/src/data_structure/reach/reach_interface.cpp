@@ -25,13 +25,12 @@ void ReachableSetInterface::compute_reachable_sets(int const& step_start, int st
     for (int time_step = step_start; time_step < step_end + 1; ++time_step) {
         compute_at_time_step(time_step);
     }
-
-    set_maps();
 }
 
 void ReachableSetInterface::compute_at_time_step(int const& time_step) {
     compute_drivable_area_at_time_step(time_step);
     compute_reachable_set_at_time_step(time_step);
+    set_maps();
 }
 
 void ReachableSetInterface::compute_drivable_area_at_time_step(int const& time_step) {
