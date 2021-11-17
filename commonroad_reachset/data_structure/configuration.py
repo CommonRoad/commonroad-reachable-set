@@ -52,7 +52,6 @@ class Configuration:
         print("# ===== Configuration Summary ===== #")
         print(f"# {self.scenario.scenario_id}")
         print("# Planning:")
-        text = None
         if self.planning.coordinate_system == "CART":
             text = "Cartesian"
         elif self.planning.coordinate_system == "CVLN":
@@ -62,7 +61,6 @@ class Configuration:
         print(f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {text}")
 
         print("# Reachable set:")
-        text = None
         if self.reachable_set.mode == 1:
             text = "Python backend"
         elif self.reachable_set.mode == 2:

@@ -1,6 +1,6 @@
 from commonroad_reachset.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reachset.data_structure.reach.reach_interface import ReachableSetInterface
-from commonroad_reachset.utility import visualization as util_visualization
+from commonroad_reachset.utility import visualization as util_visual
 
 
 def main():
@@ -17,7 +17,7 @@ def main():
     reach_interface.compute_reachable_sets()
 
     # ==== plot computation results
-    util_visualization.plot_scenario_with_reachable_sets(reach_interface, as_svg=False)
+    util_visual.plot_scenario_with_reachable_sets(reach_interface, as_svg=False)
 
 
 if __name__ == "__main__":

@@ -14,19 +14,18 @@ from commonroad_reachset.utility.geometry import create_aabb_from_coordinates
 
 
 class CppCollisionChecker:
-    """Collision checker for the reachable sets.
+    """Collision checker for the reachable sets with C++ backend.
 
-    This handles collision checks in both Cartesian and Curvilinear coordinate systems.
+    It handles collision checks in both Cartesian and Curvilinear coordinate systems.
     """
 
     def __init__(self, config: Configuration):
         self.config = config
         self.collision_checker = None
-
         self._initialize_collision_checker()
 
     def _initialize_collision_checker(self):
-        """Initializes the collision checker based on the specified coordinate system"""
+        """Initializes the collision checker based on the specified coordinate system."""
         if self.config.planning.coordinate_system == "CART":
             self.collision_checker = self._create_cartesian_collision_checker()
 
@@ -34,8 +33,9 @@ class CppCollisionChecker:
             self.collision_checker = self._create_curvilinear_collision_checker()
 
         else:
-            raise Exception("<CollisionChecker> Undefined coordinate system.")
+            raise Exception("<CppCollisionChecker> Undefined coordinate system.")
 
+    # todo: delete
     def _custom_collision_checker(self):
         if self.config.planning.coordinate_system == "CART":
             # cartesian collision checker
