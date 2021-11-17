@@ -1,13 +1,12 @@
 from typing import List, Union
 
 import commonroad_dc.pycrcc as pycrcc
-import numpy as np
 import commonroad_dc.pycrccosy as pycrccosy
+import commonroad_reachset.utility.geometry as util_geometry
+import numpy as np
 import pycrreachset as reach
 from commonroad.geometry.shape import ShapeGroup, Shape, Rectangle, Circle
 from commonroad_dc.collision.collision_detection.minkowski_sum import minkowski_sum_circle
-
-import commonroad_reachset.utility.geometry as util_geometry
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 
 

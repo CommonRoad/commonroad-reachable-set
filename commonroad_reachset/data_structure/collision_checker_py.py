@@ -1,14 +1,16 @@
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from commonroad.geometry.shape import Rectangle, Shape, Polygon, ShapeGroup
-from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
+from commonroad.scenario.obstacle import StaticObstacle
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.trajectory import State
 from commonroad_dc.boundary import boundary
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+
 from commonroad_reachset.data_structure.configuration import Configuration
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reachset.utility import geometry as util_geometry
 
 
 class PyCollisionChecker:
@@ -18,8 +20,13 @@ class PyCollisionChecker:
     """
 
     def __init__(self, config: Configuration):
-        self.config = config
-        self.scenario_cc = None
+        self.config: Configuration = config
+        self.CLCS: CurvilinearCoordinateSystem = config.planning.CLCS
+        self.scenario_cc: Optional[Scenario] = None
+
+        radius_disc = self.config.vehicle.ego.radius_disc
+        # used in minkowski sum operation to approximate the shape of the ego vehicle
+        self.rectangle_for_inflation = Rectangle(length=radius_disc, width=radius_disc)
         self._initialize_collision_checker()
 
     def _initialize_collision_checker(self):
@@ -81,31 +88,29 @@ class PyCollisionChecker:
         list_obstacles_CART.append(object_road_boundary)
 
         # convert obstacles into curvilinear coordinate system
-        list_obstacles_CVLN = self.convert_obstacles_to_curvilinear_coordinate_system(list_obstacles_CART,
-                                                                                      config.planning.CLCS)
+        list_obstacles_CVLN = self.convert_obstacles_to_curvilinear_coordinate_system(list_obstacles_CART)
 
         scenario_cc.add_objects(list_obstacles_CVLN)
 
         return scenario_cc
 
-    def convert_obstacles_to_curvilinear_coordinate_system(self, list_obstacles_CART, CLCS):
+    def convert_obstacles_to_curvilinear_coordinate_system(self, list_obstacles_CART):
         """Returns a list of obstacles converted into curvilinear coordinate system.
 
         Splitting obstacles in the Cartesian coordinate system into smaller rectangles (rasterization) reduces over-
         approximation in the curvilinear coordinate system, since they are converted into axis-aligned rectangles.
         """
-
         list_obstacles_static_CART = [obs for obs in list_obstacles_CART if isinstance(obs, StaticObstacle)]
-        list_obstacles_dynamic_CART = [obs for obs in list_obstacles_CART if isinstance(obs, DynamicObstacle)]
+        list_obstacles_static_CVLN = self.convert_to_curvilinear_static_obstacles(list_obstacles_static_CART)
 
-        list_obstacles_static_CVLN = self.convert_to_curvilinear_static_obstacles(list_obstacles_static_CART, CLCS)
         # todo: implement this
+        # list_obstacles_dynamic_CART = [obs for obs in list_obstacles_CART if isinstance(obs, DynamicObstacle)]
         # list_obstacles_dynamic_CVLN = self.convert_to_curvilinear_dynamic_obstacles(list_obstacles_dynamic_CART, CLCS)
-
         # return list_obstacles_static_CVLN + list_obstacles_dynamic_CVLN
+
         return list_obstacles_static_CVLN
 
-    def convert_to_curvilinear_static_obstacles(self, list_obstacles_static_CART, CLCS: CurvilinearCoordinateSystem):
+    def convert_to_curvilinear_static_obstacles(self, list_obstacles_static_CART):
         """Converts a list of static obstacles to obstacle under Curvilinear coordinate system."""
         list_obstacles_static_CVLN = []
 
@@ -116,15 +121,14 @@ class PyCollisionChecker:
 
             if isinstance(occupancy.shape, ShapeGroup):
                 for shape in occupancy.shape.shapes:
-                    shape_obstacle_CVLN, position_CVLN = self.convert_to_curvilinear_shape(shape, CLCS)
-
+                    shape_obstacle_CVLN, position_CVLN = self.convert_to_curvilinear_shape(shape)
                     if shape_obstacle_CVLN is None or position_CVLN is None:
                         continue
 
                     id_obstacle = self.config.scenario.generate_object_id()
                     type_obstacle = obstacle.obstacle_type
 
-                    state_initial_obstacle_CVLN = State(position=np.array([0,0]), orientation=0.00,
+                    state_initial_obstacle_CVLN = State(position=np.array([0, 0]), orientation=0.00,
                                                         time_step=time_step_initial)
 
                     # feed in the required components to construct a static obstacle
@@ -134,12 +138,12 @@ class PyCollisionChecker:
                     list_obstacles_static_CVLN.append(static_obstacle)
 
             elif isinstance(occupancy.shape, Shape):
-                shape_obstacle_CVLN, _ = self.convert_to_curvilinear_shape(occupancy.shape, CLCS)
+                shape_obstacle_CVLN, _ = self.convert_to_curvilinear_shape(occupancy.shape)
 
                 id_obstacle = obstacle.obstacle_id
                 type_obstacle = obstacle.obstacle_type
                 position = obstacle.initial_state.position
-                position_obstacle_CVLN = CLCS.convert_to_curvilinear_coords(position[0], position[1])
+                position_obstacle_CVLN = self.CLCS.convert_to_curvilinear_coords(position[0], position[1])
 
                 state_initial_obstacle_CVLN = State(position=position_obstacle_CVLN, orientation=0.00,
                                                     time_step=time_step_initial)
@@ -152,18 +156,24 @@ class PyCollisionChecker:
 
         return list_obstacles_static_CVLN
 
-    def convert_to_curvilinear_shape(self, shape: Shape, CLCS):
+    def convert_to_curvilinear_shape(self, shape: Shape):
         """Converts a rectangle or polygon to Curvilinear coordinate system."""
+
         if isinstance(shape, Rectangle):
-            list_vertices_CVLN = self.convert_to_curvilinear_vertices(shape.vertices, CLCS)
+            shape_inflated = util_geometry.minkowski_sum(ReachPolygon(shape.vertices),
+                                                         ReachPolygon(self.rectangle_for_inflation.vertices))
+
+            list_vertices_CVLN = self.convert_to_curvilinear_vertices(shape_inflated.vertices)
             rectangle, position = self.create_rectangle_from_vertices(list_vertices_CVLN)
 
             return rectangle, position
 
         elif isinstance(shape, Polygon):
+            shape_inflated = util_geometry.minkowski_sum(ReachPolygon(shape.vertices),
+                                                         ReachPolygon(self.rectangle_for_inflation.vertices))
             try:
-                position = CLCS.convert_to_curvilinear_coords(shape.center[0], shape.center[1])
-                list_vertices_CVLN = self.convert_to_curvilinear_vertices(shape.vertices, CLCS)
+                position = self.CLCS.convert_to_curvilinear_coords(shape.center[0], shape.center[1])
+                list_vertices_CVLN = self.convert_to_curvilinear_vertices(shape_inflated.vertices)
                 polygon = self.create_polygon_from_vertices(list_vertices_CVLN)
 
                 return polygon, position
@@ -174,11 +184,10 @@ class PyCollisionChecker:
         else:
             return None
 
-    @staticmethod
-    def convert_to_curvilinear_vertices(list_vertices_CART, CLCS: CurvilinearCoordinateSystem):
+    def convert_to_curvilinear_vertices(self, list_vertices_CART):
         """Converts a list of vertices to Curvilinear coordinate system."""
         try:
-            list_vertices_CVLN = [CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1])
+            list_vertices_CVLN = [self.CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1])
                                   for vertex in list_vertices_CART]
 
         except ValueError:
@@ -217,12 +226,12 @@ class PyCollisionChecker:
 
     def collides_at_time_step(self, time_idx: int, rectangle: ReachPolygon) -> bool:
         """Checks for collision with obstacles in the scenario at time step."""
-
         list_polygons_collision_at_time_step = self.list_polygons_collision_at_time_step(time_idx)
 
         return self.rectangle_collides_with_obstacles(rectangle, list_polygons_collision_at_time_step)
 
     def list_polygons_collision_at_time_step(self, time_step: int):
+        """Returns the list of polygons for collision check at the given time step."""
         list_polygons = []
 
         list_occupancies = self.scenario_cc.occupancies_at_time_step(time_step)
@@ -238,6 +247,7 @@ class PyCollisionChecker:
 
     @staticmethod
     def rectangle_collides_with_obstacles(rectangle: ReachPolygon, list_polygons: List[Polygon]):
+        """Returns true if the input rectangle collides with the input list of polygons"""
         for polygon in list_polygons:
             if rectangle.intersects(polygon):
                 return True
