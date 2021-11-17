@@ -3,7 +3,7 @@ config_reachable_set:
   # 1: computation with pure Python backend
   # 2: computation with Python backend and C++ collision check
   # 3: computation with C++ backend
-  mode: 1
+  mode: 3
   # grid size for rectangle alignment (before collision check)
   size_grid: 0.2
   # grid size for second time rectangle alignment (after collision check)

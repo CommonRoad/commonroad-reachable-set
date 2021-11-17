@@ -1,16 +1,15 @@
 from typing import List
 
 import commonroad_dc.pycrcc as pycrcc
-import numpy as np
 import pycrreachset as reach
 from commonroad.geometry.shape import Rectangle, ShapeGroup
 from commonroad.scenario.obstacle import StaticObstacle
 from commonroad.scenario.scenario import Scenario
 from commonroad_dc.boundary import boundary
 from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
+
 from commonroad_reachset.data_structure.configuration import Configuration
 from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
-from commonroad_reachset.utility.geometry import create_aabb_from_coordinates
 
 
 class CppCollisionChecker:
@@ -34,27 +33,6 @@ class CppCollisionChecker:
 
         else:
             raise Exception("<CppCollisionChecker> Undefined coordinate system.")
-
-    # todo: delete
-    def _custom_collision_checker(self):
-        if self.config.planning.coordinate_system == "CART":
-            # cartesian collision checker
-            collision_checker = pycrcc.CollisionChecker()
-            collision_checker.add_collision_object(create_aabb_from_coordinates(0, -2, 150, 0))
-            collision_checker.add_collision_object(create_aabb_from_coordinates(0, 8, 150, 10))
-            collision_checker.add_collision_object(pycrcc.RectOBB(2.25, 1.0, 0.3, 65.0, 2.25))
-            return collision_checker
-
-        else:
-            # curvilinear collision checker
-            list_vertices_polygons = [np.array([[10, -2], [140, -2], [140, 0], [10, 0]]),
-                                      np.array([[10, 8], [140, 8], [140, 10], [10, 10]])]
-
-            collision_checker = reach.create_curvilinear_collision_checker(list_vertices_polygons, {},
-                                                                           self.config.planning.CLCS,
-                                                                           self.config.vehicle.radius_disc, 4)
-
-            return collision_checker
 
     def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:
         """Creates a Cartesian collision checker.

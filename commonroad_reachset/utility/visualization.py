@@ -11,6 +11,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 
 from commonroad_reachset.data_structure.reach.reach_node import ReachNode
 from commonroad_reachset.data_structure.reach.reach_interface import ReachableSetInterface
+from commonroad_reachset.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reachset.utility import coordinate_system as util_coordinate_system
 
 
@@ -20,6 +21,14 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     config = reach_interface.config
     scenario = config.scenario
 
+    if config.reachable_set.mode == 3:
+        # using C++ backend
+        backend = "CPP"
+
+    else:
+        # using Python backend
+        backend = "PYTHON"
+
     # create output directory
     path_output = path_output or config.general.path_output
     Path(path_output).mkdir(parents=True, exist_ok=True)
@@ -28,7 +37,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     time_step_end = time_step_end or reach_interface.time_step_end
 
     # set plot limits
-    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
+    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
     # set color
     palette = sns.color_palette("GnBu_d", 3)
@@ -51,7 +60,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
         else:
             list_nodes = reach_interface.pruned_reachable_set_at_time_step(time_step)
 
-        draw_reachable_sets(list_nodes, config, renderer, draw_params)
+        draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -72,28 +81,27 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     print("\tReachable sets plotted.")
 
 
-def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterface, margin=20):
-    if reach_interface.config.reachable_set.mode == 3:
-        # using C++ backend
-        import pycrreachset as reach
-        backend = "CPP"
-
-    else:
-        # using Python backend
-        backend = "PYTHON"
-
+def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterface, backend, margin=20):
     config = reach_interface.config
     x_min = y_min = np.infty
     x_max = y_max = -np.infty
 
     if config.planning.coordinate_system == "CART":
         for time_step in range(reach_interface.time_step_start, reach_interface.time_step_end):
-            for rectangle in reach_interface.drivable_area_at_time_step(time_step):
-                bounds = rectangle.bounds
-                x_min = min(x_min, bounds[0])
-                y_min = min(y_min, bounds[1])
-                x_max = max(x_max, bounds[2])
-                y_max = max(y_max, bounds[3])
+            if backend == "PYTHON":
+                for rectangle in reach_interface.drivable_area_at_time_step(time_step):
+                    bounds = rectangle.bounds
+                    x_min = min(x_min, bounds[0])
+                    y_min = min(y_min, bounds[1])
+                    x_max = max(x_max, bounds[2])
+                    y_max = max(y_max, bounds[3])
+
+            else:
+                for rectangle in reach_interface.drivable_area_at_time_step(time_step):
+                    x_min = min(x_min, rectangle.p_lon_min())
+                    y_min = min(y_min, rectangle.p_lat_min())
+                    x_max = max(x_max, rectangle.p_lon_max())
+                    y_max = max(y_max, rectangle.p_lat_max())
 
     elif config.planning.coordinate_system == "CVLN":
         for time_step in range(reach_interface.time_step_start, reach_interface.time_step_end):
@@ -110,19 +118,16 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
     return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
 
 
-def draw_reachable_sets(list_nodes: Union[List[ReachNode]], config, renderer, draw_params):
+def draw_reachable_sets(list_nodes: Union[List[ReachNode]], config, renderer, draw_params, backend):
     """Draws reach nodes."""
     if config.planning.coordinate_system == "CART":
         for node in list_nodes:
-            Polygon(vertices=np.array(node.position_rectangle.vertices)).draw(renderer, draw_params=draw_params)
+            vertices = node.position_rectangle.vertices if backend == "PYTHON" else node.position_rectangle().vertices()
+            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params)
 
     elif config.planning.coordinate_system == "CVLN":
         for node in list_nodes:
-            if isinstance(node, ReachNode):
-                position_rectangle = node.position_rectangle
-
-            else:
-                position_rectangle = node.position_rectangle()
+            position_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
             list_polygons_CART = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
             if list_polygons_CART:

@@ -58,11 +58,11 @@ class PyCollisionChecker:
         if config.reachable_set.consider_traffic:
             list_obstacles_CART += config.scenario.obstacles
 
+        scenario_cc.add_objects(list_obstacles_CART)
+
         # add road boundary
         object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="triangulation")
-        list_obstacles_CART.append(object_road_boundary)
-
-        scenario_cc.add_objects(list_obstacles_CART)
+        scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
 
@@ -237,7 +237,7 @@ class PyCollisionChecker:
         list_occupancies = self.scenario_cc.occupancies_at_time_step(time_step)
         for occ in list_occupancies:
             if isinstance(occ.shape, ShapeGroup):
-                for shape in occ.shapes:
+                for shape in occ.shape.shapes:
                     list_polygons.append(shape.shapely_object)
 
             elif isinstance(occ.shape, Rectangle) or isinstance(occ.shape, Polygon):
