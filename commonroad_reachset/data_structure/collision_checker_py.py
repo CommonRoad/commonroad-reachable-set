@@ -32,7 +32,7 @@ class PyCollisionChecker:
     def _initialize_collision_checker(self):
         """Initializes the collision checker based on the specified coordinate system."""
         if self.config.planning.coordinate_system == "CART":
-            self.scenario_cc = self._create_cartesian_scenario_for_collision_check(self.config)
+            self.scenario_cc = self._create_scenario_for_cartesian_collision_check(self.config)
 
         elif self.config.planning.coordinate_system == "CVLN":
             self.scenario_cc = self._create_scenario_for_curvilinear_collision_check(self.config)
@@ -41,7 +41,7 @@ class PyCollisionChecker:
             raise Exception("<PyCollisionChecker> Undefined coordinate system.")
 
     @staticmethod
-    def _create_cartesian_scenario_for_collision_check(config: Configuration):
+    def _create_scenario_for_cartesian_collision_check(config: Configuration):
         """Returns a scenario with obstacles in Cartesian coordinate system.
 
         Elements included: obstacles, road boundaries.

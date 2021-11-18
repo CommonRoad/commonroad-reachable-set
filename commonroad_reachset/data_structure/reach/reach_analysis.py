@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from commonroad_reachset.data_structure.collision_checker_py import PyCollisionChecker
 from commonroad_reachset.data_structure.configuration import Configuration
@@ -22,7 +22,7 @@ class ReachabilityAnalysis:
                 from commonroad_reachset.data_structure.collision_checker_cpp import CppCollisionChecker
 
             except ImportError:
-                print("<ReachabilityAnalysis> Cannot import C++ collision checker.")
+                print("<ReachabilityAnalysis> Cannot import CppCollisionChecker.")
 
             else:
                 self._collision_checker = CppCollisionChecker(config)
