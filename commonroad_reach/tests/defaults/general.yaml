@@ -1,0 +1,5 @@
+config_general:
+  # path are relative to the root directory
+  path_scenarios: scenarios/
+  path_output: evaluation/
+  path_test: /home/julian/TUM/MasterThesis/CodeBase/cooperative-motion-planning/reach/commonroad_reach/not_used/

@@ -1,2 +1,2 @@
-config_planning:
+planning:
   time_steps_computation: 50

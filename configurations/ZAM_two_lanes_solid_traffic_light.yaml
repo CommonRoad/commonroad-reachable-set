@@ -1,10 +1,10 @@
-config_planning:
+planning:
   dt: 0.1
   time_steps_computation: 50
   coordinate_system: "CVLN"
   use_spot: no
 
-config_reachable_set:
+reachable_set:
   size_grid: 0.2
   size_grid_2nd: 0.1
   radius_terminal_split: 0.5
