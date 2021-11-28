@@ -1,11 +1,10 @@
 import glob
 import os
-from typing import Dict, Union
+from typing import Union
 
-from omegaconf import OmegaConf, ListConfig, DictConfig
-
+import commonroad_reach.utility.general as util_general
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.utility import general as util_general
+from omegaconf import OmegaConf, ListConfig, DictConfig
 
 
 class ConfigurationBuilder:
@@ -14,7 +13,9 @@ class ConfigurationBuilder:
     path_config_default: str = None
 
     @classmethod
-    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1) -> Configuration:
+    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1,
+                            path_root: str = os.path.join(os.getcwd(), ".."),
+                            dir_config: str = "configurations", dir_config_default: str = "defaults") -> Configuration:
         """Builds configuration from default and scenario-specific config files.
 
         Steps:
@@ -28,9 +29,12 @@ class ConfigurationBuilder:
         Args:
             name_scenario (str): considered scenario
             idx_planning_problem (int, optional): index of the planning problem. Defaults to 0.
+            path_root(str): root path of the package
+            dir_config (str): directory storing configurations
+            dir_config_default (str): directory storing default configurations
         """
         if cls.path_root is None:
-            cls.set_paths(path_root=os.path.join(os.getcwd(), ".."))
+            cls.set_paths(path_root=path_root, dir_config=dir_config, dir_config_default=dir_config_default)
 
         # default configurations
         config_default = cls.construct_default_configuration()
@@ -41,6 +45,7 @@ class ConfigurationBuilder:
         # command line interface configurations
         config_cli = OmegaConf.from_cli()
 
+        # configurations coming after overrides the ones coming before
         config_combined = OmegaConf.merge(config_default, config_scenario, config_cli)
         config = Configuration(config_combined)
 
@@ -50,17 +55,17 @@ class ConfigurationBuilder:
         return config
 
     @classmethod
-    def set_paths(cls, path_root: str, path_to_config: str = "configurations", dir_configs_default: str = "defaults"):
+    def set_paths(cls, path_root: str, dir_config: str, dir_config_default: str):
         """Sets root path, path to configurations, and path to default configurations.
 
         Args:
             path_root (str): root directory
-            path_to_config (str): relative path of configurations to root path
-            dir_configs_default (str): directory under root folder containing default config files.
+            dir_config (str): directory storing configurations
+            dir_config_default (str): directory storing default configurations
         """
         cls.path_root = path_root
-        cls.path_config = os.path.join(path_root, path_to_config)
-        cls.path_config_default = os.path.join(cls.path_config, dir_configs_default)
+        cls.path_config = os.path.join(path_root, dir_config)
+        cls.path_config_default = os.path.join(cls.path_config, dir_config_default)
 
     @classmethod
     def construct_default_configuration(cls) -> Union[ListConfig, DictConfig]:
