@@ -1,12 +1,12 @@
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import pycrreachset as reach
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
+from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import ListConfig, DictConfig
 
 from commonroad_reach.utility import configugation as util_configuration
-from commonroad_route_planner.route_planner import RoutePlanner
 
 
 class Configuration:
@@ -17,31 +17,11 @@ class Configuration:
         self.scenario: Optional[Scenario] = None
         self.planning_problem: Optional[PlanningProblem] = None
 
-        self.config_general = GeneralConfiguration(config)
-        self.config_vehicle = VehicleConfiguration(config)
-        self.config_planning = PlanningConfiguration(config)
-        self.config_reachable_set = ReachableSetConfiguration(config)
-        self.config_debug = DebugConfiguration(config)
-
-    @property
-    def general(self):
-        return self.config_general
-
-    @property
-    def vehicle(self):
-        return self.config_vehicle
-
-    @property
-    def planning(self):
-        return self.config_planning
-
-    @property
-    def reachable_set(self):
-        return self.config_reachable_set
-
-    @property
-    def debug(self):
-        return self.config_debug
+        self.general = GeneralConfiguration(config)
+        self.vehicle = VehicleConfiguration(config)
+        self.planning = PlanningConfiguration(config)
+        self.reachable_set = ReachableSetConfiguration(config)
+        self.debug = DebugConfiguration(config)
 
     def complete_configuration(self, scenario, planning_problem):
         self.scenario = scenario
