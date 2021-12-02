@@ -18,3 +18,7 @@ doc/html/
 *.png
 
 cmake-build-release/
+
+commonroad_reach/graph_reach/*.c
+commonroad_reach/graph_reach/*.so
+commonroad_reach/graph_reach/build/
