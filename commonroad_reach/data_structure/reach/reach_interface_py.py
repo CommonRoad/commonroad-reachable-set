@@ -100,7 +100,7 @@ class PyReachableSetInterface:
         cnt_nodes_before_pruning = 0
         cnt_nodes_after_pruning = 0
 
-        for time_step in range(self.time_step_end - 1, self.time_step_start - 1, -1):
+        for time_step in range(self.time_step_end, self.time_step_start - 1, -1):
             list_nodes = self.reachable_set_at_time_step(time_step)
             cnt_nodes_before_pruning += len(list_nodes)
 
