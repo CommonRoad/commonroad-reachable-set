@@ -12,7 +12,6 @@ target_include_directories(pycrreachset PRIVATE
 target_link_libraries(pycrreachset PRIVATE
         yaml-cpp
         ${CRDC_LIBRARY}
-        ${CRCCOSY_LIBRARY}
         fcl
         ccd
         ${S11N_LIBRARY}
