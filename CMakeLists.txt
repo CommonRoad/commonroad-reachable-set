@@ -2,13 +2,17 @@
 cmake_minimum_required(VERSION 3.15) # minimum required version of CMake
 project(reach) # project name
 
+option(ADD_TESTS "unit tests" OFF)
+
 # ========= find necessary packages
 find_package(Eigen3 REQUIRED) # Eigen3
 find_package(fcl REQUIRED) # for collision checks
 find_package(ccd REQUIRED) # for collision checks
 find_library(S11N_LIBRARY s11n HINTS ${PC_LIBS11N_LIBRARIES}) # for object serialization in C++
 find_package(yaml-cpp REQUIRED) # for reading yaml files
-find_package(doctest REQUIRED) # testing with doctest
+if(ADD_TESTS)
+    find_package(doctest REQUIRED) # testing with doctest
+endif()
 find_package(OpenMP REQUIRED) # for parallel computation
 
 # ========= general settings
