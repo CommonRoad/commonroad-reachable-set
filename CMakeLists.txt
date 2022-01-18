@@ -4,16 +4,28 @@ project(reach) # project name
 
 option(ADD_TESTS "unit tests" OFF)
 
+if(NOT DEFINED CRDC_DIR) # path to drivability checker
+    message(SEND_ERROR "Path to drivability checker (CRDC_DIR) is not set!")
+endif()
+
+# path to vendored FCL installation in drivability checker
+set(fcl_DIR ${CRDC_DIR}/build/temp.linux-x86_64-3.7/dist/lib/cmake/fcl)
+
+# path to vendored CCD installation in drivability checker
+set(ccd_DIR ${CRDC_DIR}/build/temp.linux-x86_64-3.7/dist/lib/ccd)
+
+
 # ========= find necessary packages
 find_package(Eigen3 REQUIRED) # Eigen3
-find_package(fcl REQUIRED) # for collision checks
 find_package(ccd REQUIRED) # for collision checks
-find_library(S11N_LIBRARY s11n HINTS ${PC_LIBS11N_LIBRARIES}) # for object serialization in C++
+find_package(fcl REQUIRED) # for collision checks
+find_library(S11N_LIBRARY s11n HINTS ${CRDC_DIR}/build/lib.linux-x86_64-3.7/commonroad_dc) # for object serialization in C++
 find_package(yaml-cpp REQUIRED) # for reading yaml files
 if(ADD_TESTS)
     find_package(doctest REQUIRED) # testing with doctest
 endif()
 find_package(OpenMP REQUIRED) # for parallel computation
+
 
 # ========= general settings
 set(CMAKE_CXX_STANDARD 17) # c++ standard
@@ -27,11 +39,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0") # for profiling
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0") # for profiling
 
-if(NOT DEFINED CRDC_DIR) # path to drivability checker
-    message("Path to drivability checker (CRDC_DIR) is not set!")
-endif()
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../) # output directory of built libraries
+
 
 # ========= add sub directories
 add_subdirectory(external/pybind11) # pybind header
