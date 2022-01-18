@@ -1,10 +1,11 @@
 # set include & library paths variables for external commonroad libraries
 set(CRDC_INCLUDE
         ${CRDC_DIR}/cpp/collision/include # drivability checker
-        ${CRDC_DIR}/cpp) # curvilinear collision checker
+        ${CRDC_DIR}/cpp/geometry/include) # curvilinear collision checker
 set(CRDC_LIBRARY
-        ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
-        ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
+        ${CRDC_DIR}/commonroad_dc/libcrcc.a         # drivability checker
+        ${CRDC_DIR}/commonroad_dc/libtriangle.a     # triangle library (static dependency of libcrcc.a)
+        ${CRDC_DIR}/commonroad_dc/libcrccosy.a      # curvilinear collision checker
         CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant include directories
@@ -46,29 +47,30 @@ target_link_libraries(playground PRIVATE
         pybind11::embed)
 
 # ==== unit tests using Doctest
-# 1. create target
-add_executable(doctest_runner
-        ${REACH_SOURCE}
-        ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_polygon.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_base_set.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_node.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_minkowski.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_sweep_line.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_collision_checker.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/common/test_reachable_set_interface.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/tests/continuous/test_continuous_reachability_analysis.cpp)
-# 2. include directories
-target_include_directories(doctest_runner PRIVATE
-        ${REACH_INCLUDE_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/tests/)
-# 3. link to external libraries
-target_link_libraries(doctest_runner
-        yaml-cpp
-        ${CRDC_LIBRARY}
-        ${CRCCOSY_LIBRARY}
-        fcl
-        ccd
-        ${S11N_LIBRARY})
+if(ADD_TESTS)
+    # 1. create target
+    add_executable(doctest_runner
+            ${REACH_SOURCE}
+            ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_polygon.cpp
+            # ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_base_set.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_node.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_minkowski.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_sweep_line.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_collision_checker.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/common/test_reachable_set_interface.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/continuous/test_continuous_reachability_analysis.cpp)
+    # 2. include directories
+    target_include_directories(doctest_runner PRIVATE
+            ${REACH_INCLUDE_DIR}
+            ${CMAKE_CURRENT_LIST_DIR}/tests/)
+    # 3. link to external libraries
+    target_link_libraries(doctest_runner
+            yaml-cpp
+            ${CRDC_LIBRARY}
+            fcl
+            ccd
+            ${S11N_LIBRARY})
+endif()
