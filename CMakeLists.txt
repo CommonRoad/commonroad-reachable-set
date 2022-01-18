@@ -10,6 +10,10 @@ if(NOT DEFINED CRDC_DIR) # path to drivability checker
 endif()
 
 
+if(NOT DEFINED PYTHON_VERSION)
+    message(SEND_ERROR "Please define the python version via -DPYTHON_VERSION=")
+endif()
+
 # path to vendored FCL installation in drivability checker
 set(fcl_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VERSION}/dist/lib/cmake/fcl)
 
