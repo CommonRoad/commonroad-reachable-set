@@ -2,7 +2,7 @@
 # 1: computation with pure Python backend
 # 2: computation with Python backend and C++ collision check
 # 3: computation with C++ backend
-mode: 3
+mode: 1
 # grid size for rectangle alignment (before collision check)
 size_grid: 0.2
 # grid size for second time rectangle alignment (after collision check)

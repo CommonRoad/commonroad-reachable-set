@@ -598,6 +598,7 @@ class ReachsetForwardStepUniformGrid(ReachsetForwardStep):
         """
         x_ref_lo, y_ref_lo, x_ref_hi, y_ref_hi = self.find_bottom_left_top_right_of_reach_set_projection(poly_x_new,
                                                                                                          poly_y_new)
+
         nx = int(np.ceil((x_ref_hi - x_ref_lo) / self.grid_x - 0.00001))
         ny = int(np.ceil((y_ref_hi - y_ref_lo) / self.grid_y - 0.00001))
 

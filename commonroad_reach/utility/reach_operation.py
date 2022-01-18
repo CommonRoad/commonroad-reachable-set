@@ -202,11 +202,21 @@ def create_repartitioned_rectangles(list_rectangles: List[ReachPolygon], size_gr
 
 
 def compute_minimum_positions_of_rectangles(list_rectangles: List[ReachPolygon]) -> Tuple[float, float]:
-    """"Returns minimum lon/lat positions of the given list of rectangles."""
+    """Returns minimum lon/lat positions of the given list of rectangles."""
     p_lon_min_rectangles = min([rectangle.p_lon_min for rectangle in list_rectangles])
     p_lat_min_rectangles = min([rectangle.p_lat_min for rectangle in list_rectangles])
 
     return p_lon_min_rectangles, p_lat_min_rectangles
+
+
+def compute_extremum_positions_of_rectangles(list_rectangles: List[ReachPolygon]) -> Tuple[float, float, float, float]:
+    """Returns extremum lon/lat positions of the given list of rectangles."""
+    p_lon_min_rectangles = min([rectangle.p_lon_min for rectangle in list_rectangles])
+    p_lon_max_rectangles = max([rectangle.p_lon_max for rectangle in list_rectangles])
+    p_lat_min_rectangles = min([rectangle.p_lat_min for rectangle in list_rectangles])
+    p_lat_max_rectangles = max([rectangle.p_lat_min for rectangle in list_rectangles])
+
+    return p_lon_min_rectangles, p_lon_max_rectangles, p_lat_min_rectangles, p_lat_max_rectangles
 
 
 def discretize_rectangles(list_rectangles: List[ReachPolygon], tuple_p_min_rectangles: Tuple[float, float],
@@ -361,7 +371,7 @@ def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
         1. examine the adjacency of rectangles of drivable area and the
            propagated base sets. They are considered adjacent if they
            overlap in the position domain.
-        2. create a adapted base set for each of the drivable area rectangle
+        2. create an adapted base set for each drivable area rectangle
     """
     reachable_base_set_time_current = []
 
