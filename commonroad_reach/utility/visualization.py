@@ -10,13 +10,14 @@ from commonroad.visualization.mp_renderer import MPRenderer
 
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.data_structure.reach.reach_interface_offline import OfflineReachableSetInterface
+from commonroad_reach.data_structure.reach.reach_interface_online import OnlineReachableSetInterface
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 
 
-def plot_scenario_with_reachable_sets(reach_interface: Union[ReachableSetInterface, OfflineReachableSetInterface],
-                                      time_step_end=0, plot_limits=None,
-                                      path_output=None, as_svg=False, plot_pruned=False):
+def plot_scenario_with_reachable_sets(
+        reach_interface: Union[ReachableSetInterface, OfflineReachableSetInterface, OnlineReachableSetInterface],
+        time_step_end=0, plot_limits=None, path_output=None, as_svg=False, plot_pruned=False):
     # ==== preparation
     config = reach_interface.config
     scenario = config.scenario
@@ -123,10 +124,10 @@ def draw_reachable_sets(list_nodes: Union[List[ReachNode]], config, renderer, dr
     if config.planning.coordinate_system == "CART":
         for node in list_nodes:
             vertices = node.position_rectangle.vertices if backend == "PYTHON" else node.position_rectangle().vertices()
-            color = tuple(np.random.random(size=3))
-            draw_params_node = draw_params.copy()
-            draw_params_node.update({"shape": {"polygon": {"facecolor": color, "edgecolor": color}}})
-            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params_node)
+            # color = tuple(np.random.random(size=3))
+            # draw_params_node = draw_params.copy()
+            # draw_params_node.update({"shape": {"polygon": {"facecolor": color, "edgecolor": color}}})
+            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params)
 
     elif config.planning.coordinate_system == "CVLN":
         for node in list_nodes:

@@ -29,7 +29,7 @@ def save_offline_computation(config: Configuration, reach_interface: OfflineReac
     pickle.dump(dict_data, f)
     f.close()
 
-    print("Offline reachable set saved.")
+    print("Offline computation result saved.")
 
 
 def extract_computation_information(reach_interface: OfflineReachableSetInterface):
@@ -47,8 +47,11 @@ def extract_computation_information(reach_interface: OfflineReachableSetInterfac
             list_nodes_parent = reach_interface.dict_time_to_reachable_set[time_step - 1]
 
             matrix_adjacency = list()
-            for node_child in list_nodes:
+            for idx_node_child, node_child in enumerate(list_nodes):
                 list_adjacency = [node_parent in node_child.list_nodes_parent for node_parent in list_nodes_parent]
+                if not all(list_adjacency) and any(list_adjacency):
+                    print(f"parent-child not adjacent: time_step: {time_step}, {idx_node_child}")
+                    print(list_adjacency)
                 matrix_adjacency.append(list_adjacency)
 
             matrix_adjacency_dense = np.array(matrix_adjacency)

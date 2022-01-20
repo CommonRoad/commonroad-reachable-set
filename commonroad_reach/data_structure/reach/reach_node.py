@@ -31,7 +31,8 @@ class ReachNode:
         self.source_propagation = None
 
     def __repr__(self):
-        return f"ReachNode(time_step={self.time_step}, id={self.id})"
+        return f"ReachNode(time_step={self.time_step}, id={self.id}," \
+               f"#parent={len(self.list_nodes_parent)}, #child={len(self.list_nodes_child)})"
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ReachNode):
@@ -45,16 +46,18 @@ class ReachNode:
         return self._polygon_lon
 
     @polygon_lon.setter
-    def polygon_lon(self, polygon):
+    def polygon_lon(self, polygon: ReachPolygon):
         self._polygon_lon = polygon
-
+        self._bounds_lon = polygon.bounds
+        
     @property
     def polygon_lat(self) -> ReachPolygon:
         return self._polygon_lat
 
     @polygon_lat.setter
-    def polygon_lat(self, polygon):
+    def polygon_lat(self, polygon: ReachPolygon):
         self._polygon_lat = polygon
+        self._bounds_lat = polygon.bounds
 
     @property
     def p_lon_min(self):

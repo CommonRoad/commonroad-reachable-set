@@ -209,6 +209,8 @@ class PlanningConfiguration:
         self.uncertainty_v_lon = config_relevant.uncertainty_v_lon
         self.uncertainty_v_lat = config_relevant.uncertainty_v_lat
 
+        self.orientation_initial = None
+
         # related to specific planning problem
         self.time_step_initial = None
         self.id_lanelet_initial = None
@@ -233,6 +235,7 @@ class PlanningConfiguration:
             self.v_lon_initial = planning_problem.initial_state.velocity
             self.v_lat_initial = 0
             self.id_lanelet_initial = 0
+            self.orientation_initial = planning_problem.initial_state.orientation
 
         elif self.coordinate_system == "CVLN":
             # plans a route from the initial lanelet to the goal lanelet

@@ -16,9 +16,9 @@ class PyReachableSetInterface:
         self.time_step_start = config.planning.time_step_start
         self.time_step_end = config.planning.time_steps_computation + self.time_step_start
 
-        self.dict_time_to_base_set_propagated = dict()
-        self.dict_time_to_drivable_area = dict()
-        self.dict_time_to_reachable_set = dict()
+        self.dict_time_to_base_set_propagated = defaultdict(list)
+        self.dict_time_to_drivable_area = defaultdict(list)
+        self.dict_time_to_reachable_set = defaultdict(list)
         self.dict_time_to_drivable_area_pruned = defaultdict(list)
         self.dict_time_to_reachable_set_pruned = defaultdict(list)
 
