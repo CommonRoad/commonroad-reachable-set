@@ -214,7 +214,7 @@ def compute_extremum_positions_of_rectangles(list_rectangles: List[ReachPolygon]
     p_lon_min_rectangles = min([rectangle.p_lon_min for rectangle in list_rectangles])
     p_lon_max_rectangles = max([rectangle.p_lon_max for rectangle in list_rectangles])
     p_lat_min_rectangles = min([rectangle.p_lat_min for rectangle in list_rectangles])
-    p_lat_max_rectangles = max([rectangle.p_lat_min for rectangle in list_rectangles])
+    p_lat_max_rectangles = max([rectangle.p_lat_max for rectangle in list_rectangles])
 
     return p_lon_min_rectangles, p_lon_max_rectangles, p_lat_min_rectangles, p_lat_max_rectangles
 

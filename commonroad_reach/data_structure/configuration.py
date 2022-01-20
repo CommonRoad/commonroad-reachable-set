@@ -134,6 +134,7 @@ class GeneralConfiguration:
         self.path_scenarios = config_relevant.path_scenarios
         self.path_scenario = config_relevant.path_scenarios + name_scenario + ".xml"
         self.path_output = config_relevant.path_output + name_scenario + "/"
+        self.path_offline_data = config_relevant.path_offline_data
 
 
 class VehicleConfiguration:

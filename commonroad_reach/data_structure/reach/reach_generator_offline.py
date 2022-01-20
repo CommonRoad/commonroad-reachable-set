@@ -1,7 +1,7 @@
-from decimal import Decimal
 from typing import List, Tuple
-
+from joblib import Parallel, delayed
 import numpy as np
+from commonroad_dc import pycrcc
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
@@ -26,7 +26,7 @@ class Cell:
         Cell.cnt_id += 1
 
     def __repr__(self):
-        return f"Cell(id={self.id},x=[{self.x_min}, {self.x_max}],y=[{self.y_min}, {self.y_max}])"
+        return f"Cell(id={self.id}, x=[{self.x_min}, {self.x_max}], y=[{self.y_min}, {self.y_max}])"
 
 
 class Grid:
@@ -34,45 +34,29 @@ class Grid:
         assert x_min < x_max, "<Grid> x_min should be smaller than x_max"
         assert y_min < y_max, "<Grid> y_min should be smaller than y_max"
 
-        self.x_min = x_min
-        self.x_max = x_max
-        self.y_min = y_min
-        self.y_max = y_max
+        self.list_cells = list()
         self.size_grid = size_grid
+
+        self.x_min_cells = np.floor(x_min / size_grid) * size_grid
+        self.x_max_cells = np.ceil(x_max / size_grid) * size_grid
+        self.y_min_cells = np.floor(y_min / size_grid) * size_grid
+        self.y_max_cells = np.ceil(y_max / size_grid) * size_grid
+
+        self.list_x_cells = np.arange(self.x_min_cells, self.x_max_cells + 0.001, self.size_grid)
+        self.list_y_cells = np.arange(self.y_min_cells, self.y_max_cells + 0.001, self.size_grid)
+        self.num_columns = len(self.list_x_cells) - 1
+        self.num_rows = len(self.list_y_cells) - 1
 
         self._create_cells()
 
     def _create_cells(self):
-        size_grid = Decimal(self.size_grid)
-        x_max = Decimal(self.x_max)
-        x_min = Decimal(self.x_min)
-        y_max = Decimal(self.y_max)
-        y_min = Decimal(self.y_min)
-
-        self._num_columns = int((x_max - x_min) / size_grid)
-        self._num_rows = int((y_max - y_min) / size_grid)
-
-        self._grid = np.empty([self._num_columns, self._num_rows], dtype=Cell)
-        for idx_col in range(self._num_columns):
-            x_min_cell = self.size_grid * idx_col
-            x_max_cell = self.size_grid * (idx_col + 1)
-            for idx_row in range(self._num_rows):
-                y_min_cell = self.size_grid * idx_row
-                y_max_cell = self.size_grid * (idx_row + 1)
-                self._grid[idx_col, idx_row] = Cell(x_min_cell, x_max_cell, y_min_cell, y_max_cell)
-
-    @property
-    def list_cells(self):
-        list_cells = []
-        for row in self._grid:
-            for cell in row:
-                list_cells.append(cell)
-
-        return list_cells
+        for x_min_cell, x_max_cell in zip(self.list_x_cells[:-1], self.list_x_cells[1:]):
+            for y_min_cell, y_max_cell in zip(self.list_y_cells[:-1], self.list_y_cells[1:]):
+                self.list_cells.append(Cell(x_min_cell, x_max_cell, y_min_cell, y_max_cell))
 
     def __repr__(self):
-        return f"Grid(#cols={self._num_columns}, #rows={self._num_rows}, x=[{self.x_min}, {self.x_max}], " \
-               f"y=[{self.y_min}, {self.y_max}], size_grid={self.size_grid})"
+        return f"Grid(#cols={self.num_columns}, #rows={self.num_rows}, x=[{self.x_min_cells}, {self.x_max_cells}], " \
+               f"y=[{self.y_min_cells}, {self.y_max_cells}], size_grid={self.size_grid})"
 
 
 class OfflineReachableSetGenerator:
@@ -147,9 +131,9 @@ class OfflineReachableSetGenerator:
         list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
         list_rectangles_repartitioned = reach_operation.create_repartitioned_rectangles(
             list_rectangles_projected, self.config.reachable_set.size_grid)
-        drivable_area = self._adapt_rectangles_to_grid(list_rectangles_repartitioned,
-                                                       self.config.reachable_set.size_grid)
-        # todo: kamm's circle
+        list_rectangles_adapted = self._adapt_rectangles_to_grid(list_rectangles_repartitioned,
+                                                                 self.config.reachable_set.size_grid)
+        drivable_area = self._remove_rectangles_out_of_kamms_circle(time_step, list_rectangles_adapted)
 
         return drivable_area, list_base_sets_propagated
 
@@ -186,8 +170,8 @@ class OfflineReachableSetGenerator:
 
         grid = Grid(*tuple_extremum, size_grid)
 
-        for cell in grid.list_cells:
-            for rectangle in list_rectangles:
+        for rectangle in list_rectangles:
+            for cell in grid.list_cells:
                 if not self.is_disjoint(rectangle, cell):
                     list_rectangles_adapted.append(self.intersect_rectangle_with_cell(rectangle, cell))
 
@@ -204,12 +188,32 @@ class OfflineReachableSetGenerator:
     @staticmethod
     def intersect_rectangle_with_cell(rectangle: ReachPolygon, cell: Cell) -> ReachPolygon:
         rectangle_intersected = rectangle.clone(convexify=False)
-        rectangle_intersected.intersect_halfspace(1, 0, cell.x_max)
-        rectangle_intersected.intersect_halfspace(-1, 0, -cell.x_min)
-        rectangle_intersected.intersect_halfspace(0, 1, cell.y_max)
-        rectangle_intersected.intersect_halfspace(0, -1, -cell.y_min)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(1, 0, cell.x_max)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(-1, 0, -cell.x_min)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(0, 1, cell.y_max)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(0, -1, -cell.y_min)
 
         return rectangle_intersected
+
+    def _remove_rectangles_out_of_kamms_circle(self, time_step: float,
+                                               list_rectangles_adapted: List[ReachPolygon]) -> List[ReachPolygon]:
+        time_duration = self.config.planning.dt * time_step
+        radius_circle = 0.5 * self.config.vehicle.ego.a_max * time_duration ** 2
+        collision_circle = pycrcc.Circle(radius_circle, 0.0, 0.0)
+
+        list_idx_rectangles_to_be_deleted = list()
+        for index, rectangle in enumerate(list_rectangles_adapted):
+            collision_rectangle = \
+                pycrcc.RectAABB((rectangle.p_lon_max - rectangle.p_lon_min) / 2,
+                                (rectangle.p_lat_max - rectangle.p_lat_min) / 2,
+                                (rectangle.p_lon_max + rectangle.p_lon_min) / 2,
+                                (rectangle.p_lat_max + rectangle.p_lat_min) / 2)
+
+            if not collision_circle.collide(collision_rectangle):
+                list_idx_rectangles_to_be_deleted.append(index)
+
+        return [rectangle for index, rectangle in enumerate(list_rectangles_adapted)
+                if index not in list_idx_rectangles_to_be_deleted]
 
     @staticmethod
     def compute_reachable_set_at_time_step(time_step: int, base_set_propagated, drivable_area) -> List[ReachNode]:

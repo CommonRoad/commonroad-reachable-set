@@ -115,8 +115,7 @@ class ConfigurationBuilder:
                 except Exception as e:
                     print(e)
 
-                else:
-                    # add scenario name to the config file
-                    config_scenario["general"] = {"name_scenario": name_scenario}
+        # add scenario name to the config file
+        config_scenario["general"] = {"name_scenario": name_scenario}
 
         return config_scenario

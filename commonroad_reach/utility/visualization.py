@@ -1,21 +1,21 @@
+from pathlib import Path
 from typing import Union, List
 
 import imageio
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from pathlib import Path
-import matplotlib.pyplot as plt
-
 from commonroad.geometry.shape import Polygon
 from commonroad.visualization.mp_renderer import MPRenderer
 
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
-from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reach.data_structure.reach.reach_interface_offline import OfflineReachableSetInterface
+from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 
 
-def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_end=0, plot_limits=None,
+def plot_scenario_with_reachable_sets(reach_interface: Union[ReachableSetInterface, OfflineReachableSetInterface],
+                                      time_step_end=0, plot_limits=None,
                                       path_output=None, as_svg=False, plot_pruned=False):
     # ==== preparation
     config = reach_interface.config
@@ -34,7 +34,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     Path(path_output).mkdir(parents=True, exist_ok=True)
 
     # set time steps
-    time_step_end = time_step_end or reach_interface.time_step_end
+    time_step_end = time_step_end or reach_interface.time_step_end + 1
 
     # set plot limits
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
@@ -123,7 +123,10 @@ def draw_reachable_sets(list_nodes: Union[List[ReachNode]], config, renderer, dr
     if config.planning.coordinate_system == "CART":
         for node in list_nodes:
             vertices = node.position_rectangle.vertices if backend == "PYTHON" else node.position_rectangle().vertices()
-            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params)
+            color = tuple(np.random.random(size=3))
+            draw_params_node = draw_params.copy()
+            draw_params_node.update({"shape": {"polygon": {"facecolor": color, "edgecolor": color}}})
+            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params_node)
 
     elif config.planning.coordinate_system == "CVLN":
         for node in list_nodes:

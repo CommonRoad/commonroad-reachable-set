@@ -9,7 +9,7 @@ uncertainty_v_lon: 0.01
 uncertainty_v_lat: 0.01
 
 # this can either be "CART" (Cartesian) or "CVLN" (Curvilinear)
-coordinate_system: "CVLN"
+coordinate_system: "CART"
 
 # this can either be "CENTER" or "REAR"
 reference_point: "CENTER"
