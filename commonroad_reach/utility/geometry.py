@@ -87,9 +87,10 @@ def create_adjacency_dictionary(
 
     for idx_1, rectangle_1 in enumerate(list_rectangles_1):
         for idx_2, rectangle_2 in enumerate(list_rectangles_2):
-            if not (rectangle_1.p_lon_min > rectangle_2.p_lon_max or rectangle_1.p_lon_max < rectangle_2.p_lon_min
-                    or rectangle_1.p_lat_min > rectangle_2.p_lat_max or rectangle_1.p_lat_max < rectangle_2.p_lat_min):
+            if rectangle_1.intersects(rectangle_2):
                 dict_idx_to_list_idx[idx_1].append(idx_2)
+            # if not (rectangle_1.p_lon_min > rectangle_2.p_lon_max or rectangle_1.p_lon_max < rectangle_2.p_lon_min
+            #         or rectangle_1.p_lat_min > rectangle_2.p_lat_max or rectangle_1.p_lat_max < rectangle_2.p_lat_min):
 
     return dict_idx_to_list_idx
 

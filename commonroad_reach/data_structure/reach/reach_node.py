@@ -1,4 +1,5 @@
 import copy
+from typing import List
 
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
@@ -24,15 +25,14 @@ class ReachNode:
         self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
         self.time_step = time_step
-        self.list_nodes_parent = list()
-        self.list_nodes_child = list()
+        self.list_nodes_parent: List[ReachNode] = list()
+        self.list_nodes_child: List[ReachNode] = list()
 
         # the node from which the current node is propagated
         self.source_propagation = None
 
     def __repr__(self):
-        return f"ReachNode(time_step={self.time_step}, id={self.id}," \
-               f"#parent={len(self.list_nodes_parent)}, #child={len(self.list_nodes_child)})"
+        return f"ReachNode(time_step={self.time_step}, id={self.id})"
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ReachNode):
@@ -49,7 +49,7 @@ class ReachNode:
     def polygon_lon(self, polygon: ReachPolygon):
         self._polygon_lon = polygon
         self._bounds_lon = polygon.bounds
-        
+
     @property
     def polygon_lat(self) -> ReachPolygon:
         return self._polygon_lat
@@ -132,7 +132,7 @@ class ReachNode:
         return self.v_lat_max
 
     @property
-    def position_rectangle(self):
+    def position_rectangle(self) -> ReachPolygon:
         """Base set projected onto the position domain."""
         tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
 
@@ -213,3 +213,47 @@ class ReachNode:
         self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
+
+
+class ReachNodeMultiGeneration(ReachNode):
+
+    def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
+        super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
+        self.list_nodes_grandparent: List[ReachNodeMultiGeneration] = list()
+        self.list_nodes_grandchild: List[ReachNodeMultiGeneration] = list()
+
+    def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
+        """Adds a new parent node"""
+        if node_grandparent not in self.list_nodes_grandparent:
+            self.list_nodes_grandparent.append(node_grandparent)
+            return True
+
+        return False
+
+    def remove_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
+        """Removes a parent node"""
+        if node_grandparent in self.list_nodes_grandparent:
+            self.list_nodes_grandparent.remove(node_grandparent)
+            return True
+
+        return False
+
+    def add_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
+        """Adds a new child node"""
+        if node_grandchild not in self.list_nodes_grandchild:
+            self.list_nodes_grandchild.append(node_grandchild)
+            return True
+
+        return False
+
+    def remove_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
+        """Removes a child node
+
+        Args:
+            node_grandchild (ReachNode): child node to be removed
+        """
+        if node_grandchild in self.list_nodes_grandchild:
+            self.list_nodes_grandchild.remove(node_grandchild)
+            return True
+
+        return False

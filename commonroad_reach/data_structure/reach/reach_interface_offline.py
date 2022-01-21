@@ -3,7 +3,7 @@ from typing import List
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_generator_offline import OfflineReachableSetGenerator
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
@@ -32,7 +32,7 @@ class OfflineReachableSetInterface:
 
         return self.dict_time_to_drivable_area[time_step]
 
-    def reachable_set_at_time_step(self, time_step: int) -> List[ReachNode]:
+    def reachable_set_at_time_step(self, time_step: int) -> List[ReachNodeMultiGeneration]:
         assert time_step in self.dict_time_to_drivable_area, "<OfflineReachableSetInterface> Input time step is not valid."
 
         return self.dict_time_to_reachable_set[time_step]
@@ -51,6 +51,7 @@ class OfflineReachableSetInterface:
             current_time = now.strftime("%H:%M:%S")
             print(f"time: {current_time}, #nodes: {len(self.reachable_set_at_time_step(time_step))}")
 
+        self._generator.determine_grandparent_relationship(self.dict_time_to_reachable_set)
         self._print_analysis()
 
     def _compute_at_time_step(self, time_step: int):

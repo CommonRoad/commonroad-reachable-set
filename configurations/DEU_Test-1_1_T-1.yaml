@@ -4,6 +4,7 @@ planning:
   use_spot: yes
   
 reachable_set:
+  mode: 2
   size_grid: 0.2
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7

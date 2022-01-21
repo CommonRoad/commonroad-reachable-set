@@ -2,7 +2,7 @@ from math import ceil, floor
 from typing import List, Tuple
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility.sweep_line import SweepLine
@@ -361,7 +361,8 @@ def split_rectangle_into_two(rectangle: ReachPolygon) -> Tuple[ReachPolygon, Rea
 
 
 def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
-                                     list_base_sets_propagated: List[ReachNode]) -> List[ReachNode]:
+                                     list_base_sets_propagated: List[ReachNode],
+                                     has_multi_generation: bool = False) -> List[ReachNode]:
     """Creates adapted base sets from the computed drivable area.
 
     The nodes of the reachable set of the current time step is later created
@@ -386,7 +387,7 @@ def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
         rectangle_drivable_area = list_rectangles_drivable_area[idx_drivable_area]
 
         base_set_adapted = adapt_base_set_to_drivable_area(rectangle_drivable_area, list_base_sets_propagated,
-                                                           list_idx_base_sets_adjacent)
+                                                           list_idx_base_sets_adjacent, has_multi_generation)
         if base_set_adapted:
             reachable_base_set_time_current.append(base_set_adapted)
 
@@ -395,19 +396,20 @@ def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
 
 def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
                                     list_base_sets_propagated: List[ReachNode],
-                                    list_idx_base_sets_adjacent: List[int]):
+                                    list_idx_base_sets_adjacent: List[int],
+                                    has_multi_generation=False):
     """Returns adapted base set created from a rectangle of the drivable area.
 
     Iterate through base sets that are adjacent to the rectangle of drivable area under examination (overlaps
     in position domain), and cut the base sets down with position constraints from the rectangle. Non-empty
     intersected lon/lat polygons imply that this is a valid base set and are considered as a parent of the
     rectangle (reachable from the node from which the base set is propagated).
-
-    Args:
-        rectangle_drivable_area (ReachPolygon): rectangle under examination
-        list_base_sets_propagated (List[ReachBaseSet]): list of base sets
-        list_idx_base_sets_adjacent (List[int]): list of adjacent ones
     """
+    if not has_multi_generation:
+        Node = ReachNode
+    else:
+        Node = ReachNodeMultiGeneration
+
     list_base_sets_parent = []
     list_vertices_polygon_lon_new = []
     list_vertices_polygon_lat_new = []
@@ -436,7 +438,7 @@ def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
     if list_vertices_polygon_lon_new and list_vertices_polygon_lat_new:
         polygon_lon_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lon_new).convex_hull)
         polygon_lat_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lat_new).convex_hull)
-        base_set_adapted = ReachNode(polygon_lon_new, polygon_lat_new)
+        base_set_adapted = Node(polygon_lon_new, polygon_lat_new)
         base_set_adapted.source_propagation = list_base_sets_parent
 
         return base_set_adapted

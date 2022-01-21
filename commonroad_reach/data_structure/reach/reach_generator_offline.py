@@ -1,10 +1,10 @@
-from typing import List, Tuple
-from joblib import Parallel, delayed
+from typing import List, Tuple, Dict
+
 import numpy as np
 from commonroad_dc import pycrcc
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import reach_operation
 
@@ -101,7 +101,7 @@ class OfflineReachableSetGenerator:
         return [ReachPolygon.from_rectangle_vertices(*tuple_vertices)]
 
     @property
-    def initial_reachable_set(self) -> List[ReachNode]:
+    def initial_reachable_set(self) -> List[ReachNodeMultiGeneration]:
         """Reachable set at the initial time step.
 
         Vertices of the longitudinal and lateral polygons are constructed directly from the config file.
@@ -112,10 +112,10 @@ class OfflineReachableSetGenerator:
         polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
         polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
 
-        return [ReachNode(polygon_lon, polygon_lat, self.config.planning.time_step_start)]
+        return [ReachNodeMultiGeneration(polygon_lon, polygon_lat, self.config.planning.time_step_start)]
 
-    def compute_drivable_area_at_time_step(self, time_step: int, reachable_set_previous: List[ReachNode]) \
-            -> Tuple[List[ReachPolygon], List[ReachNode]]:
+    def compute_drivable_area_at_time_step(self, time_step: int, reachable_set_previous: List[ReachNodeMultiGeneration]) \
+            -> Tuple[List[ReachPolygon], List[ReachNodeMultiGeneration]]:
         """Computes the drivable area at the specified time step.
 
         Steps:
@@ -137,7 +137,7 @@ class OfflineReachableSetGenerator:
 
         return drivable_area, list_base_sets_propagated
 
-    def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
+    def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration]) -> List[ReachNodeMultiGeneration]:
         """Propagates the nodes of the reachable set from the last time step."""
         list_base_sets_propagated = []
 
@@ -158,7 +158,8 @@ class OfflineReachableSetGenerator:
                 pass
 
             else:
-                base_set_propagated = ReachNode(polygon_lon_propagated, polygon_lat_propagated, node.time_step)
+                base_set_propagated = ReachNodeMultiGeneration(polygon_lon_propagated, polygon_lat_propagated,
+                                                               node.time_step)
                 base_set_propagated.source_propagation = node
                 list_base_sets_propagated.append(base_set_propagated)
 
@@ -216,7 +217,8 @@ class OfflineReachableSetGenerator:
                 if index not in list_idx_rectangles_to_be_deleted]
 
     @staticmethod
-    def compute_reachable_set_at_time_step(time_step: int, base_set_propagated, drivable_area) -> List[ReachNode]:
+    def compute_reachable_set_at_time_step(time_step: int, base_set_propagated, drivable_area) \
+            -> List[ReachNodeMultiGeneration]:
         """Computes the reachable set at the specified time step.
 
         Steps:
@@ -229,9 +231,30 @@ class OfflineReachableSetGenerator:
 
         # Step 1
         list_base_sets_adapted = reach_operation.adapt_base_sets_to_drivable_area(drivable_area,
-                                                                                  base_set_propagated)
+                                                                                  base_set_propagated,
+                                                                                  has_multi_generation=True)
         # Step 2
         reachable_set_time_step_current = reach_operation.create_nodes_of_reachable_set(time_step,
                                                                                         list_base_sets_adapted)
 
         return reachable_set_time_step_current
+
+    def determine_grandparent_relationship(self, dict_time_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]):
+        for time_step in list(dict_time_to_reachable_set.keys())[2:]:
+            list_nodes = dict_time_to_reachable_set[time_step]
+            list_nodes_grand_parent = dict_time_to_reachable_set[time_step - 2]
+            list_nodes_grand_parent_propagated = list_nodes_grand_parent
+
+            for _ in range(2):
+                list_nodes_grand_parent_propagated = self._propagate_reachable_set(list_nodes_grand_parent_propagated)
+
+            for node in list_nodes:
+                rectangle_node = node.position_rectangle
+
+                for idx_grandparent, node_grand_parent_propagated in enumerate(list_nodes_grand_parent_propagated):
+                    rectangle_node_grand_parent_propagated = node_grand_parent_propagated.position_rectangle
+                    node_grand_parent = list_nodes_grand_parent[idx_grandparent]
+
+                    if rectangle_node.intersects(rectangle_node_grand_parent_propagated):
+                        node.add_grandparent_node(node_grand_parent)
+                        node_grand_parent.add_grandchild_node(node)

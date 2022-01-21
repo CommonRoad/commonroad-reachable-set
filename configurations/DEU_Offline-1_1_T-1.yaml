@@ -1,19 +1,19 @@
 planning:
   dt: 0.1
-  time_steps_computation: 10
+  time_steps_computation: 15
   
 reachable_set:
   size_grid: 0.5
 
 vehicle:
   ego:
-    v_lon_min: -20.0
-    v_lon_max: 20.0
-    v_lat_min: -20.0
-    v_lat_max: 20.0
+    v_lon_min: -30.0
+    v_lon_max: 30.0
+    v_lat_min: -30.0
+    v_lat_max: 30.0
 
-    a_lon_min: -5.01
-    a_lon_max: 5.01
-    a_lat_min: -5.01
-    a_lat_max: 5.01
-    a_max: 5.01
+    a_lon_min: -5.0
+    a_lon_max: 5.0
+    a_lat_min: -5.0
+    a_lat_max: 5.0
+    a_max: 5.0

@@ -6,12 +6,12 @@ from commonroad_reach.utility import visualization as util_visual
 
 def main():
     # ==== build configuration
-    name_scenario = "DEU_Test-1_1_T-1"
-    # name_scenario = "ARG_Carcarana-1_1_T-1"
+    # name_scenario = "DEU_Test-1_1_T-1"
+    name_scenario = "ARG_Carcarana-1_1_T-1"
     # name_scenario = "ZAM_Tjunction-1_313_T-1"
     config = ConfigurationBuilder.build_configuration(name_scenario)
 
-    reach_interface = OnlineReachableSetInterface(config, "offline_20_0.5_5.01_20.0.pickle")
+    reach_interface = OnlineReachableSetInterface(config, "offline_15_0.5_5.0_30.0.pickle")
     reach_interface.compute_reachable_sets()
 
     util_visual.plot_scenario_with_reachable_sets(reach_interface, as_svg=False)

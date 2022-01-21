@@ -14,11 +14,14 @@ def save_offline_computation(config: Configuration, reach_interface: OfflineReac
     os.makedirs(config.general.path_offline_data, exist_ok=True)
 
     dict_data = dict()
-    dict_time_to_list_tuples_reach_node_attributes, dict_time_to_adjacency_matrices = \
+    dict_time_to_list_tuples_reach_node_attributes,\
+    dict_time_to_adjacency_matrices_parent,\
+    dict_time_to_adjacency_matrices_grandparent = \
         extract_computation_information(reach_interface)
 
     dict_data["node_attributes"] = dict_time_to_list_tuples_reach_node_attributes
-    dict_data["adjacency_matrices"] = dict_time_to_adjacency_matrices
+    dict_data["adjacency_matrices_parent"] = dict_time_to_adjacency_matrices_parent
+    dict_data["adjacency_matrices_grandparent"] = dict_time_to_adjacency_matrices_grandparent
 
     time_steps = config.planning.time_steps_computation
     size_grid = config.reachable_set.size_grid
@@ -34,7 +37,8 @@ def save_offline_computation(config: Configuration, reach_interface: OfflineReac
 
 def extract_computation_information(reach_interface: OfflineReachableSetInterface):
     dict_time_to_list_tuples_reach_node_attributes = defaultdict(list)
-    dict_time_to_adjacency_matrices = dict()
+    dict_time_to_adjacency_matrices_parent = dict()
+    dict_time_to_adjacency_matrices_grandparent = dict()
 
     for time_step, list_nodes in reach_interface.dict_time_to_reachable_set.items():
         for node in list_nodes:
@@ -47,15 +51,27 @@ def extract_computation_information(reach_interface: OfflineReachableSetInterfac
             list_nodes_parent = reach_interface.dict_time_to_reachable_set[time_step - 1]
 
             matrix_adjacency = list()
-            for idx_node_child, node_child in enumerate(list_nodes):
-                list_adjacency = [node_parent in node_child.list_nodes_parent for node_parent in list_nodes_parent]
-                if not all(list_adjacency) and any(list_adjacency):
-                    print(f"parent-child not adjacent: time_step: {time_step}, {idx_node_child}")
-                    print(list_adjacency)
+            for node in list_nodes:
+                list_adjacency = [(node_parent in node.list_nodes_parent) for node_parent in list_nodes_parent]
                 matrix_adjacency.append(list_adjacency)
 
             matrix_adjacency_dense = np.array(matrix_adjacency)
             matrix_adjacency_sparse = sparse.csr_matrix(matrix_adjacency_dense, dtype=bool)
-            dict_time_to_adjacency_matrices[time_step] = matrix_adjacency_sparse
+            dict_time_to_adjacency_matrices_parent[time_step] = matrix_adjacency_sparse
 
-    return dict_time_to_list_tuples_reach_node_attributes, dict_time_to_adjacency_matrices
+        if time_step >= 2:
+            list_nodes_grandparent = reach_interface.dict_time_to_reachable_set[time_step - 2]
+
+            matrix_adjacency = list()
+            for node in list_nodes:
+                list_adjacency = [(node_grandparent in node.list_nodes_grandparent)
+                                  for node_grandparent in list_nodes_grandparent]
+                matrix_adjacency.append(list_adjacency)
+
+            matrix_adjacency_dense = np.array(matrix_adjacency)
+            matrix_adjacency_sparse = sparse.csr_matrix(matrix_adjacency_dense, dtype=bool)
+            dict_time_to_adjacency_matrices_grandparent[time_step] = matrix_adjacency_sparse
+
+    return dict_time_to_list_tuples_reach_node_attributes, \
+           dict_time_to_adjacency_matrices_parent, \
+           dict_time_to_adjacency_matrices_grandparent
