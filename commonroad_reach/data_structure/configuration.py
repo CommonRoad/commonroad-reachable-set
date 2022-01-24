@@ -266,7 +266,7 @@ class ReachableSetConfiguration:
         self.prune_nodes_not_reaching_final_time_step = config_relevant.prune_nodes_not_reaching_final_time_step
 
         self.consider_traffic = config_relevant.consider_traffic
-        self.allow_overtaking = config_relevant.allow_overtaking
+        self.name_pickle_offline = config_relevant.name_pickle_offline
 
 
 class DebugConfiguration:

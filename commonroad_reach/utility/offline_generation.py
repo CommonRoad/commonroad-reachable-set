@@ -6,10 +6,10 @@ import numpy as np
 from scipy import sparse
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_interface_offline import OfflineReachableSetInterface
+from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
 
 
-def save_offline_computation(config: Configuration, reach_interface: OfflineReachableSetInterface):
+def save_offline_computation(config: Configuration, reach_interface: PyGridOfflineReachableSet):
     # check if the output path exists
     os.makedirs(config.general.path_offline_data, exist_ok=True)
 
@@ -35,12 +35,12 @@ def save_offline_computation(config: Configuration, reach_interface: OfflineReac
     print("Offline computation result saved.")
 
 
-def extract_computation_information(reach_interface: OfflineReachableSetInterface):
+def extract_computation_information(reach_interface: PyGridOfflineReachableSet):
     dict_time_to_list_tuples_reach_node_attributes = defaultdict(list)
     dict_time_to_adjacency_matrices_parent = dict()
     dict_time_to_adjacency_matrices_grandparent = dict()
 
-    for time_step, list_nodes in reach_interface.dict_time_to_reachable_set.items():
+    for time_step, list_nodes in reach_interface._dict_time_to_reachable_set.items():
         for node in list_nodes:
             tuple_attribute = (
                 round(node.p_lon_min, 6), round(node.p_lat_min, 6), round(node.p_lon_max, 6), round(node.p_lat_max, 6),
@@ -48,7 +48,7 @@ def extract_computation_information(reach_interface: OfflineReachableSetInterfac
             dict_time_to_list_tuples_reach_node_attributes[time_step].append(tuple_attribute)
 
         if time_step >= 1:
-            list_nodes_parent = reach_interface.dict_time_to_reachable_set[time_step - 1]
+            list_nodes_parent = reach_interface._dict_time_to_reachable_set[time_step - 1]
 
             matrix_adjacency = list()
             for node in list_nodes:
@@ -60,7 +60,7 @@ def extract_computation_information(reach_interface: OfflineReachableSetInterfac
             dict_time_to_adjacency_matrices_parent[time_step] = matrix_adjacency_sparse
 
         if time_step >= 2:
-            list_nodes_grandparent = reach_interface.dict_time_to_reachable_set[time_step - 2]
+            list_nodes_grandparent = reach_interface._dict_time_to_reachable_set[time_step - 2]
 
             matrix_adjacency = list()
             for node in list_nodes:

@@ -59,7 +59,7 @@ class Grid:
                f"y=[{self.y_min_cells}, {self.y_max_cells}], size_grid={self.size_grid})"
 
 
-class OfflineReachableSetGenerator:
+class OfflineReachabilityAnalysis:
     def __init__(self, config: Configuration):
         self.config = config
 

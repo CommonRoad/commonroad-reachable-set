@@ -1,5 +1,5 @@
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
-from commonroad_reach.data_structure.reach.reach_interface import PyReachableSetInterface
+from commonroad_reach.data_structure.reach.reach_interface import PyReachableSet
 from commonroad_reach.continuous.continuous_reachability_analysis import \
     ContinuousReachabilityAnalysis
 
@@ -11,6 +11,6 @@ def test_reachable_set_computation(path_config):
     config = ConfigurationBuilder.build_configuration(name_scenario)
 
     reachability_analysis = ContinuousReachabilityAnalysis(config)
-    reach_manager = PyReachableSetInterface(reachability_analysis)
+    reach_manager = PyReachableSet(reachability_analysis)
     reach_manager.compute_reachable_sets(1, 5)
     print("Reachable set computed.")

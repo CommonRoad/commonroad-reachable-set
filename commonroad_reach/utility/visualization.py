@@ -9,14 +9,14 @@ from commonroad.geometry.shape import Polygon
 from commonroad.visualization.mp_renderer import MPRenderer
 
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
-from commonroad_reach.data_structure.reach.reach_interface_offline import OfflineReachableSetInterface
-from commonroad_reach.data_structure.reach.reach_interface_online import OnlineReachableSetInterface
+from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
+from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 
 
 def plot_scenario_with_reachable_sets(
-        reach_interface: Union[ReachableSetInterface, OfflineReachableSetInterface, OnlineReachableSetInterface],
+        reach_interface: Union[ReachableSetInterface, PyGridOfflineReachableSet, PyGridOnlineReachableSet],
         time_step_end=0, plot_limits=None, path_output=None, as_svg=False, plot_pruned=False):
     # ==== preparation
     config = reach_interface.config
