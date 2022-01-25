@@ -5,82 +5,82 @@ from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
 from commonroad.scenario.trajectory import State
 
 
-def convert_obstacles_to_curvilinear_coordinate_system(list_obstacles_CART, CLCS):
+def convert_obstacles_to_curvilinear_coordinate_system(list_obstacles_cart, CLCS):
     """Returns a list of obstacles converted into curvilinear coordinate system.
 
     Splitting obstacles in the Cartesian coordinate system into smaller rectangles (rasterization) reduces over-
     approximation in the curvilinear coordinate system, since they are converted into axis-aligned rectangles.
     """
 
-    list_obstacles_static_CART = [obs for obs in list_obstacles_CART if isinstance(obs, StaticObstacle)]
-    list_obstacles_dynamic_CART = [obs for obs in list_obstacles_CART if isinstance(obs, DynamicObstacle)]
+    list_obstacles_static_cart = [obs for obs in list_obstacles_cart if isinstance(obs, StaticObstacle)]
+    list_obstacles_dynamic_cart = [obs for obs in list_obstacles_cart if isinstance(obs, DynamicObstacle)]
 
-    list_obstacles_static_CVLN = convert_to_curvilinear_static_obstacles(list_obstacles_static_CART, CLCS)
-    list_obstacles_dynamic_CVLN = convert_to_curvilinear_dynamic_obstacles(list_obstacles_dynamic_CART, CLCS)
+    list_obstacles_static_cvln = convert_to_curvilinear_static_obstacles(list_obstacles_static_cart, CLCS)
+    list_obstacles_dynamic_cvln = convert_to_curvilinear_dynamic_obstacles(list_obstacles_dynamic_cart, CLCS)
 
-    return list_obstacles_static_CVLN + list_obstacles_dynamic_CVLN
+    return list_obstacles_static_cvln + list_obstacles_dynamic_cvln
 
 
-def convert_to_curvilinear_static_obstacles(list_obstacles_static_CART, CLCS: pycrccosy.CurvilinearCoordinateSystem):
+def convert_to_curvilinear_static_obstacles(list_obstacles_static_cart, CLCS: pycrccosy.CurvilinearCoordinateSystem):
     """Converts a list of static obstacles to obstacle under Curvilinear coordinate system."""
-    list_obstacles_static_CVLN = []
+    list_obstacles_static_cvln = []
 
-    for obstacle in list_obstacles_static_CART:
+    for obstacle in list_obstacles_static_cart:
         time_step_initial = obstacle.initial_state.time_step
 
         occupancy = obstacle.occupancy_at_time(time_step_initial)
 
         if isinstance(occupancy.shape, Shape):
-            shape_obstacle_CVLN = convert_to_curvilinear_shape(occupancy.shape, CLCS)
+            shape_obstacle_cvln = convert_to_curvilinear_shape(occupancy.shape, CLCS)
 
             id_obstacle = obstacle.obstacle_id
             type_obstacle = obstacle.obstacle_type
             position = obstacle.initial_state.position
-            position_obstacle_CVLN = CLCS.convert_to_curvilinear_coords(position[0], position[1])
+            position_obstacle_cvln = CLCS.convert_to_curvilinear_coords(position[0], position[1])
 
-            state_initial_obstacle_CVLN = State(position=position_obstacle_CVLN, orientation=0.00,
+            state_initial_obstacle_cvln = State(position=position_obstacle_cvln, orientation=0.00,
                                                 time_step=time_step_initial)
 
             # feed in the required components to construct a static obstacle
             static_obstacle = StaticObstacle(id_obstacle, type_obstacle,
-                                             shape_obstacle_CVLN, state_initial_obstacle_CVLN)
+                                             shape_obstacle_cvln, state_initial_obstacle_cvln)
 
-            list_obstacles_static_CVLN.append(static_obstacle)
+            list_obstacles_static_cvln.append(static_obstacle)
 
         # elif isinstance(occupancy.shape, ShapeGroup):
-        #     shape_group_CVLN = convert_to_curvilinear_shape_group(occupancy.shape)
+        #     shape_group_cvln = convert_to_curvilinear_shape_group(occupancy.shape)
 
-    return list_obstacles_static_CVLN
+    return list_obstacles_static_cvln
 
 
 def convert_to_curvilinear_shape(shape: Shape, CLCS):
     """Converts a rectangle or polygon to Curvilinear coordinate system."""
     if isinstance(shape, Rectangle):
-        list_vertices_CVLN = convert_to_curvilinear_vertices(shape.vertices, CLCS)
-        rectangle, position = create_rectangle_from_vertices(list_vertices_CVLN)
+        list_vertices_cvln = convert_to_curvilinear_vertices(shape.vertices, CLCS)
+        rectangle, position = create_rectangle_from_vertices(list_vertices_cvln)
 
         return rectangle
 
     elif isinstance(shape, Polygon):
-        list_vertices_CVLN = convert_to_curvilinear_vertices(shape.vertices, CLCS)
-        polygon, position = create_polygon_from_vertices(list_vertices_CVLN)
+        list_vertices_cvln = convert_to_curvilinear_vertices(shape.vertices, CLCS)
+        polygon, position = create_polygon_from_vertices(list_vertices_cvln)
 
         return polygon
     else:
         return None
 
 
-def convert_to_curvilinear_vertices(list_vertices_CART, CLCS):
+def convert_to_curvilinear_vertices(list_vertices_cart, CLCS):
     """Converts a list of vertices to Curvilinear coordinate system."""
     try:
-        list_vertices_CVLN = [
+        list_vertices_cvln = [
             CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1])
-            for vertex in list_vertices_CART
+            for vertex in list_vertices_cart
         ]
     except ValueError:
         return []
     else:
-        return list_vertices_CVLN
+        return list_vertices_cvln
 
 
 def create_rectangle_from_vertices(list_vertices):
@@ -109,45 +109,45 @@ def create_polygon_from_vertices(list_vertices):
         return None, None
 
 
-def convert_to_curvilinear_static_obstacles(list_obstacles_static_CART, CLCS):
-    list_obstacles_static_CVLN = []
-    for obstacle in list_obstacles_static_CART:
+def convert_to_curvilinear_static_obstacles(list_obstacles_static_cart, CLCS):
+    list_obstacles_static_cvln = []
+    for obstacle in list_obstacles_static_cart:
         occupancy = obstacle.occupancy_at_time(obstacle.initial_state.time_step)
 
         if isinstance(occupancy.shape, Shape):
-            shape_CVLN = convert_to_curvilinear_shape(occupancy.shape, CLCS)
+            shape_cvln = convert_to_curvilinear_shape(occupancy.shape, CLCS)
         elif isinstance(occupancy.shape, ShapeGroup):
-            shape_group_CVLN = convert_to_curvilinear_shape_group(occupancy.shape)
+            shape_group_cvln = convert_to_curvilinear_shape_group(occupancy.shape)
 
-    return list_obstacles_static_CVLN
+    return list_obstacles_static_cvln
 
 
 def convert_to_curvilinear_shape(shape: Shape, CLCS):
     if isinstance(shape, Rectangle):
-        list_vertices_CVLN = convert_to_curvilinear_vertices(shape.vertices, CLCS)
-        rectangle, coordinate = create_rectangle_from_vertices(list_vertices_CVLN)
+        list_vertices_cvln = convert_to_curvilinear_vertices(shape.vertices, CLCS)
+        rectangle, coordinate = create_rectangle_from_vertices(list_vertices_cvln)
 
         return rectangle, coordinate
 
     elif isinstance(shape, Polygon):
-        list_vertices_CVLN = convert_to_curvilinear_vertices(shape.vertices, CLCS)
-        polygon, coordinate = create_polygon_from_vertices(list_vertices_CVLN)
+        list_vertices_cvln = convert_to_curvilinear_vertices(shape.vertices, CLCS)
+        polygon, coordinate = create_polygon_from_vertices(list_vertices_cvln)
 
         return polygon, coordinate
     else:
         return None, None
 
 
-def convert_to_curvilinear_vertices(list_vertices_CART, CLCS):
+def convert_to_curvilinear_vertices(list_vertices_cart, CLCS):
     try:
-        list_vertices_CVLN = [
+        list_vertices_cvln = [
             CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1])
-            for vertex in list_vertices_CART
+            for vertex in list_vertices_cart
         ]
     except ValueError:
         return []
     else:
-        return list_vertices_CVLN
+        return list_vertices_cvln
 
 
 def create_rectangle_from_vertices(list_vertices):
@@ -178,12 +178,12 @@ def convert_to_curvilinear_shape_group(shape_group: ShapeGroup):
     return None
 
 
-def convert_to_curvilinear_dynamic_obstacles(list_obstacles_dynamic_CART, CLCS):
+def convert_to_curvilinear_dynamic_obstacles(list_obstacles_dynamic_cart, CLCS):
     return []
 
 
-def convert_to_CVLN_static_obstacle(obstacle, CLCS):
-    list_obstacles_CVLN = []
+def convert_to_cvln_static_obstacle(obstacle, CLCS):
+    list_obstacles_cvln = []
 
     list_list_vertices_obstacles = []
     occupancy = obstacle.occupancy_at_time(obstacle.initial_state.time_step)
@@ -198,17 +198,17 @@ def convert_to_CVLN_static_obstacle(obstacle, CLCS):
 
     for list_vertices in list_list_vertices_obstacles:
         try:
-            list_vertices_CVLN = [
+            list_vertices_cvln = [
                 CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1])
                 for vertex in list_vertices
             ]
         except ValueError:
             continue
         else:
-            static_obstacle = create_static_obstacle_from_vertices(list_vertices_CVLN, obstacle)
-            list_obstacles_CVLN.append(static_obstacle)
+            static_obstacle = create_static_obstacle_from_vertices(list_vertices_cvln, obstacle)
+            list_obstacles_cvln.append(static_obstacle)
 
-    return list_obstacles_CVLN
+    return list_obstacles_cvln
 
 
 def create_static_obstacle_from_vertices(list_vertices, obstacle):
@@ -248,24 +248,24 @@ def create_scenario_for_curvilinear_collision_check(self, config: Configuration)
     scenario: Scenario = config.scenario
     scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
 
-    list_obstacles_CART = []
+    list_obstacles_cart = []
 
     # add obstacles
     if config.reachable_set.consider_traffic:
-        list_obstacles_CART += config.scenario.obstacles
+        list_obstacles_cart += config.scenario.obstacles
 
     # add road boundary
     object_road_boundary, _ = boundary.create_road_boundary_obstacle(
         scenario_cc, method="triangulation"
     )
-    list_obstacles_CART.append(object_road_boundary)
+    list_obstacles_cart.append(object_road_boundary)
 
     # convert obstacles into curvilinear coordinate system
-    list_obstacles_CVLN = self.convert_obstacles_to_curvilinear_coordinate_system(
-        list_obstacles_CART, config.planning.CLCS
+    list_obstacles_cvln = self.convert_obstacles_to_curvilinear_coordinate_system(
+        list_obstacles_cart, config.planning.CLCS
     )
 
-    scenario_cc.add_objects(list_obstacles_CVLN)
+    scenario_cc.add_objects(list_obstacles_cvln)
 
     return scenario_cc
 
@@ -419,9 +419,9 @@ def create_bounding_box_from_projection_domain(time_start: int, time_end: int, C
     dict_time_to_bounding_box = defaultdict(list)
 
     for time_step in range(time_start, time_end):
-        bounding_box_CART = CLCS.projection_domain()
-        bounding_box_CART = [list(np.array(bounding_box_CART))]
-        dict_time_to_bounding_box[time_step] = bounding_box_CART
+        bounding_box_cart = CLCS.projection_domain()
+        bounding_box_cart = [list(np.array(bounding_box_cart))]
+        dict_time_to_bounding_box[time_step] = bounding_box_cart
 
     return dict_time_to_bounding_box
 

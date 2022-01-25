@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from typing import Optional, Union
 
 import pycrreachset as reach
@@ -6,7 +10,7 @@ from commonroad.scenario.scenario import Scenario
 from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import ListConfig, DictConfig
 
-from commonroad_reach.utility import configugation as util_configuration
+from commonroad_reach.utility import configuration as util_configuration
 
 
 class Configuration:
@@ -44,14 +48,23 @@ class Configuration:
 
         print("# Reachable set:")
         if self.reachable_set.mode == 1:
-            text = "Python backend"
+            text = "Single-step: Python backend with Python collision checker"
         elif self.reachable_set.mode == 2:
-            text = "Python backend (C++ collision checker)"
+            text = "Single-step: Python backend with C++ collision checker"
         elif self.reachable_set.mode == 3:
-            text = "C++ backend"
+            text = "Single-step: C++ backend with C++ collision checker"
+        elif self.reachable_set.mode == 4:
+            text = "Multi-step (online): Python backend with Python collision checker"
+        elif self.reachable_set.mode == 5:
+            text = "Multi-step (online): Python backend with C++ collision checker"
+        elif self.reachable_set.mode == 6:
+            text = "Multi-step (offline): Python backend"
         else:
             text = "Undefined"
-        print(f"# \tback end: {text}, prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
+
+        logger.info(text)
+
+        print(f"# \tmode: {text}, prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
         print("# ================================= #")
 
     def convert_to_cpp_configuration(self) -> reach.Configuration:
@@ -120,9 +133,6 @@ class Configuration:
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
         config.reachable_set.num_threads = self.reachable_set.num_threads
 
-        config.debug.verbose_mode = self.debug.verbose_mode
-        config.debug.measure_time = self.debug.measure_time
-
         return config
 
 
@@ -134,6 +144,7 @@ class GeneralConfiguration:
         self.path_scenarios = config_relevant.path_scenarios
         self.path_scenario = config_relevant.path_scenarios + name_scenario + ".xml"
         self.path_output = config_relevant.path_output + name_scenario + "/"
+        self.path_logs = config_relevant.path_logs
         self.path_offline_data = config_relevant.path_offline_data
 
 
@@ -248,7 +259,7 @@ class PlanningConfiguration:
             self.id_lanelet_initial = route.list_ids_lanelets[0]
 
             self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-            p_initial, v_initial = util_configuration.compute_initial_state_CVLN(config)
+            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
@@ -275,5 +286,3 @@ class DebugConfiguration:
 
         self.save_plots = config_relevant.save_plots
         self.save_config = config_relevant.save_config
-        self.verbose_mode = config_relevant.verbose
-        self.measure_time = config_relevant.measure_time

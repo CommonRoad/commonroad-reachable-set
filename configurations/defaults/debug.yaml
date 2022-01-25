@@ -1,5 +1,2 @@
 save_plots: 1
 save_config: 1
-
-verbose: 0
-measure_time: 1

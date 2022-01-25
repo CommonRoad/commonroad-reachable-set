@@ -9,7 +9,7 @@ np.seterr(divide='ignore', invalid='ignore')
 def compute_disc_radius_and_wheelbase(length, width, wheelbase: float = None):
     """Computes the radius of the discs to approximate the shape of vehicle.
     
-    If wheelbase is not given, it is assumed that the the front and rear axles are positioned at length/6
+    If wheelbase is not given, it is assumed that the front and rear axles are positioned at length/6
     and length * 5/6 of the shape, thus yielding a wheelbase of 4*length/6.
 
     Args:
@@ -67,7 +67,7 @@ def compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
     return curvature
 
 
-def compute_initial_state_CVLN(config):
+def compute_initial_state_cvln(config):
     """Computes the initial state of the ego vehicle given a planning problem.
 
     For the transformation of the ego vehicle's velocity to the curvilinear coordinate system, it is assumed

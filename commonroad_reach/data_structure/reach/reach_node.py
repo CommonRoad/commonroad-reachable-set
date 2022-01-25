@@ -9,8 +9,8 @@ class ReachNode:
 
     A node is constructed from a base set and has a time step, an ID, and holds a list of parent nodes
     and child nodes. Each base set is a Cartesian product of polygon_lon and polygon_lat. In Curvilinear
-    coordinate system, polygon_lon is a polygon in the longitudinal p-v domain, and polygon_lat is a
-    polygon in the lateral p-v domain; In Cartesian coordinate system, they represent polygons in the
+    coordinate system, polygon_lon is a polygon in the longitudinal s-v domain, and polygon_lat is a
+    polygon in the lateral d-v domain; In Cartesian coordinate system, they represent polygons in the
     x-v and y-v domains, respectively. It stores the indices of all parent base sets from the previous time
     step from which the current base set is reachable.
     """
@@ -153,11 +153,7 @@ class ReachNode:
         cls.cnt_id = 0
 
     def add_parent_node(self, node_parent: "ReachNode") -> bool:
-        """Adds a new parent node
-
-        Args:
-            node_parent (ReachNode): parent node to be added
-        """
+        """Adds a parent node into the list."""
         if node_parent not in self.list_nodes_parent:
             self.list_nodes_parent.append(node_parent)
             return True
@@ -165,11 +161,7 @@ class ReachNode:
         return False
 
     def remove_parent_node(self, node_parent: "ReachNode") -> bool:
-        """Removes a parent node
-
-        Args:
-            node_parent (ReachNode): parent node to be removed
-        """
+        """Removes a parent node from the list."""
         if node_parent in self.list_nodes_parent:
             self.list_nodes_parent.remove(node_parent)
             return True
@@ -177,11 +169,7 @@ class ReachNode:
         return False
 
     def add_child_node(self, node_child: "ReachNode") -> bool:
-        """Adds a new child node
-
-        Args:
-            node_child (ReachNode): child node to be added
-        """
+        """Adds a child node into the list."""
         if node_child not in self.list_nodes_child:
             self.list_nodes_child.append(node_child)
             return True
@@ -189,11 +177,7 @@ class ReachNode:
         return False
 
     def remove_child_node(self, node_child: "ReachNode") -> bool:
-        """Removes a child node
-
-        Args:
-            node_child (ReachNode): child node to be removed
-        """
+        """Removes a child node from the list."""
         if node_child in self.list_nodes_child:
             self.list_nodes_child.remove(node_child)
             return True
@@ -208,7 +192,7 @@ class ReachNode:
         self._polygon_lat = self.polygon_lat.intersect_halfspace(-1, 0, -p_lat_min)
 
     def intersect_in_velocity_domain(self, v_lon_min, v_lat_min, v_lon_max, v_lat_max):
-        """Intersects with the given v-values in velocity domain """
+        """Intersects with the given velocity values in velocity domain """
         self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)
         self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
@@ -216,14 +200,17 @@ class ReachNode:
 
 
 class ReachNodeMultiGeneration(ReachNode):
+    """Node within the reachability graph.
 
+    In addition to the ReachNode class, this class holds additional lists for grandparent and grandchild nodes.
+    """
     def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
         self.list_nodes_grandparent: List[ReachNodeMultiGeneration] = list()
         self.list_nodes_grandchild: List[ReachNodeMultiGeneration] = list()
 
     def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
-        """Adds a new parent node"""
+        """Adds a grandparent node into the list."""
         if node_grandparent not in self.list_nodes_grandparent:
             self.list_nodes_grandparent.append(node_grandparent)
             return True
@@ -231,7 +218,7 @@ class ReachNodeMultiGeneration(ReachNode):
         return False
 
     def remove_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
-        """Removes a parent node"""
+        """Removes a grandparent node from the list."""
         if node_grandparent in self.list_nodes_grandparent:
             self.list_nodes_grandparent.remove(node_grandparent)
             return True
@@ -239,7 +226,7 @@ class ReachNodeMultiGeneration(ReachNode):
         return False
 
     def add_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
-        """Adds a new child node"""
+        """Adds a grandchild node into the list."""
         if node_grandchild not in self.list_nodes_grandchild:
             self.list_nodes_grandchild.append(node_grandchild)
             return True
@@ -247,11 +234,7 @@ class ReachNodeMultiGeneration(ReachNode):
         return False
 
     def remove_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
-        """Removes a child node
-
-        Args:
-            node_grandchild (ReachNode): child node to be removed
-        """
+        """Removes a grandchild node from the list."""
         if node_grandchild in self.list_nodes_grandchild:
             self.list_nodes_grandchild.remove(node_grandchild)
             return True

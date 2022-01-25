@@ -2,6 +2,7 @@ from math import ceil, floor
 from typing import List, Tuple
 
 from commonroad_reach.data_structure.configuration import Configuration
+from commonroad_reach.data_structure.grid import Grid, Cell
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
@@ -300,6 +301,9 @@ def check_collision_and_split_rectangles(collision_checker,
     if not list_rectangles:
         return []
 
+    if not collision_checker:
+        return list_rectangles
+
     # check collision for each input rectangle
     radius_terminal_squared = radius_terminal_split ** 2
     for rectangle in list_rectangles:
@@ -462,3 +466,48 @@ def create_nodes_of_reachable_set(time_step: int, list_base_sets_adapted: List[R
         list_nodes_reachable_set_new.append(node_child)
 
     return list_nodes_reachable_set_new
+
+
+def adapt_rectangles_to_grid(list_rectangles: List[ReachPolygon], size_grid: float) -> List[ReachPolygon]:
+    """Adapts the given list of position rectangles to a Cartesian grid."""
+    def is_disjoint(_rectangle: ReachPolygon, _cell: Cell) -> bool:
+        if _rectangle.p_lon_max < _cell.x_min or _rectangle.p_lon_min > _cell.x_max or \
+                _rectangle.p_lat_max < _cell.y_min or _rectangle.p_lat_min > _cell.y_max:
+            return True
+
+        return False
+
+    def intersect_rectangle_with_cell(_rectangle: ReachPolygon, _cell: Cell) -> ReachPolygon:
+        rectangle_intersected = _rectangle.clone(convexify=False)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(1, 0, _cell.x_max)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(-1, 0, -_cell.x_min)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(0, 1, _cell.y_max)
+        rectangle_intersected = rectangle_intersected.intersect_halfspace(0, -1, -_cell.y_min)
+
+        return rectangle_intersected
+
+    list_rectangles_adapted = []
+    tuple_extremum = compute_extremum_positions_of_rectangles(list_rectangles)
+    grid = Grid(*tuple_extremum, size_grid)
+
+    for rectangle in list_rectangles:
+        for cell in grid.list_cells:
+            if not is_disjoint(rectangle, cell):
+                list_rectangles_adapted.append(intersect_rectangle_with_cell(rectangle, cell))
+
+    return list_rectangles_adapted
+
+
+def remove_rectangles_out_of_kamms_circle(time_duration: float, a_max: float,
+                                          list_rectangles_adapted: List[ReachPolygon]) -> List[ReachPolygon]:
+    """Discard position rectangles that do not intersect with Kamm's friction circle."""
+    center_circle = (0, 0)
+    radius_circle = 0.5 * a_max * time_duration ** 2
+
+    list_idx_rectangles_to_be_deleted = list()
+    for index, rectangle in enumerate(list_rectangles_adapted):
+        if not util_geometry.rectangle_intersects_with_circle(rectangle, center_circle, radius_circle):
+            list_idx_rectangles_to_be_deleted.append(index)
+
+    return [rectangle for index, rectangle in enumerate(list_rectangles_adapted)
+            if index not in list_idx_rectangles_to_be_deleted]

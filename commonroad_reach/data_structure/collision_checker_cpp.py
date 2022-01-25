@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import List
 
 import commonroad_dc.pycrcc as pycrcc
@@ -23,6 +26,8 @@ class CppCollisionChecker:
         self.collision_checker = None
         self._initialize_collision_checker()
 
+        logger.info("CPPCollisionChecker initialized.")
+
     def _initialize_collision_checker(self):
         """Initializes the collision checker based on the specified coordinate system."""
         if self.config.planning.coordinate_system == "CART":
@@ -32,7 +37,9 @@ class CppCollisionChecker:
             self.collision_checker = self._create_curvilinear_collision_checker()
 
         else:
-            raise Exception("<CppCollisionChecker> Undefined coordinate system.")
+            message = "Undefined coordinate system."
+            logger.exception(message)
+            raise Exception(message)
 
     def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:
         """Creates a Cartesian collision checker.
@@ -44,9 +51,8 @@ class CppCollisionChecker:
         dict_param = {"minkowski_sum_circle": True,
                       "minkowski_sum_circle_radius": self.config.vehicle.ego.radius_disc,
                       "resolution": 5}
-        collision_checker = self.create_cartesian_collision_checker_from_scenario(scenario_cc, params=dict_param)
 
-        return collision_checker
+        return self.create_cartesian_collision_checker_from_scenario(scenario_cc, params=dict_param)
 
     @staticmethod
     def create_scenario_with_road_boundaries(config: Configuration) -> Scenario:

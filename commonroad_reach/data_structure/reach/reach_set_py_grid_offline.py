@@ -1,12 +1,21 @@
+import logging
+
+logger = logging.getLogger(__name__)
+from typing import List
+
+from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
+from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+
 from collections import defaultdict
 from datetime import datetime
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_analysis_offline import OfflineReachabilityAnalysis
+from commonroad_reach.utility import offline_generation as util_offline
 
 
 class PyGridOfflineReachableSet:
-    """Interface to work with reachable sets with python backend."""
+    """Offline step in the multi-step reachable set computation with Python backend."""
 
     def __init__(self, config: Configuration):
         self.config = config
@@ -21,38 +30,41 @@ class PyGridOfflineReachableSet:
         self._dict_time_to_reachable_set[self.time_step_start] = self._reachability_analysis.initial_reachable_set
         self._list_time_steps_computed = [0]
 
-    def drivable_area_at_time_step(self, time_step: int):
+    def drivable_area_at_time_step(self, time_step: int) -> List[ReachPolygon]:
         if time_step not in self._list_time_steps_computed:
-            print("Given time step for drivable area retrieval is out of range.")
+            message = "Given time step for drivable area retrieval is out of range."
+            print(message)
+            logger.warning(message)
             return []
 
         else:
             return self._dict_time_to_drivable_area[time_step]
 
-    def reachable_set_at_time_step(self, time_step: int):
+    def reachable_set_at_time_step(self, time_step: int) -> List[ReachNodeMultiGeneration]:
         if time_step not in self._list_time_steps_computed:
-            print("Given time step for reachable set retrieval is out of range.")
+            message = "Given time step for reachable set retrieval is out of range."
+            print(message)
+            logger.warning(message)
             return []
 
         else:
             return self._dict_time_to_reachable_set[time_step]
 
-    def compute_reachable_sets(self, time_step_start: int = 1, time_step_end: int = 0):
+    def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
-        assert time_step_start != 0, "Time step should not start with 0."
-
-        if not time_step_end:
-            time_step_end = self.time_step_end
-
         for time_step in range(time_step_start, time_step_end + 1):
             print(time_step)
+
             self._compute_at_time_step(time_step)
+            self._list_time_steps_computed.append(time_step)
+
             now = datetime.now()
             current_time = now.strftime("%H:%M:%S")
             print(f"time: {current_time}, #nodes: {len(self.reachable_set_at_time_step(time_step))}")
 
         self._reachability_analysis.determine_grandparent_relationship(self._dict_time_to_reachable_set)
-        self._print_analysis()
+
+        util_offline.save_offline_computation(self.config, reach_interface)
 
     def _compute_at_time_step(self, time_step: int):
         """Computes drivable area and reachable set of the time step."""
@@ -79,15 +91,7 @@ class PyGridOfflineReachableSet:
         """
         base_sets_propagated = self._dict_time_to_base_set_propagated[time_step]
         drivable_area = self._dict_time_to_drivable_area[time_step]
-
-        reachable_set = self._reachability_analysis. \
-            compute_reachable_set_at_time_step(time_step, base_sets_propagated, drivable_area)
-
+        reachable_set = self._reachability_analysis.compute_reachable_set_at_time_step(time_step,
+                                                                                       base_sets_propagated,
+                                                                                       drivable_area)
         self._dict_time_to_reachable_set[time_step] = reachable_set
-
-    def _print_analysis(self):
-        sum_nodes = 0
-        for time_step in self._dict_time_to_reachable_set:
-            sum_nodes += len(self.reachable_set_at_time_step(time_step))
-
-        print(f"#nodes: {sum_nodes}")

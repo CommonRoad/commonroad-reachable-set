@@ -17,7 +17,7 @@ def create_curvilinear_aabb_from_obstacle(
 
     The shapes are dilated with the disc radius of the ego vehicle to consider its shape.
     """
-    list_aabb_CVLN = []
+    list_aabb_cvln = []
 
     if time_step is None:
         time_step = obstacle.initial_state.time_step
@@ -29,13 +29,13 @@ def create_curvilinear_aabb_from_obstacle(
     if isinstance(occupancy.shape, ShapeGroup):
         for shape in occupancy.shape.shapes:
             shape_dilated = minkowski_sum_circle(shape, radius_disc, resolution)
-            list_aabb_CVLN += create_curvilinear_and_rasterized_aabb_from_shape(shape_dilated, CLCS)
+            list_aabb_cvln += create_curvilinear_and_rasterized_aabb_from_shape(shape_dilated, CLCS)
 
     else:
         shape_dilated = minkowski_sum_circle(occupancy.shape, radius_disc, resolution)
-        list_aabb_CVLN = create_curvilinear_and_rasterized_aabb_from_shape(shape_dilated, CLCS)
+        list_aabb_cvln = create_curvilinear_and_rasterized_aabb_from_shape(shape_dilated, CLCS)
 
-    return list_aabb_CVLN
+    return list_aabb_cvln
 
 
 def create_curvilinear_and_rasterized_aabb_from_shape(
@@ -47,7 +47,7 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
     over-approximation of the shape of the obstacle. We therefore rasterize (partition) the converted rectangle in
     the longitudinal direction and adjust their lateral coordinates to reduce the over-approximation.
     """
-    list_aabb_CVLN = []
+    list_aabb_cvln = []
 
     # adapt circle to rectangle
     if isinstance(shape, Circle):
@@ -55,13 +55,13 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
         shape = Rectangle(shape.radius * 2, shape.radius * 2, shape.center)
 
     # convert to curvilinear vertices
-    list_vertices_CVLN = convert_to_curvilinear_vertices(shape.vertices, CLCS)
-    if not list_vertices_CVLN:
+    list_vertices_cvln = convert_to_curvilinear_vertices(shape.vertices, CLCS)
+    if not list_vertices_cvln:
         return []
 
     # get the bounding box of the converted vertices
     p_lon_min, p_lat_min, p_lon_max, p_lat_max = util_geometry.obtain_extremum_coordinates_of_vertices(
-        list_vertices_CVLN)
+        list_vertices_cvln)
 
     # obtain a list of longitudinal positions for rasterization
     step = 2
@@ -70,7 +70,7 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
         list_p_lon.append(p_lon_max)
 
     # this polygon will later be used to find the intersection with partitioned bounding boxes
-    polygon_obstacle_CART = ReachPolygon(shape.vertices)
+    polygon_obstacle_cart = ReachPolygon(shape.vertices)
 
     # iterate through each partition, convert to Cartesian, and find the intersection with the polygon of the shape.
     # then, convert the vertices of the intersected polygon again to Curvilinear, and find out the new lateral
@@ -82,10 +82,10 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
         vertex4 = CLCS.convert_to_cartesian_coords(p_lon_min_partition, p_lat_max)
 
         # Cartesian polygon of the partition
-        polygon_partition_CART = ReachPolygon([vertex1, vertex2, vertex3, vertex4])
+        polygon_partition_cart = ReachPolygon([vertex1, vertex2, vertex3, vertex4])
 
         # find the intersection with the polygon of the obstacle
-        polygon_intersection = polygon_obstacle_CART.intersection(polygon_partition_CART)
+        polygon_intersection = polygon_obstacle_cart.intersection(polygon_partition_cart)
         if polygon_intersection.is_empty:
             continue
 
@@ -100,39 +100,39 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
         p_lat_min_partition = min(list_p_lat)
         p_lat_max_partition = max(list_p_lat)
 
-        list_aabb_CVLN.append(util_geometry.create_aabb_from_coordinates(p_lon_min_partition, p_lat_min_partition,
+        list_aabb_cvln.append(util_geometry.create_aabb_from_coordinates(p_lon_min_partition, p_lat_min_partition,
                                                                          p_lon_max_partition, p_lat_max_partition))
 
-    return list_aabb_CVLN
+    return list_aabb_cvln
 
 
-def convert_to_curvilinear_vertices(vertices_CART: np.ndarray, CLCS: pycrccosy.CurvilinearCoordinateSystem):
+def convert_to_curvilinear_vertices(vertices_cart: np.ndarray, CLCS: pycrccosy.CurvilinearCoordinateSystem):
     """Converts a list of Cartesian vertices to Curvilinear vertices."""
     try:
-        list_vertices_CVLN = [CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1]) for vertex in vertices_CART]
+        list_vertices_cvln = [CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1]) for vertex in vertices_cart]
 
     except ValueError:
         return []
 
     else:
-        return list_vertices_CVLN
+        return list_vertices_cvln
 
 
-def convert_to_cartesian_polygons(rectangle_CVLN: Union[ReachPolygon, reach.ReachPolygon],
+def convert_to_cartesian_polygons(rectangle_cvln: Union[ReachPolygon, reach.ReachPolygon],
                                   CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle):
     """Returns a list of rectangles converted to Cartesian coordinate system.
 
     If split_wrt_angle set to True, the converted rectangles will be further split into smaller ones if their
     upper and lower edges has a difference in angle greater than a threshold. This is to smoothen the plotting.
     """
-    if isinstance(rectangle_CVLN, ReachPolygon):
-        return convert_to_cartesian_polygon(rectangle_CVLN.bounds, CLCS, split_wrt_angle)
+    if isinstance(rectangle_cvln, ReachPolygon):
+        return convert_to_cartesian_polygon(rectangle_cvln.bounds, CLCS, split_wrt_angle)
 
-    elif isinstance(rectangle_CVLN, reach.ReachPolygon):
-        p_lon_min = rectangle_CVLN.p_lon_min()
-        p_lat_min = rectangle_CVLN.p_lat_min()
-        p_lon_max = rectangle_CVLN.p_lon_max()
-        p_lat_max = rectangle_CVLN.p_lat_max()
+    elif isinstance(rectangle_cvln, reach.ReachPolygon):
+        p_lon_min = rectangle_cvln.p_lon_min()
+        p_lat_min = rectangle_cvln.p_lat_min()
+        p_lon_max = rectangle_cvln.p_lon_max()
+        p_lat_max = rectangle_cvln.p_lat_max()
 
         return convert_to_cartesian_polygon((p_lon_min, p_lat_min, p_lon_max, p_lat_max), CLCS, split_wrt_angle)
 

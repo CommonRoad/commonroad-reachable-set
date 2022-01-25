@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from abc import ABC
 from typing import List, Tuple, Union
 
@@ -8,15 +11,16 @@ from shapely.geometry import Polygon, MultiPolygon
 class ReachPolygon(Polygon, ABC):
     """Polygon class that constitutes to reachset nodes and position rectangles.
 
-    When used to represent a reachset node, it is defined in the position-velocity
-    domain, and can be used to represent a polygon in either the longitudinal or
-    the lateral direction; When used to represent a position, it is defined in
-    the longitudinal/lateral position domain.
+    When used to represent a reachset node, it is defined in the position-velocity domain, and can be used to
+    represent a polygon in either the longitudinal or the lateral direction; When used to represent a position,
+    it is defined in the longitudinal/lateral position domain.
     """
 
     def __init__(self, list_vertices, fix_vertices=True):
         if len(list_vertices) < 3:
-            raise Exception("A polygon needs at least 3 vertices.")
+            message = "A polygon needs at least 3 vertices."
+            logger.exception(message)
+            raise Exception(message)
 
         # Shapely closed polygon requires identical initial and final vertices
         if fix_vertices and not np.allclose(list_vertices[0], list_vertices[-1]):
@@ -108,7 +112,7 @@ class ReachPolygon(Polygon, ABC):
 
     def intersect_halfspace(self, a, b, c) -> Union["ReachPolygon", None]:
         """Returns the intersection of the polygon and the halfspace specified in the form of ax + by <= c."""
-        assert not (a == 0 and b == 0), "<ReachPolygon> Halfspace parameters not valid."
+        assert not (a == 0 and b == 0), "Halfspace parameters not valid."
 
         polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self.bounds)
         polygon_intersected = self.intersection(polygon_halfspace)
@@ -133,7 +137,9 @@ class ReachPolygon(Polygon, ABC):
                 list_y.extend(polygon.exterior.coords.xy[1])
 
         else:
-            raise Exception("<ReachPolygon> Type error.")
+            message = "Type error."
+            logger.exception(message)
+            raise Exception(message)
 
         list_vertices = [vertex for vertex in zip(list_x, list_y)]
 
@@ -153,7 +159,9 @@ class ReachPolygon(Polygon, ABC):
                 list_y.extend(plg.exterior.coords.xy[1])
 
         else:
-            raise Exception("<ReachPolygon> Type error.")
+            message = "Type error."
+            logger.exception(message)
+            raise Exception(message)
 
         list_vertices = [vertex for vertex in zip(list_x, list_y)]
 

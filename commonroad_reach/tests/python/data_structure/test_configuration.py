@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from commonroad_reach.utility import configugation as util_configuration
+from commonroad_reach.utility import configuration as util_configuration
 
 
 @pytest.mark.parametrize(

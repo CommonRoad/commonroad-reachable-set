@@ -1,13 +1,18 @@
+import logging
+
+logger = logging.getLogger(__name__)
+logging.getLogger('PIL').setLevel(logging.WARNING)
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+
 from pathlib import Path
 from typing import Union, List
-
 import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+
 from commonroad.geometry.shape import Polygon
 from commonroad.visualization.mp_renderer import MPRenderer
-
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
 from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
@@ -46,7 +51,7 @@ def plot_scenario_with_reachable_sets(
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
 
     # ==== plotting
-    print("\nPlotting reachable sets...")
+    print("* Plotting reachable sets...")
     renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
     for time_step in range(time_step_end):
         # clear plot
@@ -55,11 +60,7 @@ def plot_scenario_with_reachable_sets(
         # plot scenario at current time step
         scenario.draw(renderer, draw_params={"time_begin": time_step})
 
-        if not plot_pruned:
-            list_nodes = reach_interface.reachable_set_at_time_step(time_step)
-
-        else:
-            list_nodes = reach_interface.pruned_reachable_set_at_time_step(time_step)
+        list_nodes = reach_interface.reachable_set_at_time_step(time_step)
 
         draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
 
@@ -106,11 +107,11 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
 
     elif config.planning.coordinate_system == "CVLN":
         for time_step in range(reach_interface.time_step_start, reach_interface.time_step_end):
-            for rectangle_CVLN in reach_interface.drivable_area_at_time_step(time_step):
-                list_rectangles_CART = util_coordinate_system.convert_to_cartesian_polygons(rectangle_CVLN,
+            for rectangle_cvln in reach_interface.drivable_area_at_time_step(time_step):
+                list_rectangles_cart = util_coordinate_system.convert_to_cartesian_polygons(rectangle_cvln,
                                                                                             config.planning.CLCS, False)
-                for rectangle_CART in list_rectangles_CART:
-                    bounds = rectangle_CART.bounds
+                for rectangle_cart in list_rectangles_cart:
+                    bounds = rectangle_cart.bounds
                     x_min = min(x_min, bounds[0])
                     y_min = min(y_min, bounds[1])
                     x_max = max(x_max, bounds[2])
@@ -132,10 +133,10 @@ def draw_reachable_sets(list_nodes: Union[List[ReachNode]], config, renderer, dr
     elif config.planning.coordinate_system == "CVLN":
         for node in list_nodes:
             position_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
-            list_polygons_CART = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
+            list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
-            if list_polygons_CART:
-                for polygon in list_polygons_CART:
+            if list_polygons_cart:
+                for polygon in list_polygons_cart:
                     Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
 
 
@@ -181,10 +182,10 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
 #     elif config.planning.coordinate_system == "CVLN":
 #         for list_rectangles_drivable_area in reach_interface.map_time_to_drivable_area().values():
 #             for rectangle in list_rectangles_drivable_area:
-#                 rectangle_CART = util_coordinate_system.convert_to_cartesian_polygons(rectangle,
+#                 rectangle_cart = util_coordinate_system.convert_to_cartesian_polygons(rectangle,
 #                                                                                       config.planning.CLCS)
-#                 if rectangle_CART:
-#                     bounds = rectangle_CART.bounds
+#                 if rectangle_cart:
+#                     bounds = rectangle_cart.bounds
 #                     x_min = min(x_min, bounds[0])
 #                     y_min = min(y_min, bounds[1])
 #                     x_max = max(x_max, bounds[2])
@@ -256,11 +257,11 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
 #
 #         elif reach_interface.config().planning.coordinate_system == reach.CoordinateSystem.CURVILINEAR:
 #             for rectangle in list_rectangles_drivable_area:
-#                 polygon_CART = util_coordinate_system.convert_to_cartesian_polygons(rectangle,
+#                 polygon_cart = util_coordinate_system.convert_to_cartesian_polygons(rectangle,
 #                                                                                     config.planning.CLCS)
 #
-#                 if polygon_CART:
-#                     Polygon(vertices=np.array(polygon_CART.vertices)).draw(renderer, draw_params=draw_params)
+#                 if polygon_cart:
+#                     Polygon(vertices=np.array(polygon_cart.vertices)).draw(renderer, draw_params=draw_params)
 #
 #         plt.rc("axes", axisbelow=True)
 #         ax = plt.gca()
@@ -310,17 +311,17 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
 #
 #         elif reach_interface.config().planning.coordinate_system == reach.CoordinateSystem.CURVILINEAR:
 #             for node in list_nodes_reachable_set:
-#                 polygon_CART = util_coordinate_system.convert_to_cartesian_polygons(
+#                 polygon_cart = util_coordinate_system.convert_to_cartesian_polygons(
 #                     node.position_rectangle(), config.planning.CLCS)
 #
-#                 if polygon_CART:
-#                     Polygon(vertices=np.array(polygon_CART.vertices)).draw(renderer, draw_params=draw_params)
+#                 if polygon_cart:
+#                     Polygon(vertices=np.array(polygon_cart.vertices)).draw(renderer, draw_params=draw_params)
 #
 #             # for rectangle in list_nodes_reachable_set:
-#             #     polygon_CART = util_coordinate_system.convert_to_cartesian_polygon(rectangle,
+#             #     polygon_cart = util_coordinate_system.convert_to_cartesian_polygon(rectangle,
 #             #                                                                        config.planning.CLCS)
-#             #     if polygon_CART:
-#             #         Polygon(vertices=np.array(polygon_CART.vertices)).draw(renderer, draw_params=draw_params)
+#             #     if polygon_cart:
+#             #         Polygon(vertices=np.array(polygon_cart.vertices)).draw(renderer, draw_params=draw_params)
 #         else:
 #             raise Exception("<Visualization> Invalid coordinate system.")
 #

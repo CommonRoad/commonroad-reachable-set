@@ -2,8 +2,9 @@
 # 1: Single-step: Python backend with Python collision checker
 # 2: Single-step: Python backend with C++ collision checker
 # 3: Single-step: C++ backend with C++ collision checker
-# 4: Multi-step: Python backend with Python collision checker
-# 5: Multi-step: Python backend with C++ collision checker
+# 4: Multi-step (online): Python backend with Python collision checker
+# 5: Multi-step (online): Python backend with C++ collision checker
+# 6: Multi-step (offline): Python backend
 mode: 1
 # grid size for rectangle alignment (before collision check)
 size_grid: 0.2

@@ -4,8 +4,9 @@ from typing import Dict, List, Tuple
 import commonroad_dc.pycrcc as pycrcc
 import numpy as np
 import skgeom as sg
-from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from skgeom import minkowski
+
+from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
 def linear_mapping(polygon, tuple_coefficients: Tuple):
@@ -25,13 +26,9 @@ def linear_mapping(polygon, tuple_coefficients: Tuple):
 def minkowski_sum(polygon1: ReachPolygon, polygon2: ReachPolygon) -> ReachPolygon:
     """Returns the Minkowski sum of two polygons.
 
-    Args:
-        polygon1 (ReachPolygon): first polygon
-        polygon2 (ReachPolygon): second polygon
+    Shapely polygon requires identical initial and final vertices; scikit-geometry polygon requires different
+    initial and final vertices. Minkowski sum in scikit-geometry requires sorting in counterclockwise direction.
     """
-    # shapely polygon requires identical initial and final vertices
-    # scikit-geometry polygon requires different initial and final vertices
-    # minkowski sum in scikit-geometry requires sorting counterclockwise
     list_vertices = sort_vertices_counterclockwise([vertex for vertex in polygon1.vertices])
     sg_polygon_1 = sg.Polygon(list_vertices)
 
@@ -75,8 +72,8 @@ def sort_vertices_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:
     return list_vertices_sorted
 
 
-def create_adjacency_dictionary(
-        list_rectangles_1: List[ReachPolygon], list_rectangles_2: List[ReachPolygon]) -> Dict[int, List[int]]:
+def create_adjacency_dictionary(list_rectangles_1: List[ReachPolygon], list_rectangles_2: List[ReachPolygon]) \
+        -> Dict[int, List[int]]:
     """Returns an adjacency dictionary.
 
     E.g.: {0:[1, 2], [1:[3, 4]]} = rectangle_0 from 1st list overlaps
@@ -89,8 +86,6 @@ def create_adjacency_dictionary(
         for idx_2, rectangle_2 in enumerate(list_rectangles_2):
             if rectangle_1.intersects(rectangle_2):
                 dict_idx_to_list_idx[idx_1].append(idx_2)
-            # if not (rectangle_1.p_lon_min > rectangle_2.p_lon_max or rectangle_1.p_lon_max < rectangle_2.p_lon_min
-            #         or rectangle_1.p_lat_min > rectangle_2.p_lat_max or rectangle_1.p_lat_max < rectangle_2.p_lat_min):
 
     return dict_idx_to_list_idx
 
@@ -118,3 +113,27 @@ def create_aabb_from_coordinates(p_lon_min, p_lat_min, p_lon_max, p_lat_max):
     aabb = pycrcc.RectAABB(length / 2.0, width / 2.0, center_lon, center_lat)
 
     return aabb
+
+
+def rectangle_intersects_with_circle(rectangle: ReachPolygon, center: Tuple[float, float], radius: float) -> bool:
+    """Returns true if the given rectangles intersects with the attributes of a circle."""
+    x_closest = clamp(center[0], rectangle.p_lon_min, rectangle.p_lon_max)
+    y_closest = clamp(center[1], rectangle.p_lat_min, rectangle.p_lat_max)
+
+    distance_x = center[0] - x_closest
+    distance_y = center[1] - y_closest
+
+    distance_squared = (distance_x * distance_x) + (distance_y * distance_y)
+
+    return distance_squared < (radius * radius)
+
+
+def clamp(value, min_value, max_value):
+    if value <= min_value:
+        return min_value
+
+    elif value >= max_value:
+        return max_value
+
+    else:
+        return value
