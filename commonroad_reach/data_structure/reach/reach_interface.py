@@ -47,6 +47,14 @@ class ReachableSetInterface:
     def time_step_end(self):
         return self._interface.time_step_end
 
+    @property
+    def reachable_set(self):
+        return self._interface.dict_time_to_reachable_set
+
+    @property
+    def drivable_area(self):
+        return self._interface.dict_time_to_drivable_area
+
     def drivable_area_at_time_step(self, time_step: int) -> Union[List[ReachPolygon]]:
         return self._interface.drivable_area_at_time_step(time_step)
 
