@@ -1,4 +1,0 @@
-INFO     [2022-01-25 10:50:01] --- Reachable set interface initialized. (reach_interface.py:23)
-INFO     [2022-01-25 10:50:01] --- * Computing reachable sets... (reach_interface.py:88)
-INFO     [2022-01-25 10:50:01] --- 	Computation took: 	0.181s (reach_interface.py:95)
-INFO     [2022-01-25 10:50:05] --- Done. (compute_reachable_set.py:26)
