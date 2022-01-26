@@ -9,13 +9,30 @@ import networkx as nx
 
 import pycrreachset
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.utility.geometry import area_of_reachable_set
+from commonroad_reach.data_structure.reach.reach_node import ReachNode
 
-# TODO Adapt all data types to work with the Python interface -> Goal: Driving corridor extraction works with both
-#  backends
-# TODO add correct description of DIGITS
-# precision
+# TODO Adapt all data types to work with the Python interface
+# TODO add specific terminal set (e.g., goal region)
+# TODO implement python function for connected set identification (using shapely polygon)
+
+# precision for connectivity check
 DIGITS = 2
+
+
+def area_of_reachable_set(list_reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]]) -> float:
+    """
+    Function computes the area of a given list of reachable set nodes
+    :param list_reach_set_nodes: List of base sets (i.e., reachable set nodes)
+    :return area of reachable set
+    """
+    area = 0.0
+    if type(list_reach_set_nodes[0]) == pycrreachset.ReachNode:
+        for node in list_reach_set_nodes:
+            area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
+    else:
+        for node in list_reach_set_nodes:
+            area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
+    return area
 
 
 class DrivingCorridors:
@@ -36,7 +53,6 @@ class DrivingCorridors:
 
     @reach_set.setter
     def reach_set(self, reachable_sets):
-        # update reach_set and time_steps with new reachable set
         self._reach_set = reachable_sets
         self.time_steps = sorted(list(reachable_sets.keys()))
 
@@ -51,8 +67,6 @@ class DrivingCorridors:
         :param lon_positions: (optional) longitudinal position
         :param lon_driving_corridor: (optional) longitudinal driving corridor
         """
-        # TODO add specific terminal set (e.g., goal region)
-
         if lon_positions is None and lon_driving_corridor is None:
             print("Computing longitudinal driving corridor...")
             time_start = time.time()
@@ -123,6 +137,7 @@ class DrivingCorridors:
         :param lon_pos: longitudinal positions of longitudinal trajectory (only necessary for lateral driving corridors)
         :param lon_driving_corridor: longitudinal driving corridor (only necessary for lateral driving corridors)
         """
+        # determine whether longitudinal or lateral corridor is searched
         longitudinal = False
         lateral = False
         if lon_pos is None and lon_driving_corridor is None:
@@ -153,9 +168,8 @@ class DrivingCorridors:
             filtered_parent_reach_set_nodes = self._determine_reachset_overlap_with_longitudinal_position(
                 list(parent_reach_set_nodes), lon_pos[time_idx - 1])
             if not filtered_parent_reach_set_nodes:
-                warnings.warn('No reachboxes found at x position. # of parent reach nodes: {}. '
-                              'current time step {}, max time step {}'.format(
-                    len(parent_reach_set_nodes), time_idx, self.time_steps[-1]))
+                warnings.warn('No reachboxes found at x position. # of parent reach nodes: {}. current time step {}, '
+                              'max time step {}'.format(len(parent_reach_set_nodes), time_idx, self.time_steps[-1]))
 
             # filter out reach set nodes that are not part of the longitudinal driving corridor
             filtered_parent_reach_set_nodes.intersection_update(lon_driving_corridor[time_idx - 1])
@@ -193,14 +207,13 @@ class DrivingCorridors:
         :param reach_set_nodes: list of reachable set nodes
         :return: list of connected reachable sets
         """
-        # determine overlapping reachable set nodes
-        # TODO implement python function for connected set identification (using shapely polygon)
+        # determine overlapping reachable set nodes (i.e., connected sets)
         if self.backend == "CPP":
             overlap = pycrreachset.connected_reachset_boost(reach_set_nodes, DIGITS)
         elif self.backend == "PYTHON":
             overlap = None
         else:
-            err_msg = "Invalid backend for driving corridor extraction. One of the following is supported: CPP or PYTHON"
+            err_msg = "Invalid backend (CPP or PYTHON)"
             raise ValueError(err_msg)
         adjacency = []
         [adjacency.extend(v) for v in overlap.values()]

@@ -1,11 +1,11 @@
 planning:
   dt: 0.1
-  time_steps_computation: 40
+  time_steps_computation: 34
 
 vehicle:
   ego:
     # velocity in m/s
-    v_lon_min: -5.01
+    v_lon_min: 0.0
 
 reachable_set:
   size_grid: 0.2

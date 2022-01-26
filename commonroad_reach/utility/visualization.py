@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Dict
 
 import imageio
 import numpy as np
@@ -13,6 +13,83 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
+
+try:
+    import pycrreachset
+except ImportError:
+    pass
+
+
+def plot_scenario_with_driving_corridors(driving_corridors: List[Dict[int, Union[ReachNode, pycrreachset.ReachNode]]],
+                                         reach_interface: ReachableSetInterface, time_step: int = None):
+    """
+    Visualizes scenario and driving corridors. For each driving corridor in the list, a separate plot is created. If no
+    time step is passed (time_step=None), the complete driving corridor is shown and the scenario at first time step is
+    plotted. If a time step is passed, the scenario and the driving corridor at the specified time step is shown.
+    :param driving_corridors: list of driving corridors to be visualized
+    :param reach_interface: reachable set interface object
+    :param time_step: (optional) if None, the entire driving corridor (up to the last time step) is shown. Otherwise,
+    the driving corridor at the specified time step is plotted.
+    """
+    # get config and scenario
+    config = reach_interface.config
+    scenario = config.scenario
+
+    # set backend
+    if config.reachable_set.mode == 3:
+        backend = "CPP"
+    else:
+        backend = "PYTHON"
+
+    # set colors
+    palette = sns.color_palette("GnBu_d", 3)
+    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
+    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # loop over driving corridors in list and count
+    dc_counter = 1
+    for dc in driving_corridors:
+        # create output directory
+        path_output = config.general.path_output
+        Path(path_output).mkdir(parents=True, exist_ok=True)
+
+        # set plot limits
+        plot_limits = compute_plot_limits_from_reachable_sets(reach_interface, backend)
+        # create renderer object
+        renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+
+        if time_step is None:
+            # plot complete driving corridor and scenario at first time step
+            plt.cla()
+            scenario.draw(renderer, draw_params={"time_begin": 0})
+            # all reach set nodes in driving corridor
+            list_nodes = [item for sublist in list(dc.values()) for item in sublist]
+            draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
+        else:
+            # plot driving corridor and scenario at the specified time step
+            plt.cla()
+            scenario.draw(renderer, draw_params={"time_begin": 0})
+            # reach set nodes in driving corridor at specified time step
+            list_nodes = dc[time_step]
+            draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
+
+        plt.rc("axes", axisbelow=True)
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        plt.margins(0, 0)
+        renderer.render()
+
+        if config.debug.save_plots:
+            if time_step is None:
+                plt.savefig(f'{path_output}{"lon_driving_corridor"}_{dc_counter}_complete.png', format="png",
+                            bbox_inches="tight",
+                            transparent=False)
+            else:
+                plt.savefig(f'{path_output}/{"lon_driving_corridor"}_{dc_counter}/{"lon_driving_corridor"}_{time_step:05d}.png', format="png", bbox_inches="tight",
+                            transparent=False)
+        # next driving corridor
+        dc_counter += 1
+    print("\tDriving corridors plotted.")
 
 
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_end=0, plot_limits=None,
