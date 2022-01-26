@@ -17,7 +17,7 @@ class OfflineReachabilityAnalysis:
 
         if not self.config.planning.coordinate_system == "CART":
             message = "Offline reachable set computation only supports Cartesian coordinate system."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
         self._initialize_zero_state_polygons()
@@ -29,12 +29,12 @@ class OfflineReachabilityAnalysis:
         of the system.
         """
         self.polygon_zero_state_lon = reach_operation.create_zero_state_polygon(self.config.planning.dt,
-                                                                                self.config.vehicle.ego.a_lon_min,
-                                                                                self.config.vehicle.ego.a_lon_max)
+                                                                                -self.config.vehicle.ego.a_max,
+                                                                                self.config.vehicle.ego.a_max)
 
         self.polygon_zero_state_lat = reach_operation.create_zero_state_polygon(self.config.planning.dt,
-                                                                                self.config.vehicle.ego.a_lat_min,
-                                                                                self.config.vehicle.ego.a_lat_max)
+                                                                                -self.config.vehicle.ego.a_max,
+                                                                                self.config.vehicle.ego.a_max)
 
     @property
     def initial_drivable_area(self) -> List[ReachPolygon]:
@@ -102,14 +102,14 @@ class OfflineReachabilityAnalysis:
                 polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
                                                                            self.polygon_zero_state_lon,
                                                                            self.config.planning.dt,
-                                                                           self.config.vehicle.ego.v_lon_min,
-                                                                           self.config.vehicle.ego.v_lon_max)
+                                                                           -self.config.vehicle.ego.v_max,
+                                                                           self.config.vehicle.ego.v_max)
 
                 polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
                                                                            self.polygon_zero_state_lat,
                                                                            self.config.planning.dt,
-                                                                           self.config.vehicle.ego.v_lat_min,
-                                                                           self.config.vehicle.ego.v_lat_max)
+                                                                           -self.config.vehicle.ego.v_max,
+                                                                           self.config.vehicle.ego.v_max)
             except (ValueError, RuntimeError):
                 logger.warning("Error occurred while propagating polygons.")
 
@@ -148,6 +148,7 @@ class OfflineReachabilityAnalysis:
         The grandparent-child relationship is established if the grandparent can reach the grandchild by propagating
         two time steps.
         """
+        logger.debug("Determining grandparent-grandchild relationship...")
         for time_step in list(dict_time_to_reachable_set.keys())[2:]:
             list_nodes = dict_time_to_reachable_set[time_step]
             list_nodes_grand_parent = dict_time_to_reachable_set[time_step - 2]

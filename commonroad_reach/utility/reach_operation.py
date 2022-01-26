@@ -1,3 +1,7 @@
+import logging
+from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 from math import ceil, floor
 from typing import List, Tuple
 
@@ -22,10 +26,8 @@ def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPol
         a_min (float): minimum acceleration (maximum deceleration)
         a_max (float): maximum acceleration
     """
-    # Step 1
     polygon_bounding = create_bounding_polygon(dt, a_min, a_max)
 
-    # Step 2
     polygon_intersected = polygon_bounding
     for gamma in [0, 0.5, 1]:
         tuple_coefficients_upper, tuple_coefficients_lower = compute_halfspace_coefficients(dt, a_min, a_max, gamma)
@@ -140,13 +142,6 @@ def propagate_polygon(polygon: ReachPolygon, polygon_zero_state: ReachPolygon, d
         2. compute the linear mapping (zero-input response) of the polygon
         3. compute the minkowski sum of the zero-input and zero-state polygons
         4. intersect with halfspaces to incorporate velocity limits
-
-    Args:
-        polygon (ReachPolygon): (lon/lat) polygon to be propagated
-        polygon_zero_state (ReachPolygon): (lon/lat) zero state polygon
-        dt (float): dt of propagation
-        v_min (float): (lon/lat) minimum velocity limit
-        v_max (float): (lon/lat) maximum velocity limit
     """
     polygon_processed = polygon.clone(convexify=True)
     polygon_processed = util_geometry.linear_mapping(polygon_processed, (1, dt, 0, 1))
@@ -177,25 +172,17 @@ def create_repartitioned_rectangles(list_rectangles: List[ReachPolygon], size_gr
         2. discretize rectangles
         3. repartition the rectangles into a new list of rectangles.
         4. restore the rectangles back to undiscretized ones.
-
-    Args:
-        list_rectangles (List[ReachPolygon]): the list of rectangles to be repartitioned
-        size_grid (float, optional): grid size for axis alignment
     """
 
     if not list_rectangles:
         return []
 
-    # Step 1
     tuple_p_min_rectangles = compute_minimum_positions_of_rectangles(list_rectangles)
 
-    # Step 2
     list_rectangles_discretized = discretize_rectangles(list_rectangles, tuple_p_min_rectangles, size_grid)
 
-    # Step 3
     list_rectangles_repartitioned = repartition_rectangles(list_rectangles_discretized)
 
-    # Step 4
     list_rectangles_undiscretized = undiscretized_rectangles(list_rectangles_repartitioned,
                                                              tuple_p_min_rectangles, size_grid)
 
@@ -229,20 +216,18 @@ def discretize_rectangles(list_rectangles: List[ReachPolygon], tuple_p_min_recta
     """
     list_rectangles_discretized = []
     p_lon_min_rectangles, p_lat_min_rectangles = tuple_p_min_rectangles
-    factor_scale = 10000
-
-    size_grid = int(size_grid * factor_scale)
-    p_lon_min_rectangles = int(p_lon_min_rectangles * factor_scale)
-    p_lat_min_rectangles = int(p_lat_min_rectangles * factor_scale)
+    p_lon_min_rectangles = Decimal(p_lon_min_rectangles)
+    p_lat_min_rectangles = Decimal(p_lat_min_rectangles)
+    size_grid = Decimal(size_grid)
 
     for rectangle in list_rectangles:
-        p_lon_min = floor((int(rectangle.p_lon_min * factor_scale) - p_lon_min_rectangles) / size_grid)
-        p_lat_min = floor((int(rectangle.p_lat_min * factor_scale) - p_lat_min_rectangles) / size_grid)
-        p_lon_max = ceil((int(rectangle.p_lon_max * factor_scale) - p_lon_min_rectangles) / size_grid)
-        p_lat_max = ceil((int(rectangle.p_lat_max * factor_scale) - p_lat_min_rectangles) / size_grid)
+        p_lon_min = floor((Decimal(rectangle.p_lon_min) - p_lon_min_rectangles) / size_grid)
+        p_lat_min = floor((Decimal(rectangle.p_lat_min) - p_lat_min_rectangles) / size_grid)
+        p_lon_max = ceil((Decimal(rectangle.p_lon_max) - p_lon_min_rectangles) / size_grid)
+        p_lat_max = ceil((Decimal(rectangle.p_lat_max) - p_lat_min_rectangles) / size_grid)
 
         list_rectangles_discretized.append(
-            ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max))
+                ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max))
 
     return list_rectangles_discretized
 
@@ -254,10 +239,8 @@ def repartition_rectangles(list_rectangles: List[ReachPolygon]) -> List[ReachPol
         1. Obtain a list of vertical segments representing the contour of the union of the rectangles.
         2. Create repartitioned rectangles from the list of vertical segments using sweep line algorithm.
     """
-    # Step 1
     list_segments_vertical = SweepLine.obtain_vertical_segments_from_rectangles(list_rectangles)
 
-    # Step 2
     list_rectangles_repartitioned = SweepLine.create_rectangles_from_vertical_segments(list_segments_vertical)
 
     return list_rectangles_repartitioned
@@ -284,18 +267,9 @@ def undiscretized_rectangles(list_rectangles_discretized: List[ReachPolygon],
     return list_rectangles_undiscretized
 
 
-def check_collision_and_split_rectangles(collision_checker,
-                                         time_step: int,
-                                         list_rectangles: List[ReachPolygon],
+def check_collision_and_split_rectangles(collision_checker, time_step: int, list_rectangles: List[ReachPolygon],
                                          radius_terminal_split: float) -> List[ReachPolygon]:
-    """Check collision status of the rectangles and split them if colliding.
-
-    Args:
-        collision_checker (CppCollisionChecker): collision checker in CART/CLCS
-        time_step (int): time step at which the collision is checked
-        list_rectangles (List[ReachPolygon]): list of rectangles to be checked
-        radius_terminal_split (float): radius to terminate splitting
-    """
+    """Check collision status of the rectangles and split them if they are colliding."""
     list_rectangles_collision_free = []
 
     if not list_rectangles:
@@ -319,12 +293,6 @@ def create_collision_free_rectangles(time_step: int, collision_checker, rectangl
 
     If a collision happens between a rectangle and other object, and that the diagonal of the rectangle is greater
     than the terminal radius, it is split into two new rectangles in whichever edge (lon/lat) that is longer.
-
-    Args:
-        time_step:
-        collision_checker (CppCollisionChecker): collision checker
-        rectangle (ReachPolygon): rectangle under examination
-        radius_terminal_squared (float): squared terminal radius. it is squared for computation efficiency.
     """
     # case 1: rectangle does not collide, return itself
     if not collision_checker.collides_at_time_step(time_step, rectangle):
@@ -348,7 +316,7 @@ def create_collision_free_rectangles(time_step: int, collision_checker, rectangl
 def split_rectangle_into_two(rectangle: ReachPolygon) -> Tuple[ReachPolygon, ReachPolygon]:
     """Returns two rectangles each of which is a half of the initial rectangle.
 
-    Split in the longer axis of the two (longitudinal / lateral).
+    Split in the longer axis of the two (longitudinal / lateral or x / y).
     """
     if (rectangle.p_lon_max - rectangle.p_lon_min) > (rectangle.p_lat_max - rectangle.p_lat_min):
         rectangle_split_1 = ReachPolygon.from_rectangle_vertices(rectangle.p_lon_min, rectangle.p_lat_min,
@@ -380,12 +348,11 @@ def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
     """
     reachable_base_set_time_current = []
 
-    # Step 1
     list_rectangles_base_sets = [base_set.position_rectangle for base_set in list_base_sets_propagated]
     list_rectangles_drivable_area = drivable_area
     dict_rectangle_adjacency = util_geometry.create_adjacency_dictionary(list_rectangles_drivable_area,
                                                                          list_rectangles_base_sets)
-    # Step 2
+
     for idx_drivable_area, list_idx_base_sets_adjacent in dict_rectangle_adjacency.items():
         # examine each drivable area rectangle
         rectangle_drivable_area = list_rectangles_drivable_area[idx_drivable_area]
@@ -401,7 +368,7 @@ def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
 def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
                                     list_base_sets_propagated: List[ReachNode],
                                     list_idx_base_sets_adjacent: List[int],
-                                    has_multi_generation=False):
+                                    multi_generation=False):
     """Returns adapted base set created from a rectangle of the drivable area.
 
     Iterate through base sets that are adjacent to the rectangle of drivable area under examination (overlaps
@@ -409,8 +376,9 @@ def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
     intersected lon/lat polygons imply that this is a valid base set and are considered as a parent of the
     rectangle (reachable from the node from which the base set is propagated).
     """
-    if not has_multi_generation:
+    if not multi_generation:
         Node = ReachNode
+
     else:
         Node = ReachNodeMultiGeneration
 
@@ -438,6 +406,7 @@ def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
                 list_vertices_polygon_lon_new += polygon_lon.vertices
                 list_vertices_polygon_lat_new += polygon_lat.vertices
                 list_base_sets_parent.append(base_set_adjacent.source_propagation)
+
     # if there is at least one valid base set, create the adapted base set
     if list_vertices_polygon_lon_new and list_vertices_polygon_lat_new:
         polygon_lon_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lon_new).convex_hull)
@@ -470,14 +439,17 @@ def create_nodes_of_reachable_set(time_step: int, list_base_sets_adapted: List[R
 
 def adapt_rectangles_to_grid(list_rectangles: List[ReachPolygon], size_grid: float) -> List[ReachPolygon]:
     """Adapts the given list of position rectangles to a Cartesian grid."""
+
     def is_disjoint(_rectangle: ReachPolygon, _cell: Cell) -> bool:
+        """Returns True if the given rectangle and cell are disjoint."""
         if _rectangle.p_lon_max < _cell.x_min or _rectangle.p_lon_min > _cell.x_max or \
                 _rectangle.p_lat_max < _cell.y_min or _rectangle.p_lat_min > _cell.y_max:
             return True
 
         return False
 
-    def intersect_rectangle_with_cell(_rectangle: ReachPolygon, _cell: Cell) -> ReachPolygon:
+    def adapt_rectangle_to_cell(_rectangle: ReachPolygon, _cell: Cell) -> ReachPolygon:
+        """Adapts the given rectangle to the given cell."""
         rectangle_intersected = _rectangle.clone(convexify=False)
         rectangle_intersected = rectangle_intersected.intersect_halfspace(1, 0, _cell.x_max)
         rectangle_intersected = rectangle_intersected.intersect_halfspace(-1, 0, -_cell.x_min)
@@ -493,7 +465,7 @@ def adapt_rectangles_to_grid(list_rectangles: List[ReachPolygon], size_grid: flo
     for rectangle in list_rectangles:
         for cell in grid.list_cells:
             if not is_disjoint(rectangle, cell):
-                list_rectangles_adapted.append(intersect_rectangle_with_cell(rectangle, cell))
+                list_rectangles_adapted.append(adapt_rectangle_to_cell(rectangle, cell))
 
     return list_rectangles_adapted
 

@@ -12,6 +12,8 @@ class ReachableSetInterface:
     """Interface for reachable set computation."""
 
     def __init__(self, config: Configuration):
+        logger.info("Initializing reachable set interface...")
+
         self.config = config
         self.mode = config.reachable_set.mode
         self.time_step_start = self.config.planning.time_step_start
@@ -47,7 +49,7 @@ class ReachableSetInterface:
 
         else:
             message = "Specified mode ID is invalid."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
     def drivable_area_at_time_step(self, time_step: int):

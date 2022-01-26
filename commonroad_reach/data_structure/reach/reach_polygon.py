@@ -19,7 +19,7 @@ class ReachPolygon(Polygon, ABC):
     def __init__(self, list_vertices, fix_vertices=True):
         if len(list_vertices) < 3:
             message = "A polygon needs at least 3 vertices."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
         # Shapely closed polygon requires identical initial and final vertices
@@ -138,7 +138,7 @@ class ReachPolygon(Polygon, ABC):
 
         else:
             message = "Type error."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
         list_vertices = [vertex for vertex in zip(list_x, list_y)]
@@ -160,7 +160,7 @@ class ReachPolygon(Polygon, ABC):
 
         else:
             message = "Type error."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
         list_vertices = [vertex for vertex in zip(list_x, list_y)]

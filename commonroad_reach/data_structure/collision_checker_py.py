@@ -44,7 +44,7 @@ class PyCollisionChecker:
 
         else:
             message = "Undefined coordinate system."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
     @staticmethod

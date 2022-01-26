@@ -19,6 +19,11 @@ class PyGridOnlineReachableSet:
 
     def __init__(self, config: Configuration):
         self.config = config
+        if config.planning.coordinate_system != "CART":
+            message = "Multi-step reachable set computation only supports Cartesian coordinate system."
+            logger.error(message)
+            raise Exception(message)
+
         self.time_step_start = config.planning.time_step_start
         self.time_step_end = config.planning.time_steps_computation + self.time_step_start
 
@@ -128,15 +133,15 @@ class PyGridOnlineReachableSet:
 
         The translation is based on the initial state of the planning problem.
         """
-        self._dict_time_to_translation = dict()
+        self._dict_time_to_translation = defaultdict()
 
         p_init = np.array([self.config.planning.p_lon_initial, self.config.planning.p_lat_initial])
-        o_init = self.config.planning.orientation_initial
+        o_init = self.config.planning.o_initial
         v_init = np.array([np.cos(o_init), np.sin(o_init)]) * self.config.planning.v_lon_initial
         dt = self.config.planning.dt
 
         for time_step in range(self.time_step_start, self.time_step_end + 1):
-            self._dict_time_to_translation[time_step] = v_init * (time_step * dt) + p_init
+            self._dict_time_to_translation[time_step] = (v_init * (time_step * dt) + p_init, v_init)
 
     def _initialize_collision_checker(self):
         if self.config.reachable_set.mode == 4:
@@ -162,8 +167,8 @@ class PyGridOnlineReachableSet:
                 logger.warning(message)
                 continue
 
-            self._compute_at_time_step(time_step)
             self._list_time_steps_computed.append(time_step)
+            self._compute_at_time_step(time_step)
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
             self._prune_nodes_not_reaching_final_time_step()
@@ -176,21 +181,25 @@ class PyGridOnlineReachableSet:
 
     def _translate_reachable_set(self, time_step: int):
         """Translates reachable sets based on the initial state and the time step."""
-        x_translate, y_translate = self._dict_time_to_translation[time_step]
+        p_translate, v_translate = self._dict_time_to_translation[time_step]
 
         for node in self._dict_time_to_reachable_set[time_step]:
             p_x_min, v_x_min, p_x_max, v_x_max = node.polygon_lon.bounds
             p_y_min, v_y_min, p_y_max, v_y_max = node.polygon_lat.bounds
 
-            p_x_min_translated = p_x_min + x_translate
-            p_x_max_translated = p_x_max + x_translate
-            p_y_min_translated = p_y_min + y_translate
-            p_y_max_translated = p_y_max + y_translate
+            p_x_min_translated = p_x_min + p_translate[0]
+            p_x_max_translated = p_x_max + p_translate[0]
+            p_y_min_translated = p_y_min + p_translate[1]
+            p_y_max_translated = p_y_max + p_translate[1]
+            v_x_min_translated = max(v_x_min + v_translate[0], -self.config.vehicle.ego.v_max)
+            v_x_max_translated = min(v_x_max + v_translate[0], self.config.vehicle.ego.v_max)
+            v_y_min_translated = max(v_y_min + v_translate[1], -self.config.vehicle.ego.v_max)
+            v_y_max_translated = min(v_y_max + v_translate[1], self.config.vehicle.ego.v_max)
 
-            node.polygon_lon = ReachPolygon.from_rectangle_vertices(p_x_min_translated, v_x_min,
-                                                                    p_x_max_translated, v_x_max)
-            node.polygon_lat = ReachPolygon.from_rectangle_vertices(p_y_min_translated, v_y_min,
-                                                                    p_y_max_translated, v_y_max)
+            node.polygon_lon = ReachPolygon.from_rectangle_vertices(p_x_min_translated, v_x_min_translated,
+                                                                    p_x_max_translated, v_x_max_translated)
+            node.polygon_lat = ReachPolygon.from_rectangle_vertices(p_y_min_translated, v_y_min_translated,
+                                                                    p_y_max_translated, v_y_max_translated)
 
     def _discard_invalid_reachable_set(self, time_step: int):
         """Discards invalid nodes of the reachable set.

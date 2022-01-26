@@ -1,10 +1,14 @@
 planning:
   dt: 0.1
-  time_steps_computation: 10
-  use_spot: yes
-  
+  time_steps_computation: 20
+  coordinate_system: "CVLN"
+
 reachable_set:
-  mode: 1
+  mode: 2
   size_grid: 0.2
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
+
+vehicle:
+  ego:
+    a_max: 5.0

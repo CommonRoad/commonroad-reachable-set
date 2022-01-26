@@ -3,6 +3,7 @@ planning:
   time_steps_computation: 15
   
 reachable_set:
+  mode: 6
   size_grid: 0.5
 
 vehicle:

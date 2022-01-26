@@ -35,37 +35,40 @@ class Configuration:
         self.planning.complete_configuration(self)
 
     def print_configuration_summary(self):
-        print("# ===== Configuration Summary ===== #")
-        print(f"# {self.scenario.scenario_id}")
-        print("# Planning:")
         if self.planning.coordinate_system == "CART":
-            text = "Cartesian"
+            CLCS = "Cartesian"
         elif self.planning.coordinate_system == "CVLN":
-            text = "Curvilinear"
+            CLCS = "Curvilinear"
         else:
-            text = "Undefined"
-        print(f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {text}")
+            CLCS = "Undefined"
 
-        print("# Reachable set:")
         if self.reachable_set.mode == 1:
-            text = "Single-step: Python backend with Python collision checker"
+            mode = "Single-step, Python backend with Python collision checker"
         elif self.reachable_set.mode == 2:
-            text = "Single-step: Python backend with C++ collision checker"
+            mode = "Single-step, Python backend with C++ collision checker"
         elif self.reachable_set.mode == 3:
-            text = "Single-step: C++ backend with C++ collision checker"
+            mode = "Single-step, C++ backend with C++ collision checker"
         elif self.reachable_set.mode == 4:
-            text = "Multi-step (online): Python backend with Python collision checker"
+            mode = "Multi-step (online), Python backend with Python collision checker"
         elif self.reachable_set.mode == 5:
-            text = "Multi-step (online): Python backend with C++ collision checker"
+            mode = "Multi-step (online), Python backend with C++ collision checker"
         elif self.reachable_set.mode == 6:
-            text = "Multi-step (offline): Python backend"
+            mode = "Multi-step (offline), Python backend"
         else:
-            text = "Undefined"
+            mode = "Undefined"
 
-        logger.info(text)
+        string = "# ===== Configuration Summary ===== #\n"
+        string += f"# {self.scenario.scenario_id}\n"
+        string += "# Planning:\n"
+        string += f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {CLCS}\n"
+        string += "# Reachable set:\n"
+        string += f"# \tmode: {mode}\n"
+        string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_time_step}\n"
+        string += "# ================================= #"
 
-        print(f"# \tmode: {text}, prune reach graph: {self.reachable_set.prune_nodes_not_reaching_final_time_step}")
-        print("# ================================= #")
+        print(string)
+        for line in string.split("\n"):
+            logger.info(line)
 
     def convert_to_cpp_configuration(self) -> reach.Configuration:
         """Converts to configuration defined by the cpp side"""
@@ -163,6 +166,7 @@ class VehicleConfiguration:
             self.v_lon_max = config_relevant.v_lon_max
             self.v_lat_min = config_relevant.v_lat_min
             self.v_lat_max = config_relevant.v_lat_max
+            self.v_max = config_relevant.v_max
 
             self.a_lon_max = config_relevant.a_lon_max
             self.a_lon_min = config_relevant.a_lon_min
@@ -220,7 +224,7 @@ class PlanningConfiguration:
         self.uncertainty_v_lon = config_relevant.uncertainty_v_lon
         self.uncertainty_v_lat = config_relevant.uncertainty_v_lat
 
-        self.orientation_initial = None
+        self.o_initial = None
 
         # related to specific planning problem
         self.time_step_initial = None
@@ -240,29 +244,36 @@ class PlanningConfiguration:
         self.lanelet_network = scenario.lanelet_network
         self.time_step_initial = planning_problem.initial_state.time_step
 
-        if self.coordinate_system == "CART":
-            self.p_lon_initial = planning_problem.initial_state.position[0]
-            self.p_lat_initial = planning_problem.initial_state.position[1]
-            self.v_lon_initial = planning_problem.initial_state.velocity
-            self.v_lat_initial = 0
-            self.id_lanelet_initial = 0
-            self.orientation_initial = planning_problem.initial_state.orientation
+        if not config.reachable_set.mode == 6:
+            if self.coordinate_system == "CART":
+                self.p_lon_initial = planning_problem.initial_state.position[0]
+                self.p_lat_initial = planning_problem.initial_state.position[1]
+                self.v_lon_initial = planning_problem.initial_state.velocity
+                self.v_lat_initial = 0
+                self.id_lanelet_initial = 0
+                self.o_initial = planning_problem.initial_state.orientation
 
-        elif self.coordinate_system == "CVLN":
-            # plans a route from the initial lanelet to the goal lanelet
-            route_planner = RoutePlanner(scenario, planning_problem)
-            candidate_holder = route_planner.plan_routes()
-            route = candidate_holder.retrieve_first_route()
+            elif self.coordinate_system == "CVLN":
+                # plans a route from the initial lanelet to the goal lanelet
+                route_planner = RoutePlanner(scenario, planning_problem)
+                candidate_holder = route_planner.plan_routes()
+                route = candidate_holder.retrieve_first_route()
 
-            self.route = route
-            self.reference_path = route.reference_path
-            self.id_lanelet_initial = route.list_ids_lanelets[0]
+                self.route = route
+                self.reference_path = route.reference_path
+                self.id_lanelet_initial = route.list_ids_lanelets[0]
 
-            self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+                self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+                p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
-            self.p_lon_initial, self.p_lat_initial = p_initial
-            self.v_lon_initial, self.v_lat_initial = v_initial
+                self.p_lon_initial, self.p_lat_initial = p_initial
+                self.v_lon_initial, self.v_lat_initial = v_initial
+
+        else:
+            # offline computation of reachable sets
+            self.p_lon_initial = self.p_lat_initial = 0
+            self.v_lon_initial = self.v_lat_initial = 0
+            self.o_initial = 0
 
 
 class ReachableSetConfiguration:

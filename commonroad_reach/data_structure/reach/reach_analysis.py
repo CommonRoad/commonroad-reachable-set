@@ -56,7 +56,7 @@ class ReachabilityAnalysis:
 
         else:
             message = "Specified mode ID is invalid."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
     @property

@@ -38,7 +38,7 @@ class CppCollisionChecker:
 
         else:
             message = "Undefined coordinate system."
-            logger.exception(message)
+            logger.error(message)
             raise Exception(message)
 
     def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:

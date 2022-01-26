@@ -47,7 +47,6 @@ class CppReachableSet:
 
     def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
-        # todo: prune, update dict
         for time_step in range(time_step_start, time_step_end + 1):
             logger.debug(f"Computing reachable set for time step {time_step}")
             self._reach.compute_at_time_step(time_step)

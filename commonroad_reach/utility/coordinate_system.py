@@ -118,8 +118,7 @@ def convert_to_curvilinear_vertices(vertices_cart: np.ndarray, CLCS: pycrccosy.C
         return list_vertices_cvln
 
 
-def convert_to_cartesian_polygons(rectangle_cvln: Union[ReachPolygon, reach.ReachPolygon],
-                                  CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle):
+def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle:bool):
     """Returns a list of rectangles converted to Cartesian coordinate system.
 
     If split_wrt_angle set to True, the converted rectangles will be further split into smaller ones if their
@@ -128,7 +127,7 @@ def convert_to_cartesian_polygons(rectangle_cvln: Union[ReachPolygon, reach.Reac
     if isinstance(rectangle_cvln, ReachPolygon):
         return convert_to_cartesian_polygon(rectangle_cvln.bounds, CLCS, split_wrt_angle)
 
-    elif isinstance(rectangle_cvln, reach.ReachPolygon):
+    else:
         p_lon_min = rectangle_cvln.p_lon_min()
         p_lat_min = rectangle_cvln.p_lat_min()
         p_lon_max = rectangle_cvln.p_lon_max()
@@ -138,10 +137,10 @@ def convert_to_cartesian_polygons(rectangle_cvln: Union[ReachPolygon, reach.Reac
 
 
 def convert_to_cartesian_polygon(tuple_vertices, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle):
-    """
-    1. Tries to convert into Cartesian rectangle.
-    2. If split_wrt_angle set to True, the converted rectangle will be further split if its upper and lower edges
-       have a difference in angle greater than the threshold.
+    """Converts a curvilinear polygon into list of cartesian polygons.
+
+    If split_wrt_angle is set to True, the converted rectangle will be recursively split if its upper and lower edges
+    have a difference in angle greater than the threshold.
     """
     p_lon_min, p_lat_min, p_lon_max, p_lat_max = tuple_vertices
 
