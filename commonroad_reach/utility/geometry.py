@@ -7,6 +7,8 @@ import skgeom as sg
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from skgeom import minkowski
 
+import pycrreachset
+
 
 def linear_mapping(polygon, tuple_coefficients: Tuple):
     """Returns the linear mapping of polygon.
@@ -117,3 +119,17 @@ def create_aabb_from_coordinates(p_lon_min, p_lat_min, p_lon_max, p_lat_max):
     aabb = pycrcc.RectAABB(length / 2.0, width / 2.0, center_lon, center_lat)
 
     return aabb
+
+
+# TODO: Add correct input type
+# TODO Adapt to be compatible with python backend
+def area_of_reachable_set(list_reach_set_nodes: List[pycrreachset.ReachNode]) -> float:
+    """
+    Function computes the area of a given reachable set (provided as a list of Reachable set nodes)
+    :param list_reach_set_nodes: List of base sets (i.e., reachable set nodes)
+    :return area of reachable set
+    """
+    area = 0.0
+    for node in list_reach_set_nodes:
+        area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
+    return area
