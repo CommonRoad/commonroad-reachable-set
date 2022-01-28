@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -16,11 +17,11 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 
 
-def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_end=0,
-                                      plot_limits=None, path_output=None, as_svg=False):
+def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_end: int = 0,
+                                      plot_limits: Tuple = None, path_output: str = None, as_svg: bool = False):
     config = reach_interface.config
     scenario = config.scenario
-    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
     time_step_end = time_step_end or reach_interface.time_step_end + 1
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
@@ -34,8 +35,9 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     message = "* Plotting reachable sets..."
     print(message)
     logger.info(message)
+
     renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
-    for time_step in range(time_step_end):
+    for time_step in range(time_step_end + 1):
         # clear plot
         plt.cla()
         list_nodes = reach_interface.reachable_set_at_time_step(time_step)
@@ -139,3 +141,72 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
         images.append(imageio.imread(filename))
 
     imageio.mimsave(path + "/../" + file_save_name + ".gif", images, duration=duration)
+
+
+def plot_scenario_with_driving_corridors(driving_corridors,
+                                         reach_interface: ReachableSetInterface, time_step: int = None):
+    """Visualizes scenario and driving corridors. For each driving corridor in the list, a separate plot is created.
+
+    If no time step is passed (time_step=None), the complete driving corridor is shown and the scenario at first time
+    step is plotted. If a time step is passed, the scenario and the driving corridor at the given time step is shown.
+    """
+    config = reach_interface.config
+    scenario = config.scenario
+    backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
+
+    palette = sns.color_palette("GnBu_d", 3)
+    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
+    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    message = "* Plotting driving corridors..."
+    print(message)
+    logger.info(message)
+
+    # loop over driving corridors in list and count
+    dc_counter = 1
+    for dc in driving_corridors:
+        # create output directory
+        path_output = config.general.path_output
+        Path(path_output).mkdir(parents=True, exist_ok=True)
+
+        # set plot limits
+        plot_limits = compute_plot_limits_from_reachable_sets(reach_interface, backend)
+        # create renderer object
+        renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+
+        if time_step is None:
+            # plot complete driving corridor and scenario at first time step
+            plt.cla()
+            scenario.draw(renderer, draw_params={"time_begin": 0})
+            # all reach set nodes in driving corridor
+            list_nodes = [item for sublist in list(dc.values()) for item in sublist]
+            draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
+
+        else:
+            # plot driving corridor and scenario at the specified time step
+            plt.cla()
+            scenario.draw(renderer, draw_params={"time_begin": 0})
+            # reach set nodes in driving corridor at specified time step
+            list_nodes = dc[time_step]
+            draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
+
+        plt.rc("axes", axisbelow=True)
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        plt.margins(0, 0)
+        renderer.render()
+
+        if config.debug.save_plots:
+            if time_step is None:
+                plt.savefig(f'{path_output}{"lon_driving_corridor"}_{dc_counter}_complete.png',
+                            format="png", bbox_inches="tight", transparent=False)
+            else:
+                plt.savefig(
+                    f'{path_output}/{"lon_driving_corridor"}_{dc_counter}/{"lon_driving_corridor"}_{time_step:05d}.png',
+                    format="png", bbox_inches="tight", transparent=False)
+        # next driving corridor
+        dc_counter += 1
+
+    message = "\tDriving corridors plotted."
+    print(message)
+    logger.info(message)

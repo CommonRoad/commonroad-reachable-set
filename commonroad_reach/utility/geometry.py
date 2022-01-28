@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
@@ -6,6 +7,7 @@ import numpy as np
 import skgeom as sg
 from skgeom import minkowski
 
+from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
@@ -136,3 +138,56 @@ def clamp(value, min_value, max_value):
 
     else:
         return value
+
+
+def area_of_reachable_set(list_reach_set_nodes) -> float:
+    """Computes the area of a given list of reachable set nodes."""
+    area = 0.0
+    if isinstance(list_reach_set_nodes[0], ReachNode):
+        for node in list_reach_set_nodes:
+            area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
+
+    else:
+        for node in list_reach_set_nodes:
+            area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
+
+    return area
+
+
+def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: int):
+    """
+    Function determines connected sets in the position domain within a given list of reachable set nodes
+    This function is the equivalent python function to pycrreachset.connected_reachset_boost().
+    Returns a dictionary with key=node idx in list and value=list of tuples
+    :param list_reach_set_nodes: list of reachable set node
+    :param no_of_digits
+    """
+    coefficient = math.pow(10.0, no_of_digits)
+    overlap = defaultdict(list)
+
+    # list of drivable areas (i.e., position rectangles)
+    list_position_rectangles = list()
+
+    # preprocess
+    for reach_node in list_reach_set_nodes:
+        # enlarge position rectangles
+        vertices_rectangle_scaled = (reach_node.p_lon_min * coefficient,
+                                     reach_node.p_lat_min * coefficient,
+                                     reach_node.p_lon_max * coefficient,
+                                     reach_node.p_lat_max * coefficient)
+        list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
+
+    # iterate over all rectangles in list
+    for idx1, position_rect_1 in enumerate(list_position_rectangles):
+        # remove index of position_rect_1 to avoid checking self-intersection
+        check_idx_list = list(range(len(list_position_rectangles)))
+        check_idx_list.pop(idx1)
+        # iterate over all other rectangles
+        for idx2 in check_idx_list:
+            # retrieve second rectangle
+            position_rect_2 = list_position_rectangles[idx2]
+            # check for overlap via shapely intersects() function. If True, add tuple of idx to dict
+            if position_rect_1.intersects(position_rect_2):
+                overlap[idx1].append((idx1, idx2))
+
+    return overlap
