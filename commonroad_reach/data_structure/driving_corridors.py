@@ -10,10 +10,13 @@ import networkx as nx
 import pycrreachset
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+
 
 # TODO Adapt all data types to work with the Python interface
 # TODO add specific terminal set (e.g., goal region)
 # TODO implement python function for connected set identification (using shapely polygon)
+
 
 # precision for connectivity check
 DIGITS = 2
@@ -33,6 +36,50 @@ def area_of_reachable_set(list_reach_set_nodes: List[Union[pycrreachset.ReachNod
         for node in list_reach_set_nodes:
             area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
     return area
+
+
+def connected_reachset_python(list_reach_set_nodes: List[ReachNode], no_of_digits: int):
+    """
+    Function determines connected sets in the position domain within a given list of reachable set nodes
+    This function is the equivalent python function to pycrreachset.connected_reachset_boost().
+    Returns a dictionary with key=node idx in list and value=list of tuples
+    :param list_reach_set_nodes: list of reachable set node
+    :param no_of_digits
+    """
+    coeff = math.pow(10.0, no_of_digits)
+    overlap = defaultdict(list)
+
+    # list of drivable areas (i.e., position rectangles)
+    list_position_rectangles = list()
+
+    # preprocess
+    for reach_node in list_reach_set_nodes:
+        # enlarge position rectangles
+        vertices_rectangle_scaled = (reach_node.p_lon_min * coeff,
+                                     reach_node.p_lat_min * coeff,
+                                     reach_node.p_lon_max * coeff,
+                                     reach_node.p_lat_max * coeff)
+        list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
+
+    # make list of drivable areas (i.e., position rectangles)
+    # list_position_rectangles = [reach_node.position_rectangle for reach_node in list_reach_set_nodes]
+
+    # iterate over all rectangles in list
+    for idx1, position_rect_1 in enumerate(list_position_rectangles):
+        # remove index of position_rect_1 to avoid checking self-overlap
+        check_idx_list = list(range(len(list_position_rectangles)))
+        check_idx_list.pop(idx1)
+        # iterate over all other rectangles
+        for idx2 in check_idx_list:
+            # retrieve second rectangle
+            position_rect_2 = list_position_rectangles[idx2]
+            # check for overlap via shapely intersects() function. If True, add tuple of idx to dict
+            # if position_rect_1.intersects(position_rect_2):
+            #    overlap[idx1].append((idx1, idx2))
+            if not (position_rect_1.p_lon_min > position_rect_2.p_lon_max or position_rect_1.p_lon_max < position_rect_2.p_lon_min
+                    or position_rect_1.p_lat_min > position_rect_2.p_lat_max or position_rect_1.p_lat_max < position_rect_2.p_lat_min):
+                overlap[idx1].append((idx1, idx2))
+    return overlap
 
 
 class DrivingCorridors:
@@ -123,7 +170,7 @@ class DrivingCorridors:
 
     def _create_reachset_connected_components_graph_backwards(self, driving_corridors_list: List[int], graph: nx.Graph,
                                                               node_id: int, time_idx: int,
-                                                              reach_set_nodes: List[pycrreachset.ReachNode],
+                                                              reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]],
                                                               lon_pos: Union[Dict[int, float], None] = None,
                                                               lon_driving_corridor: Union[Dict[int, List[pycrreachset.ReachNode]], None] = None):
         """
@@ -177,7 +224,11 @@ class DrivingCorridors:
         elif longitudinal:
             parent_reach_set_nodes = set()
             # determine parent reach set nodes for each reach set node within connected components
-            [parent_reach_set_nodes.update(reach_node.vec_nodes_parent()) for reach_node in reach_set_nodes]
+            # TODO adapt to Python Backend
+            if self.backend == "CPP":
+                [parent_reach_set_nodes.update(reach_node.vec_nodes_parent()) for reach_node in reach_set_nodes]
+            else:
+                [parent_reach_set_nodes.update(reach_node.list_nodes_parent) for reach_node in reach_set_nodes]
             filtered_parent_reach_set_nodes = parent_reach_set_nodes
         else:
             filtered_parent_reach_set_nodes = None
@@ -200,7 +251,7 @@ class DrivingCorridors:
                 lon_pos,
                 lon_driving_corridor)
 
-    def _determine_connected_components(self, reach_set_nodes: List[pycrreachset.ReachNode]):
+    def _determine_connected_components(self, reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]]):
         """
         Determines and returns the connected reachable sets in positions domain within the list of given base sets (i.e.,
         reachable set nodes)
@@ -211,10 +262,12 @@ class DrivingCorridors:
         if self.backend == "CPP":
             overlap = pycrreachset.connected_reachset_boost(reach_set_nodes, DIGITS)
         elif self.backend == "PYTHON":
-            overlap = None
+            overlap = connected_reachset_python(reach_set_nodes, DIGITS)
         else:
             err_msg = "Invalid backend (CPP or PYTHON)"
             raise ValueError(err_msg)
+
+        # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
         adjacency = []
         [adjacency.extend(v) for v in overlap.values()]
 
