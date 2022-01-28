@@ -35,10 +35,16 @@ class ReachNode:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ReachNode):
-            return self.id == other.id
+            return self.id == other.id and self.time_step == other.time_step
 
         else:
             return False
+
+    def __key(self):
+        return self.id, self.time_step
+
+    def __hash__(self):
+        return hash(self.__key())
 
     @property
     def polygon_lon(self) -> ReachPolygon:
