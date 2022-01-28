@@ -1,7 +1,7 @@
 import logging
 
 logger = logging.getLogger(__name__)
-from typing import List
+from typing import List, Dict
 
 import pycrreachset as reach
 
@@ -24,6 +24,14 @@ class CppReachableSet:
         self._dict_time_to_reachable_set = None
         self._prune_reachable_set = config.reachable_set.prune_nodes_not_reaching_final_time_step
         self._list_time_steps_computed = [0]
+
+    @property
+    def dict_time_to_reachable_set(self) -> Dict:
+        return self._dict_time_to_reachable_set
+
+    @property
+    def dict_time_to_drivable_area(self) -> Dict:
+        return self._dict_time_to_drivable_area
 
     def drivable_area_at_time_step(self, time_step: int) -> List[reach.ReachPolygon]:
         if time_step not in self._list_time_steps_computed:

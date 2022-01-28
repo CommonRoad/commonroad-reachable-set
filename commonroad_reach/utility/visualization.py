@@ -22,7 +22,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     config = reach_interface.config
     scenario = config.scenario
     backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
-    time_step_end = time_step_end or reach_interface.time_step_end + 1
+    time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
     path_output = path_output or config.general.path_output

@@ -101,8 +101,7 @@ class DrivingCorridors:
             driving_corridor_list = [elem for _, elem in sorted(zip(heuristic, driving_corridor_list), key=lambda
                 pair: pair[0], reverse=True)]
 
-        if self.config.debug.measure_time:
-            print(f"\tComputation took: \t{time.time() - time_start:.3f}s")
+        print(f"\tComputation took: \t{time.time() - time_start:.3f}s")
 
         return driving_corridor_list
 

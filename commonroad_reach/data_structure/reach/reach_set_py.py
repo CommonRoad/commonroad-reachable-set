@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from collections import defaultdict
-from typing import List
+from typing import List, Dict
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_analysis import ReachabilityAnalysis
@@ -27,6 +27,14 @@ class PyReachableSet:
         self._prune_reachable_set = config.reachable_set.prune_nodes_not_reaching_final_time_step
         self._pruned = False
         self._list_time_steps_computed = [0]
+
+    @property
+    def dict_time_to_reachable_set(self) -> Dict:
+        return self._dict_time_to_reachable_set
+
+    @property
+    def dict_time_to_drivable_area(self) -> Dict:
+        return self._dict_time_to_drivable_area
 
     def drivable_area_at_time_step(self, time_step: int) -> List[ReachPolygon]:
         if time_step not in self._list_time_steps_computed:

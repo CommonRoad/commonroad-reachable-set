@@ -1,6 +1,7 @@
 planning:
   dt: 0.1
-  time_steps_computation: 15
+  time_steps_computation: 33
+  coordinate_system: "CVLN"
 
 vehicle:
   ego:

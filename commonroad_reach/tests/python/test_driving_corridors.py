@@ -7,8 +7,8 @@ import os
 
 def main():
     # ==== build configuration
-    name_scenario = "DEU_Test-1_1_T-1"
-    # name_scenario = "ARG_Carcarana-1_1_T-1"
+    # name_scenario = "DEU_Test-1_1_T-1"
+    name_scenario = "ARG_Carcarana-1_1_T-1"
     # name_scenario = "ZAM_Tjunction-1_313_T-1"
 
     config = ConfigurationBuilder.build_configuration(name_scenario, path_root=os.path.join(os.getcwd(), "../../.."))
