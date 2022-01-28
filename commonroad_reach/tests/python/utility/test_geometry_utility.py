@@ -15,34 +15,18 @@ def test_linear_mapping():
 
 
 def test_sort_counterclockwise():
-    list_vertices = [[0, 1], [-1, -1], [1, 0], [1, 1], [-1, 1], [1, -1], [0, -1], [-1, 0]]
-    list_vertices_sorted_expected = [
-        (1, 1),
-        (0, 1),
-        (-1, 1),
-        (-1, 0),
-        (-1, -1),
-        (0, -1),
-        (1, -1),
-        (1, 0),
-    ]
+    list_vertices = [(0, 1), (-1, -1), (1, 0), (1, 1), (-1, 1), (1, -1), (0, -1), (-1, 0)]
+    list_vertices_sorted_expected = [(1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0)]
 
     list_vertices_sorted = util_geometry.sort_vertices_counterclockwise(list_vertices)
     assert list_vertices_sorted == list_vertices_sorted_expected
 
 
-def test_miskowski_sum():
+def test_minkowski_sum():
     list_vertices_polygon_1 = [(-1, -1), (1, -1), (0, 1)]
     list_vertices_polygon_2 = [(3, -1), (5, -1), (5, 1), (3, 1)]
-    list_vertices_polygon_summed_expected = [
-        (2.0, -2.0),
-        (4.0, -2.0),
-        (6.0, -2.0),
-        (6.0, -0.0),
-        (5.0, 2.0),
-        (3.0, 2.0),
-        (2.0, -0.0),
-    ]
+    list_vertices_polygon_summed_expected = [(2.0, -2.0), (4.0, -2.0), (6.0, -2.0), (6.0, -0.0), (5.0, 2.0), (3.0, 2.0),
+                                             (2.0, -0.0)]
 
     polygon_1 = ReachPolygon(list_vertices_polygon_1)
     polygon_2 = ReachPolygon(list_vertices_polygon_2)
@@ -64,15 +48,11 @@ def test_create_adjacency_dictionary():
     list_tuples_vertices_2 = [(0.5, 0.5, 1.5, 1.5), (1.5, 0.5, 2.5, 1.5), (2.5, 0.5, 3.5, 1.5)]
     dict_adjacency_expected = {0: [0, 1], 1: [1, 2]}
 
-    list_rectangles_1 = [
-        ReachPolygon.from_rectangle_vertices(*tuple_vertices)
-        for tuple_vertices in list_tuples_vertices_1
-    ]
+    list_rectangles_1 = [ReachPolygon.from_rectangle_vertices(*tuple_vertices)
+                         for tuple_vertices in list_tuples_vertices_1]
 
-    list_rectangles_2 = [
-        ReachPolygon.from_rectangle_vertices(*tuple_vertices)
-        for tuple_vertices in list_tuples_vertices_2
-    ]
+    list_rectangles_2 = [ReachPolygon.from_rectangle_vertices(*tuple_vertices)
+                         for tuple_vertices in list_tuples_vertices_2]
 
     dict_adjacency = util_geometry.create_adjacency_dictionary(list_rectangles_1, list_rectangles_2)
 
@@ -80,22 +60,15 @@ def test_create_adjacency_dictionary():
 
 
 def test_examine_overlapping_relationship():
-    list_rectangles_1 = [
-        ReachPolygon.from_rectangle_vertices(0.5, 0.5, 1.5, 1.5),
-        ReachPolygon.from_rectangle_vertices(1.5, 0.5, 2.5, 1.5),
-    ]
+    list_rectangles_1 = [ReachPolygon.from_rectangle_vertices(0.5, 0.5, 1.5, 1.5),
+                         ReachPolygon.from_rectangle_vertices(1.5, 0.5, 2.5, 1.5)]
 
-    list_rectangles_2 = [
-        ReachPolygon.from_rectangle_vertices(0, 0, 1, 1),
-        ReachPolygon.from_rectangle_vertices(1, 0, 2, 1),
-        ReachPolygon.from_rectangle_vertices(2, 0, 3, 1),
-    ]
+    list_rectangles_2 = [ReachPolygon.from_rectangle_vertices(0, 0, 1, 1),
+                         ReachPolygon.from_rectangle_vertices(1, 0, 2, 1),
+                         ReachPolygon.from_rectangle_vertices(2, 0, 3, 1)]
 
-    dict_id_rectangle_1_to_list_ids_rectangles_2 = (
-        util_geometry.create_adjacency_dictionary(
-            list_rectangles_1, list_rectangles_2
-        )
-    )
+    dict_id_rectangle_1_to_list_ids_rectangles_2 = \
+        util_geometry.create_adjacency_dictionary(list_rectangles_1, list_rectangles_2)
 
     assert dict_id_rectangle_1_to_list_ids_rectangles_2.get(0) == [0, 1] and \
            dict_id_rectangle_1_to_list_ids_rectangles_2.get(1) == [1, 2]

@@ -31,6 +31,9 @@ class ReachPolygon(Polygon, ABC):
     def __repr__(self):
         return f"ReachPolygon({self.bounds[0]:.4}, {self.bounds[1]:.4}, {self.bounds[2]:.4}, {self.bounds[3]:.4})"
 
+    def __str__(self):
+        return f"{self.bounds}"
+
     @property
     def p_min(self):
         """Minimum position in the position-velocity domain."""

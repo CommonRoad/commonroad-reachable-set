@@ -1,12 +1,8 @@
-config_planning:
-  v_lon_desired: 15.5
-
-  # this can either be "CART" or "CVLN"
+planning:
   coordinate_system: "CVLN"
-  # this can either be "CENTER" or "REAR"
   reference_point: "CENTER"
 
-config_vehicle:
+vehicle:
   ego:
     # velocity in m/s
     v_lon_min: 0.0

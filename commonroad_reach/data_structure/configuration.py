@@ -224,7 +224,7 @@ class PlanningConfiguration:
         self.uncertainty_v_lon = config_relevant.uncertainty_v_lon
         self.uncertainty_v_lat = config_relevant.uncertainty_v_lat
 
-        self.o_initial = None
+        self.o_initial = 0
 
         # related to specific planning problem
         self.time_step_initial = None

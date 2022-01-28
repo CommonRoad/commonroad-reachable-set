@@ -76,9 +76,8 @@ def create_adjacency_dictionary(list_rectangles_1: List[ReachPolygon], list_rect
         -> Dict[int, List[int]]:
     """Returns an adjacency dictionary.
 
-    E.g.: {0:[1, 2], [1:[3, 4]]} = rectangle_0 from 1st list overlaps
-    with rectangles_1 and _2 from the 2nd list; rectangle_1 (1st) overlaps
-    with rectangles_3 and _4 (2nd).
+    E.g.: {0 : [1, 2], 1 : [3, 4]} = rectangle_0 from 1st list overlaps with rectangles_1 and _2 from the 2nd list;
+    rectangle_1 (1st) overlaps with rectangles_3 and _4 (2nd).
     """
     dict_idx_to_list_idx = defaultdict(list)
 

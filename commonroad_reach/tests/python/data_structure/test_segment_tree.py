@@ -1,8 +1,4 @@
-from commonroad_reach.data_structure.segment_tree import (
-    CounterSegmentTree,
-    CounterTreeNode,
-    ToggleSegmentTree,
-)
+from commonroad_reach.data_structure.segment_tree import CounterSegmentTree, CounterTreeNode, ToggleSegmentTree
 
 
 def test_activate_joint_segments():

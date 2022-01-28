@@ -1,12 +1,12 @@
-from typing import List, Union
+from typing import List
 
 import commonroad_dc.pycrcc as pycrcc
 import commonroad_dc.pycrccosy as pycrccosy
-import commonroad_reach.utility.geometry as util_geometry
 import numpy as np
-import pycrreachset as reach
 from commonroad.geometry.shape import ShapeGroup, Shape, Rectangle, Circle
 from commonroad_dc.collision.collision_detection.minkowski_sum import minkowski_sum_circle
+
+import commonroad_reach.utility.geometry as util_geometry
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
@@ -118,7 +118,7 @@ def convert_to_curvilinear_vertices(vertices_cart: np.ndarray, CLCS: pycrccosy.C
         return list_vertices_cvln
 
 
-def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle:bool):
+def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle: bool):
     """Returns a list of rectangles converted to Cartesian coordinate system.
 
     If split_wrt_angle set to True, the converted rectangles will be further split into smaller ones if their
