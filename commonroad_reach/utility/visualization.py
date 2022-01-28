@@ -34,7 +34,6 @@ def plot_scenario_with_driving_corridors(driving_corridors: List[Dict[int, Union
     # get config and scenario
     config = reach_interface.config
     scenario = config.scenario
-    planning_problem = config.planning_problem
 
     # set backend
     if config.reachable_set.mode == 3:
@@ -63,7 +62,6 @@ def plot_scenario_with_driving_corridors(driving_corridors: List[Dict[int, Union
             # plot complete driving corridor and scenario at first time step
             plt.cla()
             scenario.draw(renderer, draw_params={"time_begin": 0})
-            planning_problem.draw(renderer)
             # all reach set nodes in driving corridor
             list_nodes = [item for sublist in list(dc.values()) for item in sublist]
             draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
