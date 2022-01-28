@@ -13,8 +13,7 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.utility import geometry as util_geometry
 
 
-# TODO Adapt all data types to work with the Python interface
-# TODO add specific terminal set (e.g., goal region)
+# TODO add overlap with specific terminal set (e.g., goal region)
 
 # scaling factor (avoid numerical errors)
 DIGITS = 2
@@ -24,7 +23,8 @@ class DrivingCorridors:
     """
     Class to compute driving corridors based on previous computation of reachable sets and drivable area
     """
-    def __init__(self, reachable_sets: Dict[int, List[pycrreachset.ReachNode]], config: Configuration):
+    def __init__(self, reachable_sets: Dict[int, List[Union[pycrreachset.ReachNode, ReachNode]]],
+                 config: Configuration):
         self.config = config
         self.reach_set = reachable_sets
         if config.reachable_set.mode == 3:
@@ -223,7 +223,8 @@ class DrivingCorridors:
         return connected_reach_sets_list
 
     @staticmethod
-    def _determine_reachset_overlap_with_longitudinal_position(reach_set_nodes: List[pycrreachset.ReachNode],
+    def _determine_reachset_overlap_with_longitudinal_position(reach_set_nodes: List[Union[pycrreachset.ReachNode,
+                                                                                           ReachNode]],
                                                                lon_pos: float):
         """
         Checks which drivable areas of the given reachable sets contain a given longitudinal position and returns the
@@ -240,7 +241,7 @@ class DrivingCorridors:
         return reach_set_nodes_overlap
 
     @staticmethod
-    def _determine_area_of_driving_corridor(driving_corridor: Dict[int, List[pycrreachset.ReachNode]]):
+    def _determine_area_of_driving_corridor(driving_corridor: Dict[int, List[Union[pycrreachset.ReachNode, ReachNode]]]):
         """
         Function to compute the cumulative area of a driving corridor, i.e.,
         :param driving_corridor:
