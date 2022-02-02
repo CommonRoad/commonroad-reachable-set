@@ -5,9 +5,6 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
-from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
-from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
 
 
 class ReachableSet(ABC):
@@ -66,6 +63,7 @@ class ReachableSet(ABC):
         mode = config.reachable_set.mode
 
         if mode in [1, 2]:
+            from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
             return PyReachableSet(config)
 
         elif mode == 3:
@@ -81,7 +79,9 @@ class ReachableSet(ABC):
                 return CppReachableSet(config)
 
         elif mode in [4, 5]:
+            from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
             return PyGridOnlineReachableSet(config)
 
         elif mode == 6:
+            from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
             return PyGridOfflineReachableSet(config)
