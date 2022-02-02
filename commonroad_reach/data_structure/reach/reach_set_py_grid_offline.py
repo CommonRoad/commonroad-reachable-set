@@ -6,11 +6,9 @@ import time
 import numpy as np
 from scipy import sparse
 
-logger = logging.getLogger(__name__)
-from typing import List
+from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 
-from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
-from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+logger = logging.getLogger(__name__)
 
 from collections import defaultdict
 
@@ -18,46 +16,20 @@ from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_analysis_offline import OfflineReachabilityAnalysis
 
 
-class PyGridOfflineReachableSet:
+class PyGridOfflineReachableSet(ReachableSet):
     """Offline step in the multi-step reachable set computation with Python backend."""
 
     def __init__(self, config: Configuration):
-        self.config = config
+        super().__init__(config)
+
         if config.planning.coordinate_system != "CART":
             message = "Multi-step reachable set computation only supports Cartesian coordinate system."
             logger.error(message)
             raise Exception(message)
 
-        self.time_step_start = config.planning.time_step_start
-        self.time_step_end = config.planning.time_steps_computation + self.time_step_start
-
         self._reachability_analysis = OfflineReachabilityAnalysis(config)
-        self._dict_time_to_base_set_propagated = defaultdict(list)
-        self._dict_time_to_drivable_area = defaultdict(list)
-        self._dict_time_to_reachable_set = defaultdict(list)
         self._dict_time_to_drivable_area[self.time_step_start] = self._reachability_analysis.initial_drivable_area
         self._dict_time_to_reachable_set[self.time_step_start] = self._reachability_analysis.initial_reachable_set
-        self._list_time_steps_computed = [0]
-
-    def drivable_area_at_time_step(self, time_step: int) -> List[ReachPolygon]:
-        if time_step not in self._list_time_steps_computed:
-            message = "Given time step for drivable area retrieval is out of range."
-            print(message)
-            logger.warning(message)
-            return []
-
-        else:
-            return self._dict_time_to_drivable_area[time_step]
-
-    def reachable_set_at_time_step(self, time_step: int) -> List[ReachNodeMultiGeneration]:
-        if time_step not in self._list_time_steps_computed:
-            message = "Given time step for reachable set retrieval is out of range."
-            print(message)
-            logger.warning(message)
-            return []
-
-        else:
-            return self._dict_time_to_reachable_set[time_step]
 
     def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
@@ -185,3 +157,6 @@ class PyGridOfflineReachableSet:
         return dict_time_to_list_tuples_reach_node_attributes, \
                dict_time_to_adjacency_matrices_parent, \
                dict_time_to_adjacency_matrices_grandparent
+
+    def _prune_nodes_not_reaching_final_time_step(self):
+        pass
