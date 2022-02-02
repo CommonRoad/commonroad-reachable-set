@@ -140,8 +140,12 @@ def clamp(value, min_value, max_value):
         return value
 
 
-def area_of_reachable_set(list_reach_set_nodes) -> float:
-    """Computes the area of a given list of reachable set nodes."""
+def area_of_reachable_set(list_reach_set_nodes: List[ReachNode]) -> float:
+    """
+    Computes the area of a given list of reachable set nodes.
+    :param list_reach_set_nodes:
+    :return area: area of projection of the reachable sets on position domain
+    """
     area = 0.0
     if isinstance(list_reach_set_nodes[0], ReachNode):
         for node in list_reach_set_nodes:
@@ -154,7 +158,7 @@ def area_of_reachable_set(list_reach_set_nodes) -> float:
     return area
 
 
-def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: int):
+def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: int) -> Dict[List]:
     """
     Function determines connected sets in the position domain within a given list of reachable set nodes
     This function is the equivalent python function to pycrreachset.connected_reachset_boost().
