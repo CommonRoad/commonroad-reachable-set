@@ -3,6 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from typing import Dict
 
 from commonroad_reach.data_structure.configuration import Configuration
 
@@ -23,6 +24,14 @@ class ReachableSet(ABC):
         self._pruned = False
 
         self._list_time_steps_computed = [0]
+
+    @property
+    def dict_time_to_reachable_set(self) -> Dict:
+        return self._dict_time_to_reachable_set
+
+    @property
+    def dict_time_to_drivable_area(self) -> Dict:
+        return self._dict_time_to_reachable_set
 
     def drivable_area_at_time_step(self, time_step: int):
         if time_step not in self._list_time_steps_computed:
