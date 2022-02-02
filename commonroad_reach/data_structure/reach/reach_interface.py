@@ -1,11 +1,10 @@
 import logging
 import time
 
+from commonroad_reach.data_structure.reach.reach_set import ReachableSet
+
 logger = logging.getLogger(__name__)
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
-from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
-from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
 
 
 class ReachableSetInterface:
@@ -15,37 +14,23 @@ class ReachableSetInterface:
         logger.info("Initializing reachable set interface...")
 
         self.config = config
-        self.mode = config.reachable_set.mode
-        self.time_step_start = self.config.planning.time_step_start
-        self.time_step_end = self.time_step_start + self.config.planning.time_steps_computation
-
         self._reach = None
         self._reachable_set_computed = False
         self._initialize_reachable_set()
 
         logger.info("Reachable set interface initialized.")
 
+    @property
+    def time_step_start(self):
+        return self._reach.time_step_start
+
+    @property
+    def time_step_end(self):
+        return self._reach.time_step_end
+
     def _initialize_reachable_set(self):
-        if self.mode in [1, 2]:
-            self._reach = PyReachableSet(self.config)
-
-        elif self.mode == 3:
-            try:
-                from commonroad_reach.data_structure.reach.reach_set_cpp import CppReachableSet
-
-            except ImportError:
-                message = "Importing C++ reachable set failed."
-                logger.exception(message)
-                print(message)
-
-            else:
-                self._reach = CppReachableSet(self.config)
-
-        elif self.mode in [4, 5]:
-            self._reach = PyGridOnlineReachableSet(self.config)
-
-        elif self.mode == 6:
-            self._reach = PyGridOfflineReachableSet(self.config)
+        if self.config.reachable_set.mode in [1, 2, 3, 4, 5, 6]:
+            self._reach = ReachableSet.instantiate(self.config)
 
         else:
             message = "Specified mode ID is invalid."
@@ -59,7 +44,7 @@ class ReachableSetInterface:
     @property
     def drivable_area(self):
         return self._reach.dict_time_to_drivable_area
-            
+
     def drivable_area_at_time_step(self, time_step: int):
         if not self._reachable_set_computed and time_step != 0:
             message = "Reachable set is not computed, retrieving drivable area failed."
