@@ -21,7 +21,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
                                       plot_limits: Tuple = None, path_output: str = None, as_svg: bool = False):
     config = reach_interface.config
     scenario = config.scenario
-    backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
@@ -152,7 +152,7 @@ def plot_scenario_with_driving_corridors(driving_corridors,
     """
     config = reach_interface.config
     scenario = config.scenario
-    backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
 
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)

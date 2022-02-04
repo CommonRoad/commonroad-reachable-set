@@ -60,7 +60,7 @@ class PyGridOnlineReachableSet(ReachableSet):
                                 dict_time_to_adjacency_matrices_parent,
                                 dict_time_to_adjacency_matrices_grandparent):
         """Restores reachable sets from the offline computation result."""
-        # todo: change to vertices of polytopes
+        # todo: change to vertices of polytopes?
         for time_step, list_tuples_attribute in dict_time_to_list_tuples_reach_node_attributes.items():
             # reconstruct nodes in the reachability graph
             for tuple_attribute in list_tuples_attribute:
@@ -171,6 +171,7 @@ class PyGridOnlineReachableSet(ReachableSet):
             v_y_min_translated = max(v_y_min + v_translate[1], -self.config.vehicle.ego.v_max)
             v_y_max_translated = min(v_y_max + v_translate[1], self.config.vehicle.ego.v_max)
 
+            # todo: this is slow, change this
             node.polygon_lon = ReachPolygon.from_rectangle_vertices(p_x_min_translated, v_x_min_translated,
                                                                     p_x_max_translated, v_x_max_translated)
             node.polygon_lat = ReachPolygon.from_rectangle_vertices(p_y_min_translated, v_y_min_translated,
@@ -183,14 +184,15 @@ class PyGridOnlineReachableSet(ReachableSet):
         """
         list_idx_nodes_to_be_discarded = []
         for idx, node in enumerate(self._dict_time_to_reachable_set[time_step]):
+            # todo: this could be improved, maybe we don't need to use a collision checker here?
             if self._collision_checker.collides_at_time_step(time_step, node.position_rectangle):
                 list_idx_nodes_to_be_discarded.append(idx)
 
             if not node.list_nodes_parent and time_step >= 1:
                 list_idx_nodes_to_be_discarded.append(idx)
 
-            if not node.list_nodes_grandparent and time_step >= 2:
-                list_idx_nodes_to_be_discarded.append(idx)
+            # if not node.list_nodes_grandparent and time_step >= 2:
+            #     list_idx_nodes_to_be_discarded.append(idx)
 
         if list_idx_nodes_to_be_discarded:
             for idx in list_idx_nodes_to_be_discarded:

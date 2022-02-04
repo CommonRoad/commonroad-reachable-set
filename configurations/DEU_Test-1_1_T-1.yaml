@@ -1,13 +1,15 @@
 planning:
   dt: 0.1
   time_steps_computation: 30
-  coordinate_system: "CVLN"
+#  coordinate_system: "CVLN"
+  coordinate_system: "CART"
 
 reachable_set:
-  mode: 3
+  mode: 5
   size_grid: 0.2
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
+  name_pickle_offline: offline_30_0.5_5.0_30.0.pickle
 
 vehicle:
   ego:

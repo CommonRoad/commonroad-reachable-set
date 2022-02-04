@@ -140,6 +140,7 @@ class ReachNode:
     @property
     def position_rectangle(self) -> ReachPolygon:
         """Base set projected onto the position domain."""
+        # todo: change this to an static attribute
         tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
 
         return ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
