@@ -1,14 +1,13 @@
 import logging
 
-from commonroad_reach.data_structure.reach.reach_set import ReachableSet
-
 logger = logging.getLogger(__name__)
 import os
 import pickle
+import numpy as np
 from collections import defaultdict
 
-import numpy as np
-
+from shapely import affinity
+from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.data_structure.collision_checker_py import PyCollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
@@ -176,6 +175,10 @@ class PyGridOnlineReachableSet(ReachableSet):
                                                                     p_x_max_translated, v_x_max_translated)
             node.polygon_lat = ReachPolygon.from_rectangle_vertices(p_y_min_translated, v_y_min_translated,
                                                                     p_y_max_translated, v_y_max_translated)
+            node.update_position_rectangle()
+
+            result = affinity.translate(node.polygon_lon, xoff=0.0, yoff=0.0)
+            print(1)
 
     def _discard_invalid_reachable_set(self, time_step: int):
         """Discards invalid nodes of the reachable set.

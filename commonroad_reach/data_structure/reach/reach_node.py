@@ -22,6 +22,10 @@ class ReachNode:
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
         self._bounds_lat = polygon_lat.bounds if polygon_lat else None
 
+        self.position_rectangle = None
+        if self._bounds_lon and self._bounds_lat:
+            self.update_position_rectangle()
+
         self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
         self.time_step = time_step
@@ -137,14 +141,6 @@ class ReachNode:
     def v_y_max(self):
         return self.v_lat_max
 
-    @property
-    def position_rectangle(self) -> ReachPolygon:
-        """Base set projected onto the position domain."""
-        # todo: change this to an static attribute
-        tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
-
-        return ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
-
     def clone(self):
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
@@ -154,6 +150,11 @@ class ReachNode:
         node_clone.source_propagation = self.source_propagation
 
         return node_clone
+
+    def update_position_rectangle(self):
+        tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
+
+        self.position_rectangle = ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
 
     @classmethod
     def reset_class_id_counter(cls):
@@ -211,6 +212,7 @@ class ReachNodeMultiGeneration(ReachNode):
 
     In addition to the ReachNode class, this class holds additional lists for grandparent and grandchild nodes.
     """
+
     def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
         self.list_nodes_grandparent: List[ReachNodeMultiGeneration] = list()

@@ -170,7 +170,7 @@ class SweepLine:
             1. Create a segment tree with the list of segments.
             2. Create a dictionary that maps p_lon to a list of rectangles whose
                left edge is aligned with p_lon.
-            3. Merge rectangles that share the same coordinates of of p_lat.
+            3. Merge rectangles that share the same coordinates of p_lat.
         """
         # Step 1
         cls.tree = cls.create_tree_from_segments(list_segments)

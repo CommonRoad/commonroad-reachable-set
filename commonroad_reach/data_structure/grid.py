@@ -49,7 +49,8 @@ class Grid:
         self._create_cells()
 
     def _create_cells(self):
-        logger.debug("\tCreating cartesian grid...")
+        logger.debug(f"\tCreating cartesian grid for x=[{self.x_min_cells},  {self.x_max_cells}], "
+                     f"y=[{self.y_min_cells}, {self.y_max_cells}]...")
 
         for x_min_cell, x_max_cell in zip(self.list_x_cells[:-1], self.list_x_cells[1:]):
             for y_min_cell, y_max_cell in zip(self.list_y_cells[:-1], self.list_y_cells[1:]):
