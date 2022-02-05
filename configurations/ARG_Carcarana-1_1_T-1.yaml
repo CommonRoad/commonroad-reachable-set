@@ -9,7 +9,7 @@ vehicle:
     v_lon_min: 0.0
 
 reachable_set:
-  mode: 2
+  mode: 3
   size_grid: 0.2
   size_grid_2nd: 0.05
   radius_terminal_split: 0.7
