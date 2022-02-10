@@ -1,8 +1,9 @@
-# cython: infer_types=True
+#cython: infer_types=True
 # from collision import CollisionChecker
 import ctypes
 from libc.math cimport round as round_c
 import numpy as np
+# cdef rasterize(bool[:,:] occ_grid, CollisionChecker cc, float ll_x, float ll_y, float, ur_x, float ur_y, dx, dy):
 cimport cython
 
 @cython.boundscheck(False)  # Deactivate bounds checking
