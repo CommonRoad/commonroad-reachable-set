@@ -1,5 +1,5 @@
 import copy
-from typing import List
+from typing import List, Optional
 
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
@@ -22,7 +22,7 @@ class ReachNode:
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
         self._bounds_lat = polygon_lat.bounds if polygon_lat else None
 
-        self.position_rectangle = None
+        self.position_rectangle: Optional[ReachPolygon] = None
         if self._bounds_lon and self._bounds_lat:
             self.update_position_rectangle()
 

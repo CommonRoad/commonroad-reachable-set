@@ -12,7 +12,7 @@ class ReachableSet(ABC):
     """Abstract class for reachable set."""
 
     def __init__(self, config: Configuration):
-        self.config = config
+        self.config: Configuration = config
         self.time_step_start = config.planning.time_step_start
         self.time_step_end = config.planning.time_steps_computation + self.time_step_start
 
@@ -94,3 +94,7 @@ class ReachableSet(ABC):
         elif mode == 6:
             from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
             return PyGridOfflineReachableSet(config)
+
+    @property
+    def max_evaluated_time_step(self):
+        return max(self._dict_time_to_reachable_set)

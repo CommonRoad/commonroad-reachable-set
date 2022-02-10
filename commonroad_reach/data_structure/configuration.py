@@ -21,11 +21,11 @@ class Configuration:
         self.scenario: Optional[Scenario] = None
         self.planning_problem: Optional[PlanningProblem] = None
 
-        self.general = GeneralConfiguration(config)
-        self.vehicle = VehicleConfiguration(config)
-        self.planning = PlanningConfiguration(config)
-        self.reachable_set = ReachableSetConfiguration(config)
-        self.debug = DebugConfiguration(config)
+        self.general: GeneralConfiguration = GeneralConfiguration(config)
+        self.vehicle: VehicleConfiguration = VehicleConfiguration(config)
+        self.planning: PlanningConfiguration = PlanningConfiguration(config)
+        self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config)
+        self.debug: DebugConfiguration = DebugConfiguration(config)
 
     def complete_configuration(self, scenario, planning_problem):
         self.scenario = scenario

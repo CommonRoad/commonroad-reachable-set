@@ -17,11 +17,13 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 
 
-def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_end: int = 0,
-                                      plot_limits: Tuple = None, path_output: str = None, as_svg: bool = False):
+def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int= 0,
+                                      time_step_end: int = 0, plot_limits: Tuple = None, path_output: str = None,
+                                      as_svg: bool = False):
     config = reach_interface.config
     scenario = config.scenario
     backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
+    time_step_start = time_step_end or reach_interface.time_step_start
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
@@ -37,13 +39,64 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     logger.info(message)
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
-    for time_step in range(time_step_end + 1):
+    for time_step in range(time_step_start, time_step_end + 1):
         # clear plot
         plt.cla()
         list_nodes = reach_interface.reachable_set_at_time_step(time_step)
 
         scenario.draw(renderer, draw_params={"time_begin": time_step})
         draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
+
+        # settings and adjustments
+        plt.rc("axes", axisbelow=True)
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        ax.set_title(f"$t = {time_step / 10.0:.1f}$ [s]", fontsize=28)
+        ax.set_xlabel(f"$s$ [m]", fontsize=28)
+        ax.set_ylabel("$d$ [m]", fontsize=28)
+        plt.margins(0, 0)
+        renderer.render()
+
+        if config.debug.save_plots:
+            save_fig(as_svg, path_output, time_step)
+
+    if config.debug.save_plots and not as_svg:
+        make_gif(path_output, "reachset_", time_step_end, str(scenario.scenario_id))
+
+    message = "\tReachable sets plotted."
+    print(message)
+    logger.info(message)
+
+
+def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, time_step_start: int= 0,
+                                     time_step_end: int = 0, plot_limits: Tuple = None, path_output: str = None,
+                                     as_svg: bool = False):
+    config = reach_interface.config
+    scenario = config.scenario
+    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
+    time_step_start = time_step_end or reach_interface.time_step_start
+    time_step_end = time_step_end or reach_interface.time_step_end
+    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
+
+    path_output = path_output or config.general.path_output
+    Path(path_output).mkdir(parents=True, exist_ok=True)
+
+    palette = sns.color_palette("GnBu_d", 3)
+    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
+    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    message = "* Plotting reachable sets..."
+    print(message)
+    logger.info(message)
+
+    renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+    for time_step in range(time_step_start, time_step_end + 1):
+        # clear plot
+        plt.cla()
+        list_nodes = reach_interface.drivable_area_at_time_step(time_step)
+
+        scenario.draw(renderer, draw_params={"time_begin": time_step})
+        draw_drivable_area(list_nodes, config, renderer, draw_params, backend)
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -100,7 +153,10 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
                     x_max = max(x_max, bounds[2])
                     y_max = max(y_max, bounds[3])
 
-    return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
+    if np.inf in (x_min, y_min) or -np.inf in (x_max, y_max):
+        return None
+    else:
+        return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
 
 
 def draw_reachable_sets(list_nodes, config, renderer, draw_params, backend):
@@ -114,6 +170,19 @@ def draw_reachable_sets(list_nodes, config, renderer, draw_params, backend):
             position_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
             list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
+            for polygon in list_polygons_cart:
+                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
+
+
+def draw_drivable_area(list_rectangles, config, renderer, draw_params, backend):
+    if config.planning.coordinate_system == "CART":
+        for rect in list_rectangles:
+            vertices = rect.vertices if backend == "PYTHON" else rect.vertices()
+            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params)
+
+    elif config.planning.coordinate_system == "CVLN":
+        for rect in list_rectangles:
+            list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(rect, config.planning.CLCS, True)
             for polygon in list_polygons_cart:
                 Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
 

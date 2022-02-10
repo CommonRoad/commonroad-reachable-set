@@ -16,7 +16,7 @@ class ReachPolygon(Polygon, ABC):
     it is defined in the longitudinal/lateral position domain.
     """
 
-    def __init__(self, list_vertices, fix_vertices=True):
+    def __init__(self, list_vertices: list, fix_vertices=True):
         if len(list_vertices) < 3:
             message = "A polygon needs at least 3 vertices."
             logger.error(message)

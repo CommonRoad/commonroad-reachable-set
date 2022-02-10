@@ -1,10 +1,14 @@
 import logging
+import math
 import os
 import pickle
 import time
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
+from commonroad_reach.__version__ import __version__
 import numpy as np
+from numpy import sort
 from scipy import sparse
 
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
@@ -23,6 +27,8 @@ class PyGridOfflineReachableSet(ReachableSet):
     """Offline step in the multi-step reachable set computation with Python backend."""
 
     def __init__(self, config: Configuration):
+        self._dict_time_to_drivable_area: Dict[int, List[ReachPolygon]]
+        self._dict_time_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]
         super().__init__(config)
 
         if config.planning.coordinate_system != "CART":
@@ -33,8 +39,15 @@ class PyGridOfflineReachableSet(ReachableSet):
         self.polygon_zero_state_lon = None
         self.polygon_zero_state_lat = None
         self._initialize_zero_state_polygons()
+
         self._dict_time_to_drivable_area[self.time_step_start] = self.initial_drivable_area
         self._dict_time_to_reachable_set[self.time_step_start] = self.initial_reachable_set
+
+    @property
+    def path_offline_file(self):
+        if self.config.reachable_set.name_pickle_offline is None:
+            return None
+        return os.path.join(self.config.general.path_offline_data, self.config.reachable_set.name_pickle_offline)
 
     def _initialize_zero_state_polygons(self):
         """Initializes the zero-state polygons of the system.
@@ -76,7 +89,7 @@ class PyGridOfflineReachableSet(ReachableSet):
 
     def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
-        for time_step in range(time_step_start, time_step_end + 1):
+        for time_step in range(time_step_start + 1, time_step_end + 1):
             message = f"\tTime step: {time_step}"
             print(message)
             logger.debug(message)
@@ -125,12 +138,13 @@ class PyGridOfflineReachableSet(ReachableSet):
 
         list_rectangles_adapted = reach_operation.adapt_rectangles_to_grid(list_rectangles_repartitioned, size_grid)
 
-        drivable_area = \
-            reach_operation.remove_rectangles_out_of_kamms_circle(time_step * self.config.planning.dt,
-                                                                  self.config.vehicle.ego.a_max,
-                                                                  list_rectangles_adapted)
+        # TODO: consider friction circle when regular grid is enforced in repartitioning
+        # drivable_area = \
+        #     reach_operation.remove_rectangles_out_of_kamms_circle(time_step * self.config.planning.dt,
+        #                                                           self.config.vehicle.ego.a_max,
+        #                                                           list_rectangles_adapted)
 
-        self._dict_time_to_drivable_area[time_step] = drivable_area
+        self._dict_time_to_drivable_area[time_step] = list_rectangles_adapted
         self._dict_time_to_base_set_propagated[time_step] = list_base_sets_propagated
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration]) -> List[ReachNodeMultiGeneration]:
@@ -215,37 +229,166 @@ class PyGridOfflineReachableSet(ReachableSet):
         # create output directory
         os.makedirs(self.config.general.path_offline_data, exist_ok=True)
 
-        dict_data = dict()
-        dict_time_to_list_tuples_reach_node_attributes, \
-        dict_time_to_adjacency_matrices_parent, \
-        dict_time_to_adjacency_matrices_grandparent = self._extract_information()
-
-        dict_data["node_attributes"] = dict_time_to_list_tuples_reach_node_attributes
-        dict_data["adjacency_matrices_parent"] = dict_time_to_adjacency_matrices_parent
-        dict_data["adjacency_matrices_grandparent"] = dict_time_to_adjacency_matrices_grandparent
+        dict_data = self._extract_information()
 
         time_steps = self.config.planning.time_steps_computation
         size_grid = self.config.reachable_set.size_grid
         a_max = self.config.vehicle.ego.a_max
         v_max = self.config.vehicle.ego.v_max
 
-        name_file = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}.pickle"
-        f = open(f"{self.config.general.path_offline_data}{name_file}", 'wb')
+        self.config.reachable_set.name_pickle_offline = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}_v{dict_data['__version__']}.pickle"
+        f = open(self.path_offline_file, 'wb')
         pickle.dump(dict_data, f)
         f.close()
 
         print()
-        message = f"Computation result saved to pickle file: {name_file}"
+        message = f"Computation result saved to pickle file: {self.path_offline_file}"
         print(message)
         logger.info(message)
+        # def _save_to_pickle(self):
+        #     os.makedirs(self.config.general.path_offline_data, exist_ok=True)
+        #     data = np.load(filename, allow_pickle=True)
+        #     # dt = data['dt']
+        #     matrices = []
+        #     projections = []
+        #     for t, adj_matrix in dict_time_to_adjacency_matrices_parent.items():
+        #         tmp = csr_matrix((np.ones_like(data['dt0_' + 'E_indices' + str(t)]),
+        #                           data['dt0_' + 'E_indices' + str(t)],
+        #                           data['dt0_' + 'E_indptr' + str(t)]),
+        #                          data['dt0_' + 'E_shape' + str(t)])
+        #         matrices.append(tmp)
+        #
+        #         tmp = csr_matrix((np.ones_like(data['dt0_' + 'P_indices' + str(t)]),
+        #                           data['dt0_' + 'P_indices' + str(t)],
+        #                           data['dt0_' + 'P_indptr' + str(t)]),
+        #                          data['dt0_' + 'P_shape' + str(t)])
+        #         projections.append(tmp)
+
+        # for t in range(data['nt']):
+        #     for delta_timestep in range(dt):
+        #         if 'data_gr' + str(t) + '_' + str(delta_timestep) in data:
+        #             tmp = csr_matrix((data['data_gr' + str(t) + '_' + str(delta_timestep)],
+        #                               data['indices_gr' + str(t) + '_' + str(delta_timestep)],
+        #                               data['indptr_gr' + str(t) + '_' + str(delta_timestep)]),
+        #                              data['shape_gr' + str(t) + '_' + str(delta_timestep)])
+        #             matrices.append(tmp)
+
+        # name_file = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}.pickle"
+        #
+        # name_file = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}.pickle"
+        # f = open(f"{self.config.general.path_offline_data}{name_file}", 'wb')
+        # pickle.dump(dict_data, f)
+        # f.close()
+        #
+        # message = f"Computation result saved to pickle file: {name_file}"
+        # print(message)
+        # logger.info(message)
+
+    def create_projection_matrices(self):
+        size_grid = self.config.reachable_set.size_grid
+        dx = size_grid / 2
+        size_grid_div = 1 / size_grid
+        for t, base_set_list in self._dict_time_to_drivable_area.items():
+            assert (len(self.dict_time_to_drivable_area) == len(self.dict_time_to_reachable_set))
+            l0 = min([x.p_lon_min for x in base_set_list])
+            l1 = max([x.p_lon_max for x in base_set_list])
+            l2 = min([x.p_lat_min for x in base_set_list])
+            l3 = max([x.p_lat_max for x in base_set_list])
+
+            lon_min = size_grid * math.floor(min([x.p_lon_center for x in base_set_list]) * size_grid_div)
+            lon_max = size_grid * math.ceil(max([x.p_lon_center for x in base_set_list]) * size_grid_div)
+            lat_min = size_grid * math.floor(min([x.p_lat_center for x in base_set_list]) * size_grid_div)
+            lat_max = size_grid * math.ceil(max([x.p_lat_center for x in base_set_list]) * size_grid_div)
+            n_lon = round((lon_max - lon_min) * size_grid_div)
+            n_lat = round((lat_max - lat_min) * size_grid_div)
+            n_lon = max(1, n_lon)
+            n_lat = max(1, n_lat)
+            lon_orig_index = round(-lon_min * size_grid_div)
+            lat_orig_index = round(-lat_min * size_grid_div)
+
+            def position_to_grid_index2d(pos_lon: float, pos_lat: float) -> Tuple[int, int]:
+                return (lon_orig_index + math.floor(pos_lon * size_grid_div),
+                        lat_orig_index + math.floor(pos_lat * size_grid_div))
+
+            def position_to_grid_index1d(pos_lon: float, pos_lat: float) -> int:
+                lon, lat = position_to_grid_index2d(pos_lon, pos_lat)
+                print(lon, lat, lon * n_lat + lat, pos_lon, pos_lat)
+                return lon * n_lat + lat
+
+            # organize into grid
+            grid_index_to_reachset = defaultdict(list)
+            # iii=3
+            # plt.figure()
+            for index_reachset, reach_set in enumerate(self.dict_time_to_reachable_set[t]):
+                # iii *= 0.95
+                # v = np.array(reach_set.position_rectangle.vertices)
+                # plt.fill(v[:, 0], v[:, 1], fill=False, lw=1.5 * iii, alpha=0.3)
+                # continue
+                grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center,
+                                                                reach_set.position_rectangle.p_lat_center)].append(
+                    index_reachset)
+                # continue
+                # if len(grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)])>1:
+                #     plt.figure()
+                #     x = np.arange(lon_min, lon_max+1e-6, size_grid)
+                #     y = np.arange(lat_min, lat_max+1e-6, size_grid)
+                #     vv = [(xx,yy) for xx in x for yy in y]
+                #     vv = np.array(vv)
+                #     plt.scatter(vv[:,0], vv[:,1])
+                #     bounds = np.array([[lon_min,lat_min], [lon_min,lat_max],[lon_max,lat_max], [lon_max,lat_min]])
+                #     plt.fill(bounds[:, 0], bounds[:, 1], fill=False)
+                #     bounds = np.array([[l0, l2], [l0, l3], [l1, l3], [l1, l2]])
+                #     plt.fill(bounds[:, 0], bounds[:, 1], fill=False)
+                #     iii=6
+                #     for inde in grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)]:
+                #         iii*=0.5
+                #         v= np.array(self.dict_time_to_reachable_set[t][inde].position_rectangle.vertices)
+                #         plt.fill(v[:,0], v[:,1], fill=False, lw=1.5*iii,alpha=0.3)
+                #
+                #     plt.title(f"{grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)]}")
+                #     plt.show(block=True)
+
+            for reach_lists in grid_index_to_reachset.values():
+                assert len(reach_lists) == 1, f"more than 1 reachset assigned to a cell!"
+
+            coordinates = list(grid_index_to_reachset.keys())
+            coordinates.sort()
+            projection_matrix = np.zeros(shape=[len(self.dict_time_to_reachable_set[t]), n_lon * n_lat], dtype=bool)
+            for coordinate in coordinates:
+                # print(grid_index_to_reachset[coordinate])
+                projection_matrix[grid_index_to_reachset[coordinate], coordinate] = True
+
+            print("-----------------------------------")
+            # print(t)
+            print(projection_matrix)
+        raise
 
     def _extract_information(self):
         """Extracts essential information from the computation result."""
+        # self.create_projection_matrices()
         dict_time_to_list_tuples_reach_node_attributes = defaultdict(list)
         dict_time_to_adjacency_matrices_parent = dict()
         dict_time_to_adjacency_matrices_grandparent = dict()
-
+        reachset_bb_ll = dict()
+        reachset_bb_ur = dict()
+        size_grid = self.config.reachable_set.size_grid
+        size_grid_div = 1 / size_grid
         for time_step, list_nodes in self._dict_time_to_reachable_set.items():
+            lon_min = size_grid * math.floor(min([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
+            lon_max = size_grid * math.ceil(max([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
+            lat_min = size_grid * math.floor(min([x.position_rectangle.p_lat_center for x in list_nodes]) * size_grid_div)
+            lat_max = size_grid * math.ceil(max([x.position_rectangle.p_lat_center for x in list_nodes]) * size_grid_div)
+            if lon_min == 0.0:
+                lon_min = size_grid * math.floor(min([x.position_rectangle.p_lon_min for x in list_nodes]) * size_grid_div)
+                lon_max = size_grid * math.ceil(max([x.position_rectangle.p_lon_max for x in list_nodes]) * size_grid_div)
+            if lat_min == 0.0:
+                lat_min = size_grid * math.floor(
+                    min([x.position_rectangle.p_lat_min for x in list_nodes]) * size_grid_div)
+                lat_max = size_grid * math.ceil(
+                    max([x.position_rectangle.p_lat_max for x in list_nodes]) * size_grid_div)
+            reachset_bb_ll[time_step] = np.array([lon_min, lat_min])
+            reachset_bb_ur[time_step] = np.array([lon_max, lat_max])
+
             for node in list_nodes:
                 tuple_attribute = (
                     round(node.p_lon_min, 6), round(node.p_lat_min, 6), round(node.p_lon_max, 6),
@@ -268,22 +411,29 @@ class PyGridOfflineReachableSet(ReachableSet):
                 dict_time_to_adjacency_matrices_parent[time_step] = matrix_adjacency_sparse
 
             # grandparent-grandchild relationship
-            if time_step >= 2:
-                list_nodes_grandparent = self._dict_time_to_reachable_set[time_step - 2]
+            # if time_step >= 2:
+            #     list_nodes_grandparent = self._dict_time_to_reachable_set[time_step - 2]
+            #
+            #     matrix_adjacency = list()
+            #     for node in list_nodes:
+            #         list_adjacency = [(node_grandparent in node.list_nodes_grandparent)
+            #                           for node_grandparent in list_nodes_grandparent]
+            #         matrix_adjacency.append(list_adjacency)
+            #
+            #     matrix_adjacency_dense = np.array(matrix_adjacency)
+            #     matrix_adjacency_sparse = sparse.csr_matrix(matrix_adjacency_dense, dtype=bool)
+            #     dict_time_to_adjacency_matrices_grandparent[time_step] = matrix_adjacency_sparse
 
-                matrix_adjacency = list()
-                for node in list_nodes:
-                    list_adjacency = [(node_grandparent in node.list_nodes_grandparent)
-                                      for node_grandparent in list_nodes_grandparent]
-                    matrix_adjacency.append(list_adjacency)
-
-                matrix_adjacency_dense = np.array(matrix_adjacency)
-                matrix_adjacency_sparse = sparse.csr_matrix(matrix_adjacency_dense, dtype=bool)
-                dict_time_to_adjacency_matrices_grandparent[time_step] = matrix_adjacency_sparse
-
-        return dict_time_to_list_tuples_reach_node_attributes, \
-               dict_time_to_adjacency_matrices_parent, \
-               dict_time_to_adjacency_matrices_grandparent
+        dict_data = dict()
+        dict_data["node_attributes"] = dict_time_to_list_tuples_reach_node_attributes
+        dict_data["adjacency_matrices_parent"] = dict_time_to_adjacency_matrices_parent
+        dict_data["adjacency_matrices_grandparent"] = dict_time_to_adjacency_matrices_grandparent
+        dict_data["reachset_bb_ll"] = reachset_bb_ll
+        dict_data["reachset_bb_ur"] = reachset_bb_ur
+        dict_data["config.vehicle"] = self.config.vehicle
+        dict_data["config.reachable_set"] = self.config.reachable_set
+        dict_data["__version__"] = __version__
+        return dict_data
 
     def _prune_nodes_not_reaching_final_time_step(self):
         pass
