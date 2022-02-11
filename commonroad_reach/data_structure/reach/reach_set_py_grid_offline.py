@@ -3,12 +3,10 @@ import math
 import os
 import pickle
 import time
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple, Optional
 
-import matplotlib.pyplot as plt
 from commonroad_reach.__version__ import __version__
 import numpy as np
-from numpy import sort
 from scipy import sparse
 
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
@@ -36,8 +34,8 @@ class PyGridOfflineReachableSet(ReachableSet):
             logger.error(message)
             raise Exception(message)
 
-        self.polygon_zero_state_lon = None
-        self.polygon_zero_state_lat = None
+        self.polygon_zero_state_lon: Dict[int,ReachPolygon] = dict()
+        self.polygon_zero_state_lat: Dict[int,ReachPolygon] = dict()
         self._initialize_zero_state_polygons()
 
         self._dict_time_to_drivable_area[self.time_step_start] = self.initial_drivable_area
@@ -55,13 +53,15 @@ class PyGridOfflineReachableSet(ReachableSet):
         Computation of the reachable set of an LTI system requires the zero-state response and the zero-input response
         of the system.
         """
-        self.polygon_zero_state_lon = reach_operation.create_zero_state_polygon(self.config.planning.dt,
-                                                                                -self.config.vehicle.ego.a_max,
-                                                                                self.config.vehicle.ego.a_max)
+        for steps in range(1, self.config.reachable_set.n_multi_steps):
+            dt = self.config.planning.dt * steps
+            self.polygon_zero_state_lon[steps] = reach_operation.create_zero_state_polygon(dt,
+                                                                                    -self.config.vehicle.ego.a_max,
+                                                                                    self.config.vehicle.ego.a_max)
 
-        self.polygon_zero_state_lat = reach_operation.create_zero_state_polygon(self.config.planning.dt,
-                                                                                -self.config.vehicle.ego.a_max,
-                                                                                self.config.vehicle.ego.a_max)
+            self.polygon_zero_state_lat[steps] = reach_operation.create_zero_state_polygon(dt,
+                                                                                    -self.config.vehicle.ego.a_max,
+                                                                                    self.config.vehicle.ego.a_max)
 
     @property
     def initial_drivable_area(self) -> List[ReachPolygon]:
@@ -103,10 +103,11 @@ class PyGridOfflineReachableSet(ReachableSet):
             print(message)
             logger.debug(message)
 
-        self._determine_grandparent_relationship(self._dict_time_to_reachable_set)
+            if self.config.reachable_set.n_multi_steps >= 2:
+                self._determine_grandparent_relationship(time_step)
 
-        # save computation result to pickle file
-        self._save_to_pickle()
+            # save computation result to pickle file
+            self._save_to_pickle()
 
     def _compute_at_time_step(self, time_step: int):
         """Computes drivable area and reachable set of the time step."""
@@ -147,21 +148,22 @@ class PyGridOfflineReachableSet(ReachableSet):
         self._dict_time_to_drivable_area[time_step] = list_rectangles_adapted
         self._dict_time_to_base_set_propagated[time_step] = list_base_sets_propagated
 
-    def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration]) -> List[ReachNodeMultiGeneration]:
+    def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration], steps=1) -> List[ReachNodeMultiGeneration]:
         """Propagates the nodes of the reachable set from the previous time step."""
+        assert steps >= 1
         list_base_sets_propagated = []
-
+        dt = self.config.planning.dt*steps
         for node in list_nodes:
             try:
                 polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
-                                                                           self.polygon_zero_state_lon,
-                                                                           self.config.planning.dt,
+                                                                           self.polygon_zero_state_lon[steps],
+                                                                           dt,
                                                                            -self.config.vehicle.ego.v_max,
                                                                            self.config.vehicle.ego.v_max)
 
                 polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
-                                                                           self.polygon_zero_state_lat,
-                                                                           self.config.planning.dt,
+                                                                           self.polygon_zero_state_lat[steps],
+                                                                           dt,
                                                                            -self.config.vehicle.ego.v_max,
                                                                            self.config.vehicle.ego.v_max)
             except (ValueError, RuntimeError):
@@ -196,47 +198,49 @@ class PyGridOfflineReachableSet(ReachableSet):
 
         self._dict_time_to_reachable_set[time_step] = reachable_set_time_step_current
 
-    def _determine_grandparent_relationship(self,
-                                            dict_time_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]):
+    def _determine_grandparent_relationship(self, time_step: int):
         """Determines grandparent-child relationship between nodes.
 
         The grandparent-child relationship is established if the grandparent can reach the grandchild by propagating
         two time steps.
         """
         logger.debug("Determining grandparent-grandchild relationship...")
-        for time_step in list(dict_time_to_reachable_set.keys())[2:]:
-            list_nodes = dict_time_to_reachable_set[time_step]
-            list_nodes_grand_parent = dict_time_to_reachable_set[time_step - 2]
-            list_nodes_grand_parent_propagated = list_nodes_grand_parent
+        for delta_steps in range(2, self.config.reachable_set.n_multi_steps):
+            for time_step in list(self.dict_time_to_reachable_set.keys())[delta_steps:time_step+1]:
+                list_nodes = self.dict_time_to_reachable_set[time_step]
+                list_nodes_grand_parent = self.dict_time_to_reachable_set[time_step - delta_steps]
+                list_nodes_grand_parent_propagated = self._propagate_reachable_set(list_nodes_grand_parent,
+                                                                                   steps=delta_steps)
 
-            for _ in range(2):
-                list_nodes_grand_parent_propagated = self._propagate_reachable_set(list_nodes_grand_parent_propagated)
+                for node in list_nodes:
+                    rectangle_node = node.position_rectangle
 
-            for node in list_nodes:
-                rectangle_node = node.position_rectangle
+                    for idx_grandparent, node_grand_parent_propagated in enumerate(list_nodes_grand_parent_propagated):
+                        rectangle_node_grand_parent_propagated = node_grand_parent_propagated.position_rectangle
+                        node_grand_parent = list_nodes_grand_parent[idx_grandparent]
 
-                for idx_grandparent, node_grand_parent_propagated in enumerate(list_nodes_grand_parent_propagated):
-                    rectangle_node_grand_parent_propagated = node_grand_parent_propagated.position_rectangle
-                    node_grand_parent = list_nodes_grand_parent[idx_grandparent]
-
-                    if rectangle_node.intersects(rectangle_node_grand_parent_propagated):
-                        node.add_grandparent_node(node_grand_parent)
-                        node_grand_parent.add_grandchild_node(node)
+                        if rectangle_node.intersects(rectangle_node_grand_parent_propagated):
+                            node.add_grandparent_node(node_grand_parent)
+                            node_grand_parent.add_grandchild_node(node)
 
     def _save_to_pickle(self):
         """Saves computation result as a pickle file."""
-        # todo: save vertices instead of min/max values
-        # create output directory
         os.makedirs(self.config.general.path_offline_data, exist_ok=True)
 
         dict_data = self._extract_information()
 
-        time_steps = self.config.planning.time_steps_computation
         size_grid = self.config.reachable_set.size_grid
         a_max = self.config.vehicle.ego.a_max
         v_max = self.config.vehicle.ego.v_max
 
-        self.config.reachable_set.name_pickle_offline = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}_v{dict_data['__version__']}.pickle"
+        self.config.reachable_set.name_pickle_offline =\
+            f"offline_{self.max_evaluated_time_step}_" \
+            f"ms{self.config.reachable_set.n_multi_steps}_" \
+            f"dx{size_grid}_" \
+            f"amax{a_max}_" \
+            f"vmax{v_max}_" \
+            f"ver{dict_data['__version__']}" \
+            f".pickle"
         f = open(self.path_offline_file, 'wb')
         pickle.dump(dict_data, f)
         f.close()
@@ -368,7 +372,7 @@ class PyGridOfflineReachableSet(ReachableSet):
         # self.create_projection_matrices()
         dict_time_to_list_tuples_reach_node_attributes = defaultdict(list)
         dict_time_to_adjacency_matrices_parent = dict()
-        dict_time_to_adjacency_matrices_grandparent = dict()
+        dict_time_to_adjacency_matrices_grandparent = defaultdict(dict)
         reachset_bb_ll = dict()
         reachset_bb_ur = dict()
         size_grid = self.config.reachable_set.size_grid
@@ -401,33 +405,33 @@ class PyGridOfflineReachableSet(ReachableSet):
             if time_step >= 1:
                 list_nodes_parent = self._dict_time_to_reachable_set[time_step - 1]
 
-                matrix_adjacency = list()
+                matrix_adjacency_tmp = list()
                 for node in list_nodes:
                     list_adjacency = [(node_parent in node.list_nodes_parent) for node_parent in list_nodes_parent]
-                    matrix_adjacency.append(list_adjacency)
+                    matrix_adjacency_tmp.append(list_adjacency)
 
-                matrix_adjacency_dense = np.array(matrix_adjacency)
+                matrix_adjacency_dense = np.array(matrix_adjacency_tmp, dtype=bool)
                 matrix_adjacency_sparse = sparse.csr_matrix(matrix_adjacency_dense, dtype=bool)
                 dict_time_to_adjacency_matrices_parent[time_step] = matrix_adjacency_sparse
 
             # grandparent-grandchild relationship
-            # if time_step >= 2:
-            #     list_nodes_grandparent = self._dict_time_to_reachable_set[time_step - 2]
-            #
-            #     matrix_adjacency = list()
-            #     for node in list_nodes:
-            #         list_adjacency = [(node_grandparent in node.list_nodes_grandparent)
-            #                           for node_grandparent in list_nodes_grandparent]
-            #         matrix_adjacency.append(list_adjacency)
-            #
-            #     matrix_adjacency_dense = np.array(matrix_adjacency)
-            #     matrix_adjacency_sparse = sparse.csr_matrix(matrix_adjacency_dense, dtype=bool)
-            #     dict_time_to_adjacency_matrices_grandparent[time_step] = matrix_adjacency_sparse
+            for delta_steps in range(2, self.config.reachable_set.n_multi_steps):
+                if time_step - delta_steps not in self._dict_time_to_reachable_set:
+                    break
+                list_nodes_grandparent = self._dict_time_to_reachable_set[time_step - delta_steps]
+                matrix_adjacency_tmp = list()
+                for node in list_nodes:
+                    list_adjacency = [(node_grandparent in node.list_nodes_grandparent[delta_steps])
+                                      for node_grandparent in list_nodes_grandparent]
+                    matrix_adjacency_tmp.append(list_adjacency)
+
+                matrix_adjacency_sparse = sparse.csr_matrix(np.array(matrix_adjacency_tmp, dtype=bool), dtype=bool)
+                dict_time_to_adjacency_matrices_grandparent[time_step][delta_steps] = matrix_adjacency_sparse
 
         dict_data = dict()
         dict_data["node_attributes"] = dict_time_to_list_tuples_reach_node_attributes
         dict_data["adjacency_matrices_parent"] = dict_time_to_adjacency_matrices_parent
-        dict_data["adjacency_matrices_grandparent"] = dict_time_to_adjacency_matrices_grandparent
+        dict_data["adjacency_matrices_grandparent"] = dict(dict_time_to_adjacency_matrices_grandparent)
         dict_data["reachset_bb_ll"] = reachset_bb_ll
         dict_data["reachset_bb_ur"] = reachset_bb_ur
         dict_data["config.vehicle"] = self.config.vehicle

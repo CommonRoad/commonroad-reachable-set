@@ -5,6 +5,7 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
+import  math
 from shapely.geometry import Polygon, MultiPolygon
 
 
@@ -182,30 +183,30 @@ class ReachPolygon(Polygon, ABC):
         if b == 0:
             # horizontal
             if a > 0:  # x <= c
-                list_vertices.append(np.array([c, y_min - margin]))
-                list_vertices.append(np.array([c, y_max + margin]))
-                list_vertices.append(np.array([x_min - margin, y_max + margin]))
-                list_vertices.append(np.array([x_min - margin, y_min - margin]))
+                list_vertices.append([c, y_min - margin])
+                list_vertices.append([c, y_max + margin])
+                list_vertices.append([x_min - margin, y_max + margin])
+                list_vertices.append([x_min - margin, y_min - margin])
 
             else:  # -x <= c
-                list_vertices.append(np.array([-c, y_min - margin]))
-                list_vertices.append(np.array([-c, y_max + margin]))
-                list_vertices.append(np.array([x_max + margin, y_max + margin]))
-                list_vertices.append(np.array([x_max + margin, y_min - margin]))
+                list_vertices.append([-c, y_min - margin])
+                list_vertices.append([-c, y_max + margin])
+                list_vertices.append([x_max + margin, y_max + margin])
+                list_vertices.append([x_max + margin, y_min - margin])
 
         elif a == 0:
             # vertical
             if b > 0:  # y <= c
-                list_vertices.append(np.array([x_min - margin, c]))
-                list_vertices.append(np.array([x_max + margin, c]))
-                list_vertices.append(np.array([x_max + margin, y_min - margin]))
-                list_vertices.append(np.array([x_min - margin, y_min - margin]))
+                list_vertices.append([x_min - margin, c])
+                list_vertices.append([x_max + margin, c])
+                list_vertices.append([x_max + margin, y_min - margin])
+                list_vertices.append([x_min - margin, y_min - margin])
 
             else:  # -y <= c
-                list_vertices.append(np.array([x_min - margin, -c]))
-                list_vertices.append(np.array([x_max + margin, -c]))
-                list_vertices.append(np.array([x_max + margin, y_max + margin]))
-                list_vertices.append(np.array([x_min - margin, y_max + margin]))
+                list_vertices.append([x_min - margin, -c])
+                list_vertices.append([x_max + margin, -c])
+                list_vertices.append([x_max + margin, y_max + margin])
+                list_vertices.append([x_min - margin, y_max + margin])
 
         else:
             # general case
@@ -220,20 +221,20 @@ class ReachPolygon(Polygon, ABC):
             for x in [x_min - margin, x_max + margin]:
                 y = (-a * x + c) / b
 
-                list_vertices.append(np.array([x, y]))
+                list_vertices.append([x, y])
 
             vertex1 = list_vertices[0]
             vertex2 = list_vertices[1]
 
             sign = -1 if a > 0 else 1
             m_perpendicular = np.array([1, b / a]) * sign
-            theta = np.arctan2(m_perpendicular[1], m_perpendicular[0])
+            theta = math.atan2(m_perpendicular[1], m_perpendicular[0])
 
             for vertex in [vertex2, vertex1]:
                 # dist_diagonal * 100 is just an arbitrarily large distance
-                x_new = vertex[0] + dist_diagonal * 100 * np.cos(theta)
-                y_new = vertex[1] + dist_diagonal * 100 * np.sin(theta)
-                vertex_new = np.array([x_new, y_new])
+                x_new = vertex[0] + dist_diagonal * 100 * math.cos(theta)
+                y_new = vertex[1] + dist_diagonal * 100 * math.sin(theta)
+                vertex_new = [x_new, y_new]
 
                 list_vertices.append(vertex_new)
 

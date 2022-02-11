@@ -1,5 +1,6 @@
 import copy
-from typing import List, Optional
+from collections import defaultdict
+from typing import List, Optional, Dict
 
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
@@ -215,37 +216,45 @@ class ReachNodeMultiGeneration(ReachNode):
 
     def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
-        self.list_nodes_grandparent: List[ReachNodeMultiGeneration] = list()
-        self.list_nodes_grandchild: List[ReachNodeMultiGeneration] = list()
+        self.list_nodes_grandparent: Dict[int, List[ReachNodeMultiGeneration]] = defaultdict(list)
+        self.list_nodes_grandchild: Dict[int, List[ReachNodeMultiGeneration]] = defaultdict(list)
 
     def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandparent node into the list."""
-        if node_grandparent not in self.list_nodes_grandparent:
-            self.list_nodes_grandparent.append(node_grandparent)
+        delta_steps = self.time_step - node_grandparent.time_step
+        assert delta_steps > 1, f"not a grand_parent: node_grandparent.time_step={node_grandparent.time_step}, " \
+                                f"self.time_step={self.time_step}"
+        if node_grandparent not in self.list_nodes_grandparent[delta_steps]:
+            self.list_nodes_grandparent[delta_steps].append(node_grandparent)
             return True
 
         return False
 
     def remove_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Removes a grandparent node from the list."""
-        if node_grandparent in self.list_nodes_grandparent:
-            self.list_nodes_grandparent.remove(node_grandparent)
+        delta_steps = self.time_step - node_grandparent.time_step
+        if node_grandparent in self.list_nodes_grandparent[delta_steps]:
+            self.list_nodes_grandparent[delta_steps].remove(node_grandparent)
             return True
 
         return False
 
     def add_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandchild node into the list."""
-        if node_grandchild not in self.list_nodes_grandchild:
-            self.list_nodes_grandchild.append(node_grandchild)
+        delta_steps = node_grandchild.time_step - self.time_step
+        assert delta_steps > 1, f"not a grandchild: node_grandchild.time_step={node_grandchild.time_step}, " \
+                                f"self.time_step={self.time_step}"
+        if node_grandchild not in self.list_nodes_grandchild[delta_steps]:
+            self.list_nodes_grandchild[delta_steps].append(node_grandchild)
             return True
 
         return False
 
     def remove_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
         """Removes a grandchild node from the list."""
-        if node_grandchild in self.list_nodes_grandchild:
-            self.list_nodes_grandchild.remove(node_grandchild)
+        delta_steps = node_grandchild.time_step - self.time_step
+        if node_grandchild in self.list_nodes_grandchild[delta_steps]:
+            self.list_nodes_grandchild[delta_steps].remove(node_grandchild)
             return True
 
         return False

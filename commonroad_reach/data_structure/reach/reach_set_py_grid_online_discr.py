@@ -5,6 +5,7 @@ from typing import Optional, List, Dict
 
 from commonroad.geometry.shape import Rectangle, Polygon
 from commonroad.scenario.scenario import Scenario
+from commonroad_reach.__version__ import __version__
 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
@@ -140,7 +141,10 @@ class PyGridOnlineReachableSet(ReachableSet):
         path_file_pickle = os.path.join(self.config.general.path_offline_data,
                                         self.config.reachable_set.name_pickle_offline)
         dict_data = pickle.load(open(path_file_pickle, "rb"))
-
+        if dict_data["__version__"] != __version__:
+            raise ValueError(f"Offline data was created with an older version of commonroad_reach"
+                             f"{dict_data['__version__']}. "
+                             f"Please recreate the file with the current version {__version__}!")
         return dict_data["node_attributes"], dict_data["adjacency_matrices_parent"], \
                dict_data["adjacency_matrices_grandparent"], \
                dict_data["reachset_bb_ll"], dict_data["reachset_bb_ur"]
@@ -193,7 +197,7 @@ class PyGridOnlineReachableSet(ReachableSet):
             #                 node.add_grandparent_node(node_grandparent)
             #                 node_grandparent.add_grandchild_node(node)
 
-    def initialize_new_scenario(self, scenario: Optional[Scenario], planning_problem: [Optional]):
+    def initialize_new_scenario(self, scenario: Optional[Scenario]=None, planning_problem: [Optional]=None):
         """
         Reset online computation for evaluation of new scenario and/or planning problem;
         thus, avoid time for parsing pickle file again.
@@ -224,24 +228,22 @@ class PyGridOnlineReachableSet(ReachableSet):
 
         self.occupied_grid_obs_static = dict()
         self._reachability_grid.clear()
-        self.reachable_set_at_time_step.clear()
-        self.drivable_area_at_time_step.clear()
-        self.time_step.clear()
+        self.reachable_set_at_time_step.cache_clear()
+        self.drivable_area_at_time_step.cache_clear()
 
         self._reachability_grid[self.time_step_start] = np.ones((1, 1), dtype=bool)
 
     def _initialize_collision_checker(self):
-        if self.config.reachable_set.mode == 4:
-            self._collision_checker = PyCollisionChecker(self.config)
-
-        elif self.config.reachable_set.mode == 5:
+        if self.config.reachable_set.mode in (1,4,6):
+            raise NotImplementedError(f" Python Collision Checker not supported for {self.__class__.__name__}! "
+                                      f"Use reachable_set.mode not in (1,4,6).")
+        else:
             try:
                 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
             except ImportError:
                 message = "Importing C++ collision checker failed."
                 print(message)
                 logger.exception(message)
-
             else:
                 self._collision_checker = CppCollisionChecker(self.config)
 
@@ -295,9 +297,8 @@ class PyGridOnlineReachableSet(ReachableSet):
             reachability_grid_prop = reachability_grid_prop.toarray()
 
         # propagate grandparents:
-        if False and init_time_step + 1 in self.dict_time_to_adjacency_matrices_grandparent:
-            for time_step_gp, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[
-                init_time_step + 1].items():  # get time index of grandparent to propagate
+        if init_time_step + 1 in self.dict_time_to_adjacency_matrices_grandparent:
+            for time_step_gp, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[init_time_step + 1].items():  # get time index of grandparent to propagate
                 delta_time_step = init_time_step - time_step_gp
                 if delta_time_step < n_multisteps and time_step_gp in self._reachability_grid:
                     reachability_grid_prop_grandparent = \

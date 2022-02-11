@@ -289,6 +289,7 @@ class ReachableSetConfiguration:
 
         self.consider_traffic = config_relevant.consider_traffic
         self.name_pickle_offline = config_relevant.name_pickle_offline
+        self.n_multi_steps = config_relevant.n_multi_steps
 
 
 class DebugConfiguration:
