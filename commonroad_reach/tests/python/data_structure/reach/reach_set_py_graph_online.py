@@ -15,8 +15,8 @@ except:
     pass
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
-from commonroad_reach.data_structure.reach.reach_set_py_grid_offline import PyGridOfflineReachableSet
-from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
+from commonroad_reach.data_structure.reach.reach_set_py_graph_offline import PyGraphReachableSetOffline
+from commonroad_reach.data_structure.reach.reach_set_py_graph_online import PyGraphReachableSetOnline
 from commonroad_reach.utility import visualization as util_visual
 
 
@@ -26,21 +26,21 @@ def test_validate_configurations():
     offline_config = ConfigurationBuilder.build_configuration(name_scenario)
     online_config = ConfigurationBuilder.build_configuration(name_scenario)
     with warnings.catch_warnings(record=True) as w:
-        PyGridOnlineReachableSet._validate_configurations(online_config.reachable_set, online_config.vehicle,
-                                                          offline_config.reachable_set, offline_config.vehicle)
+        PyGraphReachableSetOnline._validate_configurations(online_config.reachable_set, online_config.vehicle,
+                                                           offline_config.reachable_set, offline_config.vehicle)
     assert len(w) == 0
 
     offline_config.reachable_set.size_grid = offline_config.reachable_set.size_grid * 2
     with warnings.catch_warnings(record=True) as w:
-        PyGridOnlineReachableSet._validate_configurations(online_config.reachable_set, online_config.vehicle,
-                                                          offline_config.reachable_set, offline_config.vehicle)
+        PyGraphReachableSetOnline._validate_configurations(online_config.reachable_set, online_config.vehicle,
+                                                           offline_config.reachable_set, offline_config.vehicle)
     assert len(w) == 1
     assert online_config.reachable_set.size_grid == offline_config.reachable_set.size_grid
 
     offline_config.vehicle.ego.a_max = offline_config.vehicle.ego.a_max * 2
     with warnings.catch_warnings(record=True) as w:
-        PyGridOnlineReachableSet._validate_configurations(online_config.reachable_set, online_config.vehicle,
-                                                          offline_config.reachable_set, offline_config.vehicle)
+        PyGraphReachableSetOnline._validate_configurations(online_config.reachable_set, online_config.vehicle,
+                                                           offline_config.reachable_set, offline_config.vehicle)
     assert len(w) == 1
     assert online_config.vehicle.ego.a_max == offline_config.vehicle.ego.a_max
 
@@ -55,7 +55,7 @@ def test_offline_reach():
     config = ConfigurationBuilder.build_configuration(name_scenario)
     [config.scenario.remove_obstacle(obs) for obs in config.scenario.obstacles]
     config.reachable_set.size_grid = 0.5
-    reach_offline = PyGridOfflineReachableSet(config)
+    reach_offline = PyGraphReachableSetOffline(config)
 
     reach_offline.compute_reachable_sets(reach_offline.time_step_start, reach_offline.time_step_start+dt)
 
@@ -72,7 +72,7 @@ def test_offline_online_compatibility():
         config = ConfigurationBuilder.build_configuration(name_scenario)
         # [config.scenario.remove_obstacle(obs) for obs in config.scenario.dynamic_obstacles]
         # config.reachable_set.size_grid = 0.5
-        reach_offline = PyGridOfflineReachableSet(config)
+        reach_offline = PyGraphReachableSetOffline(config)
 
         reach_offline.config.general.path_offline_data = offline_dir
         reach_offline.compute_reachable_sets(reach_offline.time_step_start, reach_offline.time_step_start+dt)
@@ -80,7 +80,7 @@ def test_offline_online_compatibility():
         config.reachable_set.mode = 5
         config.planning_problem.initial_state = State(position=np.array([15,1.5]),
                                                       velocity=15, orientation=0,steering_angle=0.0,yaw_rate=0, slip_angle=0, time_step=0)
-        reach_online = PyGridOnlineReachableSet(config)
+        reach_online = PyGraphReachableSetOnline(config)
         reach_online.compute_reachable_sets(0, dt)
     finally:
         shutil.rmtree(offline_dir)
@@ -106,7 +106,7 @@ def online_reach():
             "/home/klischat/GIT_REPOS/commonroad-reachable-set/output/offline_data/" \
             "offline_33_ms6_dx0.5_amax5.0_vmax30.0_ver0.0.1.pickle"
         reach_interface: ReachableSetInterface = ReachableSetInterface(config)
-        reach_online: PyGridOnlineReachableSet = reach_interface._reach
+        reach_online: PyGraphReachableSetOnline = reach_interface._reach
         times = []
         print("start")
         for _ in range(1):

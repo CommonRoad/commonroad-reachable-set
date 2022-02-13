@@ -21,8 +21,8 @@ from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.utility import reach_operation
 
 
-class PyGridOfflineReachableSet(ReachableSet):
-    """Offline step in the multi-step reachable set computation with Python backend."""
+class PyGraphReachableSetOffline(ReachableSet):
+    """Offline step in the graph-based reachable set computation with Python backend."""
 
     def __init__(self, config: Configuration):
         self._dict_time_to_drivable_area: Dict[int, List[ReachPolygon]]
@@ -34,8 +34,8 @@ class PyGridOfflineReachableSet(ReachableSet):
             logger.error(message)
             raise Exception(message)
 
-        self.polygon_zero_state_lon: Dict[int,ReachPolygon] = dict()
-        self.polygon_zero_state_lat: Dict[int,ReachPolygon] = dict()
+        self.polygon_zero_state_lon: Dict[int, ReachPolygon] = dict()
+        self.polygon_zero_state_lat: Dict[int, ReachPolygon] = dict()
         self._initialize_zero_state_polygons()
 
         self._dict_time_to_drivable_area[self.time_step_start] = self.initial_drivable_area
@@ -56,12 +56,12 @@ class PyGridOfflineReachableSet(ReachableSet):
         for steps in range(1, self.config.reachable_set.n_multi_steps):
             dt = self.config.planning.dt * steps
             self.polygon_zero_state_lon[steps] = reach_operation.create_zero_state_polygon(dt,
-                                                                                    -self.config.vehicle.ego.a_max,
-                                                                                    self.config.vehicle.ego.a_max)
+                                                                                           -self.config.vehicle.ego.a_max,
+                                                                                           self.config.vehicle.ego.a_max)
 
             self.polygon_zero_state_lat[steps] = reach_operation.create_zero_state_polygon(dt,
-                                                                                    -self.config.vehicle.ego.a_max,
-                                                                                    self.config.vehicle.ego.a_max)
+                                                                                           -self.config.vehicle.ego.a_max,
+                                                                                           self.config.vehicle.ego.a_max)
 
     @property
     def initial_drivable_area(self) -> List[ReachPolygon]:
@@ -148,11 +148,12 @@ class PyGridOfflineReachableSet(ReachableSet):
         self._dict_time_to_drivable_area[time_step] = list_rectangles_adapted
         self._dict_time_to_base_set_propagated[time_step] = list_base_sets_propagated
 
-    def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration], steps=1) -> List[ReachNodeMultiGeneration]:
+    def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration], steps=1) -> List[
+        ReachNodeMultiGeneration]:
         """Propagates the nodes of the reachable set from the previous time step."""
         assert steps >= 1
         list_base_sets_propagated = []
-        dt = self.config.planning.dt*steps
+        dt = self.config.planning.dt * steps
         for node in list_nodes:
             try:
                 polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
@@ -206,7 +207,7 @@ class PyGridOfflineReachableSet(ReachableSet):
         """
         logger.debug("Determining grandparent-grandchild relationship...")
         for delta_steps in range(2, self.config.reachable_set.n_multi_steps):
-            for time_step in list(self.dict_time_to_reachable_set.keys())[delta_steps:time_step+1]:
+            for time_step in list(self.dict_time_to_reachable_set.keys())[delta_steps:time_step + 1]:
                 list_nodes = self.dict_time_to_reachable_set[time_step]
                 list_nodes_grand_parent = self.dict_time_to_reachable_set[time_step - delta_steps]
                 list_nodes_grand_parent_propagated = self._propagate_reachable_set(list_nodes_grand_parent,
@@ -233,7 +234,7 @@ class PyGridOfflineReachableSet(ReachableSet):
         a_max = self.config.vehicle.ego.a_max
         v_max = self.config.vehicle.ego.v_max
 
-        self.config.reachable_set.name_pickle_offline =\
+        self.config.reachable_set.name_pickle_offline = \
             f"offline_{self.max_evaluated_time_step}_" \
             f"ms{self.config.reachable_set.n_multi_steps}_" \
             f"dx{size_grid}_" \
@@ -378,13 +379,19 @@ class PyGridOfflineReachableSet(ReachableSet):
         size_grid = self.config.reachable_set.size_grid
         size_grid_div = 1 / size_grid
         for time_step, list_nodes in self._dict_time_to_reachable_set.items():
-            lon_min = size_grid * math.floor(min([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
-            lon_max = size_grid * math.ceil(max([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
-            lat_min = size_grid * math.floor(min([x.position_rectangle.p_lat_center for x in list_nodes]) * size_grid_div)
-            lat_max = size_grid * math.ceil(max([x.position_rectangle.p_lat_center for x in list_nodes]) * size_grid_div)
+            lon_min = size_grid * math.floor(
+                min([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
+            lon_max = size_grid * math.ceil(
+                max([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
+            lat_min = size_grid * math.floor(
+                min([x.position_rectangle.p_lat_center for x in list_nodes]) * size_grid_div)
+            lat_max = size_grid * math.ceil(
+                max([x.position_rectangle.p_lat_center for x in list_nodes]) * size_grid_div)
             if lon_min == 0.0:
-                lon_min = size_grid * math.floor(min([x.position_rectangle.p_lon_min for x in list_nodes]) * size_grid_div)
-                lon_max = size_grid * math.ceil(max([x.position_rectangle.p_lon_max for x in list_nodes]) * size_grid_div)
+                lon_min = size_grid * math.floor(
+                    min([x.position_rectangle.p_lon_min for x in list_nodes]) * size_grid_div)
+                lon_max = size_grid * math.ceil(
+                    max([x.position_rectangle.p_lon_max for x in list_nodes]) * size_grid_div)
             if lat_min == 0.0:
                 lat_min = size_grid * math.floor(
                     min([x.position_rectangle.p_lat_min for x in list_nodes]) * size_grid_div)

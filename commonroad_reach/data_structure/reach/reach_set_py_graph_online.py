@@ -22,8 +22,8 @@ from commonroad_reach.data_structure.configuration import Configuration, Vehicle
 logger = logging.getLogger(__name__)
 
 
-class PyGridOnlineReachableSet(ReachableSet):
-    """Online step in the multi-step reachable set computation with Python backend."""
+class PyGraphReachableSetOnline(ReachableSet):
+    """Online step in the graph-based reachable set computation with Python backend."""
 
     def __init__(self, config: Configuration):
         super().__init__(config)
