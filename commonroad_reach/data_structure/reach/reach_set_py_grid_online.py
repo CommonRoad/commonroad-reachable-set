@@ -1,17 +1,25 @@
-import logging
-
-logger = logging.getLogger(__name__)
+import inspect
 import os
 import pickle
-import numpy as np
+import warnings
 from collections import defaultdict
+import logging
+import math
+from functools import lru_cache
+from typing import Optional, List, Dict
+import numpy as np
+from scipy import sparse
 
-from shapely import affinity
-from commonroad_reach.data_structure.reach.reach_set import ReachableSet
-from commonroad_reach.data_structure.collision_checker_py import PyCollisionChecker
-from commonroad_reach.data_structure.configuration import Configuration
+from commonroad.scenario.scenario import Scenario
+from commonroad_reach.__version__ import __version__
+from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reach.utility.obstacle_grid import ObstacleRegularGrid
+from commonroad_reach.data_structure.reach.reach_set import ReachableSet
+from commonroad_reach.data_structure.configuration import Configuration, VehicleConfiguration, ReachableSetConfiguration
+
+logger = logging.getLogger(__name__)
 
 
 class PyGridOnlineReachableSet(ReachableSet):
@@ -26,23 +34,102 @@ class PyGridOnlineReachableSet(ReachableSet):
             raise Exception(message)
 
         self._num_time_steps_offline_computation = 0
-        self._collision_checker = None
+        self._collision_checker: Optional[CppCollisionChecker] = None
+
+        self._initialize_collision_checker()
+        self.occupied_grid_obs_static = ()
+        self._reachability_grid: Dict[int, np.ndarray] = {}
+
+        self.obstacle_grid: ObstacleRegularGrid = None
+        self.dict_time_to_list_tuples_reach_node_attributes = {}
+        self.dict_time_to_adjacency_matrices_parent = {}
+        self.dict_time_to_adjacency_matrices_grandparent = {}
+
+        self.reachset_bb_ll: Dict[int, np.ndarray] = dict()
+        self.reachset_bb_ur: Dict[int, np.ndarray] = dict()
+        self._dict_time_to_reachable_set_all: Dict[int, List[ReachNodeMultiGeneration]] = defaultdict(list)
+        self._dict_time_to_drivable_area_all: Dict[int, List[ReachPolygon]] = defaultdict(list)
 
         self._restore_reachability_graph()
-        self._compute_translation_over_time()
         self._initialize_collision_checker()
 
-    def _restore_reachability_graph(self):
+        self.initialize_new_scenario(self.config.scenario, self.config.planning_problem)
+
+    def _dict_time_to_reachable_set(self) -> Dict[int, List[ReachNodeMultiGeneration]]:
+        dict_time_to_reachable_set = {}
+        for t in self._list_time_steps_computed:
+            dict_time_to_reachable_set[t] = self.reachable_set_at_time_step(t)
+
+        return dict_time_to_reachable_set
+
+    @lru_cache(128)
+    def reachable_set_at_time_step(self, time_step: int) -> List[ReachNodeMultiGeneration]:
+        if time_step not in self._list_time_steps_computed:
+            message = "Given time step for drivable area retrieval is out of range."
+            print(message)
+            logger.warning(message)
+            return []
+
+        else:
+            reachset_list = self._dict_time_to_reachable_set_all[time_step]
+            return [reachset_list[index_reachset]
+                    for index_reachset, reachable in enumerate(self._reachability_grid[time_step].flatten())
+                    if reachable]
+
+    def _dict_time_to_drivable_area(self) -> Dict[int, List[ReachPolygon]]:
+        dict_time_to_drivable_area = {}
+        for t in self._list_time_steps_computed:
+            dict_time_to_drivable_area[t] = self.drivable_area_at_time_step(t)
+
+        return dict_time_to_drivable_area
+
+    @lru_cache(128)
+    def drivable_area_at_time_step(self, time_step: int) -> List[ReachPolygon]:
+        if time_step not in self._list_time_steps_computed:
+            message = "Given time step for drivable area retrieval is out of range."
+            print(message)
+            logger.warning(message)
+            return []
+
+        else:
+            rectangle_list_all = self._dict_time_to_drivable_area_all[time_step]
+            drivable_area = []
+            for index_reachset, reachable in enumerate(self._reachability_grid[time_step].flatten()):
+                if reachable:
+                    try:
+                        vertices = rectangle_list_all[index_reachset].vertices
+                        vertices += self.reachset_translation(time_step)
+                        drivable_area.append(ReachPolygon(vertices, fix_vertices=False))
+                    except:
+                        continue
+            return drivable_area
+
+    @property
+    def max_evaluated_time_step(self) -> int:
+        return max(self._reachability_grid)
+
+    @lru_cache(128)
+    def time_step(self, time_index: int) -> int:
+        """
+        Convert relative time index (initial time_index = 0) to time_step (initial time_step = time_step_start)
+        :param time_index:
+        :return:
+        """
+        return time_index + self.time_step_start
+
+    def _restore_reachability_graph(self) -> None:
         """Restores reachability graph from the offline computation result."""
-        dict_time_to_list_tuples_reach_node_attributes, dict_time_to_adjacency_matrices_parent, \
-        dict_time_to_adjacency_matrices_grandparent = self.load_offline_computation_result()
-        self._num_time_steps_offline_computation = len(dict_time_to_list_tuples_reach_node_attributes)
+        self.dict_time_to_list_tuples_reach_node_attributes, self.dict_time_to_adjacency_matrices_parent, \
+        self.dict_time_to_adjacency_matrices_grandparent, \
+        self.reachset_bb_ll, self.reachset_bb_ur = self._load_offline_computation_result()
+        self._num_time_steps_offline_computation = len(self.dict_time_to_list_tuples_reach_node_attributes)
 
-        self._restore_reachable_sets(dict_time_to_list_tuples_reach_node_attributes,
-                                     dict_time_to_adjacency_matrices_parent,
-                                     dict_time_to_adjacency_matrices_grandparent)
+        self._grid_shapes = {t: (round((self.reachset_bb_ur[t][0] - ll[0]) / self.config.reachable_set.size_grid),
+                                 round((self.reachset_bb_ur[t][1] - ll[1]) / self.config.reachable_set.size_grid))
+                             for t, ll in self.reachset_bb_ll.items()}
+        self._restore_reachable_sets(self.dict_time_to_list_tuples_reach_node_attributes)
 
-    def load_offline_computation_result(self):
+    def _load_offline_computation_result(self) -> tuple:
         """Loads pickle file generated in the offline computation step."""
         message = "* Loading offline computation result..."
         print(message)
@@ -51,15 +138,60 @@ class PyGridOnlineReachableSet(ReachableSet):
         path_file_pickle = os.path.join(self.config.general.path_offline_data,
                                         self.config.reachable_set.name_pickle_offline)
         dict_data = pickle.load(open(path_file_pickle, "rb"))
-
+        if dict_data["__version__"] != __version__:
+            raise ValueError(f"Offline data was created with an older version of commonroad-reach "
+                             f"{dict_data['__version__']}. "
+                             f"Please recreate the file with the current version {__version__} !")
+        self._validate_configurations(self.config.reachable_set, self.config.vehicle,
+                                      dict_data["config.reachable_set"], dict_data["config.vehicle"])
         return dict_data["node_attributes"], dict_data["adjacency_matrices_parent"], \
-               dict_data["adjacency_matrices_grandparent"]
+               dict_data["adjacency_matrices_grandparent"], \
+               dict_data["reachset_bb_ll"], dict_data["reachset_bb_ur"]
 
-    def _restore_reachable_sets(self, dict_time_to_list_tuples_reach_node_attributes,
-                                dict_time_to_adjacency_matrices_parent,
-                                dict_time_to_adjacency_matrices_grandparent):
+    @staticmethod
+    def _validate_configurations(reachset_config_online: ReachableSetConfiguration,
+                                 vehicle_config_online: VehicleConfiguration,
+                                 reachset_config_offline: ReachableSetConfiguration,
+                                 vehicle_config_offline: VehicleConfiguration) -> None:
+        """
+        Ensures that original configuration from the offline data is used for relevant parameters.
+        :param reachset_config_online: configuration used for online reachability analysis
+        :param vehicle_config_online: configuration used for online reachability analysis
+        :param reachset_config_offline: configuration used for offline reachability analysis
+        :param vehicle_config_offline: configuration used for offline reachability analysis
+        :return: None
+        """
+
+        def validate_and_update_config(config_online, config_offline, relevant_attributes):
+            for attr in vars(config_online):
+                if attr in relevant_attributes and hasattr(config_offline, attr):
+                    if getattr(config_online, attr) != getattr(config_offline, attr):
+                        online_value = getattr(config_online, attr)
+                        offline_value = getattr(config_offline, attr)
+                        warn_text = f"Parameter {config_online.__class__.__name__}.{attr}=" \
+                                    f"{online_value}!={offline_value}, which was " \
+                                    f"used to create {reachset_config_online.name_pickle_offline}. Overwriting value..."
+                        warnings.warn(warn_text)
+                        logger.warning(warn_text)
+                        setattr(config_online, attr, offline_value)
+
+        relevant_attributes_reachset = \
+            ["size_grid",
+             "n_multi_steps"]
+        relevant_attributes_ego_vehicle = \
+            ["a_lon_max",
+             "a_lon_min",
+             "a_lat_max",
+             "a_lat_min",
+             "a_max",
+             "v_lon_max"]
+
+        validate_and_update_config(reachset_config_online, reachset_config_offline, relevant_attributes_reachset)
+        validate_and_update_config(vehicle_config_online.ego, vehicle_config_offline.ego,
+                                   relevant_attributes_ego_vehicle)
+
+    def _restore_reachable_sets(self, dict_time_to_list_tuples_reach_node_attributes):
         """Restores reachable sets from the offline computation result."""
-        # todo: change to vertices of polytopes?
         for time_step, list_tuples_attribute in dict_time_to_list_tuples_reach_node_attributes.items():
             # reconstruct nodes in the reachability graph
             for tuple_attribute in list_tuples_attribute:
@@ -68,193 +200,149 @@ class PyGridOnlineReachableSet(ReachableSet):
                 polygon_y = ReachPolygon.from_rectangle_vertices(p_y_min, v_y_min, p_y_max, v_y_max)
 
                 node = ReachNodeMultiGeneration(polygon_x, polygon_y, time_step)
-                self._dict_time_to_reachable_set[time_step].append(node)
+                self._dict_time_to_reachable_set_all[time_step].append(node)
+                position_rectangle = ReachPolygon.from_rectangle_vertices(p_x_min, p_y_min, p_x_max, p_y_max)
+                self._dict_time_to_drivable_area_all[time_step].append(position_rectangle)
 
-            # restore parent-child relationship
-            if time_step >= 1:
-                matrix_adjacency_dense = dict_time_to_adjacency_matrices_parent[time_step].todense()
-                list_nodes_parent = self._dict_time_to_reachable_set[time_step - 1]
-                list_nodes = self._dict_time_to_reachable_set[time_step]
-
-                for idx_node, list_adjacency in enumerate(matrix_adjacency_dense):
-                    node = list_nodes[idx_node]
-                    [list_adjacency] = list_adjacency.tolist()
-
-                    for idx_parent, adjacency in enumerate(list_adjacency):
-                        node_parent = list_nodes_parent[idx_parent]
-                        if adjacency:
-                            node.add_parent_node(node_parent)
-                            node_parent.add_child_node(node)
-
-            # restore grandparent-grandchild relationship
-            if time_step >= 2:
-                matrix_adjacency_dense = dict_time_to_adjacency_matrices_grandparent[time_step].todense()
-                list_nodes_grandparent = self._dict_time_to_reachable_set[time_step - 2]
-                list_nodes = self._dict_time_to_reachable_set[time_step]
-
-                for idx_node, list_adjacency in enumerate(matrix_adjacency_dense):
-                    node = list_nodes[idx_node]
-                    [list_adjacency] = list_adjacency.tolist()
-
-                    for idx_grandparent, adjacency in enumerate(list_adjacency):
-                        node_grandparent = list_nodes_grandparent[idx_grandparent]
-                        if adjacency:
-                            node.add_grandparent_node(node_grandparent)
-                            node_grandparent.add_grandchild_node(node)
-
-    def _compute_translation_over_time(self):
-        """Computes translation of the reachable sets at different time steps.
-
-        The translation is based on the initial state of the planning problem.
+    def initialize_new_scenario(self, scenario: Optional[Scenario] = None, planning_problem: [Optional] = None) -> None:
         """
-        self._dict_time_to_translation = defaultdict()
+        Reset online computation for evaluation of new scenario and/or planning problem;
+        thus, avoid time for parsing pickle file again.
+        :param scenario: new scenario (keep old scenario if None)
+        :param planning_problem: new planning_problem (keep old planning_problem if None)
+        :return: None
+        """
+        update_planning_problem = planning_problem is not None
+        update_cc = update_planning_problem or (scenario is not None)
+        if scenario is not None:
+            self.config.scenario = scenario
 
-        p_init = np.array([self.config.planning.p_lon_initial, self.config.planning.p_lat_initial])
-        o_init = self.config.planning.o_initial
-        v_init = np.array([np.cos(o_init), np.sin(o_init)]) * self.config.planning.v_lon_initial
-        dt = self.config.planning.dt
+        if planning_problem is not None:
+            self.config.planning_problem = planning_problem
+            self.reachset_translation.cache_clear()
 
-        for time_step in range(self.time_step_start, self.time_step_end + 1):
-            self._dict_time_to_translation[time_step] = (v_init * (time_step * dt) + p_init, v_init)
+        if update_cc:
+            self._initialize_collision_checker()
+            self._occ_grid_at_time.cache_clear()
 
-    def _initialize_collision_checker(self):
-        if self.config.reachable_set.mode == 4:
-            self._collision_checker = PyCollisionChecker(self.config)
+            self.obstacle_grid = ObstacleRegularGrid \
+                (self.reachset_bb_ll, self.reachset_bb_ur, self._collision_checker.collision_checker,
+                 self.config.reachable_set.size_grid, self.config.reachable_set.size_grid,
+                 self.config.planning_problem,
+                 a_x=self.config.vehicle.ego.a_max, a_y=self.config.vehicle.ego.a_max,
+                 t_f=self.config.scenario.dt * self._num_time_steps_offline_computation,
+                 grid_shapes=self._grid_shapes)
 
-        elif self.config.reachable_set.mode == 5:
+        self.occupied_grid_obs_static = dict()
+        self._reachability_grid.clear()
+        self.reachable_set_at_time_step.cache_clear()
+        self.drivable_area_at_time_step.cache_clear()
+
+        self._reachability_grid[self.time_step_start] = np.ones((1, 1), dtype=bool)
+
+    def _initialize_collision_checker(self) -> None:
+        if self.config.reachable_set.mode in (1, 4, 6):
+            raise NotImplementedError(f" Python Collision Checker not supported for {self.__class__.__name__}! "
+                                      f"Use reachable_set.mode not in (1,4,6).")
+        else:
             try:
                 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
-
             except ImportError:
                 message = "Importing C++ collision checker failed."
                 print(message)
                 logger.exception(message)
-
             else:
                 self._collision_checker = CppCollisionChecker(self.config)
 
-    def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
-        for time_step in range(time_step_start, time_step_end + 1):
+    def compute_reachable_sets(self, time_step_start: int, time_step_end: int, n_multisteps: int = 0) -> None:
+        for time_step in range(time_step_start, time_step_end):
             if time_step > self._num_time_steps_offline_computation:
-                message = f"Time step {time_step} is out of range, max allowed: {self._num_time_steps_offline_computation}"
+                message = f"Time step {time_step} is out of range, max allowed: " \
+                          f"{self._num_time_steps_offline_computation}"
                 print(message)
                 logger.warning(message)
-                continue
+                return
 
             self._list_time_steps_computed.append(time_step)
-            self._compute_at_time_step(time_step)
+            self._forward_propagation(time_step, n_multisteps)
+            self._list_time_steps_computed.append(time_step + 1)
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
             self._prune_nodes_not_reaching_final_time_step()
 
-    def _compute_at_time_step(self, time_step: int):
-        """Compute reachable set for the given time step."""
-        self._translate_reachable_set(time_step)
-        self._discard_invalid_reachable_set(time_step)
-        self._update_drivable_area(time_step)
+    def _prune_nodes_not_reaching_final_time_step(self) -> None:
+        """Prunes nodes that don't reach the final time step.
 
-    def _translate_reachable_set(self, time_step: int):
-        """Translates reachable sets based on the initial state and the time step."""
-        p_translate, v_translate = self._dict_time_to_translation[time_step]
-
-        for node in self._dict_time_to_reachable_set[time_step]:
-            p_x_min, v_x_min, p_x_max, v_x_max = node.polygon_lon.bounds
-            p_y_min, v_y_min, p_y_max, v_y_max = node.polygon_lat.bounds
-
-            p_x_min_translated = p_x_min + p_translate[0]
-            p_x_max_translated = p_x_max + p_translate[0]
-            p_y_min_translated = p_y_min + p_translate[1]
-            p_y_max_translated = p_y_max + p_translate[1]
-            v_x_min_translated = max(v_x_min + v_translate[0], -self.config.vehicle.ego.v_max)
-            v_x_max_translated = min(v_x_max + v_translate[0], self.config.vehicle.ego.v_max)
-            v_y_min_translated = max(v_y_min + v_translate[1], -self.config.vehicle.ego.v_max)
-            v_y_max_translated = min(v_y_max + v_translate[1], self.config.vehicle.ego.v_max)
-
-            # todo: this is slow, change this
-            node.polygon_lon = ReachPolygon.from_rectangle_vertices(p_x_min_translated, v_x_min_translated,
-                                                                    p_x_max_translated, v_x_max_translated)
-            node.polygon_lat = ReachPolygon.from_rectangle_vertices(p_y_min_translated, v_y_min_translated,
-                                                                    p_y_max_translated, v_y_max_translated)
-            node.update_position_rectangle()
-
-            result = affinity.translate(node.polygon_lon, xoff=0.0, yoff=0.0)
-            print(1)
-
-    def _discard_invalid_reachable_set(self, time_step: int):
-        """Discards invalid nodes of the reachable set.
-
-        Nodes that are either colliding with obstacles, has no parent, or has no grandparent will be discarded.
+        Iterates through reachability graph backward in time, discards nodes that don't have a child node.
         """
-        list_idx_nodes_to_be_discarded = []
-        for idx, node in enumerate(self._dict_time_to_reachable_set[time_step]):
-            # todo: this could be improved, maybe we don't need to use a collision checker here?
-            if self._collision_checker.collides_at_time_step(time_step, node.position_rectangle):
-                list_idx_nodes_to_be_discarded.append(idx)
+        for i_t in range(self.max_evaluated_time_step, 0, -1):
+            self.backward_step(i_t)
 
-            if not node.list_nodes_parent and time_step >= 1:
-                list_idx_nodes_to_be_discarded.append(idx)
+    @lru_cache(124)
+    def reachset_translation(self, time_step: int) -> np.ndarray:
+        """Translation of initial state at time_step"""
+        initial_state = self.config.planning_problem.initial_state
+        v_init = np.array([math.cos(initial_state.orientation),
+                           math.sin(initial_state.orientation)]) * initial_state.velocity
+        return initial_state.position + v_init * self.config.scenario.dt * time_step
 
-            # if not node.list_nodes_grandparent and time_step >= 2:
-            #     list_idx_nodes_to_be_discarded.append(idx)
-
-        if list_idx_nodes_to_be_discarded:
-            for idx in list_idx_nodes_to_be_discarded:
-                node = self._dict_time_to_reachable_set[time_step][idx]
-                for node_parent in node.list_nodes_parent:
-                    node_parent.remove_child_node(node)
-
-                for node_child in node.list_nodes_child:
-                    node_child.remove_parent_node(node)
-
-                for node_grandparent in node.list_nodes_grandparent:
-                    node_grandparent.remove_grandchild_node(node)
-
-                for node_grandchild in node.list_nodes_grandchild:
-                    node_grandchild.remove_grandparent_node(node)
-
-            self._dict_time_to_reachable_set[time_step] = \
-                [node for idx, node in enumerate(self._dict_time_to_reachable_set[time_step])
-                 if idx not in list_idx_nodes_to_be_discarded]
-
-    def _update_drivable_area(self, time_step):
-        self._dict_time_to_drivable_area[time_step].clear()
-        for node in self.reachable_set_at_time_step(time_step):
-            self._dict_time_to_drivable_area[time_step].append(node.position_rectangle)
-
-    def _prune_nodes_not_reaching_final_time_step(self):
-        """Prunes nodes not reaching the final time step.
-
-        Iterates through reachable sets in backward direction and discard nodes not reaching the final time step.
+    def _forward_propagation(self, init_time_step: int, n_multisteps: int) -> None:
         """
-        cnt_nodes_before_pruning = cnt_nodes_after_pruning = len(self.reachable_set_at_time_step(self.time_step_end))
+        Propagates current reachability grid and excludes forbidden states
+        :param n_multisteps:
+        :param reachset_translation_tmp: translation of reachset center at current time step
+        :return:
+        """
+        if init_time_step >= self._num_time_steps_offline_computation:
+            raise ValueError('Reached max number of offline computed time steps!')
 
-        for time_step in range(self.time_step_end - 1, self.time_step_start - 1, -1):
-            list_nodes = self.reachable_set_at_time_step(time_step)
-            cnt_nodes_before_pruning += len(list_nodes)
+        reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[init_time_step + 1].dot(
+            self._reachability_grid[init_time_step].reshape([-1, 1]))
 
-            list_idx_nodes_to_be_deleted = list()
-            for idx_node, node in enumerate(list_nodes):
-                # discard if the node has no child node
-                if not node.list_nodes_child:
-                    list_idx_nodes_to_be_deleted.append(idx_node)
-                    # iterate through parent nodes and disconnect them
-                    for node_parent in node.list_nodes_parent:
-                        node_parent.remove_child_node(node)
+        if sparse.issparse(reachability_grid_prop):
+            reachability_grid_prop = reachability_grid_prop.toarray()
 
-            self._dict_time_to_reachable_set[time_step] = [node for idx_node, node in enumerate(list_nodes)
-                                                           if idx_node not in list_idx_nodes_to_be_deleted]
-            self._dict_time_to_drivable_area[time_step] = [node.position_rectangle
-                                                           for idx_node, node in enumerate(list_nodes)
-                                                           if idx_node not in list_idx_nodes_to_be_deleted]
+        # propagate grandparents:
+        if init_time_step + 1 in self.dict_time_to_adjacency_matrices_grandparent:
+            for time_step_gp, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[
+                init_time_step + 1].items():  # get time index of grandparent to propagate
+                delta_time_step = init_time_step - time_step_gp
+                if delta_time_step < n_multisteps and time_step_gp in self._reachability_grid:
+                    reachability_grid_prop_grandparent = \
+                        adj_matrix_gp.dot(self._reachability_grid[time_step_gp].reshape([-1, 1]))
+                    if sparse.issparse(reachability_grid_prop_grandparent):
+                        prop_grandparent_tmp = reachability_grid_prop_grandparent.toarray()
+                    else:
+                        prop_grandparent_tmp = reachability_grid_prop_grandparent
 
-            cnt_nodes_after_pruning += len(list_nodes)
+                    # intersect with propagated cells of other time steps
+                    reachability_grid_prop = np.logical_and(reachability_grid_prop, prop_grandparent_tmp)
 
-        self._pruned = True
+        # intersect propagated cells with occupied cells
+        reachability_grid_prop = np.logical_and(reachability_grid_prop.reshape([-1, 1]),
+                                                self._occ_grid_at_time(init_time_step + 1))
 
-        message = f"\t#Nodes before pruning: \t{cnt_nodes_before_pruning}"
-        print(message)
-        logger.info(message)
+        self._reachability_grid[init_time_step + 1] = reachability_grid_prop
 
-        message = f"\t#Nodes after pruning: \t{cnt_nodes_after_pruning}"
-        print(message)
-        logger.info(message)
+    @lru_cache(128)
+    def _occ_grid_at_time(self, time_step: int) -> np.ndarray:
+        occupied_grid_obs = self.obstacle_grid.occupancy_grid_at_time(time_step, self.reachset_translation(time_step))
+        return occupied_grid_obs.reshape([-1, 1])
+
+    def backward_step(self, init_time_step: int) -> None:
+
+        if init_time_step <= 0:
+            logger.warning('Reached max number of backward timesteps')
+            return
+
+        reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[init_time_step].transpose() * \
+                                 self._reachability_grid[init_time_step].reshape([-1, 1])
+        if sparse.issparse(reachability_grid_prop):
+            reachability_grid_prop = reachability_grid_prop.toarray()
+
+        # intersect propagated cells with occupied cells
+        reachability_grid_prop_pruned = np.logical_and(reachability_grid_prop.reshape([-1, 1]),
+                                                       self._occ_grid_at_time(init_time_step - 1))
+
+        self._reachability_grid[init_time_step - 1] = \
+            np.logical_and(self._reachability_grid[init_time_step - 1], reachability_grid_prop_pruned)

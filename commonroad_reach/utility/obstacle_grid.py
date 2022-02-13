@@ -1,13 +1,9 @@
 import math
 
 import commonroad_dc.pycrcc as pycrcc
-# from pruningPy.graph_reach.util_reach import convert_cart2pixel_coordinates_c, get_vertices_from_rect
 
-# import util_reach as util_reach
-from typing import Tuple, List, Dict
-# from pruningPy.graph_reach.utils import *
+from typing import Tuple, Dict
 from collections import defaultdict
-import time
 import cv2 as cv
 import numpy as np
 from commonroad_reach.utility.util_py_grid_online_reach import convert_cart2pixel_coordinates_c, get_vertices_from_rect

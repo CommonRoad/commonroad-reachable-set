@@ -164,8 +164,7 @@ def test_create_base_set_from_position_region():
     list_vertices_lat_expected = [(2, -4), (5, 2), (5, 7), (5, 11.9)]
 
     base_set_adapted = reach_operation.adapt_base_set_to_drivable_area(rectangle_drivable_area,
-                                                                       list_base_sets,
-                                                                       list_idx_base_sets_adjacent)
+                                                                       list_idx_base_sets_adjacent, list_base_sets)
 
     for vertex in list_vertices_lon_expected:
         assert base_set_adapted.polygon_lon.contains(Point(vertex))

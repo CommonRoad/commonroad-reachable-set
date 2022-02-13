@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Tuple
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ from commonroad_reach.utility import coordinate_system as util_coordinate_system
 
 
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int= 0,
-                                      time_step_end: int = 0, plot_limits: Tuple = None, path_output: str = None,
+                                      time_step_end: int = 0, plot_limits: list = None, path_output: str = None,
                                       as_svg: bool = False):
     config = reach_interface.config
     scenario = config.scenario
@@ -69,12 +70,12 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
 
 
 def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, time_step_start: int= 0,
-                                     time_step_end: int = 0, plot_limits: Tuple = None, path_output: str = None,
+                                     time_step_end: int = 0, plot_limits: list = None, path_output: str = None,
                                      as_svg: bool = False):
     config = reach_interface.config
     scenario = config.scenario
     backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
-    time_step_start = time_step_end or reach_interface.time_step_start
+    time_step_start = time_step_start or reach_interface.time_step_start
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
@@ -194,7 +195,8 @@ def save_fig(as_svg, path_output, time_step):
                     transparent=False)
     else:
         # save as png
-        plt.savefig(f'{path_output}{"reachset"}_{time_step:05d}.png', format="png", bbox_inches="tight",
+        print("save",os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'))
+        plt.savefig(os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
                     transparent=False)
 
 

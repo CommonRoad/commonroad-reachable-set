@@ -88,7 +88,7 @@ class ReachableSet(ABC):
                 return CppReachableSet(config)
 
         elif mode in [4, 5]:
-            from commonroad_reach.data_structure.reach.reach_set_py_grid_online_discr import PyGridOnlineReachableSet
+            from commonroad_reach.data_structure.reach.reach_set_py_grid_online import PyGridOnlineReachableSet
             return PyGridOnlineReachableSet(config)
 
         elif mode == 6:

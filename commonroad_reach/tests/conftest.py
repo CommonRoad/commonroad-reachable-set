@@ -8,7 +8,7 @@ import pytest
 from commonroad_reach.data_structure.collision_checker_py import PyCollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
-from commonroad_reach.data_structure.reach.reach_analysis import ReachabilityAnalysis
+from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
@@ -69,4 +69,4 @@ def list_rectangles_discritized():
 
 @pytest.fixture
 def reachability_analysis(config):
-    return ReachabilityAnalysis(config)
+    return ReachableSetInterface(config)
