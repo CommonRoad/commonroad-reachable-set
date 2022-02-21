@@ -27,7 +27,6 @@ class PyGraphReachableSetOnline(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
-        self.config = config
         if config.planning.coordinate_system != "CART":
             message = "Multi-step reachable set computation only supports Cartesian coordinate system."
             logger.error(message)
@@ -254,7 +253,12 @@ class PyGraphReachableSetOnline(ReachableSet):
             else:
                 self._collision_checker = CppCollisionChecker(self.config)
 
-    def compute_reachable_sets(self, time_step_start: int, time_step_end: int, n_multisteps: int = 0) -> None:
+    def compute_reachable_sets(self, time_step_start: int = 1,
+                               time_step_end: Optional[int] = None,
+                               n_multisteps: int = 0) -> None:
+        if time_step_end is None:
+            time_step_end = self.time_step_start
+
         for time_step in range(time_step_start, time_step_end):
             if time_step > self._num_time_steps_offline_computation:
                 message = f"Time step {time_step} is out of range, max allowed: " \
@@ -275,8 +279,10 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         Iterates through reachability graph backward in time, discards nodes that don't have a child node.
         """
-        for i_t in range(self.max_evaluated_time_step, 0, -1):
+        for i_t in range(self.max_evaluated_time_step-1, -1, -1):
             self.backward_step(i_t)
+
+        self._pruned = True
 
     @lru_cache(124)
     def reachset_translation(self, time_step: int) -> np.ndarray:
@@ -286,27 +292,27 @@ class PyGraphReachableSetOnline(ReachableSet):
                            math.sin(initial_state.orientation)]) * initial_state.velocity
         return initial_state.position + v_init * self.config.scenario.dt * time_step
 
-    def _forward_propagation(self, init_time_step: int, n_multisteps: int) -> None:
+    def _forward_propagation(self, time_step: int, n_multisteps: int) -> None:
         """
         Propagates current reachability grid and excludes forbidden states
-        :param n_multisteps:
-        :param reachset_translation_tmp: translation of reachset center at current time step
+        :param time_step: initial time step of the reachable set
+        :param n_multisteps: number of previous time steps considered for the propagation
         :return:
         """
-        if init_time_step >= self._num_time_steps_offline_computation:
+        if time_step >= self._num_time_steps_offline_computation:
             raise ValueError('Reached max number of offline computed time steps!')
 
-        reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[init_time_step + 1].dot(
-            self._reachability_grid[init_time_step].reshape([-1, 1]))
+        reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[time_step].dot(
+            self._reachability_grid[time_step - 1].reshape([-1, 1]))
 
         if sparse.issparse(reachability_grid_prop):
             reachability_grid_prop = reachability_grid_prop.toarray()
 
         # propagate grandparents:
-        if init_time_step + 1 in self.dict_time_to_adjacency_matrices_grandparent:
-            for time_step_gp, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[
-                init_time_step + 1].items():  # get time index of grandparent to propagate
-                delta_time_step = init_time_step - time_step_gp
+        if time_step in self.dict_time_to_adjacency_matrices_grandparent:
+            for time_step_gp, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[time_step].items():
+                # get time index of grandparent to propagate
+                delta_time_step = time_step - time_step_gp
                 if delta_time_step < n_multisteps and time_step_gp in self._reachability_grid:
                     reachability_grid_prop_grandparent = \
                         adj_matrix_gp.dot(self._reachability_grid[time_step_gp].reshape([-1, 1]))
@@ -320,29 +326,29 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         # intersect propagated cells with occupied cells
         reachability_grid_prop = np.logical_and(reachability_grid_prop.reshape([-1, 1]),
-                                                self._occ_grid_at_time(init_time_step + 1))
+                                                self._occ_grid_at_time(time_step))
 
-        self._reachability_grid[init_time_step + 1] = reachability_grid_prop
+        self._reachability_grid[time_step] = reachability_grid_prop
 
     @lru_cache(128)
     def _occ_grid_at_time(self, time_step: int) -> np.ndarray:
         occupied_grid_obs = self.obstacle_grid.occupancy_grid_at_time(time_step, self.reachset_translation(time_step))
         return occupied_grid_obs.reshape([-1, 1])
 
-    def backward_step(self, init_time_step: int) -> None:
+    def backward_step(self, time_step: int) -> None:
 
-        if init_time_step <= 0:
+        if time_step < 0:
             logger.warning('Reached max number of backward timesteps')
             return
 
-        reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[init_time_step].transpose() * \
-                                 self._reachability_grid[init_time_step].reshape([-1, 1])
+        reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[time_step + 1].transpose() * \
+                                 self._reachability_grid[time_step + 1].reshape([-1, 1])
         if sparse.issparse(reachability_grid_prop):
             reachability_grid_prop = reachability_grid_prop.toarray()
 
         # intersect propagated cells with occupied cells
         reachability_grid_prop_pruned = np.logical_and(reachability_grid_prop.reshape([-1, 1]),
-                                                       self._occ_grid_at_time(init_time_step - 1))
+                                                       self._occ_grid_at_time(time_step))
 
-        self._reachability_grid[init_time_step - 1] = \
-            np.logical_and(self._reachability_grid[init_time_step - 1], reachability_grid_prop_pruned)
+        self._reachability_grid[time_step] = \
+            np.logical_and(self._reachability_grid[time_step], reachability_grid_prop_pruned)

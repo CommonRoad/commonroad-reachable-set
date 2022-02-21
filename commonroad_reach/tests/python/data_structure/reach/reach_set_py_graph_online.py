@@ -81,7 +81,7 @@ def test_offline_online_compatibility():
         config.planning_problem.initial_state = State(position=np.array([15,1.5]),
                                                       velocity=15, orientation=0,steering_angle=0.0,yaw_rate=0, slip_angle=0, time_step=0)
         reach_online = PyGraphReachableSetOnline(config)
-        reach_online.compute_reachable_sets(0, dt)
+        reach_online.compute_reachable_sets(1, dt)
     finally:
         shutil.rmtree(offline_dir)
         print("removed")
