@@ -49,11 +49,9 @@ class Configuration:
         elif self.reachable_set.mode == 3:
             mode = "Single-step, C++ backend with C++ collision checker"
         elif self.reachable_set.mode == 4:
-            mode = "Multi-step (online), Python backend with Python collision checker"
+            mode = "Graph-based (online), Python backend with C++ collision checker"
         elif self.reachable_set.mode == 5:
-            mode = "Multi-step (online), Python backend with C++ collision checker"
-        elif self.reachable_set.mode == 6:
-            mode = "Multi-step (offline), Python backend"
+            mode = "Graph-based (offline), Python backend"
         else:
             mode = "Undefined"
 

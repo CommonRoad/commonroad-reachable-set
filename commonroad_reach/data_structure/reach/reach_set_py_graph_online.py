@@ -240,26 +240,22 @@ class PyGraphReachableSetOnline(ReachableSet):
         self._reachability_grid[self.time_step_start] = np.ones((1, 1), dtype=bool)
 
     def _initialize_collision_checker(self) -> None:
-        if self.config.reachable_set.mode in (1, 4, 6):
-            raise NotImplementedError(f" Python Collision Checker not supported for {self.__class__.__name__}! "
-                                      f"Use reachable_set.mode not in (1,4,6).")
+        try:
+            from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+        except ImportError:
+            message = "Importing C++ collision checker failed."
+            print(message)
+            logger.exception(message)
         else:
-            try:
-                from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
-            except ImportError:
-                message = "Importing C++ collision checker failed."
-                print(message)
-                logger.exception(message)
-            else:
-                self._collision_checker = CppCollisionChecker(self.config)
+            self._collision_checker = CppCollisionChecker(self.config)
 
     def compute_reachable_sets(self, time_step_start: int = 1,
                                time_step_end: Optional[int] = None,
                                n_multisteps: int = 0) -> None:
         if time_step_end is None:
-            time_step_end = self.time_step_start
+            time_step_end = self.time_step_end
 
-        for time_step in range(time_step_start, time_step_end):
+        for time_step in range(time_step_start, time_step_end + 1):
             if time_step > self._num_time_steps_offline_computation:
                 message = f"Time step {time_step} is out of range, max allowed: " \
                           f"{self._num_time_steps_offline_computation}"
@@ -269,7 +265,7 @@ class PyGraphReachableSetOnline(ReachableSet):
 
             self._list_time_steps_computed.append(time_step)
             self._forward_propagation(time_step, n_multisteps)
-            self._list_time_steps_computed.append(time_step + 1)
+            self._list_time_steps_computed.append(time_step)
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
             self._prune_nodes_not_reaching_final_time_step()
@@ -279,7 +275,7 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         Iterates through reachability graph backward in time, discards nodes that don't have a child node.
         """
-        for i_t in range(self.max_evaluated_time_step-1, -1, -1):
+        for i_t in range(self.max_evaluated_time_step-1, 0, -1):
             self.backward_step(i_t)
 
         self._pruned = True

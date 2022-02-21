@@ -29,7 +29,7 @@ class ReachableSetInterface:
         return self._reach.time_step_end
 
     def _initialize_reachable_set(self):
-        if self.config.reachable_set.mode in [1, 2, 3, 4, 5, 6]:
+        if self.config.reachable_set.mode in [1, 2, 3, 4, 5]:
             self._reach = ReachableSet.instantiate(self.config)
 
         else:
