@@ -5,7 +5,7 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
-import  math
+import math
 from shapely.geometry import Polygon, MultiPolygon
 
 
@@ -18,14 +18,15 @@ class ReachPolygon(Polygon, ABC):
     """
 
     def __init__(self, list_vertices: list, fix_vertices=True):
-        if len(list_vertices) < 3:
-            message = "A polygon needs at least 3 vertices."
-            logger.error(message)
-            raise Exception(message)
+        if isinstance(list_vertices, list):
+            if len(list_vertices) < 3:
+                message = "A polygon needs at least 3 vertices."
+                logger.error(message)
+                raise Exception(message)
 
-        # Shapely closed polygon requires identical initial and final vertices
-        if fix_vertices and not np.allclose(list_vertices[0], list_vertices[-1]):
-            list_vertices.append(list_vertices[0])
+            # Shapely closed polygon requires identical initial and final vertices
+            if fix_vertices and not np.allclose(list_vertices[0], list_vertices[-1]):
+                list_vertices.append(list_vertices[0])
 
         super(ReachPolygon, self).__init__(list_vertices)
 

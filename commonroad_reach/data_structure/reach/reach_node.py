@@ -2,7 +2,9 @@ import copy
 from collections import defaultdict
 from typing import List, Optional, Dict
 
+import numpy as np
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from shapely import affinity
 
 
 class ReachNode:
@@ -17,9 +19,9 @@ class ReachNode:
     """
     cnt_id = 0
 
-    def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
-        self._polygon_lon = polygon_lon
-        self._polygon_lat = polygon_lat
+    def __init__(self, polygon_lon: ReachPolygon, polygon_lat: ReachPolygon, time_step: int = -1):
+        self._polygon_lon: ReachPolygon = polygon_lon
+        self._polygon_lat: ReachPolygon = polygon_lat
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
         self._bounds_lat = polygon_lat.bounds if polygon_lat else None
 
@@ -156,6 +158,15 @@ class ReachNode:
         tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
 
         self.position_rectangle = ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
+
+    def translate(self, p_lon_off: float=0.0, v_lon_off: float=0.0, p_lat_off: float=0.0, v_lat_off: float=0.0)\
+            -> "ReachNode":
+        """Creates a copy translated by offsets."""
+        return ReachNode(ReachPolygon.from_polygon(affinity.translate(self.polygon_lon,
+                                                                      xoff=p_lon_off, yoff=v_lon_off)),
+                         ReachPolygon.from_polygon(affinity.translate(self.polygon_lat,
+                                                                      xoff=p_lat_off, yoff=v_lat_off)),
+                         time_step=self.time_step)
 
     @classmethod
     def reset_class_id_counter(cls):

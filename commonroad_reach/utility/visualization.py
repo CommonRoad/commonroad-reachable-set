@@ -86,7 +86,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, tim
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
 
-    message = "* Plotting reachable sets..."
+    message = "* Plotting drivable area..."
     print(message)
     logger.info(message)
 
@@ -113,7 +113,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, tim
             save_fig(as_svg, path_output, time_step)
 
     if config.debug.save_plots and not as_svg:
-        make_gif(path_output, "reachset_", time_step_end, str(scenario.scenario_id))
+        make_gif(path_output, "drivable_area_", time_step_end, str(scenario.scenario_id))
 
     message = "\tReachable sets plotted."
     print(message)

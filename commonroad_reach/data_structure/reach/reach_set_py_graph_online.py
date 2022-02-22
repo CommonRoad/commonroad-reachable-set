@@ -17,7 +17,7 @@ from scipy import sparse
 # from commonroad_reach.__version__ import __version__
 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration, VehicleConfiguration, ReachableSetConfiguration
-from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
+from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration, ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.utility.obstacle_grid import ObstacleRegularGrid
@@ -71,10 +71,15 @@ class PyGraphReachableSetOnline(ReachableSet):
             return []
 
         else:
-            reachset_list = self._dict_time_to_reachable_set_all[time_step]
-            return [reachset_list[index_reachset]
-                    for index_reachset, reachable in enumerate(self._reachability_grid[time_step].flatten())
-                    if reachable]
+            reachset_list_all = self._dict_time_to_reachable_set_all[time_step]
+            reachset = []
+            for index_reachset, reachable in enumerate(self._reachability_grid[time_step].flatten()):
+                if reachable:
+                    translation = self.reachset_translation(time_step)
+                    reachset.append(reachset_list_all[index_reachset].translate(p_lon_off=translation[0],
+                                                                                p_lat_off=translation[1],
+                                                                                v_lon_off=self.config.planning.v_lon_initial))
+            return reachset
 
     def _dict_time_to_drivable_area(self) -> Dict[int, List[ReachPolygon]]:
         dict_time_to_drivable_area = {}
