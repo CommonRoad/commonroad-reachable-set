@@ -2,8 +2,8 @@
 # 1: Single-step: Python backend with Python collision checker
 # 2: Single-step: Python backend with C++ collision checker
 # 3: Single-step: C++ backend with C++ collision checker
-# 5: Graph-based (online): Python backend with C++ collision checker
-# 6: Graph-based (offline): Python backend
+# 4: Graph-based (online): Python backend with C++ collision checker
+# 5: Graph-based (offline): Python backend
 mode: 2
 # grid size for rectangle alignment (before collision check)
 size_grid: 0.2
@@ -18,6 +18,6 @@ num_threads: 4
 # flag whether to prune reach nodes not reaching the final time step
 prune_nodes_not_reaching_final_time_step: true
 # name of the pickle file of the offline computation
-name_pickle_offline: offline_40_0.5_5.0_30.0.pickle
+name_pickle_offline: offline_30_ms6_dx0.5_amax5.0_vmax30.0_ver0.0.1.pickle
 # number of multi-steps for graph-based propagation
 n_multi_steps: 6
