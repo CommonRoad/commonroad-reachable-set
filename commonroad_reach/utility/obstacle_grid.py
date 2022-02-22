@@ -6,6 +6,7 @@ from typing import Tuple, Dict
 from collections import defaultdict
 import cv2 as cv
 import numpy as np
+from commonroad_reach.data_structure.configuration import PlanningConfiguration
 from commonroad_reach.utility.util_py_grid_online_reach import convert_cart2pixel_coordinates_c, get_vertices_from_rect
 
 USE_COLLISION = True
@@ -14,7 +15,7 @@ CONVEX_SHAPE = True
 
 class ObstacleRegularGrid:
     def __init__(self, ll: Dict[int, np.ndarray], ur: Dict[int, np.ndarray], collision_checker: pycrcc.CollisionChecker,
-                 dx: float, dy: float, planning_problem, a_x: float, a_y: float, t_f: float,
+                 dx: float, dy: float, planning_config: PlanningConfiguration, a_x: float, a_y: float, t_f: float,
                  grid_shapes: Dict[int, Tuple[int,int]]):
         """
         Class for computing uniformly spatial partitioned grid of obstacles
@@ -30,18 +31,15 @@ class ObstacleRegularGrid:
         self.cc_static: pycrcc.CollisionChecker = pycrcc.CollisionChecker()
         self.cc_dynamic: pycrcc.CollisionChecker = pycrcc.CollisionChecker()
         self.grid_shapes = grid_shapes
+
         # filter irrelevant obstacles over complete time interval
-        init_pos = planning_problem.initial_state.position
-        init_vel = planning_problem.initial_state.velocity
-        init_ori = planning_problem.initial_state.orientation
+        init_pos = planning_config.p_lon_lat_initial
+        init_vel = planning_config.v_lon_lat_initial
 
         a_max = max([a_x, a_y])
-        extreme_pos = np.array([init_pos + a_max * t_f ** 2 / 2 + init_vel *
-                                np.array([math.cos(init_ori), math.sin(init_ori)]) * t_f,
-                                init_pos - a_max * t_f ** 2 / 2 + init_vel *
-                                np.array([math.cos(init_ori), math.sin(init_ori)]) * t_f,
-                                init_pos - a_max * t_f ** 2 / 2 - init_vel *
-                                np.array([math.cos(init_ori), math.sin(init_ori)]) * t_f,
+        extreme_pos = np.array([init_pos + a_max * t_f ** 2 / 2 + init_vel * t_f,
+                                init_pos - a_max * t_f ** 2 / 2 + init_vel * t_f,
+                                init_pos - a_max * t_f ** 2 / 2 - init_vel * t_f,
                                 init_pos])
         collision_reachable_area_tmp = pycrcc.RectAABB(np.max(extreme_pos[:, 0]) - np.min(extreme_pos[:, 0]),
                                                        np.max(extreme_pos[:, 1]) - np.min(extreme_pos[:, 1]),
@@ -63,7 +61,6 @@ class ObstacleRegularGrid:
         self.dy_div = 1.0 / self.dy
         self.ll: Dict[int, np.ndarray] = ll
         self.ur: Dict[int, np.ndarray] = ur
-        self.occupied_grid_obs_static = defaultdict(None)
 
     def occupancy_grid_at_time(self, time_step: int, translate_reachset: np.ndarray) -> np.ndarray:
         """
@@ -82,17 +79,12 @@ class ObstacleRegularGrid:
                                                        (ur_translated[0] + ll_translated[0]) / 2,
                                                        (ur_translated[1] + ll_translated[1]) / 2)
 
-        if time_step not in self.occupied_grid_obs_static:
-            static_obstacles: pycrcc.CollisionChecker = \
-                self.cc_static.window_query(collision_reachable_area_tmp)
-            for obs in static_obstacles.obstacles():
-                occupancy_grid = self._add_obstacle_at_time_opencv(obs, occupancy_grid,
-                                                                   ur_translated=ur_translated,
-                                                                   ll_translated=ll_translated)
-
-            self.occupied_grid_obs_static[time_step] = occupancy_grid.copy()
-        else:
-            occupancy_grid = self.occupied_grid_obs_static[time_step].copy()
+        static_obstacles: pycrcc.CollisionChecker = \
+            self.cc_static.window_query(collision_reachable_area_tmp)
+        for obs in static_obstacles.obstacles():
+            occupancy_grid = self._add_obstacle_at_time_opencv(obs, occupancy_grid,
+                                                               ur_translated=ur_translated,
+                                                               ll_translated=ll_translated)
 
         cc_dynamic: pycrcc.CollisionChecker = \
             self.cc_dynamic.time_slice(time_step).window_query(collision_reachable_area_tmp)
@@ -102,7 +94,7 @@ class ObstacleRegularGrid:
                                                                ur_translated=ur_translated,
                                                                ll_translated=ll_translated)
 
-        return np.logical_or(occupancy_grid.astype(dtype=bool), self.occupied_grid_obs_static[time_step])
+        return occupancy_grid.astype(dtype=bool)
 
     def _add_obstacle_at_time_opencv(self,
                                      collision_object: pycrcc.CollisionObject,

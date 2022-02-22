@@ -30,10 +30,6 @@ class PyGraphReachableSetOnline(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
-        if config.planning.coordinate_system != "CART":
-            message = "Multi-step reachable set computation only supports Cartesian coordinate system."
-            logger.error(message)
-            raise Exception(message)
 
         self._num_time_steps_offline_computation = 0
         self._collision_checker: Optional[CppCollisionChecker] = None
@@ -218,22 +214,23 @@ class PyGraphReachableSetOnline(ReachableSet):
         :return: None
         """
         update_planning_problem = planning_problem is not None
-        update_cc = update_planning_problem or (scenario is not None)
+        update_cc = update_planning_problem or (scenario is not None) \
+                    or self.config.planning.coordinate_system == "CVLN"
         if scenario is not None:
             self.config.scenario = scenario
 
         if planning_problem is not None:
-            self.config.planning_problem = planning_problem
+            self.config.complete_configuration(scenario, planning_problem)
             self.reachset_translation.cache_clear()
 
         if update_cc:
             self._initialize_collision_checker()
             self._occ_grid_at_time.cache_clear()
 
-            self.obstacle_grid = ObstacleRegularGrid \
+            self.obstacle_grid = ObstacleRegularGrid\
                 (self.reachset_bb_ll, self.reachset_bb_ur, self._collision_checker.collision_checker,
                  self.config.reachable_set.size_grid, self.config.reachable_set.size_grid,
-                 self.config.planning_problem,
+                 self.config.planning,
                  a_x=self.config.vehicle.ego.a_max, a_y=self.config.vehicle.ego.a_max,
                  t_f=self.config.scenario.dt * self._num_time_steps_offline_computation,
                  grid_shapes=self._grid_shapes)
@@ -290,9 +287,8 @@ class PyGraphReachableSetOnline(ReachableSet):
     def reachset_translation(self, time_step: int) -> np.ndarray:
         """Translation of initial state at time_step"""
         initial_state = self.config.planning_problem.initial_state
-        v_init = np.array([math.cos(initial_state.orientation),
-                           math.sin(initial_state.orientation)]) * initial_state.velocity
-        return initial_state.position + v_init * self.config.scenario.dt * time_step
+        return self.config.planning.p_lon_lat_initial\
+               + self.config.planning.v_lon_lat_initial * self.config.scenario.dt * time_step
 
     def _forward_propagation(self, time_step: int, n_multisteps: int) -> None:
         """

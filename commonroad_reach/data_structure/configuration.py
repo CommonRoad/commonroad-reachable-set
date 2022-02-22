@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import numpy as np
 from typing import Optional, Union
 
 import pycrreachset as reach
@@ -27,7 +28,7 @@ class Configuration:
         self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config)
         self.debug: DebugConfiguration = DebugConfiguration(config)
 
-    def complete_configuration(self, scenario, planning_problem):
+    def complete_configuration(self, scenario: Scenario, planning_problem: PlanningProblem):
         self.scenario = scenario
         self.planning_problem = planning_problem
 
@@ -272,6 +273,14 @@ class PlanningConfiguration:
             self.p_lon_initial = self.p_lat_initial = 0
             self.v_lon_initial = self.v_lat_initial = 0
             self.o_initial = 0
+    
+    @property
+    def p_lon_lat_initial(self):
+        return np.array([self.p_lon_initial, self.p_lat_initial])
+
+    @property
+    def v_lon_lat_initial(self):
+        return np.array([self.v_lon_initial, self.v_lat_initial])
 
 
 class ReachableSetConfiguration:
