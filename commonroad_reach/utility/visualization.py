@@ -24,7 +24,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     config = reach_interface.config
     scenario = config.scenario
     backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
-    time_step_start = time_step_end or reach_interface.time_step_start
+    time_step_start = time_step_start or reach_interface.time_step_start
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
 
@@ -191,11 +191,12 @@ def draw_drivable_area(list_rectangles, config, renderer, draw_params, backend):
 def save_fig(as_svg, path_output, time_step):
     if as_svg:
         # save as svg
+        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.svg'))
         plt.savefig(f'{path_output}{"reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
                     transparent=False)
     else:
         # save as png
-        print("save",os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'))
+        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'))
         plt.savefig(os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
                     transparent=False)
 
@@ -204,6 +205,7 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
     images = []
     filenames = []
 
+    print("\tCreating GIF...")
     for i in range(number_of_figures):
         im_path = path + prefix + "{:05d}.png".format(i)
         filenames.append(im_path)

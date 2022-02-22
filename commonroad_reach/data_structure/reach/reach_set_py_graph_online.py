@@ -1,23 +1,26 @@
-import inspect
+import pyximport
+pyximport.install()
+
+import logging
+import math
 import os
 import pickle
 import warnings
 from collections import defaultdict
-import logging
-import math
 from functools import lru_cache
 from typing import Optional, List, Dict
+
 import numpy as np
+from commonroad.scenario.scenario import Scenario
 from scipy import sparse
 
-from commonroad.scenario.scenario import Scenario
-from commonroad_reach.__version__ import __version__
+# from commonroad_reach.__version__ import __version__
 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+from commonroad_reach.data_structure.configuration import Configuration, VehicleConfiguration, ReachableSetConfiguration
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
-from commonroad_reach.utility.obstacle_grid import ObstacleRegularGrid
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
-from commonroad_reach.data_structure.configuration import Configuration, VehicleConfiguration, ReachableSetConfiguration
+from commonroad_reach.utility.obstacle_grid import ObstacleRegularGrid
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,6 @@ class PyGraphReachableSetOnline(ReachableSet):
         self._num_time_steps_offline_computation = 0
         self._collision_checker: Optional[CppCollisionChecker] = None
 
-        self._initialize_collision_checker()
         self.occupied_grid_obs_static = ()
         self._reachability_grid: Dict[int, np.ndarray] = {}
 
@@ -51,7 +53,6 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         self._restore_reachability_graph()
         self._initialize_collision_checker()
-
         self.initialize_new_scenario(self.config.scenario, self.config.planning_problem)
 
     def _dict_time_to_reachable_set(self) -> Dict[int, List[ReachNodeMultiGeneration]]:
@@ -137,10 +138,10 @@ class PyGraphReachableSetOnline(ReachableSet):
         path_file_pickle = os.path.join(self.config.general.path_offline_data,
                                         self.config.reachable_set.name_pickle_offline)
         dict_data = pickle.load(open(path_file_pickle, "rb"))
-        if dict_data["__version__"] != __version__:
-            raise ValueError(f"Offline data was created with an older version of commonroad-reach "
-                             f"{dict_data['__version__']}. "
-                             f"Please recreate the file with the current version {__version__} !")
+        # if dict_data["__version__"] != __version__:
+        #     raise ValueError(f"Offline data was created with an older version of commonroad-reach "
+        #                      f"{dict_data['__version__']}. "
+        #                      f"Please recreate the file with the current version {__version__} !")
         self._validate_configurations(self.config.reachable_set, self.config.vehicle,
                                       dict_data["config.reachable_set"], dict_data["config.vehicle"])
         return dict_data["node_attributes"], dict_data["adjacency_matrices_parent"], \
@@ -241,8 +242,8 @@ class PyGraphReachableSetOnline(ReachableSet):
 
     def _initialize_collision_checker(self) -> None:
         if self.config.reachable_set.mode in (1, 4, 6):
-            raise NotImplementedError(f" Python Collision Checker not supported for {self.__class__.__name__}! "
-                                      f"Use reachable_set.mode not in (1,4,6).")
+            raise NotImplementedError(f"Python Collision Checker not supported for {self.__class__.__name__}! "
+                                      f"Use reachable_set.mode not in [1, 4, 6].")
         else:
             try:
                 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
