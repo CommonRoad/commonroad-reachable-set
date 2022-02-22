@@ -191,10 +191,10 @@ class PyReachableSet(ReachableSet):
             list_idx_nodes_to_be_deleted = list()
             for idx_node, node in enumerate(list_nodes):
                 # discard the node if it has no child node
-                if not node.list_nodes_child:
+                if not node.nodes_child:
                     list_idx_nodes_to_be_deleted.append(idx_node)
                     # iterate through its parent nodes and disconnect them
-                    for node_parent in node.list_nodes_parent:
+                    for node_parent in node.nodes_parent:
                         node_parent.remove_child_node(node)
 
             # update drivable area and reachable set dictionaries

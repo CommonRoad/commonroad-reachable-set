@@ -1,6 +1,6 @@
 import copy
 from collections import defaultdict
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Set
 
 import numpy as np
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
@@ -32,8 +32,8 @@ class ReachNode:
         self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
         self.time_step = time_step
-        self.list_nodes_parent: List[ReachNode] = list()
-        self.list_nodes_child: List[ReachNode] = list()
+        self.nodes_parent: Set[ReachNode] = set()
+        self.nodes_child: Set[ReachNode] = set()
 
         # the node from which the current node is propagated
         self.source_propagation = None
@@ -148,8 +148,8 @@ class ReachNode:
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
                                self.time_step)
-        node_clone.list_nodes_parent = copy.deepcopy(self.list_nodes_parent)
-        node_clone.list_nodes_child = copy.deepcopy(self.list_nodes_child)
+        node_clone.nodes_parent = copy.deepcopy(self.nodes_parent)
+        node_clone.nodes_child = copy.deepcopy(self.nodes_child)
         node_clone.source_propagation = self.source_propagation
 
         return node_clone
@@ -174,35 +174,23 @@ class ReachNode:
 
     def add_parent_node(self, node_parent: "ReachNode") -> bool:
         """Adds a parent node into the list."""
-        if node_parent not in self.list_nodes_parent:
-            self.list_nodes_parent.append(node_parent)
-            return True
-
-        return False
+        self.nodes_parent.add(node_parent)
 
     def remove_parent_node(self, node_parent: "ReachNode") -> bool:
         """Removes a parent node from the list."""
-        if node_parent in self.list_nodes_parent:
-            self.list_nodes_parent.remove(node_parent)
-            return True
-
-        return False
+        was_parent = node_parent in self.nodes_parent
+        self.nodes_parent.remove(node_parent)
+        return was_parent
 
     def add_child_node(self, node_child: "ReachNode") -> bool:
         """Adds a child node into the list."""
-        if node_child not in self.list_nodes_child:
-            self.list_nodes_child.append(node_child)
-            return True
-
-        return False
+        self.nodes_child.add(node_child)
 
     def remove_child_node(self, node_child: "ReachNode") -> bool:
         """Removes a child node from the list."""
-        if node_child in self.list_nodes_child:
-            self.list_nodes_child.remove(node_child)
-            return True
-
-        return False
+        was_child = node_child in self.nodes_child
+        self.nodes_child.remove(node_child)
+        return was_child
 
     def intersect_in_position_domain(self, p_lon_min, p_lat_min, p_lon_max, p_lat_max):
         """Intersects with the given rectangle in position domain"""
@@ -236,7 +224,7 @@ class ReachNodeMultiGeneration(ReachNode):
         assert delta_steps > 1, f"not a grand_parent: node_grandparent.time_step={node_grandparent.time_step}, " \
                                 f"self.time_step={self.time_step}"
         if node_grandparent not in self.list_nodes_grandparent[delta_steps]:
-            self.list_nodes_grandparent[delta_steps].append(node_grandparent)
+            self.list_nodes_grandparent[delta_steps].add(node_grandparent)
             return True
 
         return False
@@ -256,7 +244,7 @@ class ReachNodeMultiGeneration(ReachNode):
         assert delta_steps > 1, f"not a grandchild: node_grandchild.time_step={node_grandchild.time_step}, " \
                                 f"self.time_step={self.time_step}"
         if node_grandchild not in self.list_nodes_grandchild[delta_steps]:
-            self.list_nodes_grandchild[delta_steps].append(node_grandchild)
+            self.list_nodes_grandchild[delta_steps].add(node_grandchild)
             return True
 
         return False

@@ -414,7 +414,7 @@ class PyGraphReachableSetOffline(ReachableSet):
 
                 matrix_adjacency_tmp = list()
                 for node in list_nodes:
-                    list_adjacency = [(node_parent in node.list_nodes_parent) for node_parent in list_nodes_parent]
+                    list_adjacency = [(node_parent in node.nodes_parent) for node_parent in list_nodes_parent]
                     matrix_adjacency_tmp.append(list_adjacency)
 
                 matrix_adjacency_dense = np.array(matrix_adjacency_tmp, dtype=bool)

@@ -69,13 +69,32 @@ class PyGraphReachableSetOnline(ReachableSet):
         else:
             reachset_list_all = self._dict_time_to_reachable_set_all[time_step]
             reachset = []
-            for index_reachset, reachable in enumerate(self._reachability_grid[time_step].flatten()):
-                if reachable:
-                    translation = self.reachset_translation(time_step)
-                    reachset.append(reachset_list_all[index_reachset].translate(p_lon_off=translation[0],
-                                                                                p_lat_off=translation[1],
-                                                                                v_lon_off=self.config.planning.v_lon_initial))
+            for index_reachset in np.argwhere(self._reachability_grid[time_step]):
+                reachset.append(reachset_list_all[index_reachset[0]].
+                                translate(p_lon_off=self.reachset_translation(time_step)[0],
+                                          p_lat_off=self.reachset_translation(time_step)[1],
+                                          v_lon_off=self.config.planning.v_lon_initial))
+
+            if time_step > 0:
+                self._restore_parent_node_relationships(reachset, time_step)
+
             return reachset
+
+    def _restore_parent_node_relationships(self, reachset: List[ReachNode], time_step: int):
+        """ Restore parent-child relationships """
+        if time_step == 0:
+            return
+        ind_2_list_index_prev    = np.insert(np.cumsum(self._reachability_grid[time_step - 1]), 0, 0)
+        ind_2_list_index_current = np.insert(np.cumsum(self._reachability_grid[time_step    ]), 0, 0)
+        for index_reachset in np.flatnonzero(self._reachability_grid[time_step]):
+            reachable_parents = np.asarray(np.logical_and(self._reachability_grid[time_step - 1].flatten(),
+                                               self.dict_time_to_adjacency_matrices_parent[time_step].todense()[
+                                               index_reachset, :]))
+            node = reachset[ind_2_list_index_current[index_reachset]]
+            for index_parent in np.flatnonzero(reachable_parents):
+                parent = self.reachable_set_at_time_step(time_step - 1)[ind_2_list_index_prev[index_parent] - 1]
+                parent.add_child_node(node)
+                node.add_parent_node(parent)
 
     def _dict_time_to_drivable_area(self) -> Dict[int, List[ReachPolygon]]:
         dict_time_to_drivable_area = {}
