@@ -1,6 +1,7 @@
 import logging
 from typing import Tuple, Union, List, Dict
 import warnings
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -14,7 +15,7 @@ import seaborn as sns
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
 # commonroad
-from commonroad.geometry.shape import Polygon
+from commonroad.geometry.shape import Polygon, Rectangle
 from commonroad.visualization.mp_renderer import MPRenderer
 
 # commonroad_reach
@@ -179,6 +180,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     config = reach_interface.config
     scenario = config.scenario
     planning_problem = config.planning_problem
+    ref_path = config.planning.reference_path
     backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
 
     # set color
@@ -216,6 +218,12 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         ax.set_aspect("equal")
         plt.margins(0, 0)
         renderer.render()
+
+        # draw reference path
+        if config.debug.draw_ref_path and ref_path is not None:
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
+                             linewidth=3.0)
+
         if config.debug.save_plots:
             plt.savefig(f'{path_output}{"lon_driving_corridor"}_{dc_id}_complete.png',
                         format="png", bbox_inches="tight", transparent=False)
@@ -246,6 +254,12 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
             ax.set_aspect("equal")
             plt.margins(0, 0)
             renderer.render()
+
+            # draw reference path
+            if config.debug.draw_ref_path and ref_path is not None:
+                renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
+                                 linewidth=3.0)
+
             if config.debug.save_plots:
                 save_format = "svg" if as_svg else "png"
                 plt.savefig(
@@ -274,7 +288,7 @@ def plot_all_driving_corridors(list_driving_corridors: List, reach_interface: Re
 
 
 def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
-                             lanelet_ids: List[int] = None, as_svg=False):
+                             lanelet_ids: List[int] = None, list_obstacles: List = None, as_svg=False):
     """
     Draws a driving corridor with 3D projection
     """
@@ -289,11 +303,11 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
 
     # temporal length of driving corridor
-    time_step_end = len(driving_corridor)
+    time_step_end = len(driving_corridor) - 1
 
     # setup figure
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d', computed_zorder=False)
+    fig = plt.figure(figsize=(20, 10))
+    ax = fig.add_subplot(111, projection='3d')
     ax.computed_zorder = False
     palette = sns.color_palette("GnBu_d", 3)
     # set plot limits
@@ -311,18 +325,23 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     _render_lanelet_network_3d(lanelet_network, ax)
 
     for time_step in range(time_step_end + 1):
-        list_reach_nodes = driving_corridor[time_step]
+        # determine tuple (z_min, z_max) for polyhedron
+        z_tuple = (time_step * interval, time_step * interval + height)
 
-        # determine z values of polyhedron
-        z_min = time_step * interval
-        z_max = time_step * interval + height
+        # 3D rendering of obstacles
+        if list_obstacles:
+            for obs in list_obstacles:
+                occ_rectangle = obs.occupancy_at_time(time_step).shape
+                _render_obstacle_3d(occ_rectangle, ax, z_tuple)
 
         # 3D rendering of reachable sets
-        _render_reachable_sets_3d(list_reach_nodes, ax, (z_min, z_max), config, palette)
+        list_reach_nodes = driving_corridor[time_step]
+        _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette)
 
     # axis settings
     ax.set_xlim(plot_limits[0:2])
     ax.set_ylim(plot_limits[2:4])
+    ax.set_zlim([0, 5])
     # ax.set_xticks([])
     # ax.set_yticks([])
     # ax.set_zticks([])
@@ -362,8 +381,8 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
             pc = Poly3DCollection(vertices_3d)
             pc.set_facecolor(face_color)
             pc.set_edgecolor(edge_color)
-            pc.set_linewidth(0.6)
-            pc.set_alpha(0.8)
+            pc.set_linewidth(0.8)
+            pc.set_alpha(0.9)
             pc.set_zorder(30)
             ax.add_collection3d(pc)
     elif cosys == "CVLN":
@@ -378,8 +397,8 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
                 pc = Poly3DCollection(vertices_3d)
                 pc.set_facecolor(face_color)
                 pc.set_edgecolor(edge_color)
-                pc.set_linewidth(0.6)
-                pc.set_alpha(0.8)
+                pc.set_linewidth(0.8)
+                pc.set_alpha(0.9)
                 pc.set_zorder(30)
                 ax.add_collection3d(pc)
 
@@ -394,13 +413,13 @@ def _compute_vertices_of_polyhedron(position_rectangle, z_tuple):
 
     # get vertices of position rectangle
     if isinstance(position_rectangle, ReachPolygon):
-        # Python data structure
+        # ReachPolygon Python data structure
         x_min = position_rectangle.p_lon_min
         x_max = position_rectangle.p_lon_max
         y_min = position_rectangle.p_lat_min
         y_max = position_rectangle.p_lat_max
     else:
-        # CPP data structure
+        # ReachPolygon CPP data structure
         x_min = position_rectangle.p_lon_min()
         x_max = position_rectangle.p_lon_max()
         y_min = position_rectangle.p_lat_min()
@@ -443,7 +462,51 @@ def _render_lanelet_network_3d(lanelet_network, ax):
         pc.set_facecolor("#c7c7c7")
         pc.set_edgecolor("#dddddd")
         pc.set_linewidth(0.5)
-        pc.set_alpha(0.8)
+        pc.set_alpha(0.7)
         pc.set_zorder(0)
         ax.add_collection3d(pc, zs=0, zdir='z')
+
+
+# TODO: can be merged with _compute_vertices_of_polyhedron
+def _render_obstacle_3d(occupancy_rect: Rectangle, ax,  z_tuple: Tuple):
+    """
+    Renders a 3d visualization of a CR obstacle occupancy (given as a CommonRoad Rectangle shape)
+    """
+    assert isinstance(occupancy_rect, Rectangle)
+    # unpack z tuple
+    z_min = z_tuple[0]
+    z_max = z_tuple[1]
+
+    # get 2D vertices of rectangle
+    vertices_2d = occupancy_rect.vertices[:-1].tolist()
+
+    # z values for 3D visualization
+    z_values = []
+    tmp1 = deepcopy(vertices_2d)
+    for i in range(len(vertices_2d)):
+        tmp1[i].append(z_min)
+        z_values.append(tmp1[i])
+    tmp2 = deepcopy(vertices_2d)
+    for i in range(len(vertices_2d)):
+        tmp2[i].append(z_max)
+        z_values.append(tmp2[i])
+
+    z_values = np.array(z_values)
+
+    vertices = [[z_values[0], z_values[1], z_values[2], z_values[3]],
+                [z_values[4], z_values[5], z_values[6], z_values[7]],
+                [z_values[0], z_values[1], z_values[5], z_values[4]],
+                [z_values[2], z_values[3], z_values[7], z_values[6]],
+                [z_values[1], z_values[2], z_values[6], z_values[5]],
+                [z_values[4], z_values[7], z_values[3], z_values[0]]]
+
+    ax.scatter3D(z_values[:, 0], z_values[:, 1], z_values[:, 2], alpha=0.0)
+    pc = Poly3DCollection(vertices)
+    pc.set_facecolor("#1d7eea")
+    pc.set_edgecolor("#00478f")
+    pc.set_linewidth(0.5)
+    pc.set_alpha(0.7)
+    pc.set_zorder(20)
+    ax.add_collection3d(pc)
+
 
