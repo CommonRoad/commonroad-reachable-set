@@ -297,3 +297,10 @@ class DebugConfiguration:
 
         self.save_plots = config_relevant.save_plots
         self.save_config = config_relevant.save_config
+        self.draw_ref_path = config_relevant.draw_ref_path
+        self.draw_planning_problem = config_relevant.draw_planning_problem
+        self.draw_icons = config_relevant.draw_icons
+        self.plot_limits = config_relevant.plot_limits
+        self.plot_azimuth = config_relevant.plot_azimuth
+        self.plot_elevation = config_relevant.plot_elevation
+        self.ax_distance = config_relevant.ax_distance
