@@ -57,7 +57,7 @@ def main():
         util_visual.draw_driving_corridor_3d(longitudinal_driving_corridors[dc_idx], dc_idx, reach_interface,
                                              lanelet_ids=ret_lanelet_ids_list(),
                                              list_obstacles=ret_obstacles_by_id(config, [352]),
-                                             as_svg=False)
+                                             as_svg=True)
 
     # plot all driving corridors (complete corridors are plotted in one plot)
     # util_visual.plot_all_driving_corridors(longitudinal_driving_corridors, reach_interface)

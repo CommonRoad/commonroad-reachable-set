@@ -11,7 +11,7 @@ scenario, planning_problem_set = CommonRoadFileReader(file_path).open()
 # plot the scenario for each time step
 plt.figure(figsize=(25, 10))
 rnd = MPRenderer()
-scenario.draw(rnd, draw_params={'time_begin': 0, 'lanelet': {'show_label': True}})
+scenario.draw(rnd, draw_params={'time_begin': 0, 'lanelet': {'show_label': False}, 'dynamic_obstacle': {'show_label': True}})
 planning_problem_set.draw(rnd)
 rnd.render()
 plt.show()

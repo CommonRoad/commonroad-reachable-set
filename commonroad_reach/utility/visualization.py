@@ -56,7 +56,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
         list_nodes = reach_interface.reachable_set_at_time_step(time_step)
 
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
-                                             "trajectory": {"draw_trajectory": False},
+                                             "trajectory": {"draw_trajectory": True},
                                              "time_begin": time_step})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
@@ -75,7 +75,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
         renderer.render()
 
         if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19, linewidth=3.0)
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19, linewidth=1.0)
 
         if config.debug.save_plots:
             save_fig(as_svg, path_output, time_step)
