@@ -101,12 +101,6 @@ class ObstacleRegularGrid:
                                      occupancy_grid: np.ndarray,
                                      ll_translated: np.ndarray,
                                      ur_translated: np.ndarray) -> np.ndarray:
-        def convert_cart2pixel_coordinates(cart: np.ndarray) -> np.ndarray:
-            # x and y are switched for openCV!
-            arr = np.array([np.round((cart[:, 1] - ll_translated[1]) * self.dy_div),
-                            np.round((cart[:, 0] - ll_translated[0]) * self.dx_div)], dtype=np.int32)
-            return arr.transpose()
-
         def fill_shape(occupancy_grid, collision_object):
             typ = type(collision_object)
             if typ == pycrcc.Polygon or typ == pycrcc.Triangle:
@@ -136,15 +130,18 @@ class ObstacleRegularGrid:
 
                 occupancy_grid = cv.fillPoly(occupancy_grid, [vertices], (0))
             elif typ == pycrcc.RectAABB:
-                pt0 = tuple(convert_cart2pixel_coordinates(np.array([[collision_object.min_x(),
-                                                                      collision_object.min_y()], ])).flatten().tolist())
-                pt1 = tuple(convert_cart2pixel_coordinates(np.array([[collision_object.max_x(),
-                                                                      collision_object.max_y()], ])).flatten().tolist())
+                pt0 = convert_cart2pixel_coordinates(collision_object.min_x(),collision_object.min_y())
+                pt1 = convert_cart2pixel_coordinates(collision_object.max_x(),collision_object.max_y())
                 occupancy_grid = cv.rectangle(occupancy_grid, pt0, pt1, (0), -1)
             else:
                 raise NotImplementedError('Type {} not Implemented'.format(typ))
 
             return occupancy_grid
+
+        def convert_cart2pixel_coordinates(x: float, y: float) -> tuple:
+            # x and y are switched for openCV!
+            return (round((y - ll_translated[1]) * self.dy_div),
+                    round((x - ll_translated[0]) * self.dx_div))
 
         occupancy_grid = fill_shape(occupancy_grid, collision_object)
         return occupancy_grid
