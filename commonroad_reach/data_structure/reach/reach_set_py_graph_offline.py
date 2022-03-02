@@ -5,6 +5,7 @@ import pickle
 import time
 from typing import List, Dict, Tuple, Optional
 
+from commonroad_dc.pycrcc import CollisionChecker, RectAABB
 from commonroad_reach.__version__ import __version__
 import numpy as np
 from scipy import sparse
@@ -29,11 +30,6 @@ class PyGraphReachableSetOffline(ReachableSet):
         self._dict_time_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]
         super().__init__(config)
 
-        if config.planning.coordinate_system != "CART":
-            message = "Multi-step reachable set computation only supports Cartesian coordinate system."
-            logger.error(message)
-            raise Exception(message)
-
         self.polygon_zero_state_lon: Dict[int, ReachPolygon] = dict()
         self.polygon_zero_state_lat: Dict[int, ReachPolygon] = dict()
         self._initialize_zero_state_polygons()
@@ -55,13 +51,19 @@ class PyGraphReachableSetOffline(ReachableSet):
         """
         for steps in range(1, self.config.reachable_set.n_multi_steps):
             dt = self.config.planning.dt * steps
-            self.polygon_zero_state_lon[steps] = reach_operation.create_zero_state_polygon(dt,
-                                                                                           -self.config.vehicle.ego.a_max,
-                                                                                           self.config.vehicle.ego.a_max)
+            if self.config.planning.coordinate_system == "CART":
+                a_lon_min = -self.config.vehicle.ego.a_max
+                a_lon_max = self.config.vehicle.ego.a_max
+                a_lat_min = -self.config.vehicle.ego.a_max
+                a_lat_max = self.config.vehicle.ego.a_max
+            else:
+                a_lon_min = self.config.vehicle.ego.a_lon_min
+                a_lon_max = self.config.vehicle.ego.a_lon_max
+                a_lat_min = self.config.vehicle.ego.a_lat_min
+                a_lat_max = self.config.vehicle.ego.a_lat_max
 
-            self.polygon_zero_state_lat[steps] = reach_operation.create_zero_state_polygon(dt,
-                                                                                           -self.config.vehicle.ego.a_max,
-                                                                                           self.config.vehicle.ego.a_max)
+            self.polygon_zero_state_lon[steps] = reach_operation.create_zero_state_polygon(dt, a_lon_min, a_lon_max)
+            self.polygon_zero_state_lat[steps] = reach_operation.create_zero_state_polygon(dt, a_lat_min, a_lat_max)
 
     @property
     def initial_drivable_area(self) -> List[ReachPolygon]:
@@ -154,19 +156,30 @@ class PyGraphReachableSetOffline(ReachableSet):
         assert steps >= 1
         list_base_sets_propagated = []
         dt = self.config.planning.dt * steps
+        if self.config.planning.coordinate_system == "CART":
+            v_lon_min = -self.config.vehicle.ego.v_max
+            v_lon_max = self.config.vehicle.ego.v_max
+            v_lat_min = -self.config.vehicle.ego.v_max
+            v_lat_max = self.config.vehicle.ego.v_max
+        else:
+            v_lon_min = -self.config.vehicle.ego.v_lon_max
+            v_lon_max = self.config.vehicle.ego.v_lon_max
+            v_lat_min = -self.config.vehicle.ego.v_lat_max
+            v_lat_max = self.config.vehicle.ego.v_lat_max
+
         for node in list_nodes:
             try:
                 polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
                                                                            self.polygon_zero_state_lon[steps],
                                                                            dt,
-                                                                           -self.config.vehicle.ego.v_max,
-                                                                           self.config.vehicle.ego.v_max)
+                                                                           v_lon_min,
+                                                                           v_lon_max)
 
                 polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
                                                                            self.polygon_zero_state_lat[steps],
                                                                            dt,
-                                                                           -self.config.vehicle.ego.v_max,
-                                                                           self.config.vehicle.ego.v_max)
+                                                                           v_lat_min,
+                                                                           v_lat_max)
             except (ValueError, RuntimeError):
                 logger.warning("Error occurred while propagating polygons.")
 
@@ -206,23 +219,45 @@ class PyGraphReachableSetOffline(ReachableSet):
         two time steps.
         """
         logger.debug("Determining grandparent-grandchild relationship...")
+        cc_at_time: Dict[int, Tuple[CollisionChecker, Dict[RectAABB, ReachNodeMultiGeneration]]] = dict()
+
+        def create_cc(nodes: List[ReachNodeMultiGeneration],
+                      list_nodes_keys:List[ReachNodeMultiGeneration]) -> Tuple[CollisionChecker,
+                                                                      Dict[RectAABB, ReachNodeMultiGeneration]]:
+            """Create collision checker from reachable sets."""
+            cc = CollisionChecker()
+            cc_obj_2_node = dict()
+            for node, key_node in zip(nodes, list_nodes_keys):
+                bounds = node.position_rectangle.bounds
+                cc_obj = RectAABB(0.5 * (bounds[2] - bounds[0]),
+                                  0.5 * (bounds[3] - bounds[1]),
+                                  node.position_rectangle.p_lon_center,
+                                  node.position_rectangle.p_lat_center)
+                cc_obj_2_node[cc_obj] = key_node
+                cc.add_collision_object(cc_obj)
+            return cc, cc_obj_2_node
+
+        def get_cc_at_time(time_step: int) -> Tuple[CollisionChecker, Dict[RectAABB,ReachNodeMultiGeneration]]:
+            """Returns collision checker from reachable sets at time_step."""
+            if time_step not in cc_at_time:
+                cc_at_time[time_step] = create_cc(self.dict_time_to_reachable_set[time_step],
+                                                  self.dict_time_to_reachable_set[time_step])
+            return cc_at_time[time_step]
+
         for delta_steps in range(2, self.config.reachable_set.n_multi_steps):
             for time_step in list(self.dict_time_to_reachable_set.keys())[delta_steps:time_step + 1]:
-                list_nodes = self.dict_time_to_reachable_set[time_step]
                 list_nodes_grand_parent = self.dict_time_to_reachable_set[time_step - delta_steps]
                 list_nodes_grand_parent_propagated = self._propagate_reachable_set(list_nodes_grand_parent,
                                                                                    steps=delta_steps)
-
-                for node in list_nodes:
-                    rectangle_node = node.position_rectangle
-
-                    for idx_grandparent, node_grand_parent_propagated in enumerate(list_nodes_grand_parent_propagated):
-                        rectangle_node_grand_parent_propagated = node_grand_parent_propagated.position_rectangle
-                        node_grand_parent = list_nodes_grand_parent[idx_grandparent]
-
-                        if rectangle_node.intersects(rectangle_node_grand_parent_propagated):
-                            node.add_grandparent_node(node_grand_parent)
-                            node_grand_parent.add_grandchild_node(node)
+                cc_nodes, cc_obj_2_node = get_cc_at_time(time_step)
+                cc_grandparents_prop, cc_obj_2_grandparent_node_prop = create_cc(list_nodes_grand_parent_propagated,
+                                                                                 list_nodes_grand_parent)
+                for rect_gp_prop, node_grand_parent in cc_obj_2_grandparent_node_prop.items():
+                    colliding_rects = cc_nodes.find_all_colliding_objects(rect_gp_prop)
+                    for rect in colliding_rects:
+                        node = cc_obj_2_node[rect]
+                        node.add_grandparent_node(node_grand_parent)
+                        node_grand_parent.add_grandchild_node(node)
 
     def _save_to_pickle(self):
         """Saves computation result as a pickle file."""
@@ -231,63 +266,30 @@ class PyGraphReachableSetOffline(ReachableSet):
         dict_data = self._extract_information()
 
         size_grid = self.config.reachable_set.size_grid
-        a_max = self.config.vehicle.ego.a_max
-        v_max = self.config.vehicle.ego.v_max
+
+        if self.config.planning.coordinate_system == "CART":
+            a_v_str = f"amax{self.config.vehicle.ego.a_max}_" \
+                      f"vmax{self.config.vehicle.ego.v_max}_"
+        else:
+            a_v_str = f"alonmax{self.config.vehicle.ego.a_lon_max}_" \
+                      f"alatmax{self.config.vehicle.ego.a_lat_max}_" \
+                      f"vlonmax{self.config.vehicle.ego.v_lon_max}_" \
+                      f"vlatmax{self.config.vehicle.ego.v_lat_max}_"
 
         self.config.reachable_set.name_pickle_offline = \
-            f"offline_{self.max_evaluated_time_step}_" \
+            f"offline_nt{self.max_evaluated_time_step}_" \
+            f"{self.config.planning.coordinate_system}_" \
+            + a_v_str + \
             f"ms{self.config.reachable_set.n_multi_steps}_" \
             f"dx{size_grid}_" \
-            f"amax{a_max}_" \
-            f"vmax{v_max}_" \
             f"ver{dict_data['__version__']}" \
             f".pickle"
-        f = open(self.path_offline_file, 'wb')
-        pickle.dump(dict_data, f)
-        f.close()
 
-        print()
+        with open(self.path_offline_file, 'wb') as f:
+            pickle.dump(dict_data, f)
+
         message = f"Computation result saved to pickle file: {self.path_offline_file}"
-        print(message)
         logger.info(message)
-        # def _save_to_pickle(self):
-        #     os.makedirs(self.config.general.path_offline_data, exist_ok=True)
-        #     data = np.load(filename, allow_pickle=True)
-        #     # dt = data['dt']
-        #     matrices = []
-        #     projections = []
-        #     for t, adj_matrix in dict_time_to_adjacency_matrices_parent.items():
-        #         tmp = csr_matrix((np.ones_like(data['dt0_' + 'E_indices' + str(t)]),
-        #                           data['dt0_' + 'E_indices' + str(t)],
-        #                           data['dt0_' + 'E_indptr' + str(t)]),
-        #                          data['dt0_' + 'E_shape' + str(t)])
-        #         matrices.append(tmp)
-        #
-        #         tmp = csr_matrix((np.ones_like(data['dt0_' + 'P_indices' + str(t)]),
-        #                           data['dt0_' + 'P_indices' + str(t)],
-        #                           data['dt0_' + 'P_indptr' + str(t)]),
-        #                          data['dt0_' + 'P_shape' + str(t)])
-        #         projections.append(tmp)
-
-        # for t in range(data['nt']):
-        #     for delta_timestep in range(dt):
-        #         if 'data_gr' + str(t) + '_' + str(delta_timestep) in data:
-        #             tmp = csr_matrix((data['data_gr' + str(t) + '_' + str(delta_timestep)],
-        #                               data['indices_gr' + str(t) + '_' + str(delta_timestep)],
-        #                               data['indptr_gr' + str(t) + '_' + str(delta_timestep)]),
-        #                              data['shape_gr' + str(t) + '_' + str(delta_timestep)])
-        #             matrices.append(tmp)
-
-        # name_file = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}.pickle"
-        #
-        # name_file = f"offline_{time_steps}_{size_grid}_{a_max}_{v_max}.pickle"
-        # f = open(f"{self.config.general.path_offline_data}{name_file}", 'wb')
-        # pickle.dump(dict_data, f)
-        # f.close()
-        #
-        # message = f"Computation result saved to pickle file: {name_file}"
-        # print(message)
-        # logger.info(message)
 
     def create_projection_matrices(self):
         size_grid = self.config.reachable_set.size_grid
@@ -295,10 +297,10 @@ class PyGraphReachableSetOffline(ReachableSet):
         size_grid_div = 1 / size_grid
         for t, base_set_list in self._dict_time_to_drivable_area.items():
             assert (len(self.dict_time_to_drivable_area) == len(self.dict_time_to_reachable_set))
-            l0 = min([x.p_lon_min for x in base_set_list])
-            l1 = max([x.p_lon_max for x in base_set_list])
-            l2 = min([x.p_lat_min for x in base_set_list])
-            l3 = max([x.p_lat_max for x in base_set_list])
+            # l0 = min([x.p_lon_min for x in base_set_list])
+            # l1 = max([x.p_lon_max for x in base_set_list])
+            # l2 = min([x.p_lat_min for x in base_set_list])
+            # l3 = max([x.p_lat_max for x in base_set_list])
 
             lon_min = size_grid * math.floor(min([x.p_lon_center for x in base_set_list]) * size_grid_div)
             lon_max = size_grid * math.ceil(max([x.p_lon_center for x in base_set_list]) * size_grid_div)
@@ -363,9 +365,6 @@ class PyGraphReachableSetOffline(ReachableSet):
                 # print(grid_index_to_reachset[coordinate])
                 projection_matrix[grid_index_to_reachset[coordinate], coordinate] = True
 
-            print("-----------------------------------")
-            # print(t)
-            print(projection_matrix)
         raise
 
     def _extract_information(self):
@@ -443,8 +442,9 @@ class PyGraphReachableSetOffline(ReachableSet):
         dict_data["reachset_bb_ur"] = reachset_bb_ur
         dict_data["config.vehicle"] = self.config.vehicle
         dict_data["config.reachable_set"] = self.config.reachable_set
+        dict_data["coordinate_system"] = self.config.planning.coordinate_system
         dict_data["__version__"] = __version__
         return dict_data
 
     def _prune_nodes_not_reaching_final_time_step(self):
-        pass
+        raise NotImplementedError

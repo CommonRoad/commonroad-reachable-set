@@ -130,8 +130,8 @@ class ObstacleRegularGrid:
 
                 occupancy_grid = cv.fillPoly(occupancy_grid, [vertices], (0))
             elif typ == pycrcc.RectAABB:
-                pt0 = convert_cart2pixel_coordinates(collision_object.min_x(),collision_object.min_y())
-                pt1 = convert_cart2pixel_coordinates(collision_object.max_x(),collision_object.max_y())
+                pt0 = convert_cart2pixel_coordinates(collision_object.min_x(), collision_object.min_y())
+                pt1 = convert_cart2pixel_coordinates(collision_object.max_x(), collision_object.max_y())
                 occupancy_grid = cv.rectangle(occupancy_grid, pt0, pt1, (0), -1)
             else:
                 raise NotImplementedError('Type {} not Implemented'.format(typ))

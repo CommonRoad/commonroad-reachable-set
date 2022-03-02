@@ -34,16 +34,14 @@ class PyGraphReachableSetOnline(ReachableSet):
         self._num_time_steps_offline_computation = 0
         self._collision_checker: Optional[CppCollisionChecker] = None
 
-        self.occupied_grid_obs_static = ()
         self._reachability_grid: Dict[int, np.ndarray] = {}
-
         self.obstacle_grid: ObstacleRegularGrid = None
         self.dict_time_to_list_tuples_reach_node_attributes = {}
         self.dict_time_to_adjacency_matrices_parent = {}
         self.dict_time_to_adjacency_matrices_grandparent = {}
-
         self.reachset_bb_ll: Dict[int, np.ndarray] = dict()
         self.reachset_bb_ur: Dict[int, np.ndarray] = dict()
+        # contains all pre-computed nodes
         self._dict_time_to_reachable_set_all: Dict[int, List[ReachNodeMultiGeneration]] = defaultdict(list)
         self._dict_time_to_drivable_area_all: Dict[int, List[ReachPolygon]] = defaultdict(list)
 
@@ -81,7 +79,7 @@ class PyGraphReachableSetOnline(ReachableSet):
             return reachset
 
     def _restore_parent_node_relationships(self, reachset: List[ReachNode], time_step: int):
-        """ Restore parent-child relationships """
+        """Restore parent-child relationships."""
         if time_step == 0:
             return
         ind_2_list_index_prev    = np.insert(np.cumsum(self._reachability_grid[time_step - 1]), 0, 0)
@@ -92,9 +90,12 @@ class PyGraphReachableSetOnline(ReachableSet):
                                                index_reachset, :]))
             node = reachset[ind_2_list_index_current[index_reachset]]
             for index_parent in np.flatnonzero(reachable_parents):
-                parent = self.reachable_set_at_time_step(time_step - 1)[ind_2_list_index_prev[index_parent] - 1]
-                parent.add_child_node(node)
-                node.add_parent_node(parent)
+                try:
+                    parent = self.reachable_set_at_time_step(time_step - 1)[ind_2_list_index_prev[index_parent] - 1]
+                    parent.add_child_node(node)
+                    node.add_parent_node(parent)
+                except IndexError:
+                    continue
 
     def _dict_time_to_drivable_area(self) -> Dict[int, List[ReachPolygon]]:
         dict_time_to_drivable_area = {}
@@ -162,6 +163,10 @@ class PyGraphReachableSetOnline(ReachableSet):
         #     raise ValueError(f"Offline data was created with an older version of commonroad-reach "
         #                      f"{dict_data['__version__']}. "
         #                      f"Please recreate the file with the current version {__version__} !")
+        # assert dict_data["coordinate_system"] == self.config.planning.coordinate_system, \
+        #     f"pickle file was created for coordinate_system={dict_data['coordinate_system']}," \
+        #     f"not {self.config.planning.coordinate_system}!"
+
         self._validate_configurations(self.config.reachable_set, self.config.vehicle,
                                       dict_data["config.reachable_set"], dict_data["config.vehicle"])
         return dict_data["node_attributes"], dict_data["adjacency_matrices_parent"], \
@@ -196,8 +201,7 @@ class PyGraphReachableSetOnline(ReachableSet):
                         setattr(config_online, attr, offline_value)
 
         relevant_attributes_reachset = \
-            ["size_grid",
-             "n_multi_steps"]
+            ["size_grid"]
         relevant_attributes_ego_vehicle = \
             ["a_lon_max",
              "a_lon_min",
@@ -209,6 +213,10 @@ class PyGraphReachableSetOnline(ReachableSet):
         validate_and_update_config(reachset_config_online, reachset_config_offline, relevant_attributes_reachset)
         validate_and_update_config(vehicle_config_online.ego, vehicle_config_offline.ego,
                                    relevant_attributes_ego_vehicle)
+
+        assert reachset_config_online.n_multi_steps <= reachset_config_offline.n_multi_steps,\
+            f"pre-computed only {reachset_config_offline.n_multi_steps} multi-steps " \
+            f"but requested {reachset_config_online.n_multi_steps}"
 
     def _restore_reachable_sets(self, dict_time_to_list_tuples_reach_node_attributes):
         """Restores reachable sets from the offline computation result."""
@@ -233,8 +241,7 @@ class PyGraphReachableSetOnline(ReachableSet):
         :return: None
         """
         update_planning_problem = planning_problem is not None
-        update_cc = update_planning_problem or (scenario is not None) \
-                    or self.config.planning.coordinate_system == "CVLN"
+        update_cc = update_planning_problem or (scenario is not None)
         if scenario is not None:
             self.config.scenario = scenario
 
@@ -244,7 +251,6 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         if update_cc:
             self._initialize_collision_checker()
-            self._occ_grid_at_time.cache_clear()
 
             self.obstacle_grid = ObstacleRegularGrid\
                 (self.reachset_bb_ll, self.reachset_bb_ur, self._collision_checker.collision_checker,
@@ -254,11 +260,11 @@ class PyGraphReachableSetOnline(ReachableSet):
                  t_f=self.config.scenario.dt * self._num_time_steps_offline_computation,
                  grid_shapes=self._grid_shapes)
 
-        self.occupied_grid_obs_static = dict()
         self._reachability_grid.clear()
         self.reachable_set_at_time_step.cache_clear()
         self.drivable_area_at_time_step.cache_clear()
-
+        self._occ_grid_at_time.cache_clear()
+        self._list_time_steps_computed = []
         self._reachability_grid[self.time_step_start] = np.ones((1, 1), dtype=bool)
 
     def _initialize_collision_checker(self) -> None:
@@ -272,8 +278,7 @@ class PyGraphReachableSetOnline(ReachableSet):
             self._collision_checker = CppCollisionChecker(self.config)
 
     def compute_reachable_sets(self, time_step_start: int = 1,
-                               time_step_end: Optional[int] = None,
-                               n_multisteps: int = 0) -> None:
+                               time_step_end: Optional[int] = None) -> None:
         if time_step_end is None:
             time_step_end = self.time_step_end
 
@@ -286,7 +291,7 @@ class PyGraphReachableSetOnline(ReachableSet):
                 return
 
             self._list_time_steps_computed.append(time_step)
-            self._forward_propagation(time_step, n_multisteps)
+            self._forward_propagation(time_step, self.config.reachable_set.n_multi_steps)
             self._list_time_steps_computed.append(time_step)
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
@@ -301,6 +306,8 @@ class PyGraphReachableSetOnline(ReachableSet):
             self.backward_step(i_t)
 
         self._pruned = True
+        self.reachable_set_at_time_step.cache_clear()
+        self.drivable_area_at_time_step.cache_clear()
 
     @lru_cache(124)
     def reachset_translation(self, time_step: int) -> np.ndarray:
@@ -309,15 +316,16 @@ class PyGraphReachableSetOnline(ReachableSet):
         return self.config.planning.p_lon_lat_initial\
                + self.config.planning.v_lon_lat_initial * self.config.scenario.dt * time_step
 
-    def _forward_propagation(self, time_step: int, n_multisteps: int) -> None:
+    def _forward_propagation(self, time_step: int, n_multi_steps: int) -> None:
         """
         Propagates current reachability grid and excludes forbidden states
         :param time_step: initial time step of the reachable set
-        :param n_multisteps: number of previous time steps considered for the propagation
+        :param n_multi_steps: number of previous time steps considered for the propagation
         :return:
         """
         if time_step >= self._num_time_steps_offline_computation:
-            raise ValueError('Reached max number of offline computed time steps!')
+            raise ValueError(f'Reached max number of offline computed time steps '
+                             f'({self._num_time_steps_offline_computation})!')
 
         reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[time_step].dot(
             self._reachability_grid[time_step - 1].reshape([-1, 1]))
@@ -326,11 +334,11 @@ class PyGraphReachableSetOnline(ReachableSet):
             reachability_grid_prop = reachability_grid_prop.toarray()
 
         # propagate grandparents:
-        if time_step in self.dict_time_to_adjacency_matrices_grandparent:
-            for time_step_gp, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[time_step].items():
+        if time_step > 1:
+            for delta_time_step, adj_matrix_gp in self.dict_time_to_adjacency_matrices_grandparent[time_step].items():
                 # get time index of grandparent to propagate
-                delta_time_step = time_step - time_step_gp
-                if delta_time_step < n_multisteps and time_step_gp in self._reachability_grid:
+                time_step_gp = time_step - delta_time_step
+                if delta_time_step <= n_multi_steps and time_step_gp in self._reachability_grid:
                     reachability_grid_prop_grandparent = \
                         adj_matrix_gp.dot(self._reachability_grid[time_step_gp].reshape([-1, 1]))
                     if sparse.issparse(reachability_grid_prop_grandparent):
@@ -341,9 +349,9 @@ class PyGraphReachableSetOnline(ReachableSet):
                     # intersect with propagated cells of other time steps
                     reachability_grid_prop = np.logical_and(reachability_grid_prop, prop_grandparent_tmp)
 
-        # intersect propagated cells with occupied cells
-        reachability_grid_prop = np.logical_and(reachability_grid_prop.reshape([-1, 1]),
-                                                self._occ_grid_at_time(time_step))
+            # intersect propagated cells with occupied cells
+            reachability_grid_prop = np.logical_and(reachability_grid_prop.reshape([-1, 1]),
+                                                    self._occ_grid_at_time(time_step))
 
         self._reachability_grid[time_step] = reachability_grid_prop
 

@@ -87,11 +87,11 @@ class ReachableSet(ABC):
             else:
                 return CppReachableSet(config)
 
-        elif mode in [4, 5]:
+        elif mode in [4]:
             from commonroad_reach.data_structure.reach.reach_set_py_graph_online import PyGraphReachableSetOnline
             return PyGraphReachableSetOnline(config)
 
-        elif mode == 6:
+        elif mode == 5:
             from commonroad_reach.data_structure.reach.reach_set_py_graph_offline import PyGraphReachableSetOffline
             return PyGraphReachableSetOffline(config)
 

@@ -2,9 +2,9 @@ import logging
 import time
 
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
+from commonroad_reach.data_structure.configuration import Configuration
 
 logger = logging.getLogger(__name__)
-from commonroad_reach.data_structure.configuration import Configuration
 
 
 class ReachableSetInterface:

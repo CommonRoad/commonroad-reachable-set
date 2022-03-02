@@ -1,8 +1,7 @@
 import copy
 from collections import defaultdict
-from typing import List, Optional, Dict, Set
+from typing import Optional, Dict, Set
 
-import numpy as np
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from shapely import affinity
 
@@ -215,8 +214,8 @@ class ReachNodeMultiGeneration(ReachNode):
 
     def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
-        self.list_nodes_grandparent: Dict[int, List[ReachNodeMultiGeneration]] = defaultdict(list)
-        self.list_nodes_grandchild: Dict[int, List[ReachNodeMultiGeneration]] = defaultdict(list)
+        self.list_nodes_grandparent: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
+        self.list_nodes_grandchild: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
 
     def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandparent node into the list."""
