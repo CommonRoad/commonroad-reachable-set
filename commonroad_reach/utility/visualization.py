@@ -207,13 +207,13 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
 
     print("\tCreating GIF...")
     for i in range(number_of_figures):
-        im_path = path + prefix + "{:05d}.png".format(i)
+        im_path = os.path.join(path, prefix + "{:05d}.png".format(i))
         filenames.append(im_path)
 
     for filename in filenames:
         images.append(imageio.imread(filename))
 
-    imageio.mimsave(path + "/../" + file_save_name + ".gif", images, duration=duration)
+    imageio.mimsave(os.path.join(path, "../", file_save_name + ".gif"), images, duration=duration)
 
 
 def plot_scenario_with_driving_corridors(driving_corridors,
