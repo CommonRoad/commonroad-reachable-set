@@ -89,8 +89,11 @@ class ReachableSetInterface:
         time_start = time.time()
         self._reach.compute_reachable_sets(time_step_start, time_step_end)
 
-        message = f"\tComputation took: \t{time.time() - time_start:.3f}s"
+        time_computation = time.time() - time_start
+        message = f"\tComputation took: \t{time_computation:.3f}s"
         logger.info(message)
         print(message)
 
         self._reachable_set_computed = True
+
+        return time_computation

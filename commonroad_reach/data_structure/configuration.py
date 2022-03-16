@@ -228,7 +228,7 @@ class PlanningConfiguration:
 
         # related to specific planning problem
         self.time_step_initial = None
-        self.id_lanelet_initial = None
+        self.id_lanelet_initial = 0
         self.route = None
         self.reference_path = None
         self.lanelet_network = None
@@ -244,38 +244,28 @@ class PlanningConfiguration:
         self.lanelet_network = scenario.lanelet_network
         self.time_step_initial = planning_problem.initial_state.time_step
 
-        if not config.reachable_set.mode == 5:
-            if self.coordinate_system == "CART":
-                self.p_lon_initial = planning_problem.initial_state.position[0]
-                self.p_lat_initial = planning_problem.initial_state.position[1]
-                self.v_lon_initial = planning_problem.initial_state.velocity *\
-                                     math.cos(planning_problem.initial_state.orientation)
-                self.v_lat_initial = planning_problem.initial_state.velocity *\
-                                     math.sin(planning_problem.initial_state.orientation)
-                self.id_lanelet_initial = 0
-                self.o_initial = planning_problem.initial_state.orientation
+        if self.coordinate_system == "CART":
+            p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
 
-            elif self.coordinate_system == "CVLN":
-                # plans a route from the initial lanelet to the goal lanelet
-                route_planner = RoutePlanner(scenario, planning_problem)
-                candidate_holder = route_planner.plan_routes()
-                route = candidate_holder.retrieve_first_route()
+            self.p_lon_initial, self.p_lat_initial = p_initial
+            self.v_lon_initial, self.v_lat_initial = v_initial
+            self.o_initial = o_initial
 
-                self.route = route
-                self.reference_path = route.reference_path
-                self.id_lanelet_initial = route.list_ids_lanelets[0]
+        elif self.coordinate_system == "CVLN":
+            # plans a route from the initial lanelet to the goal lanelet
+            route_planner = RoutePlanner(scenario, planning_problem)
+            candidate_holder = route_planner.plan_routes()
+            route = candidate_holder.retrieve_first_route()
 
-                self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-                p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+            self.route = route
+            self.reference_path = route.reference_path
+            self.id_lanelet_initial = route.list_ids_lanelets[0]
 
-                self.p_lon_initial, self.p_lat_initial = p_initial
-                self.v_lon_initial, self.v_lat_initial = v_initial
+            self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
-        else:
-            # offline computation of reachable sets
-            self.p_lon_initial = self.p_lat_initial = 0
-            self.v_lon_initial = self.v_lat_initial = 0
-            self.o_initial = 0
+            self.p_lon_initial, self.p_lat_initial = p_initial
+            self.v_lon_initial, self.v_lat_initial = v_initial
     
     @property
     def p_lon_lat_initial(self):
