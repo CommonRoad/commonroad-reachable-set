@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 import numpy as np
 from typing import Optional, Union
 
-import pycrreachset as reach
+import pycrreach as reach
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
 from commonroad_route_planner.route_planner import RoutePlanner

@@ -1,6 +1,6 @@
 #include "pybind.hpp"
 
-PYBIND11_MODULE(pycrreachset, m) {
+PYBIND11_MODULE(pycrreach, m) {
     m.doc() = "Pybind module for reachable set.";
 
     export_data_structures(m);

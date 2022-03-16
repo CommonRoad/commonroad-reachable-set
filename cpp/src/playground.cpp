@@ -65,7 +65,7 @@ int main() {
     // ======== ReachableSetInterface
     auto reach_interface = ReachableSetInterface(config, collision_checker);
 
-    //print_collision_checker(reach_interface.reachability_analysis->collision_checker());
+    //print_collision_checker(reach_interface.reachable_set->collision_checker());
 
     auto start = high_resolution_clock::now();
     cout << "Computing reachable sets..." << endl;

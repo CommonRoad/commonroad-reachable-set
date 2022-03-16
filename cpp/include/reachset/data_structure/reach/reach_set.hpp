@@ -10,39 +10,47 @@
 using CollisionCheckerPtr = collision::CollisionCheckerPtr;
 
 namespace reach {
-/// Reachability analysis of vehicles.
-class ReachabilityAnalysis {
+/// Reachable set representation for the ego vehicle."""
+class ReachableSet {
 private:
-    ConfigurationPtr _config;
-    CollisionCheckerPtr _collision_checker;
-    ReachPolygonPtr _polygon_zero_state_lon;
-    ReachPolygonPtr _polygon_zero_state_lat;
+    bool _prune_reachable_set{false};
+    bool _pruned{false};
+    std::vector<int> _vec_time_steps_computed{0};
+
 
 public:
-    //ReachabilityAnalysis() = default;
+    explicit ReachableSet(ConfigurationPtr config);
 
-    explicit ReachabilityAnalysis(ConfigurationPtr config);
+    ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collision_checker);
 
-    ReachabilityAnalysis(ConfigurationPtr config, CollisionCheckerPtr collision_checker);
+    ConfigurationPtr config;
+    CollisionCheckerPtr collision_checker;
 
-    inline ConfigurationPtr config() const { return _config; };
+    int time_step_start{};
+    int time_step_end{};
+    std::map<int, std::vector<ReachPolygonPtr>> map_time_to_base_set_propagated;
+    std::map<int, std::vector<ReachPolygonPtr>> map_time_to_drivable_area;
+    std::map<int, std::vector<ReachNodePtr>> map_time_to_reachable_set;
+    std::map<int, std::vector<ReachNodePtr>> map_time_to_reachable_set_pruned;
 
-    inline CollisionCheckerPtr collision_checker() const { return _collision_checker; }
+    ReachPolygonPtr polygon_zero_state_lon;
+    ReachPolygonPtr polygon_zero_state_lat;
 
-    inline ReachPolygonPtr polygon_zero_state_lon() const { return _polygon_zero_state_lon; }
+    std::vector<ReachPolygonPtr> drivable_area_at_time_step(int const& time_step);
 
-    inline ReachPolygonPtr polygon_zero_state_lat() const { return _polygon_zero_state_lat; }
-
+    std::vector<ReachNodePtr> reachable_set_at_time_step(int const& time_step);
     /// Drivable area at the initial time step.
     /// Constructed directly from the config file.
-    std::vector<ReachPolygonPtr> initial_drivable_area() const;
+    std::vector<ReachPolygonPtr> construct_initial_drivable_area() const;
 
     /// Reachable set at the initial time step.
     /// Vertices of the longitudinal and lateral polygons are constructed directly from the config file.
-    std::vector<ReachNodePtr> initial_reachable_set() const;
+    std::vector<ReachNodePtr> construct_initial_reachable_set() const;
 
     /// Initializes the zero-state polygons of the system.
     void initialize_zero_state_polygons();
+
+    void compute_reachable_sets(int const& step_start, int const& step_end);
 
     std::tuple<std::vector<ReachPolygonPtr>, std::vector<ReachNodePtr>>
     compute_drivable_area_at_time_step(int const& time_step,
@@ -57,5 +65,5 @@ public:
                                        std::vector<ReachPolygonPtr> const& drivable_area);
 };
 
-using ReachabilityAnalysisPtr = shared_ptr<ReachabilityAnalysis>;
+using ReachableSetPtr = shared_ptr<ReachableSet>;
 }

@@ -13,7 +13,7 @@
 #include "reachset/data_structure/configuration.hpp"
 
 #include "reachset/data_structure/reach/reach_interface.hpp"
-#include "reachset/data_structure/reach/reach_analysis.hpp"
+#include "reachset/data_structure/reach/reach_set.hpp"
 
 #include "reachset/utility/collision_checker.hpp"
 

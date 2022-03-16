@@ -13,7 +13,7 @@ void export_reachable_set_interface(py::module& m) {
             .def(py::init<ConfigurationPtr const&, CollisionCheckerPtr const&>(),
                  py::arg("configuration"),
                  py::arg("collision_checker"))
-            .def_readonly("reachability_analysis", &ReachableSetInterface::reachability_analysis)
+            .def_readonly("reachable_set", &ReachableSetInterface::reachable_set)
             .def_readonly("time_step_start", &ReachableSetInterface::time_step_start)
             .def_readonly("time_step_end", &ReachableSetInterface::time_step_end)
             .def_readonly("map_time_to_drivable_area", &ReachableSetInterface::map_time_to_drivable_area)
@@ -36,17 +36,17 @@ void export_reachable_set_interface(py::module& m) {
 }
 
 void export_reachability_analysis(py::module& m) {
-    py::class_<ReachabilityAnalysis, shared_ptr<ReachabilityAnalysis>>(m, "ReachabilityAnalysis")
+    py::class_<ReachableSet, shared_ptr<ReachableSet>>(m, "ReachableSet")
             .def(py::init<ConfigurationPtr const&>(), py::arg("configuration"))
             .def(py::init<ConfigurationPtr const&, CollisionCheckerPtr const&>(),
                  py::arg("configuration"),
                  py::arg("collision_checker"))
-            .def("config", &ReachabilityAnalysis::config)
-            .def("collision_checker", &ReachabilityAnalysis::collision_checker)
-            .def("initial_drivable_area", &ReachabilityAnalysis::initial_drivable_area)
-            .def("initial_reachable_set", &ReachabilityAnalysis::initial_reachable_set)
+            .def("config", &ReachableSet::config)
+            .def("collision_checker", &ReachableSet::collision_checker)
+            .def("construct_initial_drivable_area", &ReachableSet::construct_initial_drivable_area)
+            .def("construct_initial_reachable_set", &ReachableSet::construct_initial_reachable_set)
             .def("compute_drivable_area_at_time_step",
-                 &ReachabilityAnalysis::compute_drivable_area_at_time_step)
+                 &ReachableSet::compute_drivable_area_at_time_step)
             .def("compute_reachable_set_at_time_step",
-                 &ReachabilityAnalysis::compute_reachable_set_at_time_step);
+                 &ReachableSet::compute_reachable_set_at_time_step);
 }

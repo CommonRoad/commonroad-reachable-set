@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 from typing import List
 
 import commonroad_dc.pycrcc as pycrcc
-import pycrreachset as reach
+import pycrreach as reach
 from commonroad.geometry.shape import Rectangle, ShapeGroup
 from commonroad.scenario.obstacle import StaticObstacle
 from commonroad.scenario.scenario import Scenario

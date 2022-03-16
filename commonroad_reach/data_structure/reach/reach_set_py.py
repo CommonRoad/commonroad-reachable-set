@@ -22,8 +22,8 @@ class PyReachableSet(ReachableSet):
         self._collision_checker = None
         self._initialize_zero_state_polygons()
         self._initialize_collision_checker()
-        self._dict_time_to_drivable_area[self.time_step_start] = self.initial_drivable_area
-        self._dict_time_to_reachable_set[self.time_step_start] = self.initial_reachable_set
+        self._dict_time_to_drivable_area[self.time_step_start] = self.construct_initial_drivable_area()
+        self._dict_time_to_reachable_set[self.time_step_start] = self.construct_initial_reachable_set()
 
     def _initialize_zero_state_polygons(self):
         """Initializes the zero-state polygons of the system.
@@ -62,8 +62,7 @@ class PyReachableSet(ReachableSet):
             logger.error(message)
             raise Exception(message)
 
-    @property
-    def initial_drivable_area(self) -> List[ReachPolygon]:
+    def construct_initial_drivable_area(self) -> List[ReachPolygon]:
         """Drivable area at the initial time step.
 
         Constructed directly from the config file.
@@ -72,8 +71,7 @@ class PyReachableSet(ReachableSet):
 
         return [ReachPolygon.from_rectangle_vertices(*tuple_vertices)]
 
-    @property
-    def initial_reachable_set(self) -> List[ReachNode]:
+    def construct_initial_reachable_set(self) -> List[ReachNode]:
         """Reachable set at the initial time step.
 
         Vertices of the polygons are constructed directly from the config file.

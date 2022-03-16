@@ -13,7 +13,7 @@
 #include "reachset/utility/shared_using.hpp"
 #include "reachset/utility/collision_checker.hpp"
 
-#include "reachset/data_structure/reach/reach_analysis.hpp"
+#include "reachset/data_structure/reach/reach_set.hpp"
 
 using namespace reach;
 using namespace collision;
