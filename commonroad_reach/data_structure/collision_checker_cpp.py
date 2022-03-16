@@ -35,6 +35,7 @@ class CppCollisionChecker:
 
         elif self.config.planning.coordinate_system == "CVLN":
             self.collision_checker = self._create_curvilinear_collision_checker()
+
         else:
             message = "Undefined coordinate system."
             logger.error(message)
@@ -113,6 +114,10 @@ class CppCollisionChecker:
         list_obstacles_dynamic = scenario.dynamic_obstacles
         dict_time_to_list_vertices_polygons_dynamic = \
             self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic)
+
+        self.list_vertices_polygons_static = list_vertices_polygons_static
+        self.dict_time_to_list_vertices_polygons_dynamic = dict_time_to_list_vertices_polygons_dynamic
+        self.radius_disc = self.config.vehicle.ego.radius_disc
 
         return reach.create_curvilinear_collision_checker(list_vertices_polygons_static,
                                                           dict_time_to_list_vertices_polygons_dynamic,
