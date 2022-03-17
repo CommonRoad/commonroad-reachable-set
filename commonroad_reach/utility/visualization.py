@@ -90,7 +90,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     logger.info(message)
 
 
-def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, time_step_start: int= 0,
+def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, time_step_start: int = 0,
                                      time_step_end: int = 0, plot_limits: list = None, path_output: str = None,
                                      as_svg: bool = False):
     config = reach_interface.config

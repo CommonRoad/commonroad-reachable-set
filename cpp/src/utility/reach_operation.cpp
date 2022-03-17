@@ -399,8 +399,8 @@ tuple<RectangleAABBPtr, RectangleAABBPtr> reach::split_rectangle_into_two(Rectan
 /// if they overlap in the position domain.
 /// 2. create a adapted base set for each of the drivable area rectangle.
 vector<ReachNodePtr> reach::adapt_base_sets_to_drivable_area(
-        vector<ReachPolygonPtr> const& drivable_area, vector<ReachNodePtr> const& vec_base_sets_propagated,
-        int const& num_threads) {
+        vector<ReachPolygonPtr> const& drivable_area,
+        vector<ReachNodePtr> const& vec_base_sets_propagated, int const& num_threads) {
 
     vector<ReachNodePtr> reachable_set_time_step_current;
     reachable_set_time_step_current.reserve(drivable_area.size());

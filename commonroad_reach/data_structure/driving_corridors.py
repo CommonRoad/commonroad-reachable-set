@@ -7,7 +7,7 @@ import time
 import numpy as np
 import networkx as nx
 
-import pycrreachset
+import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.utility import geometry as util_geometry
@@ -24,7 +24,7 @@ class DrivingCorridors:
     """
     Class to compute driving corridors based on previous computation of reachable sets and drivable area
     """
-    def __init__(self, reachable_sets: Dict[int, List[Union[pycrreachset.ReachNode, ReachNode]]],
+    def __init__(self, reachable_sets: Dict[int, List[Union[pycrreach.ReachNode, ReachNode]]],
                  config: Configuration):
         self.config = config
         self.reach_set = reachable_sets
@@ -115,9 +115,9 @@ class DrivingCorridors:
 
     def _create_reachset_connected_components_graph_backwards(self, driving_corridors_list: List[int], graph: nx.Graph,
                                                               node_id: int, time_idx: int,
-                                                              reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]],
+                                                              reach_set_nodes: List[Union[pycrreach.ReachNode, ReachNode]],
                                                               lon_pos: Union[Dict[int, float], None] = None,
-                                                              lon_driving_corridor: Union[Dict[int, List[pycrreachset.ReachNode]], None] = None):
+                                                              lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None):
         """
         Traverses graph of connected reachable sets backwards in time and extracts paths starting from a terminal set.
         A path within the graph corresponds to a possible driving corridor
@@ -207,7 +207,7 @@ class DrivingCorridors:
         """
         # determine overlapping reachable set nodes (i.e., connected sets)
         if self.backend == "CPP":
-            overlap = pycrreachset.connected_reachset_boost(reach_set_nodes, DIGITS)
+            overlap = pycrreach.connected_reachset_boost(reach_set_nodes, DIGITS)
         elif self.backend == "PYTHON":
             overlap = util_geometry.connected_reachset_py(reach_set_nodes, DIGITS)
         else:
@@ -238,7 +238,7 @@ class DrivingCorridors:
         return connected_reach_sets_list
 
     @staticmethod
-    def _determine_reachset_overlap_with_longitudinal_position(reach_set_nodes: List[Union[pycrreachset.ReachNode,
+    def _determine_reachset_overlap_with_longitudinal_position(reach_set_nodes: List[Union[pycrreach.ReachNode,
                                                                                            ReachNode]],
                                                                lon_pos: float):
         """
@@ -256,7 +256,7 @@ class DrivingCorridors:
         return reach_set_nodes_overlap
 
     @staticmethod
-    def _determine_area_of_driving_corridor(driving_corridor: Dict[int, List[Union[pycrreachset.ReachNode, ReachNode]]]):
+    def _determine_area_of_driving_corridor(driving_corridor: Dict[int, List[Union[pycrreach.ReachNode, ReachNode]]]):
         """
         Function to compute the cumulative area of a driving corridor, i.e.,
         :param driving_corridor:

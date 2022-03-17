@@ -67,19 +67,44 @@ def compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
     return curvature
 
 
+def compute_initial_state_cart(config):
+    """Computes the initial Cartesian state of the ego vehicle given a planning problem."""
+    planning_problem = config.planning_problem
+    wheelbase = config.vehicle.ego.wheelbase
+
+    x, y = planning_problem.initial_state.position
+    o = planning_problem.initial_state.orientation
+    v = planning_problem.initial_state.velocity
+
+    if config.planning.reference_point == "CENTER":
+        pass
+
+    elif config.planning.reference_point == "REAR":
+        x = x - wheelbase / 2 * np.cos(o)
+        y = y - wheelbase / 2 * np.sin(o)
+
+    else:
+        raise Exception(f"Unknown reference point: {config.planning.reference_point}")
+
+    v_x = v * np.cos(o)
+    v_y = v * np.sin(o)
+
+    return (x, y), (v_x, v_y), o
+
+
 def compute_initial_state_cvln(config):
-    """Computes the initial state of the ego vehicle given a planning problem.
+    """Computes the initial curvilinear state of the ego vehicle given a planning problem.
 
     For the transformation of the ego vehicle's velocity to the curvilinear coordinate system, it is assumed
     that d*kappa_ref << 1 holds, where d is the distance of the ego vehicle to the reference path and kappa_ref
     is the curvature of the reference path
     """
     planning_problem = config.planning_problem
+    wheelbase = config.vehicle.ego.wheelbase
+
     x, y = planning_problem.initial_state.position
     orientation = planning_problem.initial_state.orientation
     v = planning_problem.initial_state.velocity
-
-    wheelbase = config.vehicle.ego.wheelbase
 
     if config.planning.reference_point == "CENTER":
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(x, y)
@@ -88,7 +113,7 @@ def compute_initial_state_cvln(config):
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(
             x - wheelbase / 2 * np.cos(orientation), y - wheelbase / 2 * np.sin(orientation))
     else:
-        raise Exception(f" Unknown reference point: {config.planning.reference_point}")
+        raise Exception(f"Unknown reference point: {config.planning.reference_point}")
 
     reference_path = config.planning.reference_path
     ref_orientation = compute_orientation_from_polyline(reference_path)

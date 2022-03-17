@@ -2,10 +2,11 @@
 set(CRDC_INCLUDE
         ${CRDC_DIR}/cpp/collision/include # drivability checker
         ${CRDC_DIR}/cpp/geometry/include) # curvilinear collision checker
+
 set(CRDC_LIBRARY
-        ${CRDC_DIR}/commonroad_dc/libcrcc.a         # drivability checker
-        ${CRDC_DIR}/commonroad_dc/libtriangle.a     # triangle library (static dependency of libcrcc.a)
-        ${CRDC_DIR}/commonroad_dc/libcrccosy.a      # curvilinear collision checker
+        ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
+        ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
+        ${CRDC_DIR}/commonroad_dc/libtriangle.a # curvilinear collision checker
         CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant include directories
@@ -22,14 +23,14 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_segment.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_interface.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_analysis.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_set.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/miscellaneous.cpp
         CACHE STRING "" FORCE)
-# ====
+
+# ========= building playground
 # 1. create executables which uses the source files set above
 add_executable(playground
         ${CMAKE_CURRENT_LIST_DIR}/src/playground.cpp
@@ -39,14 +40,14 @@ target_include_directories(playground PRIVATE
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
 target_link_libraries(playground PRIVATE
-        yaml-cpp
         ${CRDC_LIBRARY}
         fcl
         ccd
         ${S11N_LIBRARY}
+        yaml-cpp
         pybind11::embed)
 
-# ==== unit tests using Doctest
+# ========= unit tests using Doctest
 if(ADD_TESTS)
     # 1. create target
     add_executable(doctest_runner

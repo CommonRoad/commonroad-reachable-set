@@ -161,7 +161,7 @@ def area_of_reachable_set(list_reach_set_nodes: List[ReachNode]) -> float:
 def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: int):
     """
     Function determines connected sets in the position domain within a given list of reachable set nodes
-    This function is the equivalent python function to pycrreachset.connected_reachset_boost().
+    This function is the equivalent python function to pycrreach.connected_reachset_boost().
     Returns a dictionary with key=node idx in list and value=list of tuples
     :param list_reach_set_nodes: list of reachable set node
     :param no_of_digits
