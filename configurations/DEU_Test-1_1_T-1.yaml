@@ -8,6 +8,8 @@ reachable_set:
   size_grid: 0.25
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
+#  name_pickle_offline: offline_30_0.5_5.0_30.0.pickle
+  name_pickle_offline: offline_33_ms6_dx0.5_amax5.0_vmax30.0_ver0.0.1.pickle
 
 vehicle:
   ego:

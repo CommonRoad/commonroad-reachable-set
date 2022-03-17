@@ -1,7 +1,9 @@
 import copy
-from typing import List
+from collections import defaultdict
+from typing import Optional, Dict, Set
 
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from shapely import affinity
 
 
 class ReachNode:
@@ -16,17 +18,21 @@ class ReachNode:
     """
     cnt_id = 0
 
-    def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
-        self._polygon_lon = polygon_lon
-        self._polygon_lat = polygon_lat
+    def __init__(self, polygon_lon: ReachPolygon, polygon_lat: ReachPolygon, time_step: int = -1):
+        self._polygon_lon: ReachPolygon = polygon_lon
+        self._polygon_lat: ReachPolygon = polygon_lat
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
         self._bounds_lat = polygon_lat.bounds if polygon_lat else None
+
+        self.position_rectangle: Optional[ReachPolygon] = None
+        if self._bounds_lon and self._bounds_lat:
+            self.update_position_rectangle()
 
         self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
         self.time_step = time_step
-        self.list_nodes_parent: List[ReachNode] = list()
-        self.list_nodes_child: List[ReachNode] = list()
+        self.nodes_parent: Set[ReachNode] = set()
+        self.nodes_child: Set[ReachNode] = set()
 
         # the node from which the current node is propagated
         self.source_propagation = None
@@ -137,22 +143,29 @@ class ReachNode:
     def v_y_max(self):
         return self.v_lat_max
 
-    @property
-    def position_rectangle(self) -> ReachPolygon:
-        """Base set projected onto the position domain."""
-        tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
-
-        return ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
-
     def clone(self):
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
                                self.time_step)
-        node_clone.list_nodes_parent = copy.deepcopy(self.list_nodes_parent)
-        node_clone.list_nodes_child = copy.deepcopy(self.list_nodes_child)
+        node_clone.nodes_parent = copy.deepcopy(self.nodes_parent)
+        node_clone.nodes_child = copy.deepcopy(self.nodes_child)
         node_clone.source_propagation = self.source_propagation
 
         return node_clone
+
+    def update_position_rectangle(self):
+        tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
+
+        self.position_rectangle = ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
+
+    def translate(self, p_lon_off: float=0.0, v_lon_off: float=0.0, p_lat_off: float=0.0, v_lat_off: float=0.0)\
+            -> "ReachNode":
+        """Creates a copy translated by offsets."""
+        return ReachNode(ReachPolygon.from_polygon(affinity.translate(self.polygon_lon,
+                                                                      xoff=p_lon_off, yoff=v_lon_off)),
+                         ReachPolygon.from_polygon(affinity.translate(self.polygon_lat,
+                                                                      xoff=p_lat_off, yoff=v_lat_off)),
+                         time_step=self.time_step)
 
     @classmethod
     def reset_class_id_counter(cls):
@@ -160,35 +173,23 @@ class ReachNode:
 
     def add_parent_node(self, node_parent: "ReachNode") -> bool:
         """Adds a parent node into the list."""
-        if node_parent not in self.list_nodes_parent:
-            self.list_nodes_parent.append(node_parent)
-            return True
-
-        return False
+        self.nodes_parent.add(node_parent)
 
     def remove_parent_node(self, node_parent: "ReachNode") -> bool:
         """Removes a parent node from the list."""
-        if node_parent in self.list_nodes_parent:
-            self.list_nodes_parent.remove(node_parent)
-            return True
-
-        return False
+        was_parent = node_parent in self.nodes_parent
+        self.nodes_parent.remove(node_parent)
+        return was_parent
 
     def add_child_node(self, node_child: "ReachNode") -> bool:
         """Adds a child node into the list."""
-        if node_child not in self.list_nodes_child:
-            self.list_nodes_child.append(node_child)
-            return True
-
-        return False
+        self.nodes_child.add(node_child)
 
     def remove_child_node(self, node_child: "ReachNode") -> bool:
         """Removes a child node from the list."""
-        if node_child in self.list_nodes_child:
-            self.list_nodes_child.remove(node_child)
-            return True
-
-        return False
+        was_child = node_child in self.nodes_child
+        self.nodes_child.remove(node_child)
+        return was_child
 
     def intersect_in_position_domain(self, p_lon_min, p_lat_min, p_lon_max, p_lat_max):
         """Intersects with the given rectangle in position domain"""
@@ -210,39 +211,48 @@ class ReachNodeMultiGeneration(ReachNode):
 
     In addition to the ReachNode class, this class holds additional lists for grandparent and grandchild nodes.
     """
+
     def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
         super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
-        self.list_nodes_grandparent: List[ReachNodeMultiGeneration] = list()
-        self.list_nodes_grandchild: List[ReachNodeMultiGeneration] = list()
+        self.list_nodes_grandparent: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
+        self.list_nodes_grandchild: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
 
     def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandparent node into the list."""
-        if node_grandparent not in self.list_nodes_grandparent:
-            self.list_nodes_grandparent.append(node_grandparent)
+        delta_steps = self.time_step - node_grandparent.time_step
+        assert delta_steps > 1, f"not a grand_parent: node_grandparent.time_step={node_grandparent.time_step}, " \
+                                f"self.time_step={self.time_step}"
+        if node_grandparent not in self.list_nodes_grandparent[delta_steps]:
+            self.list_nodes_grandparent[delta_steps].add(node_grandparent)
             return True
 
         return False
 
     def remove_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Removes a grandparent node from the list."""
-        if node_grandparent in self.list_nodes_grandparent:
-            self.list_nodes_grandparent.remove(node_grandparent)
+        delta_steps = self.time_step - node_grandparent.time_step
+        if node_grandparent in self.list_nodes_grandparent[delta_steps]:
+            self.list_nodes_grandparent[delta_steps].remove(node_grandparent)
             return True
 
         return False
 
     def add_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandchild node into the list."""
-        if node_grandchild not in self.list_nodes_grandchild:
-            self.list_nodes_grandchild.append(node_grandchild)
+        delta_steps = node_grandchild.time_step - self.time_step
+        assert delta_steps > 1, f"not a grandchild: node_grandchild.time_step={node_grandchild.time_step}, " \
+                                f"self.time_step={self.time_step}"
+        if node_grandchild not in self.list_nodes_grandchild[delta_steps]:
+            self.list_nodes_grandchild[delta_steps].add(node_grandchild)
             return True
 
         return False
 
     def remove_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
         """Removes a grandchild node from the list."""
-        if node_grandchild in self.list_nodes_grandchild:
-            self.list_nodes_grandchild.remove(node_grandchild)
+        delta_steps = node_grandchild.time_step - self.time_step
+        if node_grandchild in self.list_nodes_grandchild[delta_steps]:
+            self.list_nodes_grandchild[delta_steps].remove(node_grandchild)
             return True
 
         return False

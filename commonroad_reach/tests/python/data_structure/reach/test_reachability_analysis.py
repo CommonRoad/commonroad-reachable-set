@@ -1,7 +1,8 @@
 import numpy as np
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_analysis import ReachabilityAnalysis
+#from pycrreachset import ReachabilityAnalysis
+from pycrreachset import ReachabilityAnalysis
 
 
 def test_reachability_analysis_initialization(config: Configuration):

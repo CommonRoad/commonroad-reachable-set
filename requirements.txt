@@ -1,14 +1,16 @@
 commonroad-io>=2021.3
+commonroad-route-planner>=2022.1
 omegaconf>=2.1.1
 
-pytest~=6.2.2
-setuptools~=50.3.2
-numpy~=1.19.2
-typing~=3.7.4.3
-shapely~=1.7.0
-enum34~=1.1.10
-imageio~=2.9.0
-seaborn~=0.10.0
-matplotlib~=3.3.3
-scipy~=1.4.1
-networkx~=2.5
+pytest>=6.2.2
+setuptools>=50.3.2
+numpy>=1.19.2
+typing>=3.7.4.3
+shapely>=1.7.0
+enum34>=1.1.10
+imageio>=2.9.0
+seaborn>=0.10.0
+matplotlib>=3.3.3
+scipy>=1.4.1
+networkx>=2.5
+opencv-python>=4.5

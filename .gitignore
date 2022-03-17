@@ -24,3 +24,7 @@ commonroad_reach/graph_reach/*.so
 commonroad_reach/graph_reach/build/
 
 *.log
+
+*.svg
+
+output/offline_data/offline_33_ms6_dx0.5_amax5.0_vmax30.0_ver0.0.1.pickle

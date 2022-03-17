@@ -3,6 +3,7 @@ import math
 
 logger = logging.getLogger(__name__)
 
+import numpy as np
 from typing import Optional, Union
 
 import pycrreachset as reach
@@ -22,13 +23,13 @@ class Configuration:
         self.scenario: Optional[Scenario] = None
         self.planning_problem: Optional[PlanningProblem] = None
 
-        self.general = GeneralConfiguration(config)
-        self.vehicle = VehicleConfiguration(config)
-        self.planning = PlanningConfiguration(config)
-        self.reachable_set = ReachableSetConfiguration(config)
-        self.debug = DebugConfiguration(config)
+        self.general: GeneralConfiguration = GeneralConfiguration(config)
+        self.vehicle: VehicleConfiguration = VehicleConfiguration(config)
+        self.planning: PlanningConfiguration = PlanningConfiguration(config)
+        self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config)
+        self.debug: DebugConfiguration = DebugConfiguration(config)
 
-    def complete_configuration(self, scenario, planning_problem):
+    def complete_configuration(self, scenario: Scenario, planning_problem: PlanningProblem):
         self.scenario = scenario
         self.planning_problem = planning_problem
 
@@ -50,11 +51,9 @@ class Configuration:
         elif self.reachable_set.mode == 3:
             mode = "Single-step, C++ backend with C++ collision checker"
         elif self.reachable_set.mode == 4:
-            mode = "Multi-step (online), Python backend with Python collision checker"
+            mode = "Graph-based (online), Python backend with C++ collision checker"
         elif self.reachable_set.mode == 5:
-            mode = "Multi-step (online), Python backend with C++ collision checker"
-        elif self.reachable_set.mode == 6:
-            mode = "Multi-step (offline), Python backend"
+            mode = "Graph-based (offline), Python backend"
         else:
             mode = "Undefined"
 
@@ -245,13 +244,13 @@ class PlanningConfiguration:
         self.lanelet_network = scenario.lanelet_network
         self.time_step_initial = planning_problem.initial_state.time_step
 
-        if not config.reachable_set.mode == 6:
+        if not config.reachable_set.mode == 5:
             if self.coordinate_system == "CART":
                 self.p_lon_initial = planning_problem.initial_state.position[0]
                 self.p_lat_initial = planning_problem.initial_state.position[1]
-                self.v_lon_initial = planning_problem.initial_state.velocity * \
+                self.v_lon_initial = planning_problem.initial_state.velocity *\
                                      math.cos(planning_problem.initial_state.orientation)
-                self.v_lat_initial = planning_problem.initial_state.velocity * \
+                self.v_lat_initial = planning_problem.initial_state.velocity *\
                                      math.sin(planning_problem.initial_state.orientation)
                 self.id_lanelet_initial = 0
                 self.o_initial = planning_problem.initial_state.orientation
@@ -277,6 +276,14 @@ class PlanningConfiguration:
             self.p_lon_initial = self.p_lat_initial = 0
             self.v_lon_initial = self.v_lat_initial = 0
             self.o_initial = 0
+    
+    @property
+    def p_lon_lat_initial(self):
+        return np.array([self.p_lon_initial, self.p_lat_initial])
+
+    @property
+    def v_lon_lat_initial(self):
+        return np.array([self.v_lon_initial, self.v_lat_initial])
 
 
 class ReachableSetConfiguration:
@@ -292,6 +299,7 @@ class ReachableSetConfiguration:
 
         self.consider_traffic = config_relevant.consider_traffic
         self.name_pickle_offline = config_relevant.name_pickle_offline
+        self.n_multi_steps = config_relevant.n_multi_steps
 
 
 class DebugConfiguration:

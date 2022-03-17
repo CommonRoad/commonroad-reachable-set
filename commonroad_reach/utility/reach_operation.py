@@ -154,14 +154,7 @@ def propagate_polygon(polygon: ReachPolygon, polygon_zero_state: ReachPolygon, d
 
 def project_base_sets_to_position_domain(list_base_sets_propagated: List[ReachNode]) -> List[ReachPolygon]:
     """Returns a list of rectangles projected onto the position domain."""
-    list_rectangles_projected = []
-    for base_set in list_base_sets_propagated:
-        p_lon_min, p_lon_max = base_set.polygon_lon.p_min, base_set.polygon_lon.p_max
-        p_lat_min, p_lat_max = base_set.polygon_lat.p_min, base_set.polygon_lat.p_max
-        list_rectangles_projected.append(
-            ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max))
-
-    return list_rectangles_projected
+    return [base_set.position_rectangle for base_set in list_base_sets_propagated]
 
 
 def create_repartitioned_rectangles(list_rectangles: List[ReachPolygon], size_grid: float) -> List[ReachPolygon]:

@@ -14,7 +14,7 @@ class ConfigurationBuilder:
 
     @classmethod
     def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1,
-                            path_root: str = os.path.join(os.getcwd(), ".."),
+                            path_root: str = os.path.normpath(os.path.join(os.path.dirname(__file__), "../..")),
                             dir_config: str = "configurations", dir_config_default: str = "defaults") -> Configuration:
         """Builds configuration from default and scenario-specific config files.
 

@@ -35,7 +35,6 @@ class CppCollisionChecker:
 
         elif self.config.planning.coordinate_system == "CVLN":
             self.collision_checker = self._create_curvilinear_collision_checker()
-
         else:
             message = "Undefined coordinate system."
             logger.error(message)
