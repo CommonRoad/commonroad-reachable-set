@@ -1,0 +1,21 @@
+planning:
+  dt: 0.1
+  time_steps_computation: 30
+  coordinate_system: "CVLN"
+
+vehicle:
+  ego:
+    # velocity in m/s
+    v_lon_min: 0.0
+
+reachable_set:
+  mode: 3
+  size_grid: 0.25
+  size_grid_2nd: 0.05
+  radius_terminal_split: 0.5
+  num_threads: 4
+
+debug:
+  draw_ref_path: True
+  draw_planning_problem: True
+  draw_icons: True
