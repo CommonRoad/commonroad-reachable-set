@@ -182,30 +182,30 @@ class ReachPolygon(Polygon, ABC):
         list_vertices = []
 
         if b == 0:
-            # horizontal
-            if a > 0:  # x <= c
-                list_vertices.append([c, y_min - margin])
-                list_vertices.append([c, y_max + margin])
+            # vertical
+            if a > 0:  # x <= c/a
+                list_vertices.append([c/a, y_min - margin])
+                list_vertices.append([c/a, y_max + margin])
                 list_vertices.append([x_min - margin, y_max + margin])
                 list_vertices.append([x_min - margin, y_min - margin])
 
-            else:  # -x <= c
-                list_vertices.append([-c, y_min - margin])
-                list_vertices.append([-c, y_max + margin])
+            else:  # x >= c/a
+                list_vertices.append([c/a, y_min - margin])
+                list_vertices.append([c/a, y_max + margin])
                 list_vertices.append([x_max + margin, y_max + margin])
                 list_vertices.append([x_max + margin, y_min - margin])
 
         elif a == 0:
-            # vertical
-            if b > 0:  # y <= c
-                list_vertices.append([x_min - margin, c])
-                list_vertices.append([x_max + margin, c])
+            # horizontal
+            if b > 0:  # by <= c
+                list_vertices.append([x_min - margin, c/b])
+                list_vertices.append([x_max + margin, c/b])
                 list_vertices.append([x_max + margin, y_min - margin])
                 list_vertices.append([x_min - margin, y_min - margin])
 
-            else:  # -y <= c
-                list_vertices.append([x_min - margin, -c])
-                list_vertices.append([x_max + margin, -c])
+            else:  # by <= c
+                list_vertices.append([x_min - margin, c/b])
+                list_vertices.append([x_max + margin, c/b])
                 list_vertices.append([x_max + margin, y_max + margin])
                 list_vertices.append([x_min - margin, y_max + margin])
 
