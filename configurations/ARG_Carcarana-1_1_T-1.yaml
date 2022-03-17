@@ -10,7 +10,7 @@ vehicle:
 
 reachable_set:
   mode: 3
-  size_grid: 0.25
+  size_grid: 0.2
   size_grid_2nd: 0.05
   radius_terminal_split: 0.5
   num_threads: 4
@@ -19,3 +19,6 @@ debug:
   draw_ref_path: True
   draw_planning_problem: True
   draw_icons: True
+  plot_azimuth: -62       # paper: -62
+  plot_elevation: 30      # paper: 30
+  ax_distance: 6          # paper: 6
