@@ -38,12 +38,12 @@ class ReachableSetInterface:
             raise Exception(message)
 
     @property
-    def reachable_set(self):
-        return self._reach.dict_time_to_reachable_set
-
-    @property
     def drivable_area(self):
         return self._reach.dict_time_to_drivable_area
+
+    @property
+    def reachable_set(self):
+        return self._reach.dict_time_to_reachable_set
 
     def drivable_area_at_time_step(self, time_step: int):
         if not self._reachable_set_computed and time_step != 0:

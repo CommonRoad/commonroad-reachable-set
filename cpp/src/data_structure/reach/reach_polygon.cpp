@@ -11,7 +11,7 @@ ReachPolygon::ReachPolygon(vector<tuple<double, double>> const& vec_vertices) {
     // prepare a vector of Boost.Geometry points
     vector<GeometryPoint> vec_points_geometry;
     vec_points_geometry.reserve(vec_vertices.size());
-    for (auto const& vertex :vec_vertices) {
+    for (auto const& vertex: vec_vertices) {
         vec_points_geometry.emplace_back(GeometryPoint{std::get<0>(vertex), std::get<1>(vertex)});
     }
 
@@ -96,26 +96,26 @@ ReachPolygonPtr ReachPolygon::construct_halfspace_polygon(double const& a, doubl
 
     vector<tuple<double, double>> vec_vertices;
     if (b == 0) { // horizontal
-        if (a > 0) { // x <= c
-            vec_vertices.emplace_back(make_tuple(c, y_min - margin));
-            vec_vertices.emplace_back(make_tuple(c, y_max + margin));
+        if (a > 0) { // ax <= c
+            vec_vertices.emplace_back(make_tuple(c / a, y_min - margin));
+            vec_vertices.emplace_back(make_tuple(c / a, y_max + margin));
             vec_vertices.emplace_back(make_tuple(x_min - margin, y_max + margin));
             vec_vertices.emplace_back(make_tuple(x_min - margin, y_min - margin));
-        } else { // -x <= c
-            vec_vertices.emplace_back(make_tuple(-c, y_min - margin));
-            vec_vertices.emplace_back(make_tuple(-c, y_max + margin));
+        } else { // -ax <= c
+            vec_vertices.emplace_back(make_tuple(c / a, y_min - margin));
+            vec_vertices.emplace_back(make_tuple(c / a, y_max + margin));
             vec_vertices.emplace_back(make_tuple(x_max + margin, y_max + margin));
             vec_vertices.emplace_back(make_tuple(x_max + margin, y_min - margin));
         }
     } else if (a == 0) { // vertical
-        if (b > 0) { // y <= c
-            vec_vertices.emplace_back(make_tuple(x_min - margin, c));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, c));
+        if (b > 0) { // by <= c
+            vec_vertices.emplace_back(make_tuple(x_min - margin, c / b));
+            vec_vertices.emplace_back(make_tuple(x_max + margin, c / b));
             vec_vertices.emplace_back(make_tuple(x_max + margin, y_min - margin));
             vec_vertices.emplace_back(make_tuple(x_min - margin, y_min - margin));
-        } else { // -y <= c
-            vec_vertices.emplace_back(make_tuple(x_min - margin, -c));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, -c));
+        } else { // -by <= c
+            vec_vertices.emplace_back(make_tuple(x_min - margin, c / b));
+            vec_vertices.emplace_back(make_tuple(x_max + margin, c / b));
             vec_vertices.emplace_back(make_tuple(x_max + margin, y_max + margin));
             vec_vertices.emplace_back(make_tuple(x_min - margin, y_max + margin));
         }
@@ -169,7 +169,7 @@ void ReachPolygon::linear_mapping(double const& a11, double const& a12, double c
 
 
 void ReachPolygon::print_vertices() const {
-    for (auto const& vertex :vertices()) {
+    for (auto const& vertex: vertices()) {
         cout << "\t(" << bg::get<0>(vertex) << ", " << bg::get<1>(vertex) << "), " << endl;
     }
 }

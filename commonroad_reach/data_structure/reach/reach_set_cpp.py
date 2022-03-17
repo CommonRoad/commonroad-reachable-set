@@ -24,11 +24,11 @@ class CppReachableSet(ReachableSet):
         """Computes reachable sets for the specified time steps."""
         for time_step in range(time_step_start, time_step_end + 1):
             logger.debug(f"Computing reachable set for time step {time_step}")
-            self._reach.compute_at_time_step(time_step)
+            self._reach.compute_reachable_sets(time_step, time_step)
             self._list_time_steps_computed.append(time_step)
 
-        self._dict_time_to_drivable_area = self._reach.map_time_to_drivable_area
-        self._dict_time_to_reachable_set = self._reach.map_time_to_reachable_set
+        self._dict_time_to_drivable_area = self._reach.drivable_area()
+        self._dict_time_to_reachable_set = self._reach.reachable_set()
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
             self._prune_nodes_not_reaching_final_time_step()

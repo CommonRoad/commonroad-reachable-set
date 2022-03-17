@@ -5,5 +5,5 @@ PYBIND11_MODULE(pycrreach, m) {
 
     export_data_structures(m);
     export_utility(m);
-    export_reachable_set(m);
+    export_reach(m);
 }

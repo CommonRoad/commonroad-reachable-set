@@ -23,7 +23,7 @@ void export_data_structures(py::module& m);
 
 void export_utility(py::module& m);
 
-void export_reachable_set(py::module& m);
+void export_reach(py::module& m);
 
 // ----
 
@@ -35,4 +35,4 @@ void export_reach_node(py::module& m);
 
 void export_reachable_set_interface(py::module& m);
 
-void export_reachability_analysis(py::module& m);
+void export_reachable_set(py::module& m);

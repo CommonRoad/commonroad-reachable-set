@@ -74,11 +74,11 @@ int main() {
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
     collision_checker->timeSlice(10);
 
-     //======== visualization of results
-    auto utils_visualization = py::module_::import("commonroad_reach.utility.visualization");
-    utils_visualization.attr("draw_scenario_with_reach_cpp")(obj_config_py, reach_interface,
-                                                             py::arg("save_gif") = true,
-                                                             py::arg("save_fig") = false);
+    // //======== visualization of results
+    //auto utils_visualization = py::module_::import("commonroad_reach.utility.visualization");
+    //utils_visualization.attr("draw_scenario_with_reach_cpp")(obj_config_py, reach_interface,
+    //                                                         py::arg("save_gif") = true,
+    //                                                         py::arg("save_fig") = false);
 
     cout << "Done." << endl;
 
