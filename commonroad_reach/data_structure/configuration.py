@@ -1,4 +1,5 @@
 import logging
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -248,8 +249,10 @@ class PlanningConfiguration:
             if self.coordinate_system == "CART":
                 self.p_lon_initial = planning_problem.initial_state.position[0]
                 self.p_lat_initial = planning_problem.initial_state.position[1]
-                self.v_lon_initial = planning_problem.initial_state.velocity
-                self.v_lat_initial = 0
+                self.v_lon_initial = planning_problem.initial_state.velocity * \
+                                     math.cos(planning_problem.initial_state.orientation)
+                self.v_lat_initial = planning_problem.initial_state.velocity * \
+                                     math.sin(planning_problem.initial_state.orientation)
                 self.id_lanelet_initial = 0
                 self.o_initial = planning_problem.initial_state.orientation
 

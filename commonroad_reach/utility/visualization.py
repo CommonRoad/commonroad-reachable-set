@@ -75,7 +75,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
         renderer.render()
 
         if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19, linewidth=1.0)
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         if config.debug.save_plots:
             save_fig(as_svg, path_output, time_step)
@@ -222,7 +222,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         # draw reference path
         if config.debug.draw_ref_path and ref_path is not None:
             renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
-                             linewidth=3.0)
+                             linewidth=1.5)
 
         if config.debug.save_plots:
             plt.savefig(f'{path_output}{"lon_driving_corridor"}_{dc_id}_complete.png',
@@ -258,7 +258,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
             # draw reference path
             if config.debug.draw_ref_path and ref_path is not None:
                 renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
-                                 linewidth=3.0)
+                                 linewidth=1.5)
 
             if config.debug.save_plots:
                 save_format = "svg" if as_svg else "png"
@@ -267,8 +267,6 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
                     format=save_format, bbox_inches="tight", transparent=False)
 
         if config.debug.save_plots and animation:
-            if as_svg:
-                warnings.warn("GIF creation not possible if as_svg option is set to True")
             make_gif(path_output_lon_dc, "lon_driving_corridor_", time_step_end, ("lon_driving_corridor_%s" % dc_id))
 
     message = ("\tDriving corridor %s plotted." % dc_id)
@@ -318,8 +316,8 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     Path(path_output).mkdir(parents=True, exist_ok=True)
 
     # settings for 3d view
-    interval = 0.08
-    height = 0.02
+    interval = 0.04
+    height = 0.04
 
     # 3D rendering of lanelet network
     _render_lanelet_network_3d(lanelet_network, ax)
@@ -341,7 +339,7 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     # axis settings
     ax.set_xlim(plot_limits[0:2])
     ax.set_ylim(plot_limits[2:4])
-    ax.set_zlim([0, 5])
+    ax.set_zlim([0, 3.5])
     # ax.set_xticks([])
     # ax.set_yticks([])
     # ax.set_zticks([])
@@ -505,7 +503,7 @@ def _render_obstacle_3d(occupancy_rect: Rectangle, ax,  z_tuple: Tuple):
     pc.set_facecolor("#1d7eea")
     pc.set_edgecolor("#00478f")
     pc.set_linewidth(0.5)
-    pc.set_alpha(0.7)
+    pc.set_alpha(0.9)
     pc.set_zorder(20)
     ax.add_collection3d(pc)
 
