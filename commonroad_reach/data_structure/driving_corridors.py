@@ -13,6 +13,7 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.utility import geometry as util_geometry
 
 
+# TODO Integrate driving corridor extractions into ReachableSetInterface class
 # TODO add overlap with specific terminal set (e.g., goal region)
 
 # scaling factor (avoid numerical errors)
@@ -41,9 +42,16 @@ class DrivingCorridors:
         self._reach_set = reachable_sets
         self.time_steps = sorted(list(reachable_sets.keys()))
 
-    def compute_driving_corridor(self,
-                                 lon_positions: Union[List[float], None] = None,
-                                 lon_driving_corridor: Union[Dict[int, List[pycrreachset.ReachNode]], None] = None)\
+    def extract_lon_driving_corridor(self):
+        pass
+
+    def extract_lat_driving_corridor(self):
+        pass
+
+    def extract_driving_corridors(self,
+                                  terminal_set = None,
+                                  lon_positions: Union[List[float], None] = None,
+                                  lon_driving_corridor: Union[Dict[int, List[pycrreachset.ReachNode]], None] = None)\
             -> List[Dict[int, List[pycrreachset.ReachNode]]]:
         """
         Function identifies driving corridors within the reachable sets. If no parameters are passed, then a
@@ -170,7 +178,11 @@ class DrivingCorridors:
             return
 
         # determine connected components in parent reach sets
-        connected_components = self._determine_connected_components(list(filtered_parent_reach_set_nodes))
+        if time_idx > 5:
+            remove_small = True
+        else:
+            remove_small = False
+        connected_components = self._determine_connected_components(list(filtered_parent_reach_set_nodes), remove_small)
 
         # recursion backwards in time
         for cc in connected_components:
@@ -186,7 +198,7 @@ class DrivingCorridors:
                 lon_pos,
                 lon_driving_corridor)
 
-    def _determine_connected_components(self, reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]]):
+    def _determine_connected_components(self, reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]], remove_small=False):
         """
         Determines and returns the connected reachable sets in positions domain within the list of given base sets (i.e.,
         reachable set nodes)
@@ -216,6 +228,10 @@ class DrivingCorridors:
         for i, connected_reach_set_nodes_idx in enumerate(nx.connected_components(graph)):
             connected_reach_sets.append([reach_set_nodes[j] for j in connected_reach_set_nodes_idx])
             heuristic.append(util_geometry.area_of_reachable_set(connected_reach_sets[-1]))
+
+            if remove_small and len(connected_reach_set_nodes_idx) <= 2 and heuristic[-1] < 0.05:
+                del connected_reach_sets[-1]
+                del heuristic[-1]
 
         connected_reach_sets_list = [elem for _, elem in sorted(zip(heuristic, connected_reach_sets),
                                                                 key=lambda pair: pair[0], reverse=True)]
