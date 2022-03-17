@@ -12,7 +12,6 @@
 #include "reachset/data_structure/reach/reach_node.hpp"
 #include "reachset/data_structure/configuration.hpp"
 
-#include "reachset/data_structure/reach/reach_interface.hpp"
 #include "reachset/data_structure/reach/reach_set.hpp"
 
 #include "reachset/utility/collision_checker.hpp"
@@ -32,7 +31,5 @@ void export_configuration(py::module& m);
 void export_reach_polygon(py::module& m);
 
 void export_reach_node(py::module& m);
-
-void export_reachable_set_interface(py::module& m);
 
 void export_reachable_set(py::module& m);

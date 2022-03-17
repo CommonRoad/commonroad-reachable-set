@@ -13,9 +13,12 @@ namespace reach {
 /// Reachable set representation for the ego vehicle.
 class ReachableSet {
 private:
+    bool _reachable_set_computed{false};
     bool _prune_reachable_set{false};
     bool _pruned{false};
     std::vector<int> _vec_time_steps_computed{0};
+
+    void _initialize();
 
     /// Initializes the zero-state polygons of the system.
     void _initialize_zero_state_polygons();
@@ -70,7 +73,15 @@ public:
         } else return map_time_to_reachable_set[time_step];
     }
 
-    void compute_reachable_sets(int const& step_start, int const& step_end);
+    inline std::map<int, std::vector<ReachPolygonPtr>> drivable_area() const {
+        return map_time_to_drivable_area;
+    }
+
+    inline std::map<int, std::vector<ReachNodePtr>> reachable_set() const {
+        return map_time_to_reachable_set;
+    }
+
+    void compute(int const& step_start, int const& step_end);
 };
 
 using ReachableSetPtr = shared_ptr<ReachableSet>;

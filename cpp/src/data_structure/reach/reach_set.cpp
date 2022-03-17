@@ -7,18 +7,23 @@
 using namespace reach;
 
 ReachableSet::ReachableSet(ConfigurationPtr config) : config(std::move(config)) {
-    _initialize_zero_state_polygons();
-    map_time_to_drivable_area[time_step_start] = _construct_initial_drivable_area();
-    map_time_to_reachable_set[time_step_start] = _construct_initial_reachable_set();
+    _initialize();
 }
 
 ReachableSet::ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collision_checker) :
         config(std::move(config)), collision_checker(std::move(collision_checker)) {
-    _initialize_zero_state_polygons();
-    map_time_to_drivable_area[time_step_start] = _construct_initial_drivable_area();
-    map_time_to_reachable_set[time_step_start] = _construct_initial_reachable_set();
+    _initialize();
 }
 
+void ReachableSet::_initialize(){
+    time_step_start = config->planning().time_step_start;
+    time_step_end = time_step_start + config->planning().time_steps_computation;
+    time_step_start = config->planning().time_step_start;
+    map_time_to_drivable_area[time_step_start] = _construct_initial_drivable_area();
+    map_time_to_reachable_set[time_step_start] = _construct_initial_reachable_set();
+
+    _initialize_zero_state_polygons();
+}
 /// @note Computation of the reachable set of an LTI system requires the zero-state response and
 /// the zero-input response of the system.
 void ReachableSet::_initialize_zero_state_polygons() {
@@ -51,7 +56,7 @@ std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const
     return vec_node;
 }
 
-void ReachableSet::compute_reachable_sets(int const& step_start, int const& step_end) {
+void ReachableSet::compute(int const& step_start, int const& step_end) {
     for (auto time_step = step_start; time_step < step_end + 1; time_step++) {
         _compute_drivable_area_at_time_step(time_step);
         _compute_reachable_set_at_time_step(time_step);

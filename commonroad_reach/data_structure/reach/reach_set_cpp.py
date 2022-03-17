@@ -18,13 +18,13 @@ class CppReachableSet(ReachableSet):
         config_cpp = self.config.convert_to_cpp_configuration()
 
         cc = CppCollisionChecker(self.config)
-        self._reach = reach.ReachableSetInterface(config_cpp, cc.collision_checker)
+        self._reach = reach.ReachableSet(config_cpp, cc.collision_checker)
 
     def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
         for time_step in range(time_step_start, time_step_end + 1):
             logger.debug(f"Computing reachable set for time step {time_step}")
-            self._reach.compute_reachable_sets(time_step, time_step)
+            self._reach.compute(time_step, time_step)
             self._list_time_steps_computed.append(time_step)
 
         self._dict_time_to_drivable_area = self._reach.drivable_area()
