@@ -22,7 +22,7 @@ bool SweepLine::Event::operator==(const Event& other) const {
 /// 1. create a segment tree with min/max lateral position of rectangles
 /// 2. create events of line sweeping: left = ENTER, right = EXIT
 /// 3. create vertical segments with events
-vector<ReachSegmentPtr>
+vector<ReachLinePtr>
 SweepLine::obtain_vertical_segments_from_rectangles(vector<ReachPolygonPtr> const& vec_rectangles) {
     if (vec_rectangles.empty())
         return {};
@@ -100,8 +100,8 @@ void SweepLine::sort_events(std::vector<EventPtr>& vec_events) {
 }
 
 /// For each event, query the tree to get the nonactive intervals, which is the desired vertical segment.
-vector<ReachSegmentPtr> SweepLine::create_vertical_segments_from_events(vector<EventPtr> const& vec_events) {
-    vector<ReachSegmentPtr> vec_segments_vertical;
+vector<ReachLinePtr> SweepLine::create_vertical_segments_from_events(vector<EventPtr> const& vec_events) {
+    vector<ReachLinePtr> vec_segments_vertical;
 
     for (auto const& event: vec_events) {
         if (event->type == EventType::ENTER) {
@@ -123,8 +123,8 @@ vector<ReachSegmentPtr> SweepLine::create_vertical_segments_from_events(vector<E
     return vec_segments_vertical;
 }
 
-vector<ReachSegmentPtr> SweepLine::create_vertical_segments_from_event(EventPtr const& event) {
-    vector<ReachSegmentPtr> vec_segments;
+vector<ReachLinePtr> SweepLine::create_vertical_segments_from_event(EventPtr const& event) {
+    vector<ReachLinePtr> vec_segments;
 
     auto stack_intervals_lat = SweepLine::tree_counter.get_stack_of_non_active_intervals(event->p_lat_low,
                                                                                          event->p_lat_high);
@@ -136,7 +136,7 @@ vector<ReachSegmentPtr> SweepLine::create_vertical_segments_from_event(EventPtr 
         stack_intervals_lat.pop();
         auto p_lon = event->p_lon;
 
-        vec_segments.emplace_back(make_shared<ReachSegment>(p_lon, p_lat_low, p_lon, p_lat_high));
+        vec_segments.emplace_back(make_shared<ReachLine>(p_lon, p_lat_low, p_lon, p_lat_high));
     }
 
     return vec_segments;
@@ -147,7 +147,7 @@ vector<ReachSegmentPtr> SweepLine::create_vertical_segments_from_event(EventPtr 
 /// 2. Create a dictionary that maps p_lon to a list of rectangles whose left edge is aligned with p_lon.
 /// 3. Merge rectangles that share the same coordinates of of p_lat.
 vector<ReachPolygonPtr>
-SweepLine::create_rectangles_from_vertical_segments(vector<ReachSegmentPtr> const& vec_segments) {
+SweepLine::create_rectangles_from_vertical_segments(vector<ReachLinePtr> const& vec_segments) {
     // Step 1
     auto[p_lat_min_segments, p_lat_max_segments] = compute_extremum_lateral_positions_of_segments(vec_segments);
     SweepLine::tree_toggle = ToggleSegmentTree(p_lat_min_segments, p_lat_max_segments);
@@ -162,7 +162,7 @@ SweepLine::create_rectangles_from_vertical_segments(vector<ReachSegmentPtr> cons
 }
 
 tuple<double, double>
-SweepLine::compute_extremum_lateral_positions_of_segments(vector<ReachSegmentPtr> const& vec_segments) {
+SweepLine::compute_extremum_lateral_positions_of_segments(vector<ReachLinePtr> const& vec_segments) {
     auto p_lat_min_segments = std::numeric_limits<double>::infinity();
     auto p_lat_max_segments = -std::numeric_limits<double>::infinity();
 
@@ -179,7 +179,7 @@ SweepLine::compute_extremum_lateral_positions_of_segments(vector<ReachSegmentPtr
 /// 2. Iterate through p_lon, retrieve relevant tuples of p_lat and toggle the status of segments between these p_lat
 /// in the segment tree. Get intervals of active segments and create rectangles.
 map<double, vector<ReachPolygonPtr>>
-SweepLine::create_p_lon_to_rectangles_map(vector<ReachSegmentPtr> const& vec_segments) {
+SweepLine::create_p_lon_to_rectangles_map(vector<ReachLinePtr> const& vec_segments) {
     if (vec_segments.empty())
         return {};
 

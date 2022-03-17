@@ -19,8 +19,9 @@ set(REACH_INCLUDE_DIR
 # set a variable to hold all relevant cpp source files of reachable sets
 set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon2.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_node.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_segment.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_set.cpp
@@ -54,7 +55,6 @@ if(ADD_TESTS)
             ${REACH_SOURCE}
             ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_polygon.cpp
-            # ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_base_set.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_node.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp

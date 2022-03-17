@@ -1,7 +1,6 @@
 #pragma once
 namespace reach {
 /// Struct representing a vertex.
-/// Used in the computation of minkowski sum of polygons.
 struct Vertex {
     double x{};
     double y{};
@@ -10,12 +9,15 @@ struct Vertex {
 
     Vertex(double const& x, double const& y) : x(x), y(y) {};
 
+    inline double p_lon() const { return x; }
+
+    inline double p_lat() const { return y; }
+
     Vertex operator-(Vertex const& other) const { return Vertex{x - other.x, y - other.y}; }
 
     Vertex operator+(Vertex const& other) const { return Vertex{x + other.x, y + other.y}; }
 
     /// Compares the angles of two vertices.
-    /// @note Taken from Stefanie Manzinger's implementation.
     static bool compare_angle(Vertex const& vertex1, Vertex const& vertex2);
 };
 
