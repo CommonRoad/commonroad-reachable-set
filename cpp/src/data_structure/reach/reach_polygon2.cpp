@@ -18,7 +18,7 @@ ReachPolygon2::ReachPolygon2(vector<Vertex> const& vec_vertices) {
     _sorting_state = unsorted;
 }
 
-ReachPolygon2::ReachPolygon2(vector<tuple<double,double>> const& vec_vertices){
+ReachPolygon2::ReachPolygon2(vector<tuple<double, double>> const& vec_vertices) {
     if (vec_vertices.size() < 3)
         throw std::invalid_argument("A polygon requires at least 3 vertices.");
 
@@ -149,7 +149,7 @@ void ReachPolygon2::sort_vertices_bottom_left_first() {
             if (vec_vertices[min_i].x > vec_vertices[i].x) {
                 min_i = i;
             } else if (vec_vertices[min_i].x == vec_vertices[i].x) {
-                std::cout << i << " " << vec_vertices[min_i].x << " " << vec_vertices[i].x << std::endl;
+                ;
             }
         }
     }
@@ -212,17 +212,18 @@ void ReachPolygon2::convexify() {
 /// If the intersected polyhedron is empty or equals the original one, then there is no valid q and r.
 /// The new polygon is constructed using the vertices[r..q] plus the two intersections point with the halfspace.
 void ReachPolygon2::intersect_halfspace(double a1, double a2, double b) {
-    convexify();
     if (vec_vertices.empty()) { return; }
 
     bool any_inside = false;
-    auto inside = [&a1, &a2, &b, &any_inside, this](size_t i) {
+
+    auto inside = [&a1, &a2, &b, &any_inside, this](std::size_t i) {
         bool ret = (a1 * vec_vertices[i].x + a2 * vec_vertices[i].y < b);
-        if (ret) { any_inside = true; }
+        if (ret) { any_inside = true; };
         return ret;
     };
 
-    // intersection between a line in parametric representation and another line given by two points
+    // intersection between a line in parametric representation and another line
+    // given by two points
     auto intersection = [&a1, &a2, &b](Vertex& pt1, Vertex& pt2) {
         double a21 = pt2.y - pt1.y;
         double a22 = -(pt2.x - pt1.x);
@@ -235,7 +236,6 @@ void ReachPolygon2::intersect_halfspace(double a1, double a2, double b) {
     if (vec_vertices.size() == 1) {
         if (inside(0)) {
             return;
-
         } else {
             vec_vertices.clear();
             _sorting_state = ccw;
@@ -243,10 +243,10 @@ void ReachPolygon2::intersect_halfspace(double a1, double a2, double b) {
         }
     }
 
-    size_t q = -1; // q is inside, prev(q) is not inside
-    size_t r = -1; // r is inside, next(r) is not inside
+    int q = -1; // q is inside, prev(q) is not inside
+    int r = -1; // r is inside, next(r) is not inside
 
-    for (int i = 1; i < vec_vertices.size() - 1; i++) {
+    for (size_t i = 1; i < vec_vertices.size() - 1; i++) {
         if (inside(i)) {
             if (!inside(i - 1)) { q = i; }
             if (!inside(i + 1)) { r = i; }
@@ -262,25 +262,26 @@ void ReachPolygon2::intersect_halfspace(double a1, double a2, double b) {
     if (q == -1) {
         if (any_inside) {
             return;
-
         } else {
-            // polygon is empty
+            // polyhedron is empty
             vec_vertices.clear();
             _sorting_state = ccw;
             return;
         }
     }
 
-    size_t qq = q - 1 < 0 ? vec_vertices.size() - 1 : q - 1; // qq = prev(q)
-    size_t rr = r + 1 > vec_vertices.size() - 1 ? 0 : r + 1; // rr = next(rr)
+    int qq = q - 1 < 0 ? vec_vertices.size() - 1 : q - 1; // qq = prev(q)
+    int rr = r + 1 > vec_vertices.size() - 1 ? 0 : r + 1; // rr = next(rr)
 
-    // create new polygon by taking i elements from old and add two intersection points.
-    // This is not correct if the polyhedron has only two vertices, but "_remove_duplicated_vertices" corrects this.
-    std::size_t n = (r >= q ? r - q + 1 : r + vec_vertices.size() - q + 1);
-    std::vector<Vertex> vertices_new;
+    // create new polygon by taking i elements from old and add two intersection
+    // points.
+    // This is not correct if the polyhedron has only two vertices, but
+    // "removeDuplicateVec2" corrects this.
+    size_t n = (r >= q ? r - q + 1 : r + vec_vertices.size() - q + 1);
+    vector<Vertex> vertices_new;
     vertices_new.reserve(n + 2);
     for (size_t i = 0; i < n; i++) {
-        vertices_new.emplace_back(get_vertex_with_cyclic_index(q + i));
+        vertices_new.push_back(get_vertex_with_cyclic_index(q + i));
     }
 
     vertices_new.emplace_back(intersection(vec_vertices[r], vec_vertices[rr]));
@@ -300,7 +301,6 @@ void ReachPolygon2::minkowski_sum(std::shared_ptr<ReachPolygon2> const& polygon_
     auto polygon_sum = make_shared<ReachPolygon2>();
     vector<tuple<double, double>> vec_vertices_sum;
     // prepare for summation by convexify and sorting the vertices of the polygons
-    convexify();
     sort_vertices_bottom_left_first();
 
     auto vertices_self = this->vertices();

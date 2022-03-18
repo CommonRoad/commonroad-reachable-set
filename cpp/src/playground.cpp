@@ -20,29 +20,6 @@ namespace py = pybind11;
 
 using CollisionCheckerPtr = collision::CollisionCheckerPtr;
 
-
-//int main() {
-//    vector<Vertex> vec_vertices = {Vertex{-1, -1},
-//                                   Vertex{1, -1},
-//                                   Vertex{0, 1},
-//                                   Vertex{-1, -1}};
-//
-//    auto polygon1 = make_shared<ReachPolygon2>(vec_vertices);
-//
-//    vec_vertices.clear();
-//    vec_vertices = {Vertex{3, -1},
-//                    Vertex{5, -1},
-//                    Vertex{5, 1,},
-//                    Vertex{3, 1},
-//                    Vertex{3, -1}};
-//
-//    auto polygon2 = make_shared<ReachPolygon2>(vec_vertices);
-//
-//    polygon1->minkowski_sum(polygon2);
-//
-//    polygon1->print_info();
-//}
-
 int main() {
     // start the python interpreter and keep it alive
     py::scoped_interpreter python{};

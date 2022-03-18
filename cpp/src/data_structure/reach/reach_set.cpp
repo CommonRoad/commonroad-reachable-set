@@ -28,7 +28,6 @@ vector<ReachPolygon2Ptr> ReachableSet::_construct_initial_drivable_area() const 
     vector<ReachPolygon2Ptr> vec_polygon;
 
     auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(config);
-    //vec_polygon.emplace_back(std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices));
     vec_polygon.emplace_back(make_shared<ReachPolygon2>(std::get<0>(tuple_vertices),
                                                         std::get<1>(tuple_vertices),
                                                         std::get<2>(tuple_vertices),
@@ -57,9 +56,6 @@ void ReachableSet::_initialize_zero_state_polygons() {
     polygon_zero_state_lat = create_zero_state_polygon(config->planning().dt,
                                                        config->vehicle().ego.a_lat_min,
                                                        config->vehicle().ego.a_lat_max);
-    polygon_zero_state_lon->print_info();
-    polygon_zero_state_lat->print_info();
-    cout << "#===" << endl;
 }
 
 void ReachableSet::compute(int step_start, int step_end) {
@@ -70,10 +66,6 @@ void ReachableSet::compute(int step_start, int step_end) {
         _compute_drivable_area_at_time_step(time_step);
         _compute_reachable_set_at_time_step(time_step);
         _vec_time_steps_computed.emplace_back(time_step);
-
-        if (map_time_to_drivable_area[time_step].empty()) {
-            cout << "gotcha @" << time_step << endl;
-        }
     }
 
     if (_prune_reachable_set) {
@@ -122,8 +114,6 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
     {
         vector<ReachNodePtr> vec_base_sets_propagated_thread;
         vec_base_sets_propagated_thread.reserve(vec_nodes.size());
-        //auto polygon_zero_state_lon_thread = polygon_zero_state_lon->clone();
-        //auto polygon_zero_state_lat_thread = polygon_zero_state_lat->clone();
 
 #pragma omp for nowait
         for (auto const& node: vec_nodes) {

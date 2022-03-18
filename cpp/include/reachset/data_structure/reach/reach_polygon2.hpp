@@ -118,14 +118,12 @@ public:
     };
 
     inline void linear_mapping(double a11, double a12, double a21, double a22) {
-        convexify();
         for (auto& vertex: vec_vertices) {
             double tmp = a11 * vertex.x + a12 * vertex.y;
             vertex.y = a21 * vertex.x + a22 * vertex.y;
             vertex.x = tmp;
         }
         _sorting_state = ccw;
-        _remove_duplicated_vertices();
     }
 
     inline std::shared_ptr<ReachPolygon2> clone() const {

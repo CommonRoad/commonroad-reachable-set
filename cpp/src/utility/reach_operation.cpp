@@ -122,8 +122,6 @@ reach::generate_tuples_vertices_polygons_initial(ConfigurationPtr const& config)
 /// 5. intersect with halfspaces to consider velocity limits
 ReachPolygon2Ptr reach::propagate_polygon(ReachPolygon2Ptr const& polygon, ReachPolygon2Ptr const& polygon_zero_state,
                                           double const& dt, double const& v_min, double const& v_max) {
-
-    polygon_zero_state->print_info();
     // create a new object (does not modify the passed in pointer)
     auto polygon_propagated = polygon->clone();
     polygon_propagated->linear_mapping(1, dt, 0, 1);
