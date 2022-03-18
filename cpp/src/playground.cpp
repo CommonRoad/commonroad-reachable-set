@@ -7,7 +7,7 @@
 
 #include "collision/collision_checker.h"
 #include "geometry/curvilinear_coordinate_system.h"
-#include "reachset/data_structure/reach/reach_interface.hpp"
+#include "reachset/data_structure/reach/reach_set.hpp"
 #include "reachset/utility/collision_checker.hpp"
 #include "reachset/utility/miscellaneous.hpp"
 
@@ -63,13 +63,13 @@ int main() {
                                                  CLCS, radius_disc, 4);
 
     // ======== ReachableSetInterface
-    auto reach_interface = ReachableSetInterface(config, collision_checker);
+    auto reachable_set = ReachableSet(config, collision_checker);
 
-    //print_collision_checker(reach_interface.reachable_set->collision_checker());
+    //print_collision_checker(reachable_set.reachable_set->collision_checker());
 
     auto start = high_resolution_clock::now();
     cout << "Computing reachable sets..." << endl;
-    reach_interface.compute_reachable_sets();
+    reachable_set.compute();
     auto end = high_resolution_clock::now();
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
     collision_checker->timeSlice(10);
