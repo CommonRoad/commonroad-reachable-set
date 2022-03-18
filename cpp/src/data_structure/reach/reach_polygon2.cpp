@@ -7,15 +7,55 @@ ReachPolygon2::ReachPolygon2() {
     _sorting_state = unsorted;
 }
 
-ReachPolygon2::ReachPolygon2(vector<Vertex> const& vec_vertices){
+ReachPolygon2::ReachPolygon2(vector<Vertex> const& vec_vertices) {
+    if (vec_vertices.size() < 3)
+        throw std::invalid_argument("A polygon requires at least 3 vertices.");
+
     for (auto const& vertex: vec_vertices) {
         this->vec_vertices.emplace_back(vertex);
     }
+    compute_bounding_box();
     _sorting_state = unsorted;
 }
 
+ReachPolygon2::ReachPolygon2(vector<tuple<double,double>> const& vec_vertices){
+    if (vec_vertices.size() < 3)
+        throw std::invalid_argument("A polygon requires at least 3 vertices.");
+
+    for (auto const& vertex: vec_vertices) {
+        this->vec_vertices.emplace_back(Vertex{std::get<0>(vertex), std::get<1>(vertex)});
+    }
+    compute_bounding_box();
+    _sorting_state = unsorted;
+}
+
+ReachPolygon2::ReachPolygon2(double const& p_lon_min, double const& p_lat_min,
+                             double const& p_lon_max, double const& p_lat_max) {
+    vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_max},
+                                     Vertex{p_lon_min, p_lat_max}};
+    for (auto const& vertex: vec_vertices_temp) {
+        this->vec_vertices.emplace_back(vertex);
+    }
+    compute_bounding_box();
+    _sorting_state = ccw;
+}
+
+ReachPolygon2::ReachPolygon2(std::tuple<double, double, double, double> const& tuple_coordinates) {
+    auto[p_lon_min, p_lat_min, p_lon_max, p_lat_max] = tuple_coordinates;
+    vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_max},
+                                     Vertex{p_lon_min, p_lat_max}};
+    for (auto const& vertex: vec_vertices_temp) {
+        this->vec_vertices.emplace_back(vertex);
+    }
+    compute_bounding_box();
+    _sorting_state = ccw;
+}
+
 ReachPolygon2::ReachPolygon2(vector<ReachPolygon2Ptr> const& vec_polygons) {
-    // todo: replace by k-way merge
     auto num_vertices = vec_vertices.size();
     for (auto const& polygon: vec_polygons) {
         num_vertices += polygon->vec_vertices.size();
@@ -24,26 +64,62 @@ ReachPolygon2::ReachPolygon2(vector<ReachPolygon2Ptr> const& vec_polygons) {
 
     for (auto const& polygon: vec_polygons) {
         for (auto const& vertex: polygon->vec_vertices) {
-            vec_vertices.push_back(vertex);
+            vec_vertices.emplace_back(vertex);
         }
     }
+
+    if (vec_vertices.size() < 3)
+        throw std::invalid_argument("A polygon requires at least 3 vertices.");
+
+    compute_bounding_box();
     _sorting_state = unsorted;
+}
+
+void ReachPolygon2::_sort_vertices_left_to_right() {
+    if (_sorting_state == left_to_right) { return; }
+
+    std::sort(vec_vertices.begin(), vec_vertices.end(),
+              [](Vertex const& vertex1, Vertex const& vertex2) {
+                  if (vertex1.x < vertex2.x) { return true; }
+                  if (vertex1.x > vertex2.x) { return false; }
+                  if (vertex1.y < vertex2.y) { return true; }
+                  if (vertex1.y > vertex2.y) { return false; }
+                  return false;
+              });
+
+    _sorting_state = left_to_right;
+}
+
+/// Removes an element if it is equal to its predecessor is equal. The first element is compared with the last
+/// element. The meaning of the operation depends on how the vertex array is sorted.
+void ReachPolygon2::_remove_duplicated_vertices() {
+    // obtain unique vertices
+    auto idx_last = std::unique(vec_vertices.begin(), vec_vertices.end(),
+                                [](Vertex const& vertex1, Vertex const& vertex2) {
+                                    return vertex1.x == vertex2.x && vertex1.y == vertex2.y;
+                                });
+    vec_vertices.erase(idx_last, vec_vertices.end());
+
+    if (vec_vertices.size() > 1 &&
+        vec_vertices[vec_vertices.size() - 1].x == vec_vertices[0].x &&
+        vec_vertices[vec_vertices.size() - 1].y == vec_vertices[0].y) {
+        vec_vertices.erase(vec_vertices.begin());
+    }
 }
 
 void ReachPolygon2::print_info() const {
     auto num_vertices = vec_vertices.size();
     cout << "==============" << endl;
     cout << "# of vertices: " << num_vertices << endl;
-    cout << "bounding box: " << p_lon_min() << ", " << p_lat_min() << ", " << p_lon_max() << ", " << p_lat_max() << endl;
+    cout << "bounding box: " << p_lon_min() << ", " << p_lat_min() << ", " << p_lon_max() << ", " << p_lat_max()
+         << endl;
 
     for (auto const& vec: vec_vertices) {
         cout << "(" << vec.x << ", " << vec.y << ")" << endl;
     }
 }
 
-void ReachPolygon2::update_bounding_box() {
-    assert(vec_vertices.size() > 0);
-
+void ReachPolygon2::compute_bounding_box() {
     auto p_lon_min = std::numeric_limits<double>::infinity();
     auto p_lat_min = std::numeric_limits<double>::infinity();
     auto p_lon_max = -std::numeric_limits<double>::infinity();
@@ -59,21 +135,8 @@ void ReachPolygon2::update_bounding_box() {
     _box = {p_lon_min, p_lat_min, p_lon_max, p_lat_max};
 }
 
-void ReachPolygon2::_sort_vertices_left_to_right() {
-    if (_sorting_state == left_to_right) { return; }
 
-    std::sort(vec_vertices.begin(), vec_vertices.end(),
-              [](Vertex const& vertex1, Vertex const& vertex2) {
-                  if (vertex1.x < vertex2.x) { return true; }
-                  if (vertex1.x > vertex2.x) { return false; }
-                  if (vertex1.y < vertex2.y) { return true; }
-                  if (vertex1.y > vertex2.y) { return false; }
-                  return false;
-              });
-    _sorting_state = left_to_right;
-}
-
-void ReachPolygon2::_sort_vertices_bottom_left_first() {
+void ReachPolygon2::sort_vertices_bottom_left_first() {
     if (_sorting_state == ccw_bottom_left_first) { return; }
     convexify();
 
@@ -102,23 +165,6 @@ void ReachPolygon2::_sort_vertices_bottom_left_first() {
     _sorting_state = ccw_bottom_left_first;
 }
 
-/// Removes an element if it is equal to its predecessor is equal. The first element is compared with the last
-/// element. The meaning of the operation depends on how the vertex array is sorted.
-void ReachPolygon2::_remove_duplicated_vertices() {
-    // obtain unique vertices
-    auto idx_last = std::unique(vec_vertices.begin(), vec_vertices.end(),
-                                [](Vertex const& vertex1, Vertex const& vertex2) {
-                                    return vertex1.x == vertex2.x && vertex1.y == vertex2.y;
-                                });
-    vec_vertices.erase(idx_last, vec_vertices.end());
-
-    if (vec_vertices.size() > 1 &&
-        vec_vertices[vec_vertices.size() - 1].x == vec_vertices[0].x &&
-        vec_vertices[vec_vertices.size() - 1].y == vec_vertices[0].y) {
-        vec_vertices.erase(vec_vertices.begin());
-    }
-}
-
 void ReachPolygon2::convexify() {
     if (_sorting_state == ccw || _sorting_state == ccw_bottom_left_first) {
         return;
@@ -139,16 +185,16 @@ void ReachPolygon2::convexify() {
     int k = 0;
     vector<Vertex> hull(2 * vec_vertices.size());
 
-    // Build the lower hull
-    for (auto const& vertex: vec_vertices) {
+    // Build lower hull
+    for (auto& vertex: vec_vertices) {
         while (k >= 2 && cross(hull[k - 2], hull[k - 1], vertex) <= 0) {
             k--;
         }
         hull[k++] = vertex;
     }
 
-    // Build the upper hull
-    for (size_t i = vec_vertices.size() - 2, t = k + 1; i >= 0; i--) {
+    // Build upper hull
+    for (int i = vec_vertices.size() - 2, t = k + 1; i >= 0; i--) {
         while (k >= t && cross(hull[k - 2], hull[k - 1], vec_vertices[i]) <= 0) {
             k--;
         }
@@ -165,7 +211,7 @@ void ReachPolygon2::convexify() {
 /// vertex[r] is inside the intersected polyhedron, but its successor vertex not
 /// If the intersected polyhedron is empty or equals the original one, then there is no valid q and r.
 /// The new polygon is constructed using the vertices[r..q] plus the two intersections point with the halfspace.
-void ReachPolygon2::intersect_half_space(double a1, double a2, double b) {
+void ReachPolygon2::intersect_halfspace(double a1, double a2, double b) {
     convexify();
     if (vec_vertices.empty()) { return; }
 
@@ -234,7 +280,7 @@ void ReachPolygon2::intersect_half_space(double a1, double a2, double b) {
     std::vector<Vertex> vertices_new;
     vertices_new.reserve(n + 2);
     for (size_t i = 0; i < n; i++) {
-        vertices_new.push_back(get_vertex_with_cyclic_index(q + i));
+        vertices_new.emplace_back(get_vertex_with_cyclic_index(q + i));
     }
 
     vertices_new.emplace_back(intersection(vec_vertices[r], vec_vertices[rr]));
@@ -246,32 +292,74 @@ void ReachPolygon2::intersect_half_space(double a1, double a2, double b) {
 }
 
 
+void ReachPolygon2::minkowski_sum(std::shared_ptr<ReachPolygon2>& polygon_other) {
+    if (this->empty() or polygon_other->empty()) {
+        return;
+    }
 
-//ReachPolygon2::ReachPolygon2(vector<tuple<double, double>> const& vec_vertices) {
-//    if (vec_vertices.size() < 3)
-//        throw std::invalid_argument("<ReachPolygon> A polygon requires at least 3 vertices.");
-//
-//    // prepare a vector of Boost.Geometry points
-//    vector<GeometryPoint> vec_points_geometry;
-//    vec_points_geometry.reserve(vec_vertices.size());
-//    for (auto const& vertex: vec_vertices) {
-//        vec_points_geometry.emplace_back(GeometryPoint{std::get<0>(vertex), std::get<1>(vertex)});
-//    }
-//
-//    // create Boost.Geometry polygon
-//    _polygon = make_shared<GeometryPolygon>();
-//    _polygon->outer().assign(vec_points_geometry.begin(), vec_points_geometry.end());
-//    bg::correct(*_polygon);
-//
-//    // update bounding box of the polygon
-//    update_bounding_box();
-//}
-//
-//ReachPolygon2::ReachPolygon2(GeometryPolygon const& polygon, bool const& correct) {
-//    _polygon = make_shared<GeometryPolygon>();
-//    _polygon->outer().assign(polygon.outer().cbegin(), polygon.outer().cend());
-//    if (correct) bg::correct(*_polygon);
-//
-//    // update bounding box of the polygon
-//    update_bounding_box();
-//}
+    auto polygon_sum = make_shared<ReachPolygon2>();
+    vector<tuple<double, double>> vec_vertices_sum;
+    // prepare for summation by convexify and sorting the vertices of the polygons
+    convexify();
+    sort_vertices_bottom_left_first();
+    polygon_other->convexify();
+    polygon_other->sort_vertices_bottom_left_first();
+
+    auto vertices_self = this->vertices();
+    auto vertices_other = polygon_other->vertices();
+    auto const num_vertices_self = vertices_self.size();
+    auto const num_vertices_other = vertices_other.size();
+    bool reach_end_self = false, reach_end_other = false;
+    auto idx_self = 0, idx_other = 0;
+
+    Vertex vector_self, vector_other;
+    while (true) {
+        polygon_sum->add_vertex(get_vertex_with_cyclic_index(idx_self) +
+                                polygon_other->get_vertex_with_cyclic_index(idx_other));
+        vector_self = get_vertex_with_cyclic_index(idx_self + 1) -
+                      get_vertex_with_cyclic_index(idx_self);
+        vector_other = polygon_other->get_vertex_with_cyclic_index(idx_other + 1) -
+                       polygon_other->get_vertex_with_cyclic_index(idx_other);
+
+        if (reach_end_self)
+            idx_other++;
+
+        else if (reach_end_other)
+            idx_self++;
+
+        else {
+            if (Vertex::compare_angle(vector_self, vector_other))
+                idx_self++;
+
+            else if (Vertex::compare_angle(vector_other, vector_self))
+                idx_other++;
+
+            else {
+                idx_self++;
+                idx_other++;
+            }
+        }
+
+        if (idx_self >= num_vertices_self) {
+            reach_end_self = true;
+            idx_self = 0;
+        }
+
+        if (idx_other >= num_vertices_other) {
+            reach_end_other = true;
+            idx_other = 0;
+        }
+
+        if (reach_end_self and reach_end_other) {
+            break;
+        }
+
+    }
+
+    polygon_sum->_remove_duplicated_vertices();
+
+    vec_vertices.clear();
+    vec_vertices = polygon_sum->vertices();
+    _sorting_state = ccw_bottom_left_first;
+    compute_bounding_box();
+}

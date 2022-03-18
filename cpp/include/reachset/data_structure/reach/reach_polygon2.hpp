@@ -16,11 +16,12 @@ private:
     };
     SortingState _sorting_state;
 
-    std::tuple<double, double, double, double> _box{};
+    std::tuple<double, double, double, double> _box{std::numeric_limits<double>::infinity(),
+                                                    std::numeric_limits<double>::infinity(),
+                                                    -std::numeric_limits<double>::infinity(),
+                                                    -std::numeric_limits<double>::infinity()};
 
     void _sort_vertices_left_to_right();
-
-    void _sort_vertices_bottom_left_first();
 
     void _remove_duplicated_vertices();
 
@@ -31,11 +32,30 @@ public:
 
     explicit ReachPolygon2(std::vector<Vertex> const& vec_vertices);
 
+    explicit ReachPolygon2(std::vector<std::tuple<double,double>> const& vec_vertices);
+
+    explicit ReachPolygon2(std::tuple<double, double, double, double> const& tuple_coordinates);
+
+    ReachPolygon2(double const& p_lon_min, double const& p_lat_min, double const& p_lon_max, double const& p_lat_max);
+
     explicit ReachPolygon2(std::vector<std::shared_ptr<ReachPolygon2>> const& vec_polygons);
+
+    std::vector<Vertex> vec_vertices;
 
     void print_info() const;
 
-    std::vector<Vertex> vec_vertices;
+    /// Computes the bounding box of the polygon.
+    void compute_bounding_box();
+
+    void sort_vertices_bottom_left_first();
+
+    /// Convexify the polygon.
+    /// @note using Andrew monotone chain, see <a href="https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain">
+    void convexify();
+
+    void intersect_halfspace(double a1, double a2, double b);
+
+    void minkowski_sum(std::shared_ptr<ReachPolygon2>& other);
 
     inline std::tuple<double, double, double, double> bounding_box() const { return this->_box; }
 
@@ -61,9 +81,7 @@ public:
 
     inline bool empty() const { return vec_vertices.empty(); }
 
-    // todo: why need to convexify here?
-    inline std::vector<Vertex> const& vertices() {
-        convexify();
+    inline std::vector<Vertex> const& vertices() const {
         return vec_vertices;
     }
 
@@ -72,29 +90,34 @@ public:
         return vec_vertices[i % vec_vertices.size()];
     }
 
-    /// Updates the bounding box of the polygon.
-    void update_bounding_box();
-
     inline void add_vertex(double x, double y) {
-        vec_vertices.emplace_back(Vertex{x, y});
+        auto vertex = Vertex{x, y};
+        vec_vertices.emplace_back(vertex);
+        update_bounding_box(vertex);
         _sorting_state = unsorted;
     }
 
-    inline void add_vertex(Vertex v) {
-        vec_vertices.emplace_back(v);
+    inline void add_vertex(Vertex vertex) {
+        vec_vertices.emplace_back(vertex);
+        update_bounding_box(vertex);
         _sorting_state = unsorted;
     }
 
     inline void add_polygon(std::shared_ptr<ReachPolygon2> const& polygon) {
         vec_vertices.insert(vec_vertices.end(), polygon->vec_vertices.begin(), polygon->vec_vertices.end());
+        compute_bounding_box();
         _sorting_state = unsorted;
     }
 
-    /// Convexify the polygon.
-    /// @note using Andrew monotone chain, see <a href="https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain">
-    void convexify();
+    /// Updates the bounding box of the polygon.
+    inline void update_bounding_box(Vertex const& vertex) {
+        _box = {std::min(p_lon_min(), vertex.p_lon()),
+                std::min(p_lat_min(), vertex.p_lat()),
+                std::max(p_lon_max(), vertex.p_lon()),
+                std::max(p_lat_max(), vertex.p_lat())};
+    };
 
-    inline void linear_map(double a11, double a12, double a21, double a22) {
+    inline void linear_mapping(double a11, double a12, double a21, double a22) {
         convexify();
         for (auto& vertex: vec_vertices) {
             double tmp = a11 * vertex.x + a12 * vertex.y;
@@ -105,33 +128,10 @@ public:
         _remove_duplicated_vertices();
     }
 
-    void intersect_half_space(double a1, double a2, double b);
+    inline std::shared_ptr<ReachPolygon2> clone() const {
+        return std::make_shared<ReachPolygon2>(vec_vertices);
+    }
 
-
-
-
-
-
-
-
-
-
-    ///// Constructor of ReachPolygon.
-    ///// @param vec_vertices vector of tuples representing the vertices
-    //explicit ReachPolygon2(std::vector<std::tuple<double, double>> const& vec_vertices);
-    //
-    ////explicit ReachPolygon2(GeometryPolygon const& polygon, bool const& correct = true);
-    //
-    //
-    //std::shared_ptr<ReachPolygon2> clone() const;
-    //
-    //inline GeometryPolygonPtr geometry_polygon() { return this->_polygon; }
-    //
-    //inline GeometryRing vertices() const { return this->_polygon->outer(); }
-    //
-    //inline bool valid() const { return _polygon != nullptr; };
-    //
-    //
     ///// Intersects with the halfspace specified in the form of ax + by <= c.
     //void intersect_halfspace(double const& a, double const& b, double const& c);
     //

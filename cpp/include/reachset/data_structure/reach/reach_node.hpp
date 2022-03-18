@@ -1,7 +1,7 @@
 #pragma once
 
 #include "reachset/utility/shared_include.hpp"
-#include "reach_polygon.hpp"
+#include "reach_polygon2.hpp"
 
 namespace reach {
 /// Node within the reachability graph, also used in the reachable set computation.
@@ -18,8 +18,8 @@ private:
 public:
     int id{};
     int time_step{};
-    ReachPolygonPtr polygon_lon;
-    ReachPolygonPtr polygon_lat;
+    ReachPolygon2Ptr polygon_lon;
+    ReachPolygon2Ptr polygon_lat;
     std::tuple<double, double, double, double> box_lon;
     std::tuple<double, double, double, double> box_lat;
     // vector of nodes from which the current node is originated
@@ -32,7 +32,7 @@ public:
     /// @param time_step time step of the node
     /// @param polygon_lon longitudinal polygon of the node
     /// @param polygon_lat lateral polygon of the node
-    ReachNode(int const& time_step, ReachPolygonPtr const& polygon_lon, ReachPolygonPtr const& polygon_lat,
+    ReachNode(int const& time_step, ReachPolygon2Ptr const& polygon_lon, ReachPolygon2Ptr const& polygon_lat,
               std::set<std::string> const& set_propositions = {});
 
     std::shared_ptr<ReachNode> clone() const;
@@ -58,7 +58,7 @@ public:
     inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_child() const { return this->_vec_nodes_child; };
 
     /// Rectangle representing the projection of the node onto the position domain.
-    ReachPolygonPtr position_rectangle() const;
+    ReachPolygon2Ptr position_rectangle() const;
 
     bool add_parent_node(std::shared_ptr<ReachNode> const& node_parent);
 

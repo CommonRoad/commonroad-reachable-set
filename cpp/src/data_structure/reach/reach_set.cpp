@@ -15,7 +15,7 @@ ReachableSet::ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collisio
     _initialize();
 }
 
-void ReachableSet::_initialize(){
+void ReachableSet::_initialize() {
     time_step_start = config->planning().time_step_start;
     time_step_end = time_step_start + config->planning().time_steps_computation;
     time_step_start = config->planning().time_step_start;
@@ -24,6 +24,30 @@ void ReachableSet::_initialize(){
 
     _initialize_zero_state_polygons();
 }
+
+vector<ReachPolygon2Ptr> ReachableSet::_construct_initial_drivable_area() const {
+    vector<ReachPolygon2Ptr> vec_polygon;
+
+    auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(config);
+    //vec_polygon.emplace_back(std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices));
+    vec_polygon.emplace_back(make_shared<ReachPolygon2>(std::get<0>(tuple_vertices),
+                                                        std::get<1>(tuple_vertices),
+                                                        std::get<2>(tuple_vertices),
+                                                        std::get<3>(tuple_vertices)));
+    return vec_polygon;
+}
+
+std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const {
+    vector<ReachNodePtr> vec_node;
+
+    auto[tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] = generate_tuples_vertices_polygons_initial(config);
+    auto polygon_lon = make_shared<ReachPolygon2>(tuple_vertices_polygon_lon);
+    auto polygon_lat = make_shared<ReachPolygon2>(tuple_vertices_polygon_lat);
+    vec_node.emplace_back(make_shared<ReachNode>(config->planning().time_step_start, polygon_lon, polygon_lat));
+
+    return vec_node;
+}
+
 /// @note Computation of the reachable set of an LTI system requires the zero-state response and
 /// the zero-input response of the system.
 void ReachableSet::_initialize_zero_state_polygons() {
@@ -34,26 +58,6 @@ void ReachableSet::_initialize_zero_state_polygons() {
     polygon_zero_state_lat = create_zero_state_polygon(config->planning().dt,
                                                        config->vehicle().ego.a_lat_min,
                                                        config->vehicle().ego.a_lat_max);
-}
-
-vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
-    vector<ReachPolygonPtr> vec_polygon;
-
-    auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(config);
-    vec_polygon.emplace_back(std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices));
-
-    return vec_polygon;
-}
-
-std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const {
-    vector<ReachNodePtr> vec_node;
-
-    auto[tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] = generate_tuples_vertices_polygons_initial(config);
-    auto polygon_lon = std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices_polygon_lon);
-    auto polygon_lat = std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices_polygon_lat);
-    vec_node.emplace_back(make_shared<ReachNode>(config->planning().time_step_start, polygon_lon, polygon_lat));
-
-    return vec_node;
 }
 
 void ReachableSet::compute(int step_start, int step_end) {
