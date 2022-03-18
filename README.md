@@ -29,7 +29,9 @@ The following C++ third-party dependencies are included with the Drivability Che
 * build the project using (replace the flags accordingly):
 
 ```bash
-cmake -DCRDC_DIR="/path/to/drivability-checker-root" -DPYTHON_VERSION="X.X" ..
+cmake -DCRDC_DIR="/path/to/drivability-checker-root" -DPYTHON_VER="X.X" -DCMAKE_BUILD_TYPE=Release..
+
+make
 ```
 
 * optionally: to run the tests, include the flag `-DADD_TESTS=ON`
