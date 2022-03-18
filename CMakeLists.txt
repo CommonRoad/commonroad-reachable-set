@@ -4,7 +4,7 @@ project(reach) # project name
 option(ADD_TESTS "unit tests" OFF) # flag to add unit tests
 
 # ========= check for required variables
-if(NOT DEFINED PYTHON_VER)
+if(NOT DEFINED PYTHON_VERSION)
     message(FATAL_ERROR "Please specify the python version via -DPYTHON_VERSION=")
 endif()
 
@@ -14,15 +14,15 @@ endif()
 
 # ========= set variables
 # path to FCL installation in drivability checker
-set(FCL_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/cmake/fcl)
+set(FCL_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VERSION}/dist/lib/cmake/fcl)
 # path to CCD installation in drivability checker
-set(CCD_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/ccd)
+set(CCD_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VERSION}/dist/lib/ccd)
 
 # ========= find necessary packages
 find_package(Eigen3 REQUIRED) # Eigen3
 find_package(ccd REQUIRED) # for collision checks
 find_package(fcl REQUIRED) # for collision checks
-find_library(S11N_LIBRARY s11n HINTS ${CRDC_DIR}/build/lib.linux-x86_64-${PYTHON_VER}/commonroad_dc) # for object serialization in C++
+find_library(S11N_LIBRARY s11n HINTS ${CRDC_DIR}/build/lib.linux-x86_64-${PYTHON_VERSION}/commonroad_dc) # for object serialization in C++
 find_package(yaml-cpp REQUIRED) # for reading yaml files
 find_package(OpenMP REQUIRED) # for parallel computation
 if(ADD_TESTS)
