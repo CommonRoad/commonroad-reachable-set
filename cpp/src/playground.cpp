@@ -8,6 +8,7 @@
 #include "collision/collision_checker.h"
 #include "geometry/curvilinear_coordinate_system.h"
 #include "reachset/data_structure/reach/reach_set.hpp"
+#include "reachset/data_structure/reach/reach_polygon2.hpp"
 #include "reachset/utility/collision_checker.hpp"
 #include "reachset/utility/miscellaneous.hpp"
 
@@ -18,7 +19,6 @@ using std::chrono::milliseconds;
 namespace py = pybind11;
 
 using CollisionCheckerPtr = collision::CollisionCheckerPtr;
-
 
 int main() {
     // start the python interpreter and keep it alive
@@ -61,18 +61,14 @@ int main() {
             create_curvilinear_collision_checker(vec_vertices_polygons_static,
                                                  map_time_to_vec_vertices_polygons_dynamic,
                                                  CLCS, radius_disc, 4);
-
-    // ======== ReachableSetInterface
-    auto reachable_set = ReachableSet(config, collision_checker);
-
     //print_collision_checker(reachable_set.reachable_set->collision_checker());
-
+    // ======== ReachableSet
+    auto reachable_set = ReachableSet(config, collision_checker);
     auto start = high_resolution_clock::now();
     cout << "Computing reachable sets..." << endl;
     reachable_set.compute();
     auto end = high_resolution_clock::now();
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
-    collision_checker->timeSlice(10);
 
     // //======== visualization of results
     //auto utils_visualization = py::module_::import("commonroad_reach.utility.visualization");

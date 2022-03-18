@@ -1,8 +1,7 @@
 import logging
-from typing import Tuple, Union, List, Dict
-import warnings
-from copy import deepcopy
 import os
+from copy import deepcopy
+from typing import Tuple, Union, List, Dict
 
 logger = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -26,8 +25,7 @@ from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
-
-def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int= 0,
+def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int = 0,
                                       time_step_end: int = 0, plot_limits: Union[List, None] = None,
                                       path_output: str = None, as_svg: bool = False):
     config = reach_interface.config
@@ -77,7 +75,8 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
         renderer.render()
 
         if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
+                             linewidth=2.0)
 
         if config.debug.save_plots:
             save_fig(as_svg, path_output, time_step)
@@ -539,7 +538,7 @@ def _render_lanelet_network_3d(lanelet_network, ax):
 
 
 # TODO: can be merged with _compute_vertices_of_polyhedron
-def _render_obstacle_3d(occupancy_rect: Rectangle, ax,  z_tuple: Tuple):
+def _render_obstacle_3d(occupancy_rect: Rectangle, ax, z_tuple: Tuple):
     """
     Renders a 3d visualization of a CR obstacle occupancy (given as a CommonRoad Rectangle shape)
     """
@@ -579,5 +578,3 @@ def _render_obstacle_3d(occupancy_rect: Rectangle, ax,  z_tuple: Tuple):
     pc.set_alpha(0.9)
     pc.set_zorder(20)
     ax.add_collection3d(pc)
-
-

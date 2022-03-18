@@ -3,7 +3,7 @@ planning:
   coordinate_system: "CVLN"
 
 reachable_set:
-  mode: 2
+  mode: 3
   size_grid: 0.25
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7

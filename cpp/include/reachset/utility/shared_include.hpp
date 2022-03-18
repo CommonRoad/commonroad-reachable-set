@@ -19,5 +19,6 @@
 #include <iterator>
 
 #include <boost/algorithm/string.hpp>
+
 namespace ba = boost::algorithm;
 

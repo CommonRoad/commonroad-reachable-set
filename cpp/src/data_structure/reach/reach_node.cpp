@@ -5,7 +5,7 @@ using namespace reach;
 
 int ReachNode::cnt_id = 0;
 
-ReachNode::ReachNode(int const& time_step, ReachPolygonPtr const& polygon_lon, ReachPolygonPtr const& polygon_lat,
+ReachNode::ReachNode(int const& time_step, ReachPolygon2Ptr const& polygon_lon, ReachPolygon2Ptr const& polygon_lat,
                      set<string> const& set_propositions) :
         time_step(time_step), polygon_lon(polygon_lon), polygon_lat(polygon_lat), set_propositions(set_propositions) {
     id = ReachNode::cnt_id++;
@@ -23,9 +23,8 @@ ReachNodePtr ReachNode::clone() const {
     return node_clone;
 }
 
-ReachPolygonPtr ReachNode::position_rectangle() const {
-    return ReachPolygon::from_rectangle_coordinates(p_lon_min(), p_lat_min(),
-                                                    p_lon_max(), p_lat_max());
+ReachPolygon2Ptr ReachNode::position_rectangle() const {
+    return make_shared<ReachPolygon2>(p_lon_min(), p_lat_min(),p_lon_max(), p_lat_max());
 }
 
 bool ReachNode::add_parent_node(ReachNodePtr const& node_parent) {
