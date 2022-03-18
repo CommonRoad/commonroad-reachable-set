@@ -18,8 +18,8 @@ ReachPolygon2Ptr reach::create_zero_state_polygon(double const& dt, double const
 
     // Step 2
     for (auto& gamma: {0.0, 0.5, 1.0}) {
-        auto[tuple_coefficients_upper, tuple_coefficients_lower] = compute_halfspace_coefficients(dt, a_min, a_max,
-                                                                                                  gamma);
+        auto[tuple_coefficients_upper, tuple_coefficients_lower] =
+                compute_halfspace_coefficients(dt, a_min, a_max, gamma);
         polygon->intersect_halfspace(std::get<0>(tuple_coefficients_upper),
                                      std::get<1>(tuple_coefficients_upper),
                                      std::get<2>(tuple_coefficients_upper));
@@ -120,9 +120,10 @@ reach::generate_tuples_vertices_polygons_initial(ConfigurationPtr const& config)
 /// 3. convexify
 /// 4. compute the minkowski sum of zero-input and zero-state responses
 /// 5. intersect with halfspaces to consider velocity limits
-ReachPolygon2Ptr reach::propagate_polygon(ReachPolygon2Ptr const& polygon, ReachPolygon2Ptr& polygon_zero_state,
+ReachPolygon2Ptr reach::propagate_polygon(ReachPolygon2Ptr const& polygon, ReachPolygon2Ptr const& polygon_zero_state,
                                           double const& dt, double const& v_min, double const& v_max) {
 
+    polygon_zero_state->print_info();
     // create a new object (does not modify the passed in pointer)
     auto polygon_propagated = polygon->clone();
     polygon_propagated->linear_mapping(1, dt, 0, 1);

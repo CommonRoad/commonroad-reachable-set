@@ -18,7 +18,6 @@ ReachableSet::ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collisio
 void ReachableSet::_initialize() {
     time_step_start = config->planning().time_step_start;
     time_step_end = time_step_start + config->planning().time_steps_computation;
-    time_step_start = config->planning().time_step_start;
     map_time_to_drivable_area[time_step_start] = _construct_initial_drivable_area();
     map_time_to_reachable_set[time_step_start] = _construct_initial_reachable_set();
 
@@ -58,16 +57,23 @@ void ReachableSet::_initialize_zero_state_polygons() {
     polygon_zero_state_lat = create_zero_state_polygon(config->planning().dt,
                                                        config->vehicle().ego.a_lat_min,
                                                        config->vehicle().ego.a_lat_max);
+    polygon_zero_state_lon->print_info();
+    polygon_zero_state_lat->print_info();
+    cout << "#===" << endl;
 }
 
 void ReachableSet::compute(int step_start, int step_end) {
-    if (step_start == 0) step_start = time_step_start;
+    if (step_start == 0) step_start = time_step_start + 1;
     if (step_end == 0) step_end = time_step_end;
 
     for (auto time_step = step_start; time_step < step_end + 1; time_step++) {
         _compute_drivable_area_at_time_step(time_step);
         _compute_reachable_set_at_time_step(time_step);
         _vec_time_steps_computed.emplace_back(time_step);
+
+        if (map_time_to_drivable_area[time_step].empty()) {
+            cout << "gotcha @" << time_step << endl;
+        }
     }
 
     if (_prune_reachable_set) {
@@ -116,6 +122,8 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
     {
         vector<ReachNodePtr> vec_base_sets_propagated_thread;
         vec_base_sets_propagated_thread.reserve(vec_nodes.size());
+        //auto polygon_zero_state_lon_thread = polygon_zero_state_lon->clone();
+        //auto polygon_zero_state_lat_thread = polygon_zero_state_lat->clone();
 
 #pragma omp for nowait
         for (auto const& node: vec_nodes) {

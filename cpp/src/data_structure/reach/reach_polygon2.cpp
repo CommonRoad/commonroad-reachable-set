@@ -292,7 +292,7 @@ void ReachPolygon2::intersect_halfspace(double a1, double a2, double b) {
 }
 
 
-void ReachPolygon2::minkowski_sum(std::shared_ptr<ReachPolygon2>& polygon_other) {
+void ReachPolygon2::minkowski_sum(std::shared_ptr<ReachPolygon2> const& polygon_other) {
     if (this->empty() or polygon_other->empty()) {
         return;
     }
@@ -302,8 +302,6 @@ void ReachPolygon2::minkowski_sum(std::shared_ptr<ReachPolygon2>& polygon_other)
     // prepare for summation by convexify and sorting the vertices of the polygons
     convexify();
     sort_vertices_bottom_left_first();
-    polygon_other->convexify();
-    polygon_other->sort_vertices_bottom_left_first();
 
     auto vertices_self = this->vertices();
     auto vertices_other = polygon_other->vertices();

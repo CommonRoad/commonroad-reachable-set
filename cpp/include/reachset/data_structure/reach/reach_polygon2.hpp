@@ -32,7 +32,7 @@ public:
 
     explicit ReachPolygon2(std::vector<Vertex> const& vec_vertices);
 
-    explicit ReachPolygon2(std::vector<std::tuple<double,double>> const& vec_vertices);
+    explicit ReachPolygon2(std::vector<std::tuple<double, double>> const& vec_vertices);
 
     explicit ReachPolygon2(std::tuple<double, double, double, double> const& tuple_coordinates);
 
@@ -55,7 +55,7 @@ public:
 
     void intersect_halfspace(double a1, double a2, double b);
 
-    void minkowski_sum(std::shared_ptr<ReachPolygon2>& other);
+    void minkowski_sum(std::shared_ptr<ReachPolygon2> const& polygon_other);
 
     inline std::tuple<double, double, double, double> bounding_box() const { return this->_box; }
 

@@ -48,7 +48,7 @@ generate_tuples_vertices_polygons_initial(ConfigurationPtr const& config);
 /// @param v_min minimum velocity
 /// @param v_max maximum velocity
 /// @return pointer to the propagated polygon
-ReachPolygon2Ptr propagate_polygon(ReachPolygon2Ptr const& polygon, ReachPolygon2Ptr& polygon_zero_state,
+ReachPolygon2Ptr propagate_polygon(ReachPolygon2Ptr const& polygon, ReachPolygon2Ptr const& polygon_zero_state,
                                    double const& dt, double const& v_min, double const& v_max);
 
 /// Returns a list of rectangles in the position domain.
