@@ -56,7 +56,10 @@ std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const
     return vec_node;
 }
 
-void ReachableSet::compute(int const& step_start, int const& step_end) {
+void ReachableSet::compute(int step_start, int step_end) {
+    if (step_start == 0) step_start = time_step_start;
+    if (step_end == 0) step_end = time_step_end;
+
     for (auto time_step = step_start; time_step < step_end + 1; time_step++) {
         _compute_drivable_area_at_time_step(time_step);
         _compute_reachable_set_at_time_step(time_step);

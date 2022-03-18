@@ -16,7 +16,7 @@ private:
     };
     SortingState _sorting_state;
 
-    std::tuple<double, double, double, double> _box;
+    std::tuple<double, double, double, double> _box{};
 
     void _sort_vertices_left_to_right();
 
@@ -29,7 +29,11 @@ private:
 public:
     ReachPolygon2();
 
+    explicit ReachPolygon2(std::vector<Vertex> const& vec_vertices);
+
     explicit ReachPolygon2(std::vector<std::shared_ptr<ReachPolygon2>> const& vec_polygons);
+
+    void print_info() const;
 
     std::vector<Vertex> vec_vertices;
 
@@ -73,10 +77,12 @@ public:
 
     inline void add_vertex(double x, double y) {
         vec_vertices.emplace_back(Vertex{x, y});
+        _sorting_state = unsorted;
     }
 
     inline void add_vertex(Vertex v) {
         vec_vertices.emplace_back(v);
+        _sorting_state = unsorted;
     }
 
     inline void add_polygon(std::shared_ptr<ReachPolygon2> const& polygon) {

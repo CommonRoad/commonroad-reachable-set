@@ -7,6 +7,13 @@ ReachPolygon2::ReachPolygon2() {
     _sorting_state = unsorted;
 }
 
+ReachPolygon2::ReachPolygon2(vector<Vertex> const& vec_vertices){
+    for (auto const& vertex: vec_vertices) {
+        this->vec_vertices.emplace_back(vertex);
+    }
+    _sorting_state = unsorted;
+}
+
 ReachPolygon2::ReachPolygon2(vector<ReachPolygon2Ptr> const& vec_polygons) {
     // todo: replace by k-way merge
     auto num_vertices = vec_vertices.size();
@@ -21,6 +28,17 @@ ReachPolygon2::ReachPolygon2(vector<ReachPolygon2Ptr> const& vec_polygons) {
         }
     }
     _sorting_state = unsorted;
+}
+
+void ReachPolygon2::print_info() const {
+    auto num_vertices = vec_vertices.size();
+    cout << "==============" << endl;
+    cout << "# of vertices: " << num_vertices << endl;
+    cout << "bounding box: " << p_lon_min() << ", " << p_lat_min() << ", " << p_lon_max() << ", " << p_lat_max() << endl;
+
+    for (auto const& vec: vec_vertices) {
+        cout << "(" << vec.x << ", " << vec.y << ")" << endl;
+    }
 }
 
 void ReachPolygon2::update_bounding_box() {
@@ -52,8 +70,6 @@ void ReachPolygon2::_sort_vertices_left_to_right() {
                   if (vertex1.y > vertex2.y) { return false; }
                   return false;
               });
-
-    assert(std::is_sorted(vertices_.begin(), vertices_.end(), cmp));
     _sorting_state = left_to_right;
 }
 
@@ -124,7 +140,7 @@ void ReachPolygon2::convexify() {
     vector<Vertex> hull(2 * vec_vertices.size());
 
     // Build the lower hull
-    for (auto const& vertex : vec_vertices) {
+    for (auto const& vertex: vec_vertices) {
         while (k >= 2 && cross(hull[k - 2], hull[k - 1], vertex) <= 0) {
             k--;
         }
@@ -221,8 +237,8 @@ void ReachPolygon2::intersect_half_space(double a1, double a2, double b) {
         vertices_new.push_back(get_vertex_with_cyclic_index(q + i));
     }
 
-    vertices_new.push_back(intersection(vec_vertices[r], vec_vertices[rr]));
-    vertices_new.push_back(intersection(vec_vertices[q], vec_vertices[qq]));
+    vertices_new.emplace_back(intersection(vec_vertices[r], vec_vertices[rr]));
+    vertices_new.emplace_back(intersection(vec_vertices[q], vec_vertices[qq]));
 
     vec_vertices = vertices_new;
     _sorting_state = ccw;

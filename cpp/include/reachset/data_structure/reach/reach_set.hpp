@@ -81,7 +81,7 @@ public:
         return map_time_to_reachable_set;
     }
 
-    void compute(int const& step_start, int const& step_end);
+    void compute(int step_start = 0, int step_end = 0);
 };
 
 using ReachableSetPtr = shared_ptr<ReachableSet>;
