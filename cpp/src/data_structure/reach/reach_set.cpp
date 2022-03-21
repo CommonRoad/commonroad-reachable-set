@@ -84,24 +84,23 @@ void ReachableSet::_compute_drivable_area_at_time_step(int const& time_step) {
     if (reachable_set_previous.empty()) {
         return;
     }
-
+    
     auto vec_base_sets_propagated = _propagate_reachable_set(reachable_set_previous);
 
     auto vec_rectangles_projected = project_base_sets_to_position_domain(vec_base_sets_propagated);
 
-    auto vec_rectangles_repartitioned = create_repartitioned_rectangles(vec_rectangles_projected,
-                                                                        config->reachable_set().size_grid);
     auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
             std::floor(time_step * config->planning().dt * 10),
             collision_checker,
-            vec_rectangles_repartitioned,
+            vec_rectangles_projected,
             config->reachable_set().radius_terminal_split,
             config->reachable_set().num_threads);
 
-    auto drivable_area = create_repartitioned_rectangles(vec_rectangles_collision_free,
-                                                         config->reachable_set().size_grid_2nd);
+    auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
+            vec_rectangles_collision_free,
+            config->reachable_set().size_grid);
 
-    map_time_to_drivable_area[time_step] = drivable_area;
+    map_time_to_drivable_area[time_step] = vec_rectangles_repartitioned;
     map_time_to_base_set_propagated[time_step] = vec_base_sets_propagated;
 }
 

@@ -8,7 +8,7 @@ ego:
   width: 1.8
 
   # velocity in m/s
-  v_lon_min: 0.0
+  v_lon_min: -0.0
   v_lon_max: 20.0
   v_lat_min: -4.0
   v_lat_max: 4.0

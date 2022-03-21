@@ -9,6 +9,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 def main():
     dict_result = {}
     counter_scenario = 0
+    config = None
     for path_scenario in glob.glob("../scenarios/runtime/*.xml"):
         name_scenario = path_scenario.split("/")[-1].split(".")[0]
         counter_scenario += 1
@@ -27,7 +28,8 @@ def main():
         time.sleep(2)
 
     # save result as csv
-    with open('computation_result.csv', 'w') as csvfile:
+    coordinate_system = "cart" if config.planning.coordinate_system == "CART" else "cvln"
+    with open(f'computation_result_{config.reachable_set.mode}_{coordinate_system}.csv', 'w') as csvfile:
         writer_sheet = csv.writer(csvfile)
         writer_sheet.writerow(['scenario name', 'mode', 'computation time'])
 
