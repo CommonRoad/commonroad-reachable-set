@@ -3,22 +3,22 @@ import logging
 logger = logging.getLogger(__name__)
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Dict
 
 from commonroad_reach.data_structure.configuration import Configuration
 
 
 class ReachableSet(ABC):
-    """Abstract class for reachable set."""
+    """Abstract superclass for reachable sets."""
 
     def __init__(self, config: Configuration):
         self.config: Configuration = config
+
         self.time_step_start = config.planning.time_step_start
         self.time_step_end = config.planning.time_steps_computation + self.time_step_start
 
-        self._dict_time_to_base_set_propagated = defaultdict(list)
-        self._dict_time_to_drivable_area = defaultdict(list)
-        self._dict_time_to_reachable_set = defaultdict(list)
+        self.dict_time_to_base_set_propagated = defaultdict(list)
+        self.dict_time_to_drivable_area = defaultdict(list)
+        self.dict_time_to_reachable_set = defaultdict(list)
 
         self._prune_reachable_set = config.reachable_set.prune_nodes_not_reaching_final_time_step
         self._pruned = False
@@ -26,12 +26,16 @@ class ReachableSet(ABC):
         self._list_time_steps_computed = [0]
 
     @property
-    def dict_time_to_reachable_set(self) -> Dict:
-        return self._dict_time_to_reachable_set
+    def drivable_area(self):
+        return self.dict_time_to_drivable_area
 
     @property
-    def dict_time_to_drivable_area(self) -> Dict:
-        return self._dict_time_to_reachable_set
+    def reachable_set(self):
+        return self.dict_time_to_reachable_set
+
+    @property
+    def max_evaluated_time_step(self):
+        return max(self.dict_time_to_reachable_set)
 
     def drivable_area_at_time_step(self, time_step: int):
         if time_step not in self._list_time_steps_computed:
@@ -41,7 +45,7 @@ class ReachableSet(ABC):
             return []
 
         else:
-            return self._dict_time_to_drivable_area[time_step]
+            return self.dict_time_to_drivable_area[time_step]
 
     def reachable_set_at_time_step(self, time_step: int):
         if time_step not in self._list_time_steps_computed:
@@ -51,11 +55,11 @@ class ReachableSet(ABC):
             return []
 
         else:
-            return self._dict_time_to_reachable_set[time_step]
+            return self.dict_time_to_reachable_set[time_step]
 
     @abstractmethod
-    def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
-        """Calls reachable set computation functions for the specified time steps."""
+    def compute(self, time_step_start: int, time_step_end: int):
+        """Calls reachable set computation for the specified time steps."""
         pass
 
     @abstractmethod
@@ -72,29 +76,21 @@ class ReachableSet(ABC):
         mode = config.reachable_set.mode
 
         if mode in [1, 2]:
+            # Polytopic set propagation with Python backend
             from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
             return PyReachableSet(config)
 
         elif mode == 3:
-            try:
-                from commonroad_reach.data_structure.reach.reach_set_cpp import CppReachableSet
-
-            except ImportError:
-                message = "Importing C++ reachable set failed."
-                logger.exception(message)
-                print(message)
-
-            else:
-                return CppReachableSet(config)
+            # Polytopic set propagation with C++ backend
+            from commonroad_reach.data_structure.reach.reach_set_cpp import CppReachableSet
+            return CppReachableSet(config)
 
         elif mode in [4]:
+            # Online stage of the Graph-based propagation
             from commonroad_reach.data_structure.reach.reach_set_py_graph_online import PyGraphReachableSetOnline
             return PyGraphReachableSetOnline(config)
 
         elif mode == 5:
+            # Offline stage of the Graph-based propagation
             from commonroad_reach.data_structure.reach.reach_set_py_graph_offline import PyGraphReachableSetOffline
             return PyGraphReachableSetOffline(config)
-
-    @property
-    def max_evaluated_time_step(self):
-        return max(self._dict_time_to_reachable_set)

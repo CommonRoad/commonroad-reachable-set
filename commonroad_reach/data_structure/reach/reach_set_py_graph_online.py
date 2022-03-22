@@ -277,8 +277,8 @@ class PyGraphReachableSetOnline(ReachableSet):
         else:
             self._collision_checker = CppCollisionChecker(self.config)
 
-    def compute_reachable_sets(self, time_step_start: int = 1,
-                               time_step_end: Optional[int] = None) -> None:
+    def compute(self, time_step_start: int = 1,
+                time_step_end: Optional[int] = None) -> None:
         if time_step_end is None:
             time_step_end = self.time_step_end
 

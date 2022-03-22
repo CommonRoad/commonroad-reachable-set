@@ -6,9 +6,9 @@ save_config: 1
 draw_ref_path: False
 # draw the planning problem
 draw_planning_problem: False
-# visualize dyn. obstacles with icons
+# visualize dynamic obstacles with icons
 draw_icons: False
-# plot limits: [x_min, x_max, y_min, y_max]; if !!null: plot_limits are computed automatically from reachable sets
+# plot limits: [x_min, x_max, y_min, y_max]; if set to !!null, they will be computed automatically from reachable sets
 plot_limits: !!null
 # settings for 3D plots
 plot_azimuth: -120

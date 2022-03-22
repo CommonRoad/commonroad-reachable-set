@@ -45,11 +45,11 @@ class Configuration:
             CLCS = "Undefined"
 
         if self.reachable_set.mode == 1:
-            mode = "Single-step, Python backend with Python collision checker"
+            mode = "Polytopic, Python backend with Python collision checker"
         elif self.reachable_set.mode == 2:
-            mode = "Single-step, Python backend with C++ collision checker"
+            mode = "Polytopic, Python backend with C++ collision checker"
         elif self.reachable_set.mode == 3:
-            mode = "Single-step, C++ backend with C++ collision checker"
+            mode = "Polytopic, C++ backend"
         elif self.reachable_set.mode == 4:
             mode = "Graph-based (online), Python backend with C++ collision checker"
         elif self.reachable_set.mode == 5:

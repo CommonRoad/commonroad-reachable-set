@@ -57,7 +57,7 @@ def test_offline_reach():
     config.reachable_set.size_grid = 0.5
     reach_offline = PyGraphReachableSetOffline(config)
 
-    reach_offline.compute_reachable_sets(reach_offline.time_step_start, reach_offline.time_step_start+dt)
+    reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
 
 
 def test_offline_online_compatibility():
@@ -75,13 +75,13 @@ def test_offline_online_compatibility():
         reach_offline = PyGraphReachableSetOffline(config)
 
         reach_offline.config.general.path_offline_data = offline_dir
-        reach_offline.compute_reachable_sets(reach_offline.time_step_start, reach_offline.time_step_start+dt)
+        reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
 
         config.reachable_set.mode = 5
         config.planning_problem.initial_state = State(position=np.array([15,1.5]),
                                                       velocity=15, orientation=0,steering_angle=0.0,yaw_rate=0, slip_angle=0, time_step=0)
         reach_online = PyGraphReachableSetOnline(config)
-        reach_online.compute_reachable_sets(1, dt)
+        reach_online.compute(1, dt)
     finally:
         shutil.rmtree(offline_dir)
         print("removed")
@@ -112,7 +112,7 @@ def online_reach():
         for _ in range(1):
             reach_online.initialize_new_scenario(scenario=config.scenario)
             t0 = time.time()
-            reach_online.compute_reachable_sets(0, dt)
+            reach_online.compute(0, dt)
             times.append(time.time()-t0)
         print(f"avg time {sum(times)/len(times)}, min {min(times)}, max {max(times)}")
         reach_interface._reachable_set_computed = True

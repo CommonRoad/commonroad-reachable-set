@@ -21,7 +21,7 @@ ego:
   a_lat_min: -2.0
   a_lat_max: 2.0
   # maximum engine power
-  a_max: 6.0
+  a_max: 8.0
 
 other:
   <<: *physical_parameters

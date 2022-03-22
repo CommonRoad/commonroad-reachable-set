@@ -84,7 +84,7 @@ void ReachableSet::_compute_drivable_area_at_time_step(int const& time_step) {
     if (reachable_set_previous.empty()) {
         return;
     }
-    
+
     auto vec_base_sets_propagated = _propagate_reachable_set(reachable_set_previous);
 
     auto vec_rectangles_projected = project_base_sets_to_position_domain(vec_base_sets_propagated);

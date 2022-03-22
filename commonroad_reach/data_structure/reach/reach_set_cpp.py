@@ -20,7 +20,7 @@ class CppReachableSet(ReachableSet):
         cc = CppCollisionChecker(self.config)
         self._reach = reach.ReachableSet(config_cpp, cc.collision_checker)
 
-    def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
+    def compute(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
         for time_step in range(time_step_start, time_step_end + 1):
             logger.debug(f"Computing reachable set for time step {time_step}")

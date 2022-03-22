@@ -20,14 +20,6 @@ class ReachableSetInterface:
 
         logger.info("Reachable set interface initialized.")
 
-    @property
-    def time_step_start(self):
-        return self._reach.time_step_start
-
-    @property
-    def time_step_end(self):
-        return self._reach.time_step_end
-
     def _initialize_reachable_set(self):
         if self.config.reachable_set.mode in [1, 2, 3, 4, 5]:
             self._reach = ReachableSet.instantiate(self.config)
@@ -38,12 +30,20 @@ class ReachableSetInterface:
             raise Exception(message)
 
     @property
+    def time_step_start(self):
+        return self._reach.time_step_start
+
+    @property
+    def time_step_end(self):
+        return self._reach.time_step_end
+
+    @property
     def drivable_area(self):
-        return self._reach.dict_time_to_drivable_area
+        return self._reach.drivable_area
 
     @property
     def reachable_set(self):
-        return self._reach.dict_time_to_reachable_set
+        return self._reach.reachable_set
 
     def drivable_area_at_time_step(self, time_step: int):
         if not self._reachable_set_computed and time_step != 0:
@@ -66,7 +66,10 @@ class ReachableSetInterface:
             return self._reach.reachable_set_at_time_step(time_step)
 
     def compute_reachable_sets(self, time_step_start: int = 1, time_step_end: int = 0):
-        """Calls reachable set computation functions for the specified time steps."""
+        message = "* Computing reachable sets..."
+        logger.info(message)
+        print(message)
+
         if not self._reach:
             message = "Reachable set is not initialized, aborting computation."
             logger.warning(message)
@@ -82,18 +85,13 @@ class ReachableSetInterface:
             print(message)
             return None
 
-        message = "* Computing reachable sets..."
-        logger.info(message)
-        print(message)
-
         time_start = time.time()
-        self._reach.compute_reachable_sets(time_step_start, time_step_end)
-
+        self._reach.compute(time_step_start, time_step_end)
+        self._reachable_set_computed = True
         time_computation = time.time() - time_start
+
         message = f"\tComputation took: \t{time_computation:.3f}s"
         logger.info(message)
         print(message)
-
-        self._reachable_set_computed = True
 
         return time_computation
