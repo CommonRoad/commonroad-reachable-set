@@ -10,29 +10,29 @@ void export_data_structures(py::module& m) {
 }
 
 void export_reach_polygon(py::module& m) {
-    py::class_<ReachPolygon2, shared_ptr<ReachPolygon2>>(m, "ReachPolygon")
+    py::class_<ReachPolygon, shared_ptr<ReachPolygon>>(m, "ReachPolygon")
             .def(py::init<vector<tuple<double, double>> const&>(),
                     py::arg("vec_vertices"))
-            .def("p_min", &ReachPolygon2::p_min)
-            .def("p_max", &ReachPolygon2::p_max)
-            .def("v_min", &ReachPolygon2::v_min)
-            .def("v_max", &ReachPolygon2::v_max)
-            .def("p_lon_min", &ReachPolygon2::p_lon_min)
-            .def("p_lon_max", &ReachPolygon2::p_lon_max)
-            .def("p_lat_min", &ReachPolygon2::p_lat_min)
-            .def("p_lat_max", &ReachPolygon2::p_lat_max)
-            .def("p_lon_center", &ReachPolygon2::p_lon_center)
-            .def("p_lat_center", &ReachPolygon2::p_lat_center)
-            .def("vertices", [](ReachPolygon2 const& polygon) {
+            .def("p_min", &ReachPolygon::p_min)
+            .def("p_max", &ReachPolygon::p_max)
+            .def("v_min", &ReachPolygon::v_min)
+            .def("v_max", &ReachPolygon::v_max)
+            .def("p_lon_min", &ReachPolygon::p_lon_min)
+            .def("p_lon_max", &ReachPolygon::p_lon_max)
+            .def("p_lat_min", &ReachPolygon::p_lat_min)
+            .def("p_lat_max", &ReachPolygon::p_lat_max)
+            .def("p_lon_center", &ReachPolygon::p_lon_center)
+            .def("p_lat_center", &ReachPolygon::p_lat_center)
+            .def("vertices", [](ReachPolygon const& polygon) {
                 py::list list_tuples_vertices;
                 for (auto const& vertex: polygon.vertices()) {
                     list_tuples_vertices.append(py::make_tuple(vertex.p_lon(), vertex.p_lat()));
                 }
                 return list_tuples_vertices;
             })
-            .def("convexify", &ReachPolygon2::convexify)
-            .def("minkowski_sum", &ReachPolygon2::minkowski_sum)
-            .def("__repr__", [](ReachPolygon2 const& polygon) {
+            .def("convexify", &ReachPolygon::convexify)
+            .def("minkowski_sum", &ReachPolygon::minkowski_sum)
+            .def("__repr__", [](ReachPolygon const& polygon) {
                 return "(" + std::to_string(polygon.p_lon_min()) + ", " + std::to_string(polygon.p_lat_min())
                        + ", " + std::to_string(polygon.p_lon_max()) + ", " + std::to_string(polygon.p_lat_max()) + ")";
             });
@@ -40,7 +40,7 @@ void export_reach_polygon(py::module& m) {
 
 void export_reach_node(py::module& m) {
     py::class_<ReachNode, shared_ptr<ReachNode>>(m, "ReachNode")
-            .def(py::init<int const&, ReachPolygon2Ptr const&, ReachPolygon2Ptr const&>(),
+            .def(py::init<int const&, ReachPolygonPtr const&, ReachPolygonPtr const&>(),
                  py::arg("time step"),
                  py::arg("polygon_lon"),
                  py::arg("polygon_lat"))
@@ -55,7 +55,6 @@ void export_reach_node(py::module& m) {
             .def_readonly("time_step", &ReachNode::time_step)
             .def_readonly("polygon_lon", &ReachNode::polygon_lon)
             .def_readonly("polygon_lat", &ReachNode::polygon_lat)
-            .def_readonly("set_propositions", &ReachNode::set_propositions)
             .def("__repr__", [](ReachNode const& node) {
                 return "(" + std::to_string(node.p_lon_min()) + ", " + std::to_string(node.p_lat_min())
                        + ", " + std::to_string(node.p_lon_max()) + ", " + std::to_string(node.p_lat_max()) + ")";

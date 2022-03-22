@@ -45,15 +45,13 @@ class Configuration:
             CLCS = "Undefined"
 
         if self.reachable_set.mode == 1:
-            mode = "Polytopic, Python backend with Python collision checker"
+            mode = "Polytopic, Python backend"
         elif self.reachable_set.mode == 2:
-            mode = "Polytopic, Python backend with C++ collision checker"
-        elif self.reachable_set.mode == 3:
             mode = "Polytopic, C++ backend"
+        elif self.reachable_set.mode == 3:
+            mode = "Graph-based (online)"
         elif self.reachable_set.mode == 4:
-            mode = "Graph-based (online), Python backend with C++ collision checker"
-        elif self.reachable_set.mode == 5:
-            mode = "Graph-based (offline), Python backend"
+            mode = "Graph-based (offline)"
         else:
             mode = "Undefined"
 
@@ -71,7 +69,7 @@ class Configuration:
             logger.info(line)
 
     def convert_to_cpp_configuration(self) -> reach.Configuration:
-        """Converts to configuration defined by the cpp side"""
+        """Converts to configuration that is readable by the C++ binding code."""
         config = reach.Configuration()
 
         config.general.name_scenario = self.name_scenario

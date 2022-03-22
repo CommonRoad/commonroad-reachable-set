@@ -20,7 +20,7 @@ set(REACH_INCLUDE_DIR
 set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_vertex.cpp
 #        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon2.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_node.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp

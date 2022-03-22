@@ -10,7 +10,7 @@ from shapely.geometry import Polygon, MultiPolygon
 
 
 class ReachPolygon(Polygon, ABC):
-    """Polygon class that constitutes to reachset nodes and position rectangles.
+    """Polygon class that constitutes reachset nodes and position rectangles.
 
     When used to represent a reachset node, it is defined in the position-velocity domain, and can be used to
     represent a polygon in either the longitudinal or the lateral direction; When used to represent a position,
@@ -24,7 +24,7 @@ class ReachPolygon(Polygon, ABC):
                 logger.error(message)
                 raise Exception(message)
 
-            # Shapely closed polygon requires identical initial and final vertices
+            # Shapely polygon requires identical initial and final vertices
             if fix_vertices and not np.allclose(list_vertices[0], list_vertices[-1]):
                 list_vertices.append(list_vertices[0])
 
@@ -117,7 +117,7 @@ class ReachPolygon(Polygon, ABC):
 
     def intersect_halfspace(self, a, b, c) -> Union["ReachPolygon", None]:
         """Returns the intersection of the polygon and the halfspace specified in the form of ax + by <= c."""
-        assert not (a == 0 and b == 0), "Halfspace parameters not valid."
+        assert not (a == 0 and b == 0), "Halfspace parameters are not valid."
 
         polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self.bounds)
         polygon_intersected = self.intersection(polygon_halfspace)

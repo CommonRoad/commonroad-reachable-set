@@ -1,7 +1,0 @@
-name_scenario: DEU_Test-1_1_T-1
-#name_scenario: ARG_Carcarana-1_1_T-1
-#name_scenario: USA_US101-15_1_T-1
-visualize_results: yes
-save_fig: no
-save_gif: yes
-plot_refined: yes

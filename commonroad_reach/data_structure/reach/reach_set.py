@@ -75,22 +75,22 @@ class ReachableSet(ABC):
         """Instantiates a reachable set class based on the given configuration."""
         mode = config.reachable_set.mode
 
-        if mode in [1, 2]:
+        if mode == 1:
             # Polytopic set propagation with Python backend
             from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
             return PyReachableSet(config)
 
-        elif mode == 3:
+        elif mode == 2:
             # Polytopic set propagation with C++ backend
             from commonroad_reach.data_structure.reach.reach_set_cpp import CppReachableSet
             return CppReachableSet(config)
 
-        elif mode in [4]:
+        elif mode == 3:
             # Online stage of the Graph-based propagation
             from commonroad_reach.data_structure.reach.reach_set_py_graph_online import PyGraphReachableSetOnline
             return PyGraphReachableSetOnline(config)
 
-        elif mode == 5:
+        elif mode == 4:
             # Offline stage of the Graph-based propagation
             from commonroad_reach.data_structure.reach.reach_set_py_graph_offline import PyGraphReachableSetOffline
             return PyGraphReachableSetOffline(config)

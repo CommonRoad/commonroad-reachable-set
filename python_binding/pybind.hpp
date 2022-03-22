@@ -7,7 +7,7 @@
 
 #include "reachset/utility/shared_include.hpp"
 #include "reachset/utility/shared_using.hpp"
-#include "reachset/data_structure/reach/reach_polygon2.hpp"
+#include "reachset/data_structure/reach/reach_polygon.hpp"
 
 #include "reachset/data_structure/reach/reach_node.hpp"
 #include "reachset/data_structure/configuration.hpp"

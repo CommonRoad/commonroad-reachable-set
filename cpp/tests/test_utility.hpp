@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "reachset/utility/shared_include.hpp"
 
-#include "reachset/data_structure/reach/reach_polygon.hpp"
+#include "reachset/data_structure/reach/reach_polygon_boost.hpp"
 // #include "reachset/data_structure/reach_base_set.hpp"
 #include "reachset/data_structure/reach/reach_node.hpp"
 #include "reachset/data_structure/segment_tree.hpp"

@@ -3,11 +3,11 @@ import math
 import os
 import pickle
 import time
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
 
+import numpy as np
 from commonroad_dc.pycrcc import CollisionChecker, RectAABB
 from commonroad_reach.__version__ import __version__
-import numpy as np
 from scipy import sparse
 
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
@@ -36,6 +36,8 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         self.dict_time_to_drivable_area[self.time_step_start] = self.initial_drivable_area
         self.dict_time_to_reachable_set[self.time_step_start] = self.initial_reachable_set
+
+        logger.info("PyGraphReachableSetOffline initialized.")
 
     @property
     def path_offline_file(self):
@@ -222,8 +224,9 @@ class PyGraphReachableSetOffline(ReachableSet):
         cc_at_time: Dict[int, Tuple[CollisionChecker, Dict[RectAABB, ReachNodeMultiGeneration]]] = dict()
 
         def create_cc(nodes: List[ReachNodeMultiGeneration],
-                      list_nodes_keys:List[ReachNodeMultiGeneration]) -> Tuple[CollisionChecker,
-                                                                      Dict[RectAABB, ReachNodeMultiGeneration]]:
+                      list_nodes_keys: List[ReachNodeMultiGeneration]) -> Tuple[CollisionChecker,
+                                                                                Dict[
+                                                                                    RectAABB, ReachNodeMultiGeneration]]:
             """Create collision checker from reachable sets."""
             cc = CollisionChecker()
             cc_obj_2_node = dict()
@@ -237,7 +240,7 @@ class PyGraphReachableSetOffline(ReachableSet):
                 cc.add_collision_object(cc_obj)
             return cc, cc_obj_2_node
 
-        def get_cc_at_time(time_step: int) -> Tuple[CollisionChecker, Dict[RectAABB,ReachNodeMultiGeneration]]:
+        def get_cc_at_time(time_step: int) -> Tuple[CollisionChecker, Dict[RectAABB, ReachNodeMultiGeneration]]:
             """Returns collision checker from reachable sets at time_step."""
             if time_step not in cc_at_time:
                 cc_at_time[time_step] = create_cc(self.dict_time_to_reachable_set[time_step],
@@ -427,7 +430,7 @@ class PyGraphReachableSetOffline(ReachableSet):
                 list_nodes_grandparent = self.dict_time_to_reachable_set[time_step - delta_steps]
                 matrix_adjacency_tmp = list()
                 for node in list_nodes:
-                    list_adjacency = [(node_grandparent in node.list_nodes_grandparent[delta_steps])
+                    list_adjacency = [(node_grandparent in node.dict_time_to_set_nodes_grandparent[delta_steps])
                                       for node_grandparent in list_nodes_grandparent]
                     matrix_adjacency_tmp.append(list_adjacency)
 

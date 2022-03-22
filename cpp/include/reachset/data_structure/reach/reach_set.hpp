@@ -1,7 +1,7 @@
 #pragma once
 
 #include "reachset/utility/shared_include.hpp"
-#include "reachset/data_structure/reach/reach_polygon2.hpp"
+#include "reachset/data_structure/reach/reach_polygon.hpp"
 #include "reachset/data_structure/reach/reach_node.hpp"
 #include "reachset/data_structure/configuration.hpp"
 #include "collision/collision_checker.h"
@@ -20,11 +20,11 @@ private:
 
     void _initialize();
 
-    void _initialize_zero_state_polygons();
-
-    std::vector<ReachPolygon2Ptr> _construct_initial_drivable_area() const;
+    std::vector<ReachPolygonPtr> _construct_initial_drivable_area() const;
 
     std::vector<ReachNodePtr> _construct_initial_reachable_set() const;
+
+    void _initialize_zero_state_polygons();
 
     void _compute_drivable_area_at_time_step(int const& time_step);
 
@@ -48,15 +48,15 @@ public:
 
     int time_step_start{};
     int time_step_end{};
-    std::map<int, std::vector<ReachPolygon2Ptr>> map_time_to_drivable_area;
+    std::map<int, std::vector<ReachPolygonPtr>> map_time_to_drivable_area;
     std::map<int, std::vector<ReachNodePtr>> map_time_to_base_set_propagated;
     std::map<int, std::vector<ReachNodePtr>> map_time_to_reachable_set;
     std::map<int, std::vector<ReachNodePtr>> map_time_to_reachable_set_pruned;
 
-    ReachPolygon2Ptr polygon_zero_state_lon;
-    ReachPolygon2Ptr polygon_zero_state_lat;
+    ReachPolygonPtr polygon_zero_state_lon;
+    ReachPolygonPtr polygon_zero_state_lat;
 
-    inline std::map<int, std::vector<ReachPolygon2Ptr>> drivable_area() const {
+    inline std::map<int, std::vector<ReachPolygonPtr>> drivable_area() const {
         return map_time_to_drivable_area;
     }
 
@@ -64,7 +64,7 @@ public:
         return map_time_to_reachable_set;
     }
 
-    inline std::vector<ReachPolygon2Ptr> drivable_area_at_time_step(int const& time_step) {
+    inline std::vector<ReachPolygonPtr> drivable_area_at_time_step(int const& time_step) {
         if (find(_vec_time_steps_computed.begin(), _vec_time_steps_computed.end(), time_step)
             != _vec_time_steps_computed.end()) {
             cout << "Given time step for drivable area retrieval is out of range." << endl;

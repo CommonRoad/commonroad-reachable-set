@@ -11,7 +11,7 @@ def test_reachability_analysis_initialization(config: Configuration):
 
 
 def test_initial_drivable_area(reachability_analysis):
-    [polygon_drivable_area] = reachability_analysis.construct_initial_drivable_area
+    [polygon_drivable_area] = reachability_analysis._construct_initial_drivable_area
 
     # values from the scenario DEU_Test-1_1_T-1
     if reachability_analysis.config.planning.coordinate_system == "CART":

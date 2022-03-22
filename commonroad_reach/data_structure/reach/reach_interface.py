@@ -21,7 +21,7 @@ class ReachableSetInterface:
         logger.info("Reachable set interface initialized.")
 
     def _initialize_reachable_set(self):
-        if self.config.reachable_set.mode in [1, 2, 3, 4, 5]:
+        if self.config.reachable_set.mode in [1, 2, 3, 4]:
             self._reach = ReachableSet.instantiate(self.config)
 
         else:

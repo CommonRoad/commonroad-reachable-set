@@ -16,19 +16,18 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
 class CppCollisionChecker:
-    """Collision checker for the reachable sets with C++ backend.
+    """Collision checker using C++ backend.
 
-    It handles collision checks in both Cartesian and Curvilinear coordinate systems.
+    It handles collision checks in both Cartesian and curvilinear coordinate systems.
     """
 
     def __init__(self, config: Configuration):
         self.config = config
-        self.collision_checker = None
-        self._initialize_collision_checker()
+        self._initialize()
 
-        logger.info("CPPCollisionChecker initialized.")
+        logger.info("CppCollisionChecker initialized.")
 
-    def _initialize_collision_checker(self):
+    def _initialize(self):
         """Initializes the collision checker based on the specified coordinate system."""
         if self.config.planning.coordinate_system == "CART":
             self.collision_checker = self._create_cartesian_collision_checker()
@@ -56,12 +55,13 @@ class CppCollisionChecker:
 
     @staticmethod
     def create_scenario_with_road_boundaries(config: Configuration) -> Scenario:
-        """Returns a scenario with obstacles in Cartesian coordinate system.
+        """Returns a scenario with obstacles in the Cartesian coordinate system.
 
         Elements included: lanelet network, obstacles, road boundaries
         """
         scenario: Scenario = config.scenario
         scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
+
         # add lanelet network
         scenario_cc.add_objects(scenario.lanelet_network)
 
@@ -100,12 +100,13 @@ class CppCollisionChecker:
         return collision_checker
 
     def _create_curvilinear_collision_checker(self) -> pycrcc.CollisionChecker:
-        """Creates a Curvilinear collision checker.
+        """Creates a curvilinear collision checker.
 
         The collision checker is created by adding a shape group containing occupancies of all static obstacles, and a
         time variant object containing shape groups of occupancies of all dynamic obstacles at different time steps.
         """
         scenario = self.config.scenario
+
         # static obstacles
         list_obstacles_static = self.retrieve_static_obstacles(scenario, self.config.reachable_set.consider_traffic)
         list_vertices_polygons_static = self.obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static)
@@ -114,33 +115,11 @@ class CppCollisionChecker:
         list_obstacles_dynamic = scenario.dynamic_obstacles
         dict_time_to_list_vertices_polygons_dynamic = \
             self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic)
-
-        self.list_vertices_polygons_static = list_vertices_polygons_static
-        self.dict_time_to_list_vertices_polygons_dynamic = dict_time_to_list_vertices_polygons_dynamic
-        self.radius_disc = self.config.vehicle.ego.radius_disc
 
         return reach.create_curvilinear_collision_checker(list_vertices_polygons_static,
                                                           dict_time_to_list_vertices_polygons_dynamic,
                                                           self.config.planning.CLCS,
                                                           self.config.vehicle.ego.radius_disc, 4)
-
-    def preprocess_obstacles(self):
-        """Creates a Curvilinear collision checker.
-
-        The collision checker is created by adding a shape group containing occupancies of all static obstacles, and a
-        time variant object containing shape groups of occupancies of all dynamic obstacles at different time steps.
-        """
-        scenario = self.config.scenario
-        # static obstacles
-        list_obstacles_static = self.retrieve_static_obstacles(scenario, self.config.reachable_set.consider_traffic)
-        list_vertices_polygons_static = self.obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static)
-
-        # dynamic obstacles
-        list_obstacles_dynamic = scenario.dynamic_obstacles
-        dict_time_to_list_vertices_polygons_dynamic = \
-            self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic)
-
-        return list_vertices_polygons_static, dict_time_to_list_vertices_polygons_dynamic
 
     @staticmethod
     def retrieve_static_obstacles(scenario: Scenario, consider_traffic: bool) -> List[StaticObstacle]:

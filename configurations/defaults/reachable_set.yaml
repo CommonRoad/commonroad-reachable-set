@@ -1,9 +1,9 @@
-# mode for computation
-# 1: Single-step: Python backend with Python collision checker
-# 2: Single-step: Python backend with C++ collision checker
-# 3: Single-step: C++ backend with C++ collision checker
-# 4: Graph-based (online): Python backend with C++ collision checker
-mode: 3
+# mode for reachable set computation
+# 1: Polytopic set propagation with Python backend
+# 2: Polytopic set propagation with C++ backend
+# 3: Online stage of the Graph-based propagation
+# 4: Offline stage of the Graph-based propagation
+mode: 2
 # grid size for rectangle alignment (before collision check)
 size_grid: 0.25
 # grid size for second time rectangle alignment (after collision check)

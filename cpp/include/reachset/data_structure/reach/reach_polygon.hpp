@@ -2,32 +2,61 @@
 
 #include "reachset/utility/geometry_definition.hpp"
 #include "reachset/utility/shared_include.hpp"
+#include "reachset/data_structure/reach/reach_vertex.hpp"
 
 namespace reach {
-/// Polygon class used in reachset nodes and position rectangles.
+/// Polygon class that constitutes reachset nodes and position rectangles.
 /// When used to represent a reachset node, it is defined in the position-velocity domain, and can be used to represent
 /// a polygon in either the longitudinal or the lateral direction; When used to represent a position, it is defined in
 /// the longitudinal/lateral position domain.
-/// @note Uses Boost.Geometry library.
 class ReachPolygon {
 private:
-    GeometryPolygonPtr _polygon;
-    std::tuple<double, double, double, double> _box;
+    // ccw = counterclockwise
+    enum SortingState {
+        unsorted, left_to_right, ccw, ccw_bottom_left_first
+    };
+    SortingState _sorting_state;
+
+    // axis-aligned box enclosing the polygon
+    std::tuple<double, double, double, double> _box{std::numeric_limits<double>::infinity(),
+                                                    std::numeric_limits<double>::infinity(),
+                                                    -std::numeric_limits<double>::infinity(),
+                                                    -std::numeric_limits<double>::infinity()};
+
+    void _sort_vertices_left_to_right();
+
+    void _remove_duplicated_vertices();
 
 public:
-    ReachPolygon() = default;
+    ReachPolygon();
 
-    /// Constructor of ReachPolygon.
-    /// @param vec_vertices vector of tuples representing the vertices
+    explicit ReachPolygon(std::vector<Vertex> const& vec_vertices);
+
     explicit ReachPolygon(std::vector<std::tuple<double, double>> const& vec_vertices);
 
-    explicit ReachPolygon(GeometryPolygon const& polygon, bool const& correct = true);
+    explicit ReachPolygon(std::tuple<double, double, double, double> const& tuple_coordinates);
 
-    std::shared_ptr<ReachPolygon> clone() const;
+    ReachPolygon(double const& p_lon_min, double const& p_lat_min, double const& p_lon_max, double const& p_lat_max);
 
-    inline GeometryPolygonPtr geometry_polygon() { return this->_polygon; }
+    explicit ReachPolygon(std::vector<std::shared_ptr<ReachPolygon>> const& vec_polygons);
 
-    inline GeometryRing vertices() const { return this->_polygon->outer(); }
+    std::vector<Vertex> vec_vertices;
+
+    void print_info() const;
+
+    void compute_bounding_box();
+
+    void sort_vertices_bottom_left_first();
+
+    /// Convexify the polygon.
+    /// @note using Andrew monotone chain, see <a href="https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain">
+    void convexify();
+
+    /// Intersects with the halfspace specified in the form of ax + by <= c.
+    void intersect_halfspace(double a, double b, double c);
+
+    /// Computes the minkowski sum with the input polygon.
+    void minkowski_sum(std::shared_ptr<ReachPolygon> const& polygon_other);
 
     inline std::tuple<double, double, double, double> bounding_box() const { return this->_box; }
 
@@ -51,49 +80,70 @@ public:
 
     inline double p_lat_center() const { return (p_lat_min() + p_lat_max()) / 2.0; }
 
-    inline bool empty() const { return vertices().empty(); }
+    inline bool empty() const { return vec_vertices.empty(); }
 
-    inline bool valid() const { return _polygon != nullptr; };
+    inline std::vector<Vertex> const& vertices() const {
+        return vec_vertices;
+    }
+
+    inline Vertex const& get_vertex_with_cyclic_index(size_t i) const {
+        assert(i >= 0);
+        return vec_vertices[i % vec_vertices.size()];
+    }
+
+    inline void add_vertex(double x, double y) {
+        auto vertex = Vertex{x, y};
+        vec_vertices.emplace_back(vertex);
+        update_bounding_box(vertex);
+        _sorting_state = unsorted;
+    }
+
+    inline void add_vertex(Vertex vertex) {
+        vec_vertices.emplace_back(vertex);
+        update_bounding_box(vertex);
+        _sorting_state = unsorted;
+    }
+
+    inline void add_polygon(std::shared_ptr<ReachPolygon> const& polygon) {
+        vec_vertices.insert(vec_vertices.end(), polygon->vec_vertices.begin(), polygon->vec_vertices.end());
+        compute_bounding_box();
+        _sorting_state = unsorted;
+    }
 
     /// Updates the bounding box of the polygon.
-    void update_bounding_box();
-
-    /// Intersects with the halfspace specified in the form of ax + by <= c.
-    void intersect_halfspace(double const& a, double const& b, double const& c);
-
-    /// Convexify the polygon.
-    void convexify();
+    inline void update_bounding_box(Vertex const& vertex) {
+        _box = {std::min(p_lon_min(), vertex.p_lon()),
+                std::min(p_lat_min(), vertex.p_lat()),
+                std::max(p_lon_max(), vertex.p_lon()),
+                std::max(p_lat_max(), vertex.p_lat())};
+    };
 
     /// Linear mapping in two dimensional plane.
     /// Computes the zero-input response of the system.
     /// @note see <a href="https://ieeexplore.ieee.org/abstract/document/8047450?casa_token=kfXwS_YEKoEAAAAA:k6TBp5W4m1BDxAZuMWI8S8T1I-fe38s3txJkzuNjiUMPv2T9Ccp1rzCmzNx8Z27VnnIgA4LU-Q">
     /// *Computing the Drivable Area of Autonomous Road Vehicles in Dynamic Road Scenes*</a> , Sec.IV.A.
-    void linear_mapping(double const& a11, double const& a12, double const& a21, double const& a22);
+    inline void linear_mapping(double a11, double a12, double a21, double a22) {
+        for (auto& vertex: vec_vertices) {
+            double tmp = a11 * vertex.x + a12 * vertex.y;
+            vertex.y = a21 * vertex.x + a22 * vertex.y;
+            vertex.x = tmp;
+        }
+        _sorting_state = ccw;
+    }
 
-    /// Computes the minkowski sum with the input polygon.
-    /// @note Taken from Sebastian Söntges/Stefanie Manzinger's implementation.
-    /// 5x faster than naively computing all new vertices and taking convex hull with Boost.Geometry.
-    void minkowski_sum(std::shared_ptr<ReachPolygon> const& polygon_other);
+    inline std::shared_ptr<ReachPolygon> clone() const {
+        return std::make_shared<ReachPolygon>(vec_vertices);
+    }
 
-    void print_vertices() const;
-
-    bool intersects(std::shared_ptr<ReachPolygon> const& polygon_other) const;
-
-    std::vector<std::shared_ptr<ReachPolygon>> intersection(std::shared_ptr<ReachPolygon> const& polygon_other) const;
-
-    /// Creates a polygon from the given coordinates of a bounding box.
-    /// @param p_lon_min minimum longitudinal position
-    /// @param p_lat_min minimum lateral position
-    /// @param p_lon_max maximum longitudinal position
-    /// @param p_lat_max maximum lateral position
-    static std::shared_ptr<ReachPolygon> from_rectangle_coordinates(double const& p_lon_min, double const& p_lat_min,
-                                                                    double const& p_lon_max, double const& p_lat_max);
-
-    /// Constructs a halfspace with the given parameters in the form of ax + by <= c.
-    /// A rectangle is constructed to represent the halfspace.
-    static std::shared_ptr<ReachPolygon>
-    construct_halfspace_polygon(double const& a, double const& b, double const& c,
-                                std::tuple<double, double, double, double> const& bounding_box);
+    /// Examines axis-aligned intersection
+    inline bool intersects(std::shared_ptr<ReachPolygon> const& polygon_other) const {
+        if (p_lon_min() >= polygon_other->p_lon_max() or p_lon_max() <= polygon_other->p_lon_min() or
+            p_lat_min() >= polygon_other->p_lat_max() or p_lat_max() <= polygon_other->p_lat_min()) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 };
 
 using ReachPolygonPtr = std::shared_ptr<ReachPolygon>;

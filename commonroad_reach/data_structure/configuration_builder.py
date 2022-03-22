@@ -80,7 +80,7 @@ class ConfigurationBuilder:
         return config_default
 
     @classmethod
-    def convert_to_absolute_paths(cls, config_default: Union[ListConfig, DictConfig]):
+    def convert_to_absolute_paths(cls, config_default: Union[ListConfig, DictConfig]) -> Union[ListConfig, DictConfig]:
         """Converts relative paths to absolute paths."""
         for key, path in config_default["general"].items():
             path_relative = os.path.join(cls.path_root, path)
@@ -90,7 +90,7 @@ class ConfigurationBuilder:
         return config_default
 
     @classmethod
-    def construct_scenario_configuration(cls, name_scenario: str):
+    def construct_scenario_configuration(cls, name_scenario: str) -> Union[DictConfig, ListConfig]:
         """Constructs scenario-specific configuration."""
         config_scenario = OmegaConf.create()
 

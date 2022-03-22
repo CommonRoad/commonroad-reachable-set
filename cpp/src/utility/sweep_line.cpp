@@ -23,7 +23,7 @@ bool SweepLine::Event::operator==(const Event& other) const {
 /// 2. create events of line sweeping: left = ENTER, right = EXIT
 /// 3. create vertical segments with events
 vector<ReachLinePtr>
-SweepLine::obtain_vertical_segments_from_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles) {
+SweepLine::obtain_vertical_segments_from_rectangles(vector<ReachPolygonPtr> const& vec_rectangles) {
     if (vec_rectangles.empty())
         return {};
 
@@ -41,7 +41,7 @@ SweepLine::obtain_vertical_segments_from_rectangles(vector<ReachPolygon2Ptr> con
 }
 
 tuple<double, double>
-SweepLine::compute_extremum_lateral_positions_of_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles) {
+SweepLine::compute_extremum_lateral_positions_of_rectangles(vector<ReachPolygonPtr> const& vec_rectangles) {
     auto p_lat_min_rectangles = std::numeric_limits<double>::infinity();
     auto p_lat_max_rectangles = -std::numeric_limits<double>::infinity();
 
@@ -53,7 +53,7 @@ SweepLine::compute_extremum_lateral_positions_of_rectangles(vector<ReachPolygon2
     return {p_lat_min_rectangles, p_lat_max_rectangles};
 }
 
-vector<EventPtr> SweepLine::create_events(vector<ReachPolygon2Ptr> const& vec_rectangles) {
+vector<EventPtr> SweepLine::create_events(vector<ReachPolygonPtr> const& vec_rectangles) {
     vector<EventPtr> vec_events;
     vec_events.reserve(vec_rectangles.size());
 
@@ -146,7 +146,7 @@ vector<ReachLinePtr> SweepLine::create_vertical_segments_from_event(EventPtr con
 /// 1. Create a segment tree with the list of segments.
 /// 2. Create a dictionary that maps p_lon to a list of rectangles whose left edge is aligned with p_lon.
 /// 3. Merge rectangles that share the same coordinates of of p_lat.
-vector<ReachPolygon2Ptr>
+vector<ReachPolygonPtr>
 SweepLine::create_rectangles_from_vertical_segments(vector<ReachLinePtr> const& vec_segments) {
     // Step 1
     auto[p_lat_min_segments, p_lat_max_segments] = compute_extremum_lateral_positions_of_segments(vec_segments);
@@ -178,12 +178,12 @@ SweepLine::compute_extremum_lateral_positions_of_segments(vector<ReachLinePtr> c
 /// 1. Create a dictionary that maps p_lon to list of tuples of p_lat from segments
 /// 2. Iterate through p_lon, retrieve relevant tuples of p_lat and toggle the status of segments between these p_lat
 /// in the segment tree. Get intervals of active segments and create rectangles.
-map<double, vector<ReachPolygon2Ptr>>
+map<double, vector<ReachPolygonPtr>>
 SweepLine::create_p_lon_to_rectangles_map(vector<ReachLinePtr> const& vec_segments) {
     if (vec_segments.empty())
         return {};
 
-    map<double, vector<ReachPolygon2Ptr>> map_p_lon_to_vec_rectangles;
+    map<double, vector<ReachPolygonPtr>> map_p_lon_to_vec_rectangles;
 
     // Step 1
     map<double, vector<tuple<double, double>>> map_p_lon_to_vec_tuples_p_lat;
@@ -214,7 +214,7 @@ SweepLine::create_p_lon_to_rectangles_map(vector<ReachLinePtr> const& vec_segmen
             stack_intervals_active.pop();
 
             map_p_lon_to_vec_rectangles[p_lon_min].emplace_back(
-                    make_shared<ReachPolygon2>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
+                    make_shared<ReachPolygon>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
         }
 
     }
@@ -224,10 +224,10 @@ SweepLine::create_p_lon_to_rectangles_map(vector<ReachLinePtr> const& vec_segmen
 
 /// Iterate through pairs of lists of rectangles, if there is a right rectangle with the same lateral coordinates,
 /// then do not add to list. Instead, the right rectangle is popped and replaced by the merged one.
-vector<ReachPolygon2Ptr> SweepLine::merge_rectangles_with_same_lateral_coordinates(
-        map<double, vector<ReachPolygon2Ptr>>& map_p_lon_to_vec_rectangles) {
+vector<ReachPolygonPtr> SweepLine::merge_rectangles_with_same_lateral_coordinates(
+        map<double, vector<ReachPolygonPtr>>& map_p_lon_to_vec_rectangles) {
 
-    vector<ReachPolygon2Ptr> vec_rectangles_merged;
+    vector<ReachPolygonPtr> vec_rectangles_merged;
 
     vector<double> vec_p_lon;
     vec_p_lon.reserve(map_p_lon_to_vec_rectangles.size());
@@ -251,10 +251,10 @@ vector<ReachPolygon2Ptr> SweepLine::merge_rectangles_with_same_lateral_coordinat
                                               rectangle_right);
                     vec_rectangles_right.erase(it_end, vec_rectangles_right.end());
 
-                    vec_rectangles_right.emplace_back(make_shared<ReachPolygon2>(rectangle_left->p_lon_min(),
-                                                                                 rectangle_left->p_lat_min(),
-                                                                                 rectangle_right->p_lon_max(),
-                                                                                 rectangle_left->p_lat_max()));
+                    vec_rectangles_right.emplace_back(make_shared<ReachPolygon>(rectangle_left->p_lon_min(),
+                                                                                rectangle_left->p_lat_min(),
+                                                                                rectangle_right->p_lon_max(),
+                                                                                rectangle_left->p_lat_max()));
                     add_to_list = false;
                     break;
                 }
@@ -272,6 +272,6 @@ vector<ReachPolygon2Ptr> SweepLine::merge_rectangles_with_same_lateral_coordinat
     return vec_rectangles_merged;
 }
 
-bool SweepLine::rectangles_have_same_p_lat(ReachPolygon2Ptr const& rectangle1, ReachPolygon2Ptr const& rectangle2) {
+bool SweepLine::rectangles_have_same_p_lat(ReachPolygonPtr const& rectangle1, ReachPolygonPtr const& rectangle2) {
     return rectangle1->p_lat_min() == rectangle2->p_lat_min() and rectangle1->p_lat_max() == rectangle2->p_lat_max();
 }

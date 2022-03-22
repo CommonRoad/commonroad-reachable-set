@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from commonroad_reach.data_structure.collision_checker_py import PyCollisionChecker
+from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
@@ -17,19 +17,31 @@ class PyReachableSet(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
-        self.polygon_zero_state_lon = None
-        self.polygon_zero_state_lat = None
-        self._collision_checker = None
+        self.dict_time_to_drivable_area[self.time_step_start] = self._construct_initial_drivable_area()
+        self.dict_time_to_reachable_set[self.time_step_start] = self._construct_initial_reachable_set()
         self._initialize_zero_state_polygons()
-        self._initialize_collision_checker()
-        self.dict_time_to_drivable_area[self.time_step_start] = self.construct_initial_drivable_area()
-        self.dict_time_to_reachable_set[self.time_step_start] = self.construct_initial_reachable_set()
+        self.collision_checker = CppCollisionChecker(self.config)
+
+        logger.info("PyReachableSet initialized.")
+
+    def _construct_initial_drivable_area(self) -> List[ReachPolygon]:
+        tuple_vertices = reach_operation.generate_tuple_vertices_position_rectangle_initial(self.config)
+
+        return [ReachPolygon.from_rectangle_vertices(*tuple_vertices)]
+
+    def _construct_initial_reachable_set(self) -> List[ReachNode]:
+        tuple_vertices_polygon_lon, tuple_vertices_polygon_lat = \
+            reach_operation.generate_tuples_vertices_polygons_initial(self.config)
+
+        polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
+        polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
+
+        return [ReachNode(polygon_lon, polygon_lat, self.config.planning.time_step_start)]
 
     def _initialize_zero_state_polygons(self):
         """Initializes the zero-state polygons of the system.
 
-        Computation of the reachable set of an LTI system requires the zero-state response and the zero-input response
-        of the system.
+        Computation of the reachable set of an LTI system requires the zero-state response of the system.
         """
         self.polygon_zero_state_lon = reach_operation.create_zero_state_polygon(self.config.planning.dt,
                                                                                 self.config.vehicle.ego.a_lon_min,
@@ -38,51 +50,6 @@ class PyReachableSet(ReachableSet):
         self.polygon_zero_state_lat = reach_operation.create_zero_state_polygon(self.config.planning.dt,
                                                                                 self.config.vehicle.ego.a_lat_min,
                                                                                 self.config.vehicle.ego.a_lat_max)
-
-    def _initialize_collision_checker(self):
-        """Initializes collision checker."""
-        mode = self.config.reachable_set.mode
-        if mode == 1:
-            self._collision_checker = PyCollisionChecker(self.config)
-
-        elif mode == 2:
-            try:
-                from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
-
-            except ImportError:
-                message = "Importing C++ collision checker failed."
-                logger.exception(message)
-                print(message)
-
-            else:
-                self._collision_checker = CppCollisionChecker(self.config)
-
-        else:
-            message = "Specified mode ID is invalid."
-            logger.error(message)
-            raise Exception(message)
-
-    def construct_initial_drivable_area(self) -> List[ReachPolygon]:
-        """Drivable area at the initial time step.
-
-        Constructed directly from the config file.
-        """
-        tuple_vertices = reach_operation.generate_tuple_vertices_position_rectangle_initial(self.config)
-
-        return [ReachPolygon.from_rectangle_vertices(*tuple_vertices)]
-
-    def construct_initial_reachable_set(self) -> List[ReachNode]:
-        """Reachable set at the initial time step.
-
-        Vertices of the polygons are constructed directly from the config file.
-        """
-        tuple_vertices_polygon_lon, tuple_vertices_polygon_lat = \
-            reach_operation.generate_tuples_vertices_polygons_initial(self.config)
-
-        polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
-        polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
-
-        return [ReachNode(polygon_lon, polygon_lat, self.config.planning.time_step_start)]
 
     def compute(self, time_step_start: int, time_step_end: int):
         for time_step in range(time_step_start, time_step_end + 1):
@@ -118,7 +85,7 @@ class PyReachableSet(ReachableSet):
                                                             self.config.reachable_set.size_grid)
 
         list_rectangles_collision_free = \
-            reach_operation.check_collision_and_split_rectangles(self._collision_checker, time_step,
+            reach_operation.check_collision_and_split_rectangles(self.collision_checker, time_step,
                                                                  list_rectangles_repartitioned,
                                                                  self.config.reachable_set.radius_terminal_split)
 

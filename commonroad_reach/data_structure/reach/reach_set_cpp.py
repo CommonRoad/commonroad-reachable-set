@@ -15,10 +15,10 @@ class CppReachableSet(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
-        config_cpp = self.config.convert_to_cpp_configuration()
+        self._reach = reach.ReachableSet(self.config.convert_to_cpp_configuration(),
+                                         CppCollisionChecker(self.config).collision_checker)
 
-        cc = CppCollisionChecker(self.config)
-        self._reach = reach.ReachableSet(config_cpp, cc.collision_checker)
+        logger.info("CppReachableSet initialized.")
 
     def compute(self, time_step_start: int, time_step_end: int):
         """Computes reachable sets for the specified time steps."""
@@ -27,8 +27,8 @@ class CppReachableSet(ReachableSet):
             self._reach.compute(time_step, time_step)
             self._list_time_steps_computed.append(time_step)
 
-        self._dict_time_to_drivable_area = self._reach.drivable_area()
-        self._dict_time_to_reachable_set = self._reach.reachable_set()
+        self.dict_time_to_drivable_area = self._reach.drivable_area()
+        self.dict_time_to_reachable_set = self._reach.reachable_set()
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
             self._prune_nodes_not_reaching_final_time_step()

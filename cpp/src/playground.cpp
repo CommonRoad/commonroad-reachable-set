@@ -8,7 +8,7 @@
 #include "collision/collision_checker.h"
 #include "geometry/curvilinear_coordinate_system.h"
 #include "reachset/data_structure/reach/reach_set.hpp"
-#include "reachset/data_structure/reach/reach_polygon2.hpp"
+#include "reachset/data_structure/reach/reach_polygon.hpp"
 #include "reachset/utility/collision_checker.hpp"
 #include "reachset/utility/miscellaneous.hpp"
 

@@ -33,7 +33,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     planning_problem = config.planning_problem
     ref_path = config.planning.reference_path
 
-    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode == 2 else "PYTHON"
     time_step_start = time_step_start or reach_interface.time_step_start
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)

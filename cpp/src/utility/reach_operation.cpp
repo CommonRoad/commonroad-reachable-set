@@ -12,14 +12,12 @@ using namespace reach;
 /// 2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to
 /// approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace is dependent on
 /// the given switching time (gamma).
-ReachPolygon2Ptr reach::create_zero_state_polygon(double const& dt, double const& a_min, double const& a_max) {
-    // Step 1
+ReachPolygonPtr reach::create_zero_state_polygon(double const& dt, double const& a_min, double const& a_max) {
     auto polygon = create_bounding_box(dt, a_min, a_max);
 
-    // Step 2
     for (auto& gamma: {0.0, 0.5, 1.0}) {
         auto[tuple_coefficients_upper, tuple_coefficients_lower] =
-                compute_halfspace_coefficients(dt, a_min, a_max, gamma);
+        compute_halfspace_coefficients(dt, a_min, a_max, gamma);
         polygon->intersect_halfspace(std::get<0>(tuple_coefficients_upper),
                                      std::get<1>(tuple_coefficients_upper),
                                      std::get<2>(tuple_coefficients_upper));
@@ -34,11 +32,11 @@ ReachPolygon2Ptr reach::create_zero_state_polygon(double const& dt, double const
     return polygon;
 }
 
-ReachPolygon2Ptr reach::create_bounding_box(double const& dt, double const& a_min, double const& a_max) {
+ReachPolygonPtr reach::create_bounding_box(double const& dt, double const& a_min, double const& a_max) {
 
     tuple tuple_vertices{0.5 * a_min * pow(dt, 2), a_min * dt, 0.5 * a_max * pow(dt, 2), a_max * dt};
 
-    return make_shared<ReachPolygon2>(tuple_vertices);
+    return make_shared<ReachPolygon>(tuple_vertices);
 }
 
 
@@ -120,8 +118,8 @@ reach::generate_tuples_vertices_polygons_initial(ConfigurationPtr const& config)
 /// 3. convexify
 /// 4. compute the minkowski sum of zero-input and zero-state responses
 /// 5. intersect with halfspaces to consider velocity limits
-ReachPolygon2Ptr reach::propagate_polygon(ReachPolygon2Ptr const& polygon, ReachPolygon2Ptr const& polygon_zero_state,
-                                          double const& dt, double const& v_min, double const& v_max) {
+ReachPolygonPtr reach::propagate_polygon(ReachPolygonPtr const& polygon, ReachPolygonPtr const& polygon_zero_state,
+                                         double const& dt, double const& v_min, double const& v_max) {
     // create a new object (does not modify the passed in pointer)
     auto polygon_propagated = polygon->clone();
     polygon_propagated->linear_mapping(1, dt, 0, 1);
@@ -133,16 +131,16 @@ ReachPolygon2Ptr reach::propagate_polygon(ReachPolygon2Ptr const& polygon, Reach
     return polygon_propagated;
 }
 
-vector<ReachPolygon2Ptr>
+vector<ReachPolygonPtr>
 reach::project_base_sets_to_position_domain(vector<ReachNodePtr> const& vec_base_sets_propagated) {
-    vector<ReachPolygon2Ptr> vec_rectangles_projected;
+    vector<ReachPolygonPtr> vec_rectangles_projected;
     vec_rectangles_projected.reserve(vec_base_sets_propagated.size());
 
     for (auto const& base_set: vec_base_sets_propagated) {
-        vec_rectangles_projected.emplace_back(make_shared<ReachPolygon2>(base_set->polygon_lon->p_min(),
-                                                                         base_set->polygon_lat->p_min(),
-                                                                         base_set->polygon_lon->p_max(),
-                                                                         base_set->polygon_lat->p_max()));
+        vec_rectangles_projected.emplace_back(make_shared<ReachPolygon>(base_set->polygon_lon->p_min(),
+                                                                        base_set->polygon_lat->p_min(),
+                                                                        base_set->polygon_lon->p_max(),
+                                                                        base_set->polygon_lat->p_max()));
 
     }
 
@@ -154,8 +152,8 @@ reach::project_base_sets_to_position_domain(vector<ReachNodePtr> const& vec_base
 /// 2. discretize rectangles
 /// 3. repartition the rectangles into a new list of rectangles.
 /// 4. restore the rectangles back to undiscretized ones.
-vector<ReachPolygon2Ptr>
-reach::create_repartitioned_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles, double const& size_grid) {
+vector<ReachPolygonPtr>
+reach::create_repartitioned_rectangles(vector<ReachPolygonPtr> const& vec_rectangles, double const& size_grid) {
     if (vec_rectangles.size() <= 1)
         return vec_rectangles;
 
@@ -175,7 +173,7 @@ reach::create_repartitioned_rectangles(vector<ReachPolygon2Ptr> const& vec_recta
     return vec_rectangles_undiscretized;
 }
 
-tuple<double, double> reach::compute_minimum_positions_of_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles) {
+tuple<double, double> reach::compute_minimum_positions_of_rectangles(vector<ReachPolygonPtr> const& vec_rectangles) {
     auto p_lon_min_rectangles = std::numeric_limits<double>::infinity();
     auto p_lat_min_rectangles = std::numeric_limits<double>::infinity();
 
@@ -189,10 +187,10 @@ tuple<double, double> reach::compute_minimum_positions_of_rectangles(vector<Reac
 
 /// p_discretized = (p_undiscretized - p_min) / size_grid
 /// floor for min values, and ceil for max values for over-approximation.
-vector<ReachPolygon2Ptr> reach::discretize_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles,
-                                                      tuple<double, double> const& tuple_p_min_rectangles,
-                                                      double const& size_grid) {
-    vector<ReachPolygon2Ptr> vec_rectangles_discretized;
+vector<ReachPolygonPtr> reach::discretize_rectangles(vector<ReachPolygonPtr> const& vec_rectangles,
+                                                     tuple<double, double> const& tuple_p_min_rectangles,
+                                                     double const& size_grid) {
+    vector<ReachPolygonPtr> vec_rectangles_discretized;
     vec_rectangles_discretized.reserve(vec_rectangles.size());
     auto[p_lon_min_rectangles, p_lat_min_rectangles] = tuple_p_min_rectangles;
     double p_lon_min, p_lat_min, p_lon_max, p_lat_max;
@@ -203,17 +201,17 @@ vector<ReachPolygon2Ptr> reach::discretize_rectangles(vector<ReachPolygon2Ptr> c
         p_lon_max = std::ceil((rectangle->p_lon_max() - p_lon_min_rectangles) / size_grid);
         p_lat_max = std::ceil((rectangle->p_lat_max() - p_lat_min_rectangles) / size_grid);
 
-        vec_rectangles_discretized.emplace_back(make_shared<ReachPolygon2>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
+        vec_rectangles_discretized.emplace_back(make_shared<ReachPolygon>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
     }
 
     return vec_rectangles_discretized;
 }
 
 /// p_undiscretized = p_discretized * size_grid + p_min
-vector<ReachPolygon2Ptr> reach::undiscretize_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles,
-                                                        tuple<double, double> const& tuple_p_min_rectangles,
-                                                        double const& size_grid) {
-    vector<ReachPolygon2Ptr> vec_rectangles_undiscretized;
+vector<ReachPolygonPtr> reach::undiscretize_rectangles(vector<ReachPolygonPtr> const& vec_rectangles,
+                                                       tuple<double, double> const& tuple_p_min_rectangles,
+                                                       double const& size_grid) {
+    vector<ReachPolygonPtr> vec_rectangles_undiscretized;
     vec_rectangles_undiscretized.reserve(vec_rectangles.size());
     auto[p_lon_min_rectangles, p_lat_min_rectangles] = tuple_p_min_rectangles;
     double p_lon_min, p_lat_min, p_lon_max, p_lat_max;
@@ -225,7 +223,7 @@ vector<ReachPolygon2Ptr> reach::undiscretize_rectangles(vector<ReachPolygon2Ptr>
         p_lat_max = rectangle->p_lat_max() * size_grid + p_lat_min_rectangles;
 
         vec_rectangles_undiscretized.emplace_back(
-                make_shared<ReachPolygon2>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
+                make_shared<ReachPolygon>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
     }
 
     return vec_rectangles_undiscretized;
@@ -234,7 +232,7 @@ vector<ReachPolygon2Ptr> reach::undiscretize_rectangles(vector<ReachPolygon2Ptr>
 /// *Steps*:
 /// 1. Obtain a list of vertical segments representing the contour of the union of the rectangles.
 /// 2. Create repartitioned rectangles from the list of vertical segments using sweep line algorithm.
-vector<ReachPolygon2Ptr> reach::repartition_rectangle(vector<ReachPolygon2Ptr> const& vec_rectangles) {
+vector<ReachPolygonPtr> reach::repartition_rectangle(vector<ReachPolygonPtr> const& vec_rectangles) {
     // Step 1
     auto vec_segments_vertical = SweepLine::obtain_vertical_segments_from_rectangles(vec_rectangles);
 
@@ -244,15 +242,15 @@ vector<ReachPolygon2Ptr> reach::repartition_rectangle(vector<ReachPolygon2Ptr> c
     return vec_rectangles_repartitioned;
 }
 
-vector<ReachPolygon2Ptr> reach::check_collision_and_split_rectangles(int const& time_step,
-                                                                     CollisionCheckerPtr const& collision_checker,
-                                                                     vector<ReachPolygon2Ptr> const& vec_rectangles,
-                                                                     double const& radius_terminal_split,
-                                                                     int const& num_threads) {
+vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& time_step,
+                                                                    CollisionCheckerPtr const& collision_checker,
+                                                                    vector<ReachPolygonPtr> const& vec_rectangles,
+                                                                    double const& radius_terminal_split,
+                                                                    int const& num_threads) {
     if (vec_rectangles.empty())
         return {};
 
-    vector<ReachPolygon2Ptr> vec_rectangles_collision_free;
+    vector<ReachPolygonPtr> vec_rectangles_collision_free;
     auto radius_terminal_squared = pow(radius_terminal_split, 2);
     // make a window query w.r.t to speed up the collision check
     auto collision_checker_sliced = collision_checker->timeSlice(time_step)->
@@ -274,7 +272,7 @@ vector<ReachPolygon2Ptr> reach::check_collision_and_split_rectangles(int const& 
 }
 
 tuple<double, double, double, double>
-reach::obtain_extremum_coordinates_of_polygons(vector<ReachPolygon2Ptr> const& vec_polygons) {
+reach::obtain_extremum_coordinates_of_polygons(vector<ReachPolygonPtr> const& vec_polygons) {
     vector<double> vec_p_lon;
     vector<double> vec_p_lat;
 
@@ -293,7 +291,7 @@ reach::obtain_extremum_coordinates_of_polygons(vector<ReachPolygon2Ptr> const& v
     return make_tuple(*p_lon_min, *p_lat_min, *p_lon_max, *p_lat_max);
 }
 
-collision::RectangleAABB reach::obtain_bounding_box_of_rectangles(vector<ReachPolygon2Ptr> const& vec_rectangles) {
+collision::RectangleAABB reach::obtain_bounding_box_of_rectangles(vector<ReachPolygonPtr> const& vec_rectangles) {
     auto p_lon_min = std::numeric_limits<double>::infinity();
     auto p_lat_min = std::numeric_limits<double>::infinity();
     auto p_lon_max = -std::numeric_limits<double>::infinity();
@@ -314,7 +312,7 @@ collision::RectangleAABB reach::obtain_bounding_box_of_rectangles(vector<ReachPo
     return collision::RectangleAABB{length / 2, width / 2, Eigen::Vector2d(center_lon, center_lat)};
 }
 
-RectangleAABBPtr reach::convert_reach_polygon_to_collision_aabb(ReachPolygon2Ptr const& rectangle) {
+RectangleAABBPtr reach::convert_reach_polygon_to_collision_aabb(ReachPolygonPtr const& rectangle) {
     auto length = (rectangle->p_lon_max() - rectangle->p_lon_min());
     auto width = (rectangle->p_lat_max() - rectangle->p_lat_min());
     auto center_lon = (rectangle->p_lon_max() + rectangle->p_lon_min()) / 2;
@@ -323,9 +321,9 @@ RectangleAABBPtr reach::convert_reach_polygon_to_collision_aabb(ReachPolygon2Ptr
     return make_shared<collision::RectangleAABB>(length / 2, width / 2, Eigen::Vector2d(center_lon, center_lat));
 }
 
-vector<ReachPolygon2Ptr>
+vector<ReachPolygonPtr>
 reach::convert_collision_aabbs_to_reach_polygons(vector<RectangleAABBPtr> const& vec_rectangles) {
-    vector<ReachPolygon2Ptr> vec_polygons;
+    vector<ReachPolygonPtr> vec_polygons;
     vec_polygons.reserve(vec_rectangles.size());
 
     for (auto const& rectangle: vec_rectangles) {
@@ -334,7 +332,7 @@ reach::convert_collision_aabbs_to_reach_polygons(vector<RectangleAABBPtr> const&
         auto p_lat_min = rectangle->center_y() - rectangle->r_y();
         auto p_lat_max = rectangle->center_y() + rectangle->r_y();
 
-        vec_polygons.emplace_back(make_shared<ReachPolygon2>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
+        vec_polygons.emplace_back(make_shared<ReachPolygon>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
     }
 
     return vec_polygons;
@@ -399,13 +397,13 @@ tuple<RectangleAABBPtr, RectangleAABBPtr> reach::split_rectangle_into_two(Rectan
 /// if they overlap in the position domain.
 /// 2. create a adapted base set for each of the drivable area rectangle.
 vector<ReachNodePtr> reach::adapt_base_sets_to_drivable_area(
-        vector<ReachPolygon2Ptr> const& drivable_area,
+        vector<ReachPolygonPtr> const& drivable_area,
         vector<ReachNodePtr> const& vec_base_sets_propagated, int const& num_threads) {
 
     vector<ReachNodePtr> reachable_set_time_step_current;
     reachable_set_time_step_current.reserve(drivable_area.size());
 
-    vector<ReachPolygon2Ptr> vec_rectangles_base_sets;
+    vector<ReachPolygonPtr> vec_rectangles_base_sets;
     vec_rectangles_base_sets.reserve(vec_base_sets_propagated.size());
 
     // Step 1
@@ -445,8 +443,8 @@ vec_rectangles_drivable_area, vec_base_sets_propagated, reachable_set_time_step_
     return reachable_set_time_step_current;
 }
 
-unordered_map<int, vector<int>> reach::create_adjacency_map(vector<ReachPolygon2Ptr> const& vec_rectangles_a,
-                                                            vector<ReachPolygon2Ptr> const& vec_rectangles_b) {
+unordered_map<int, vector<int>> reach::create_adjacency_map(vector<ReachPolygonPtr> const& vec_rectangles_a,
+                                                            vector<ReachPolygonPtr> const& vec_rectangles_b) {
     unordered_map<int, vector<int>> map_idx_to_vec_idx;
 
     for (int idx_a = 0; idx_a < vec_rectangles_a.size(); idx_a++) {
@@ -455,12 +453,7 @@ unordered_map<int, vector<int>> reach::create_adjacency_map(vector<ReachPolygon2
         for (int idx_b = 0; idx_b < vec_rectangles_b.size(); idx_b++) {
             auto const& rectangle_b = vec_rectangles_b[idx_b];
 
-            if (not(rectangle_a->p_lon_min() >= rectangle_b->p_lon_max() or
-                    rectangle_a->p_lon_max() <= rectangle_b->p_lon_min() or
-                    rectangle_a->p_lat_min() >= rectangle_b->p_lat_max() or
-                    rectangle_a->p_lat_max() <= rectangle_b->p_lat_min()))
-
-                map_idx_to_vec_idx[idx_a].emplace_back(idx_b);
+            if (rectangle_a->intersects(rectangle_b)) { map_idx_to_vec_idx[idx_a].emplace_back(idx_b); }
         }
     }
 
@@ -471,7 +464,7 @@ unordered_map<int, vector<int>> reach::create_adjacency_map(vector<ReachPolygon2
 /// position domain), and cut the base sets down with position constraints from the rectangle. Non-empty intersected
 /// lon/lat polygons imply that this is a valid base set and are considered as a parent of the rectangle (reachable
 /// from the node from which the base set is propagated).
-ReachNodePtr reach::adapt_base_set_to_drivable_area(ReachPolygon2Ptr const& rectangle_drivable_area,
+ReachNodePtr reach::adapt_base_set_to_drivable_area(ReachPolygonPtr const& rectangle_drivable_area,
                                                     vector<ReachNodePtr> const& vec_base_sets_propagated,
                                                     vector<int> const& vec_idx_base_sets_adjacent) {
     vector<ReachNodePtr> vec_base_sets_parent;
@@ -512,8 +505,8 @@ ReachNodePtr reach::adapt_base_set_to_drivable_area(ReachPolygon2Ptr const& rect
 
     if (not vec_vertices_polygon_lon_new.empty() and not vec_vertices_polygon_lat_new.empty()) {
         // if there is at least one valid base set
-        auto polygon_lon_new = make_shared<ReachPolygon2>(vec_vertices_polygon_lon_new);
-        auto polygon_lat_new = make_shared<ReachPolygon2>(vec_vertices_polygon_lat_new);
+        auto polygon_lon_new = make_shared<ReachPolygon>(vec_vertices_polygon_lon_new);
+        auto polygon_lat_new = make_shared<ReachPolygon>(vec_vertices_polygon_lat_new);
         polygon_lon_new->convexify();
         polygon_lat_new->convexify();
 
