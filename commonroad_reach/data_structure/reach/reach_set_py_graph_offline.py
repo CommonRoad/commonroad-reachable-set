@@ -7,7 +7,7 @@ from typing import List, Dict, Tuple
 
 import numpy as np
 from commonroad_dc.pycrcc import CollisionChecker, RectAABB
-from commonroad_reach.__version__ import __version__
+from commonroad_reach import __version__
 from scipy import sparse
 
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration

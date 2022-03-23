@@ -1,20 +1,19 @@
 import numpy as np
 
 from commonroad_reach.data_structure.configuration import Configuration
-#from pycrreach import ReachabilityAnalysis
-from pycrreach import ReachabilityAnalysis
+from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
 
 
 def test_reachability_analysis_initialization(config: Configuration):
-    ReachabilityAnalysis(config)
+    PyReachableSet(config)
     assert True
 
 
-def test_initial_drivable_area(reachability_analysis):
-    [polygon_drivable_area] = reachability_analysis._construct_initial_drivable_area
+def test_initial_drivable_area(reachable_set_py):
+    [polygon_drivable_area] = reachable_set_py._construct_initial_drivable_area()
 
     # values from the scenario DEU_Test-1_1_T-1
-    if reachability_analysis.config.planning.coordinate_system == "CART":
+    if reachable_set_py.config.planning.coordinate_system == "CART":
         p_lon = 35.1
         p_lat = 2.1
 

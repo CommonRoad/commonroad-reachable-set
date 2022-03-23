@@ -65,9 +65,8 @@ def test_offline_online_compatibility():
     offline_dir = tempfile.mktemp(suffix="")
     os.makedirs(offline_dir)
     try:
-
-        config = name_scenario = "DEU_Offline-1_1_T-1"
-        dt = 10
+        name_scenario = "DEU_Offline-1_1_T-1"
+        dt = 5
 
         config = ConfigurationBuilder.build_configuration(name_scenario)
         # [config.scenario.remove_obstacle(obs) for obs in config.scenario.dynamic_obstacles]
@@ -77,12 +76,13 @@ def test_offline_online_compatibility():
         reach_offline.config.general.path_offline_data = offline_dir
         reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
 
-        config.reachable_set.mode_computation = 5
+        config.reachable_set.mode_computation = 4
         config.planning_problem.initial_state = State(position=np.array([15, 1.5]),
                                                       velocity=15, orientation=0, steering_angle=0.0, yaw_rate=0,
                                                       slip_angle=0, time_step=0)
         reach_online = PyGraphReachableSetOnline(config)
         reach_online.compute(1, dt)
+
     finally:
         shutil.rmtree(offline_dir)
         print("removed")
@@ -93,7 +93,7 @@ def online_reach():
     # os.makedirs(offline_dir)
     try:
         # ensure pickled data can be parsed by online reachability
-        config = name_scenario = "DEU_Offline-1_1_T-1"
+        name_scenario = "DEU_Offline-1_1_T-1"
         # name_scenario = "ARG_Carcarana-1_1_T-1"
         # name_scenario = "ZAM_Tjunction-1_313_T-1"
         dt = 18
