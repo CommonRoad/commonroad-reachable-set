@@ -124,8 +124,8 @@ class PyReachableSet(ReachableSet):
         """Computes the reachable set for the given time step.
 
         Steps:
-            1. create a list of base sets adapted to the drivable area.
-            2. create a list of reach nodes from the list of adapted base sets.
+            1. construct reach nodes from drivable area and the propagated based sets.
+            2. update parent-child relationship of the nodes.
         """
         base_sets_propagated = self.dict_time_to_base_set_propagated[time_step]
         drivable_area = self.dict_time_to_drivable_area[time_step]
@@ -133,11 +133,11 @@ class PyReachableSet(ReachableSet):
         if not drivable_area:
             return None
 
-        list_base_sets_adapted = reach_operation.adapt_base_sets_to_drivable_area(drivable_area, base_sets_propagated)
+        list_nodes = reach_operation.construct_reach_nodes(drivable_area, base_sets_propagated)
 
-        reachable_set_current_step = reach_operation.create_nodes_of_reachable_set(time_step, list_base_sets_adapted)
+        reachable_set = reach_operation.connect_children_to_parents(time_step, list_nodes)
 
-        self.dict_time_to_reachable_set[time_step] = reachable_set_current_step
+        self.dict_time_to_reachable_set[time_step] = reachable_set
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
         """Propagates the nodes of the reachable set."""
@@ -177,10 +177,10 @@ class PyReachableSet(ReachableSet):
             list_idx_nodes_to_be_deleted = list()
             for idx_node, node in enumerate(list_nodes):
                 # discard the node if it has no child node
-                if not node.nodes_child:
+                if not node.list_nodes_child:
                     list_idx_nodes_to_be_deleted.append(idx_node)
                     # iterate through its parent nodes and disconnect them
-                    for node_parent in node.nodes_parent:
+                    for node_parent in node.list_nodes_parent:
                         node_parent.remove_child_node(node)
 
             # update drivable area and reachable set dictionaries
@@ -190,7 +190,7 @@ class PyReachableSet(ReachableSet):
             self.dict_time_to_reachable_set[time_step] = [node for idx_node, node in enumerate(list_nodes)
                                                           if idx_node not in list_idx_nodes_to_be_deleted]
 
-            cnt_nodes_after_pruning += len(list_nodes)
+            cnt_nodes_after_pruning += len(self.dict_time_to_reachable_set[time_step])
 
         self._pruned = True
 

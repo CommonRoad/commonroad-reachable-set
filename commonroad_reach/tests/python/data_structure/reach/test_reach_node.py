@@ -9,7 +9,7 @@ def test_new_node_has_id_0():
 
 
 def test_new_node_has_empty_parents_and_children(node: ReachNode):
-    assert len(node.nodes_parent) == 0 and len(node.nodes_child) == 0
+    assert len(node.list_nodes_parent) == 0 and len(node.list_nodes_child) == 0
 
 
 def test_node_has_correct_boundaries():

@@ -325,21 +325,20 @@ def split_rectangle_into_two(rectangle: ReachPolygon) -> Tuple[ReachPolygon, Rea
     return rectangle_split_1, rectangle_split_2
 
 
-def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
-                                     list_base_sets_propagated: List[ReachNode],
-                                     has_multi_generation: bool = False) -> List[ReachNode]:
-    """Creates adapted base sets from the computed drivable area.
+def construct_reach_nodes(drivable_area: List[ReachPolygon],
+                          list_base_sets_propagated: List[ReachNode],
+                          has_multi_generation: bool = False) -> List[ReachNode]:
+    """Constructs nodes of the reachability graph.
 
-    The nodes of the reachable set of the current time step is later created
-    from these adapted base sets.
+    The nodes are constructed by cutting down the propagated base sets to the drivable area to determine the reachable
+    positions and velocities.
 
     Steps:
-        1. examine the adjacency of rectangles of drivable area and the
-           propagated base sets. They are considered adjacent if they
+        1. examine the adjacency of drivable area and the propagated base sets. They are considered adjacent if they
            overlap in the position domain.
-        2. create an adapted base set for each drivable area rectangle
+        2. create a node from each drivable area and its adjacent propagated base sets.
     """
-    reachable_base_set_time_current = []
+    reachable_set = []
 
     list_rectangles_base_sets = [base_set.position_rectangle for base_set in list_base_sets_propagated]
     list_rectangles_drivable_area = drivable_area
@@ -350,24 +349,23 @@ def adapt_base_sets_to_drivable_area(drivable_area: List[ReachPolygon],
         # examine each drivable area rectangle
         rectangle_drivable_area = list_rectangles_drivable_area[idx_drivable_area]
 
-        base_set_adapted = adapt_base_set_to_drivable_area(rectangle_drivable_area, list_base_sets_propagated,
-                                                           list_idx_base_sets_adjacent, has_multi_generation)
-        if base_set_adapted:
-            reachable_base_set_time_current.append(base_set_adapted)
+        reach_node = construct_reach_node(rectangle_drivable_area, list_base_sets_propagated,
+                                                list_idx_base_sets_adjacent, has_multi_generation)
+        if reach_node:
+            reachable_set.append(reach_node)
 
-    return reachable_base_set_time_current
+    return reachable_set
 
 
-def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
-                                    list_base_sets_propagated: List[ReachNode],
-                                    list_idx_base_sets_adjacent: List[int],
-                                    multi_generation=False):
-    """Returns adapted base set created from a rectangle of the drivable area.
+def construct_reach_node(rectangle_drivable_area: ReachPolygon,
+                         list_base_sets_propagated: List[ReachNode],
+                         list_idx_base_sets_adjacent: List[int],
+                         multi_generation=False):
+    """Returns a reach node constructed from the propagated base sets.
 
-    Iterate through base sets that are adjacent to the rectangle of drivable area under examination (overlaps
-    in position domain), and cut the base sets down with position constraints from the rectangle. Non-empty
-    intersected lon/lat polygons imply that this is a valid base set and are considered as a parent of the
-    rectangle (reachable from the node from which the base set is propagated).
+    Iterate through base sets that are adjacent to the drivable area, and cut the base sets down with position
+    constraints from the drivable area. A non-empty intersected polygon imply that it is a valid base set and is
+    considered as a parent of the rectangle (reachable from the node from which the base set is propagated).
     """
     if not multi_generation:
         Node = ReachNode
@@ -404,21 +402,17 @@ def adapt_base_set_to_drivable_area(rectangle_drivable_area: ReachPolygon,
     if list_vertices_polygon_lon_new and list_vertices_polygon_lat_new:
         polygon_lon_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lon_new).convex_hull)
         polygon_lat_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lat_new).convex_hull)
-        base_set_adapted = Node(polygon_lon_new, polygon_lat_new)
-        base_set_adapted.source_propagation = list_base_sets_parent
+        reach_node = Node(polygon_lon_new, polygon_lat_new)
+        reach_node.source_propagation = list_base_sets_parent
 
-        return base_set_adapted
+        return reach_node
 
 
-def create_nodes_of_reachable_set(time_step: int, list_base_sets_adapted: List[ReachNode]):
-    """Creates list of reachable set nodes of the current time step.
-
-    Each adapted base set is converted into a reachable set node. Also, the parent-child relationship with
-    the nodes of the last time step is updated.
-    """
+def connect_children_to_parents(time_step: int, list_nodes: List[ReachNode]):
+    """Connects the child reach nodes to their parent nodes."""
     list_nodes_reachable_set_new = []
 
-    for node_child in list_base_sets_adapted:
+    for node_child in list_nodes:
         node_child.time_step = time_step
         # update parent-child relationship
         for node_parent in node_child.source_propagation:

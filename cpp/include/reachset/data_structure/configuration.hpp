@@ -135,6 +135,8 @@ struct ReachableSetConfiguration {
     double radius_terminal_split{};
     // number of threads in parallel computation
     int num_threads{};
+    // flag whether to prune reach nodes not reaching the final time step
+    bool prune_nodes{};
 
     ReachableSetConfiguration() = default;
 

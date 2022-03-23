@@ -67,8 +67,8 @@ void ReachableSet::compute(int step_start, int step_end) {
         _vec_time_steps_computed.emplace_back(time_step);
     }
 
-    if (_prune_reachable_set) {
-        _prune_nodes_not_reaching_final_time_step();
+    if (step_start != step_end and config->reachable_set().prune_nodes) {
+        prune_nodes_not_reaching_final_time_step();
     }
 }
 
@@ -80,9 +80,7 @@ void ReachableSet::compute(int step_start, int step_end) {
 /// 5. Merge and repartition the collision-free rectangles again to reduce number of nodes.
 void ReachableSet::_compute_drivable_area_at_time_step(int const& time_step) {
     auto reachable_set_previous = map_time_to_reachable_set[time_step - 1];
-    if (reachable_set_previous.empty()) {
-        return;
-    }
+    if (reachable_set_previous.empty()) return;
 
     auto vec_base_sets_propagated = _propagate_reachable_set(reachable_set_previous);
 
@@ -170,19 +168,63 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
 }
 
 /// *Steps*:
-/// 1. create a list of new base sets cut down with rectangles of the drivable area.
-/// 2. create the list of nodes of the new reachable set.
+/// 1. construct reach nodes from drivable area and the propagated base sets.
+/// 2. update parent-child relationship of the nodes.
 void ReachableSet::_compute_reachable_set_at_time_step(int const& time_step) {
     auto drivable_area = map_time_to_drivable_area[time_step];
     auto vec_base_sets_propagated = map_time_to_base_set_propagated[time_step];
-    if (drivable_area.empty())
-        return;
+    auto num_threads = config->reachable_set().num_threads;
 
-    auto vec_base_sets_adapted = adapt_base_sets_to_drivable_area(drivable_area, vec_base_sets_propagated,
-                                                                  config->reachable_set().num_threads);
+    if (drivable_area.empty()) return;
 
-    auto reachable_set_current_step = create_reachable_set_nodes(time_step, vec_base_sets_adapted,
-                                                                 config->reachable_set().num_threads);
+    auto vec_nodes = construct_reach_nodes(drivable_area, vec_base_sets_propagated, num_threads);
 
-    map_time_to_reachable_set[time_step] = reachable_set_current_step;
+    auto reachable_set = connect_children_to_parents(time_step, vec_nodes, num_threads);
+
+    map_time_to_reachable_set[time_step] = reachable_set;
+}
+
+void ReachableSet::prune_nodes_not_reaching_final_time_step() {
+    auto cnt_nodes_before_pruning = reachable_set_at_time_step(time_step_end).size();
+    auto cnt_nodes_after_pruning = cnt_nodes_before_pruning;
+
+    for (auto time_step = time_step_end - 1; time_step > time_step_start - 1; time_step--) {
+        auto vec_nodes = reachable_set_at_time_step(time_step);
+        cnt_nodes_before_pruning += vec_nodes.size();
+
+        vector<int> vec_idx_nodes_to_be_deleted{};
+        for (int idx_node = 0; idx_node < vec_nodes.size(); idx_node++) {
+            // discard the node if it has no child node
+            auto node = vec_nodes[idx_node];
+            if (node->vec_nodes_child().empty()) {
+                vec_idx_nodes_to_be_deleted.push_back(idx_node);
+                // iterate through its parent nodes and disconnect them
+                for (auto const& node_parent: node->vec_nodes_parent()) {
+                    node_parent->remove_child_node(node);
+                }
+            }
+        }
+        // discard nodes without a child
+        vector<ReachPolygonPtr> vec_drivable_area_updated{};
+        vector<ReachNodePtr> vec_reachable_set_updated{};
+        for (int idx_node = 0; idx_node < vec_nodes.size(); idx_node++) {
+            auto result = std::find(vec_idx_nodes_to_be_deleted.begin(),
+                                    vec_idx_nodes_to_be_deleted.end(),
+                                    idx_node) != vec_idx_nodes_to_be_deleted.end();
+
+            if (not result) {
+                auto node = vec_nodes[idx_node];
+                vec_drivable_area_updated.emplace_back(node->position_rectangle());
+                vec_reachable_set_updated.emplace_back(node);
+            }
+        }
+        // update drivable area and reachable set dictionaries
+        map_time_to_drivable_area[time_step] = vec_drivable_area_updated;
+        map_time_to_reachable_set[time_step] = vec_reachable_set_updated;
+        cnt_nodes_after_pruning += map_time_to_reachable_set[time_step].size();
+    }
+
+    _pruned = true;
+    cout << "\t#Nodes before pruning: \t" << cnt_nodes_before_pruning << endl;
+    cout << "\t#Nodes after pruning: \t" << cnt_nodes_after_pruning << endl;
 }

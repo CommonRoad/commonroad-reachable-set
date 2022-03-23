@@ -143,6 +143,7 @@ class Configuration:
         config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
         config.reachable_set.num_threads = self.reachable_set.num_threads
+        config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_time_step
 
         return config
 

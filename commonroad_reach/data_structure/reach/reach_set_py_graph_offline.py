@@ -205,12 +205,12 @@ class PyGraphReachableSetOffline(ReachableSet):
         if not drivable_area:
             return []
 
-        list_base_sets_adapted = reach_operation.adapt_base_sets_to_drivable_area(drivable_area,
-                                                                                  base_sets_propagated,
-                                                                                  has_multi_generation=True)
+        list_base_sets_adapted = reach_operation.construct_reach_nodes(drivable_area,
+                                                                       base_sets_propagated,
+                                                                       has_multi_generation=True)
 
-        reachable_set_time_step_current = reach_operation.create_nodes_of_reachable_set(time_step,
-                                                                                        list_base_sets_adapted)
+        reachable_set_time_step_current = reach_operation.connect_children_to_parents(time_step,
+                                                                                      list_base_sets_adapted)
 
         self.dict_time_to_reachable_set[time_step] = reachable_set_time_step_current
 
@@ -416,7 +416,7 @@ class PyGraphReachableSetOffline(ReachableSet):
 
                 matrix_adjacency_tmp = list()
                 for node in list_nodes:
-                    list_adjacency = [(node_parent in node.nodes_parent) for node_parent in list_nodes_parent]
+                    list_adjacency = [(node_parent in node.list_nodes_parent) for node_parent in list_nodes_parent]
                     matrix_adjacency_tmp.append(list_adjacency)
 
                 matrix_adjacency_dense = np.array(matrix_adjacency_tmp, dtype=bool)

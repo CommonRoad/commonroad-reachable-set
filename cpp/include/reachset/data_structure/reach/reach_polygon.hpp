@@ -129,10 +129,13 @@ public:
             vertex.x = tmp;
         }
         _sorting_state = ccw;
+        compute_bounding_box();
     }
 
     inline std::shared_ptr<ReachPolygon> clone() const {
-        return std::make_shared<ReachPolygon>(vec_vertices);
+        auto polygon_cloned = std::make_shared<ReachPolygon>(vec_vertices);
+        polygon_cloned->_sorting_state = _sorting_state;
+        return polygon_cloned;
     }
 
     /// Examines axis-aligned intersection

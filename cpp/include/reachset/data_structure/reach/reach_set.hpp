@@ -14,7 +14,6 @@ namespace reach {
 class ReachableSet {
 private:
     bool _reachable_set_computed{false};
-    bool _prune_reachable_set{false};
     bool _pruned{false};
     std::vector<int> _vec_time_steps_computed{0};
 
@@ -67,7 +66,7 @@ public:
 
     inline std::vector<ReachPolygonPtr> drivable_area_at_time_step(int const& time_step) {
         if (find(_vec_time_steps_computed.begin(), _vec_time_steps_computed.end(), time_step)
-            != _vec_time_steps_computed.end()) {
+            == _vec_time_steps_computed.end()) {
             cout << "Given time step for drivable area retrieval is out of range." << endl;
             return {};
         } else return map_time_to_drivable_area[time_step];
@@ -75,13 +74,15 @@ public:
 
     inline std::vector<ReachNodePtr> reachable_set_at_time_step(int const& time_step) {
         if (find(_vec_time_steps_computed.begin(), _vec_time_steps_computed.end(), time_step)
-            != _vec_time_steps_computed.end()) {
+            == _vec_time_steps_computed.end()) {
             cout << "Given time step for reachable set retrieval is out of range." << endl;
             return {};
         } else return map_time_to_reachable_set[time_step];
     }
 
     void compute(int step_start = 0, int step_end = 0);
+
+    void prune_nodes_not_reaching_final_time_step();
 };
 
 using ReachableSetPtr = shared_ptr<ReachableSet>;

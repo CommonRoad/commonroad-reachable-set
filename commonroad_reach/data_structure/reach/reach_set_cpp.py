@@ -34,5 +34,4 @@ class CppReachableSet(ReachableSet):
             self._prune_nodes_not_reaching_final_time_step()
 
     def _prune_nodes_not_reaching_final_time_step(self):
-        # todo: add pruning in the C++ side
-        pass
+        self._reach.prune_nodes_not_reaching_final_time_step()

@@ -59,8 +59,7 @@ void ReachPolygon::intersect_halfspace(double const& a, double const& b, double 
     if (a == 0 and b == 0)
         throw std::invalid_argument("<ReachPolygon> Halfspace parameters not valid.");
 
-    if (_polygon == nullptr)
-        return;
+    if (_polygon == nullptr) return;
 
     // construct halfspace polygon
     ReachPolygonPtr polygon_halfspace = construct_halfspace_polygon(a, b, c, _box);
@@ -175,9 +174,7 @@ void ReachPolygon::print_vertices() const {
 }
 
 void ReachPolygon::minkowski_sum(ReachPolygonPtr const& polygon_other) {
-    if (this->empty() or polygon_other->empty()) {
-        return;
-    }
+    if (this->empty() or polygon_other->empty()) return;
 
     auto vertices_self = this->vertices();
     auto vertices_other = polygon_other->vertices();

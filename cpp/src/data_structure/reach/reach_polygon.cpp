@@ -164,9 +164,7 @@ void ReachPolygon::sort_vertices_bottom_left_first() {
 }
 
 void ReachPolygon::convexify() {
-    if (_sorting_state == ccw || _sorting_state == ccw_bottom_left_first) {
-        return;
-    }
+    if (_sorting_state == ccw || _sorting_state == ccw_bottom_left_first) return;
 
     _sort_vertices_left_to_right();
     _remove_duplicated_vertices();
@@ -202,6 +200,7 @@ void ReachPolygon::convexify() {
     hull.resize(k - 1); // modified from original version
     vec_vertices = hull;
     _sorting_state = ccw;
+    compute_bounding_box();
 }
 
 /// Searches in counter-clockwise order through vertices for two vertices marked by index r and q:
@@ -211,7 +210,7 @@ void ReachPolygon::convexify() {
 /// The new polygon is constructed using the vertices[r..q] plus the two intersections point with the halfspace.
 void ReachPolygon::intersect_halfspace(double a, double b, double c) {
     if (a == 0 and b == 0) {
-        cout << "Halfspace parameters are invalid." <<endl;
+        cout << "Halfspace parameters are invalid." << endl;
         return;
     }
     if (vec_vertices.empty()) { return; }
@@ -236,9 +235,8 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
     };
 
     if (vec_vertices.size() == 1) {
-        if (inside(0)) {
-            return;
-        } else {
+        if (inside(0)) return;
+        else {
             vec_vertices.clear();
             _sorting_state = ccw;
             return;
@@ -266,9 +264,8 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
 
     assert(q == -1 ? r == q : true); // if q==-1 then also r==-1
     if (q == -1) {
-        if (any_inside) {
-            return;
-        } else {
+        if (any_inside) return;
+        else {
             // polyhedron is empty
             vec_vertices.clear();
             _sorting_state = ccw;
@@ -296,13 +293,12 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
     vec_vertices = vertices_new;
     _sorting_state = ccw;
     _remove_duplicated_vertices();
+    compute_bounding_box();
 }
 
 
 void ReachPolygon::minkowski_sum(std::shared_ptr<ReachPolygon> const& polygon_other) {
-    if (this->empty() or polygon_other->empty()) {
-        return;
-    }
+    if (this->empty() or polygon_other->empty()) return;
 
     auto polygon_sum = make_shared<ReachPolygon>();
     vector<tuple<double, double>> vec_vertices_sum;

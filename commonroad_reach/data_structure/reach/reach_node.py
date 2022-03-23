@@ -1,6 +1,6 @@
 import copy
 from collections import defaultdict
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, List
 
 from shapely import affinity
 
@@ -30,8 +30,8 @@ class ReachNode:
         self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
         self.time_step = time_step
-        self.nodes_parent: Set[ReachNode] = set()
-        self.nodes_child: Set[ReachNode] = set()
+        self.list_nodes_parent: List[ReachNode] = list()
+        self.list_nodes_child: List[ReachNode] = list()
 
         # the node from which the current node is propagated
         self.source_propagation = None
@@ -146,8 +146,8 @@ class ReachNode:
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
                                self.time_step)
-        node_clone.nodes_parent = copy.deepcopy(self.nodes_parent)
-        node_clone.nodes_child = copy.deepcopy(self.nodes_child)
+        node_clone.list_nodes_parent = copy.deepcopy(self.list_nodes_parent)
+        node_clone.list_nodes_child = copy.deepcopy(self.list_nodes_child)
         node_clone.source_propagation = self.source_propagation
 
         return node_clone
@@ -171,24 +171,26 @@ class ReachNode:
 
     def add_parent_node(self, node_parent: "ReachNode"):
         """Adds a parent node into the list."""
-        self.nodes_parent.add(node_parent)
+        if node_parent not in self.list_nodes_parent:
+            self.list_nodes_parent.append(node_parent)
 
     def remove_parent_node(self, node_parent: "ReachNode") -> bool:
         """Removes a parent node from the list."""
-        if node_parent in self.nodes_parent:
-            self.nodes_parent.remove(node_parent)
+        if node_parent in self.list_nodes_parent:
+            self.list_nodes_parent.remove(node_parent)
             return True
 
         return False
 
     def add_child_node(self, node_child: "ReachNode"):
         """Adds a child node into the list."""
-        self.nodes_child.add(node_child)
+        if node_child not in self.list_nodes_child:
+            self.list_nodes_child.append(node_child)
 
     def remove_child_node(self, node_child: "ReachNode") -> bool:
         """Removes a child node from the list."""
-        if node_child in self.nodes_child:
-            self.nodes_child.remove(node_child)
+        if node_child in self.list_nodes_child:
+            self.list_nodes_child.remove(node_child)
             return True
 
         return False

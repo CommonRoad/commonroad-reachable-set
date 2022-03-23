@@ -111,23 +111,24 @@ inline double diagonal_squared(RectangleAABBPtr const& rectangle) {
 /// Returns two rectangles each of which is a half of the initial rectangle.
 std::tuple<RectangleAABBPtr, RectangleAABBPtr> split_rectangle_into_two(RectangleAABBPtr const& rectangle);
 
-/// Creates adapted base sets from the computed drivable area.
-///The nodes of the reachable set of the current time step is later created from these adapted base sets.
-std::vector<ReachNodePtr> adapt_base_sets_to_drivable_area(std::vector<ReachPolygonPtr> const& drivable_area,
-                                                           std::vector<ReachNodePtr> const& vec_base_sets_propagated,
-                                                           int const& num_threads);
+/// Constructs nodes of the reachability graph.
+/// The nodes are constructed by cutting down the propagated base sets to the drivable area to determine the reachable
+/// positions and velocities.
+std::vector<ReachNodePtr> construct_reach_nodes(std::vector<ReachPolygonPtr> const& drivable_area,
+                                                std::vector<ReachNodePtr> const& vec_base_sets_propagated,
+                                                int const& num_threads);
 
 /// Creates a map indicating the adjacency (overlapping) status of two lists of rectangles.
 std::unordered_map<int, vector<int>> create_adjacency_map(std::vector<ReachPolygonPtr> const& vec_rectangles_a,
                                                           std::vector<ReachPolygonPtr> const& vec_rectangles_b);
 
-/// Returns adapted base set created from a rectangle of the drivable area.
-ReachNodePtr adapt_base_set_to_drivable_area(ReachPolygonPtr const& rectangle_drivable_area,
-                                             std::vector<ReachNodePtr> const& vec_base_sets_propagated,
-                                             std::vector<int> const& vec_idx_base_sets_adjacent);
+/// Returns a reach node constructed from the propagated base sets.
+ReachNodePtr construct_reach_node(ReachPolygonPtr const& rectangle_drivable_area,
+                                  std::vector<ReachNodePtr> const& vec_base_sets_propagated,
+                                  std::vector<int> const& vec_idx_base_sets_adjacent);
 
-/// Creates list of reachable set nodes of the current time step (continuous reachability analysis).
-std::vector<ReachNodePtr>
-create_reachable_set_nodes(int const& time_step, std::vector<ReachNodePtr> const& vec_base_sets_adapted,
-                           int const& num_threads);
+/// Connects the child reach nodes to their parent nodes.
+std::vector<ReachNodePtr> connect_children_to_parents(int const& time_step,
+                                                      std::vector<ReachNodePtr> const& vec_base_sets_adapted,
+                                                      int const& num_threads);
 }

@@ -171,7 +171,7 @@ class DrivingCorridors:
             if self.backend == "CPP":
                 [parent_reach_set_nodes.update(reach_node.vec_nodes_parent()) for reach_node in reach_set_nodes]
             else:
-                [parent_reach_set_nodes.update(reach_node.nodes_parent) for reach_node in reach_set_nodes]
+                [parent_reach_set_nodes.update(reach_node.list_nodes_parent) for reach_node in reach_set_nodes]
             filtered_parent_reach_set_nodes = parent_reach_set_nodes
         else:
             filtered_parent_reach_set_nodes = None
