@@ -28,7 +28,7 @@ class DrivingCorridors:
                  config: Configuration):
         self.config = config
         self.reach_set = reachable_sets
-        if config.reachable_set.mode == 3:
+        if config.reachable_set.mode_computation == 3:
             self.backend = "CPP"        # using C++ backend
         else:
             self.backend = "PYTHON"     # using Python backend

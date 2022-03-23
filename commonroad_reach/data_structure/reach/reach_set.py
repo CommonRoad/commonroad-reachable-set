@@ -73,7 +73,7 @@ class ReachableSet(ABC):
     @classmethod
     def instantiate(cls, config: Configuration):
         """Instantiates a reachable set class based on the given configuration."""
-        mode = config.reachable_set.mode
+        mode = config.reachable_set.mode_computation
 
         if mode == 1:
             # Polytopic set propagation with Python backend

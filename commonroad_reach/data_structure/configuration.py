@@ -1,5 +1,4 @@
 import logging
-import math
 
 logger = logging.getLogger(__name__)
 
@@ -38,29 +37,39 @@ class Configuration:
 
     def print_configuration_summary(self):
         if self.planning.coordinate_system == "CART":
-            CLCS = "Cartesian"
+            CLCS = "cartesian"
         elif self.planning.coordinate_system == "CVLN":
-            CLCS = "Curvilinear"
+            CLCS = "curvilinear"
         else:
-            CLCS = "Undefined"
+            CLCS = "undefined"
 
-        if self.reachable_set.mode == 1:
-            mode = "Polytopic, Python backend"
-        elif self.reachable_set.mode == 2:
-            mode = "Polytopic, C++ backend"
-        elif self.reachable_set.mode == 3:
-            mode = "Graph-based (online)"
-        elif self.reachable_set.mode == 4:
-            mode = "Graph-based (offline)"
+        if self.reachable_set.mode_computation == 1:
+            mode_computation = "polytopic, python backend"
+        elif self.reachable_set.mode_computation == 2:
+            mode_computation = "polytopic, v++ backend"
+        elif self.reachable_set.mode_computation == 3:
+            mode_computation = "graph-based (online)"
+        elif self.reachable_set.mode_computation == 4:
+            mode_computation = "graph-based (offline)"
         else:
-            mode = "Undefined"
+            mode_computation = "undefined"
+
+        if self.reachable_set.mode_repartition == 1:
+            mode_repartition = "repartition, collision check"
+        elif self.reachable_set.mode_repartition == 2:
+            mode_repartition = "collision check, repartition"
+        elif self.reachable_set.mode_repartition == 3:
+            mode_repartition = "repartition, collision check, then repartition"
+        else:
+            mode_repartition = "undefined"
 
         string = "# ===== Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
         string += f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {CLCS}\n"
         string += "# Reachable set:\n"
-        string += f"# \tmode: {mode}\n"
+        string += f"# \tcomputation mode: {mode_computation} | repartition mode: {mode_repartition}\n"
+        string += f"# \tgrid size: {self.reachable_set.size_grid}, terminal split radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_time_step}\n"
         string += "# ================================= #"
 
@@ -129,6 +138,7 @@ class Configuration:
         else:
             config.planning.reference_point = reach.ReferencePoint.CENTER
 
+        config.reachable_set.mode_repartition = self.reachable_set.mode_repartition
         config.reachable_set.size_grid = self.reachable_set.size_grid
         config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
@@ -264,7 +274,7 @@ class PlanningConfiguration:
 
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
-    
+
     @property
     def p_lon_lat_initial(self):
         return np.array([self.p_lon_initial, self.p_lat_initial])
@@ -278,7 +288,8 @@ class ReachableSetConfiguration:
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.reachable_set
 
-        self.mode = config_relevant.mode
+        self.mode_computation = config_relevant.mode_computation
+        self.mode_repartition = config_relevant.mode_repartition
         self.num_threads = config_relevant.num_threads
         self.size_grid = config_relevant.size_grid
         self.size_grid_2nd = config_relevant.size_grid_2nd

@@ -30,6 +30,7 @@ private:
 
     void _compute_reachable_set_at_time_step(int const& time_step);
 
+    /// Propagates the nodes of the reachable set.
     std::vector<ReachNodePtr> _propagate_reachable_set(const std::vector<ReachNodePtr>& vec_nodes);
 
     // todo

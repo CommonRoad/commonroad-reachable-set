@@ -89,6 +89,7 @@ std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& tim
 tuple<double, double, double, double>
 obtain_extremum_coordinates_of_polygons(vector<ReachPolygonPtr> const& vec_polygons);
 
+/// Returns the bounding box of rectangles
 collision::RectangleAABB obtain_bounding_box_of_rectangles(std::vector<ReachPolygonPtr> const& vec_rectangles);
 
 /// Converts a ReachPolygon to axis-aligned bounding box.
@@ -102,6 +103,7 @@ std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerP
                                                                RectangleAABBPtr const& rectangle,
                                                                double const& radius_terminal_squared);
 
+/// Returns the squared diagonal of the rectangle.
 inline double diagonal_squared(RectangleAABBPtr const& rectangle) {
     return 4 * pow(rectangle->r_x(), 2) + 4 * pow(rectangle->r_y(), 2);
 }

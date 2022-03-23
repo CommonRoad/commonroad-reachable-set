@@ -126,9 +126,10 @@ struct PlanningConfiguration {
 
 /// Struct storing reachable set configurations.
 struct ReachableSetConfiguration {
-    // grid size for repartitioning rectangles (before collision check)
+    int mode_repartition{};
+    // grid size for repartitioning rectangles
     double size_grid{};
-    // grid size for repartitioning rectangles (after collision check)
+    // grid size for repartitioning rectangles (second time)
     double size_grid_2nd{};
     // terminal radius for splitting of rectangles
     double radius_terminal_split{};

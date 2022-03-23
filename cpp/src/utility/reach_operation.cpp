@@ -141,7 +141,6 @@ reach::project_base_sets_to_position_domain(vector<ReachNodePtr> const& vec_base
                                                                         base_set->polygon_lat->p_min(),
                                                                         base_set->polygon_lon->p_max(),
                                                                         base_set->polygon_lat->p_max()));
-
     }
 
     return vec_rectangles_projected;
@@ -154,21 +153,16 @@ reach::project_base_sets_to_position_domain(vector<ReachNodePtr> const& vec_base
 /// 4. restore the rectangles back to undiscretized ones.
 vector<ReachPolygonPtr>
 reach::create_repartitioned_rectangles(vector<ReachPolygonPtr> const& vec_rectangles, double const& size_grid) {
-    if (vec_rectangles.size() <= 1)
-        return vec_rectangles;
+    if (vec_rectangles.size() <= 1) return vec_rectangles;
 
-    // Step 1
     auto tuple_p_min_rectangles = compute_minimum_positions_of_rectangles(vec_rectangles);
 
-    // Step 2
     auto vec_rectangles_discretized = discretize_rectangles(vec_rectangles, tuple_p_min_rectangles, size_grid);
 
-    // Step 3
     auto vec_rectangles_repartitioned = repartition_rectangle(vec_rectangles_discretized);
 
-    // Step 4
-    auto vec_rectangles_undiscretized = undiscretize_rectangles(vec_rectangles_repartitioned, tuple_p_min_rectangles,
-                                                                size_grid);
+    auto vec_rectangles_undiscretized = undiscretize_rectangles(vec_rectangles_repartitioned,
+                                                                tuple_p_min_rectangles, size_grid);
 
     return vec_rectangles_undiscretized;
 }
@@ -196,10 +190,10 @@ vector<ReachPolygonPtr> reach::discretize_rectangles(vector<ReachPolygonPtr> con
     double p_lon_min, p_lat_min, p_lon_max, p_lat_max;
 
     for (auto const& rectangle: vec_rectangles) {
-        p_lon_min = std::floor((rectangle->p_lon_min() - p_lon_min_rectangles) / size_grid);
-        p_lat_min = std::floor((rectangle->p_lat_min() - p_lat_min_rectangles) / size_grid);
-        p_lon_max = std::ceil((rectangle->p_lon_max() - p_lon_min_rectangles) / size_grid);
-        p_lat_max = std::ceil((rectangle->p_lat_max() - p_lat_min_rectangles) / size_grid);
+        p_lon_min = floor((rectangle->p_lon_min() - p_lon_min_rectangles) / size_grid);
+        p_lat_min = floor((rectangle->p_lat_min() - p_lat_min_rectangles) / size_grid);
+        p_lon_max = ceil((rectangle->p_lon_max() - p_lon_min_rectangles) / size_grid);
+        p_lat_max = ceil((rectangle->p_lat_max() - p_lat_min_rectangles) / size_grid);
 
         vec_rectangles_discretized.emplace_back(make_shared<ReachPolygon>(p_lon_min, p_lat_min, p_lon_max, p_lat_max));
     }
@@ -247,20 +241,19 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& t
                                                                     vector<ReachPolygonPtr> const& vec_rectangles,
                                                                     double const& radius_terminal_split,
                                                                     int const& num_threads) {
-    if (vec_rectangles.empty())
-        return {};
+    if (vec_rectangles.empty()) return {};
 
-    vector<ReachPolygonPtr> vec_rectangles_collision_free;
+    vector <ReachPolygonPtr> vec_rectangles_collision_free;
     auto radius_terminal_squared = pow(radius_terminal_split, 2);
-    // make a window query w.r.t to speed up the collision check
+    // make a window query w.r.t rectangles to speed up the collision check
     auto collision_checker_sliced = collision_checker->timeSlice(time_step)->
             windowQuery(obtain_bounding_box_of_rectangles(vec_rectangles));
 
     for (auto const& rectangle: vec_rectangles) {
         auto aabb = convert_reach_polygon_to_collision_aabb(rectangle);
-        // todo: check this for potential speed up
-        auto vec_aabbs_split = create_collision_free_rectangles(collision_checker_sliced, aabb,
-                                                                radius_terminal_squared);
+
+        auto vec_aabbs_split = create_collision_free_rectangles(collision_checker_sliced,
+                                                                aabb, radius_terminal_squared);
         auto vec_rectangles_split = convert_collision_aabbs_to_reach_polygons(vec_aabbs_split);
 
         vec_rectangles_collision_free.insert(vec_rectangles_collision_free.end(),
@@ -343,24 +336,18 @@ reach::convert_collision_aabbs_to_reach_polygons(vector<RectangleAABBPtr> const&
 vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
                                                                  RectangleAABBPtr const& rectangle,
                                                                  double const& radius_terminal_squared) {
-    // todo: test if copying the collision checker for every rectangle and shrinking the query window actually
-    // speeds up the computation time (see Stefanie's old code)
-    if (not collision_checker->collide(rectangle))
-        // case 1: rectangle does not collide, return itself
-        return {rectangle};
-
-    else if (diagonal_squared(rectangle) < radius_terminal_squared)
+    // case 1: rectangle does not collide, return itself
+    if (not collision_checker->collide(rectangle)) return {rectangle};
         // case 2: the diagonal is smaller than the terminal radius, return nothing
-        return {};
-
-    else {
+    else if (diagonal_squared(rectangle) < radius_terminal_squared) return {};
         // case 3: colliding but diagonal is long enough. split into two halves.
+    else {
         auto[rectangle_split_a, rectangle_split_b] = split_rectangle_into_two(rectangle);
 
-        auto vec_rectangles_split_a = create_collision_free_rectangles(collision_checker, rectangle_split_a,
-                                                                       radius_terminal_squared);
-        auto vec_rectangles_split_b = create_collision_free_rectangles(collision_checker, rectangle_split_b,
-                                                                       radius_terminal_squared);
+        auto vec_rectangles_split_a =
+                create_collision_free_rectangles(collision_checker, rectangle_split_a, radius_terminal_squared);
+        auto vec_rectangles_split_b =
+                create_collision_free_rectangles(collision_checker, rectangle_split_b, radius_terminal_squared);
 
         vec_rectangles_split_a.insert(vec_rectangles_split_a.end(),
                                       std::make_move_iterator(vec_rectangles_split_b.begin()),

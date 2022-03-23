@@ -3,13 +3,18 @@
 # 2: Polytopic set propagation with C++ backend
 # 3: Online stage of the Graph-based propagation
 # 4: Offline stage of the Graph-based propagation
-mode: 2
+mode_computation: 2
+# mode for drivable area repartition
+# 1: Repartition, then collision check (results in more nodes)
+# 2: Collision check, then repartition (reduces number of nodes)
+# 3: Repartition, collision check, then repartition again (reduces number of nodes)
+mode_repartition: 2
 # grid size for rectangle alignment (before collision check)
-size_grid: 0.25
+size_grid: 0.2
 # grid size for second time rectangle alignment (after collision check)
 size_grid_2nd: 0.05
 # threshold for terminating the split of reachable sets in collision checks
-radius_terminal_split: 0.7
+radius_terminal_split: 0.5
 # if set to false, static and dynamic obstacles will be omitted
 consider_traffic: true
 # number of thread for C++ reachable set computation

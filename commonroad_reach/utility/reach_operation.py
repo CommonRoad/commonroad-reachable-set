@@ -220,7 +220,7 @@ def discretize_rectangles(list_rectangles: List[ReachPolygon], tuple_p_min_recta
         p_lat_max = ceil((Decimal(rectangle.p_lat_max) - p_lat_min_rectangles) / size_grid)
 
         list_rectangles_discretized.append(
-                ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max))
+            ReachPolygon.from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max))
 
     return list_rectangles_discretized
 

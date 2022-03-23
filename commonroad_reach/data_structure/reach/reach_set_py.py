@@ -66,7 +66,7 @@ class PyReachableSet(ReachableSet):
 
         Steps:
             1. Propagate each node of the reachable set from the previous time step, resulting in propagated base sets.
-            2. Project the base sets onto the position domain to obtain the position rectangles.
+            2. Project the base sets onto the position domain to obtain position rectangles.
             3. Merge and repartition these rectangles to potentially reduce the number of rectangles.
             4. Check for collisions with obstacles and road boundaries, and obtain collision-free rectangles.
             5. Merge and repartition the collision-free rectangles again to potentially reduce the number of rectangles.
@@ -80,17 +80,42 @@ class PyReachableSet(ReachableSet):
 
         list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
 
-        list_rectangles_repartitioned = \
-            reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
-                                                            self.config.reachable_set.size_grid)
+        # repartition, then collision check
+        if self.config.reachable_set.mode_repartition == 1:
+            list_rectangles_repartitioned = \
+                reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
+                                                                self.config.reachable_set.size_grid)
 
-        list_rectangles_collision_free = \
-            reach_operation.check_collision_and_split_rectangles(self.collision_checker, time_step,
-                                                                 list_rectangles_repartitioned,
-                                                                 self.config.reachable_set.radius_terminal_split)
+            drivable_area = \
+                reach_operation.check_collision_and_split_rectangles(self.collision_checker, time_step,
+                                                                     list_rectangles_repartitioned,
+                                                                     self.config.reachable_set.radius_terminal_split)
 
-        drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
-                                                                        self.config.reachable_set.size_grid_2nd)
+        # collision check, then repartition
+        elif self.config.reachable_set.mode_repartition == 2:
+            list_rectangles_collision_free = \
+                reach_operation.check_collision_and_split_rectangles(self.collision_checker, time_step,
+                                                                     list_rectangles_projected,
+                                                                     self.config.reachable_set.radius_terminal_split)
+            drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
+                                                                            self.config.reachable_set.size_grid_2nd)
+
+        # repartition, collision check, then repartition again
+        elif self.config.reachable_set.mode_repartition == 3:
+            list_rectangles_repartitioned = \
+                reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
+                                                                self.config.reachable_set.size_grid)
+
+            list_rectangles_collision_free = \
+                reach_operation.check_collision_and_split_rectangles(self.collision_checker, time_step,
+                                                                     list_rectangles_repartitioned,
+                                                                     self.config.reachable_set.radius_terminal_split)
+
+            drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
+                                                                            self.config.reachable_set.size_grid_2nd)
+
+        else:
+            raise Exception("Invalid mode for repartition.")
 
         self.dict_time_to_drivable_area[time_step] = drivable_area
         self.dict_time_to_base_set_propagated[time_step] = list_base_sets_propagated
@@ -115,7 +140,7 @@ class PyReachableSet(ReachableSet):
         self.dict_time_to_reachable_set[time_step] = reachable_set_current_step
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
-        """Propagates the nodes of the reachable set from the previous time step."""
+        """Propagates the nodes of the reachable set."""
         list_base_sets_propagated = []
 
         for node in list_nodes:

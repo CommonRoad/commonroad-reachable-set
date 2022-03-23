@@ -24,12 +24,12 @@ def main():
         time_computation = reach_interface.compute_reachable_sets()
         time_computation = round(time_computation, 3)
 
-        dict_result[name_scenario] = [config.reachable_set.mode, time_computation]
+        dict_result[name_scenario] = [config.reachable_set.mode_computation, time_computation]
         time.sleep(2)
 
     # save result as csv
     coordinate_system = "cart" if config.planning.coordinate_system == "CART" else "cvln"
-    with open(f'computation_result_{config.reachable_set.mode}_{coordinate_system}.csv', 'w') as csvfile:
+    with open(f'computation_result_{config.reachable_set.mode_computation}_{coordinate_system}.csv', 'w') as csvfile:
         writer_sheet = csv.writer(csvfile)
         writer_sheet.writerow(['scenario name', 'mode', 'computation time'])
 

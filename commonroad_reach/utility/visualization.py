@@ -33,7 +33,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
     planning_problem = config.planning_problem
     ref_path = config.planning.reference_path
 
-    backend = "CPP" if config.reachable_set.mode == 2 else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     time_step_start = time_step_start or reach_interface.time_step_start
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
@@ -94,7 +94,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, tim
                                      as_svg: bool = False):
     config = reach_interface.config
     scenario = config.scenario
-    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode_computation == 3 else "PYTHON"
     time_step_start = time_step_start or reach_interface.time_step_start
     time_step_end = time_step_end or reach_interface.time_step_end
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface, backend)
@@ -253,7 +253,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
 
     planning_problem = config.planning_problem
     ref_path = config.planning.reference_path
-    backend = "CPP" if config.reachable_set.mode == 3 else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode_computation == 3 else "PYTHON"
 
     # set color
     palette = sns.color_palette("GnBu_d", 3)
@@ -370,7 +370,7 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     config = reach_interface.config
     lanelet_network = create_lanelet_network_from_ids(config.scenario.lanelet_network, lanelet_ids) if lanelet_ids \
         else config.scenario.lanelet_network
-    backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode_computation in [3, 5] else "PYTHON"
 
     # temporal length of driving corridor
     time_step_end = len(driving_corridor) - 1
@@ -436,7 +436,7 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
     """
     # get information from config
     cosys = config.planning.coordinate_system
-    backend = "CPP" if config.reachable_set.mode in [3, 5] else "PYTHON"
+    backend = "CPP" if config.reachable_set.mode_computation in [3, 5] else "PYTHON"
 
     # set colors
     face_color = palette[0]

@@ -8,12 +8,12 @@ vehicle:
     # velocity in m/s
     v_lon_min: 0.0
 
-reachable_set:
-  mode: 2
-  size_grid: 0.25
-  size_grid_2nd: 0.05
-  radius_terminal_split: 0.7
-  num_threads: 4
+#reachable_set:
+#  mode: 2
+#  size_grid: 0.25
+#  size_grid_2nd: 0.05
+#  radius_terminal_split: 0.7
+#  num_threads: 4
 
 debug:
   draw_ref_path: True
