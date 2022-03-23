@@ -78,8 +78,9 @@ def test_offline_online_compatibility():
         reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
 
         config.reachable_set.mode_computation = 5
-        config.planning_problem.initial_state = State(position=np.array([15,1.5]),
-                                                      velocity=15, orientation=0,steering_angle=0.0,yaw_rate=0, slip_angle=0, time_step=0)
+        config.planning_problem.initial_state = State(position=np.array([15, 1.5]),
+                                                      velocity=15, orientation=0, steering_angle=0.0, yaw_rate=0,
+                                                      slip_angle=0, time_step=0)
         reach_online = PyGraphReachableSetOnline(config)
         reach_online.compute(1, dt)
     finally:
@@ -100,9 +101,10 @@ def online_reach():
         config = ConfigurationBuilder.build_configuration(name_scenario)
         config.reachable_set.mode_computation = 5
         config.reachable_set.size_grid = 0.3
-        config.planning_problem.initial_state = State(position=np.array([17,1.5]),
-                                                      velocity=30, orientation=0,steering_angle=0.0,yaw_rate=0, slip_angle=0, time_step=0)
-        config.reachable_set.name_pickle_offline =\
+        config.planning_problem.initial_state = State(position=np.array([17, 1.5]),
+                                                      velocity=30, orientation=0, steering_angle=0.0, yaw_rate=0,
+                                                      slip_angle=0, time_step=0)
+        config.reachable_set.name_pickle_offline = \
             "/home/klischat/GIT_REPOS/commonroad-reachable-set/output/offline_data/" \
             "offline_33_ms6_dx0.5_amax5.0_vmax30.0_ver0.0.1.pickle"
         reach_interface: ReachableSetInterface = ReachableSetInterface(config)
@@ -113,21 +115,20 @@ def online_reach():
             reach_online.initialize_new_scenario(scenario=config.scenario)
             t0 = time.time()
             reach_online.compute(0, dt)
-            times.append(time.time()-t0)
-        print(f"avg time {sum(times)/len(times)}, min {min(times)}, max {max(times)}")
+            times.append(time.time() - t0)
+        print(f"avg time {sum(times) / len(times)}, min {min(times)}, max {max(times)}")
         reach_interface._reachable_set_computed = True
         config.debug.save_plots = True
-        util_visual.plot_scenario_with_drivable_area(reach_interface, plot_limits=[0,150,-10,10],time_step_start=1, time_step_end=dt, as_svg=False)
+        util_visual.plot_scenario_with_drivable_area(reach_interface, plot_limits=[0, 150, -10, 10], time_step_start=1,
+                                                     time_step_end=dt, as_svg=False)
         plt.show(block=True)
 
     finally:
         # shutil.rmtree(offline_dir)
         print("removed")
 
+
 if __name__ == "__main__":
     # test_offline_online_compatibility()
     # test_offline_reach()
     online_reach()
-
-
-
