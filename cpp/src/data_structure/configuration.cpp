@@ -4,14 +4,14 @@
 using namespace reach;
 
 GeneralConfiguration::GeneralConfiguration(YAML::Node const& node) {
-    auto node_general = node["config_general"];
+    auto node_general = node["general"];
 
     name_scenario = node_general["name_scenario"].as<string>();
     path_scenario = path_scenarios + name_scenario + ".xml";
 }
 
 Ego::Ego(YAML::Node const& node) {
-    auto node_vehicle = node["config_vehicle"]["ego"];
+    auto node_vehicle = node["vehicle"]["ego"];
 
     id_type_vehicle = node_vehicle["id_type_vehicle"].as<int>();
     id_vehicle = 0;
@@ -37,7 +37,7 @@ Ego::Ego(YAML::Node const& node) {
 }
 
 Other::Other(YAML::Node const& node) {
-    auto node_vehicle = node["config_vehicle"]["other"];
+    auto node_vehicle = node["vehicle"]["other"];
 
     id_type_vehicle = node_vehicle["id_type_vehicle"].as<int>();
     id_vehicle = 0;
@@ -67,7 +67,7 @@ VehicleConfiguration::VehicleConfiguration(YAML::Node const& node) {
 }
 
 PlanningConfiguration::PlanningConfiguration(YAML::Node const& node) {
-    auto node_planning = node["config_planning"];
+    auto node_planning = node["planning"];
 
     dt = node_planning["dt"].as<double>();
     time_step_start = node_planning["time_step_start"].as<int>();
@@ -98,7 +98,7 @@ PlanningConfiguration::PlanningConfiguration(YAML::Node const& node) {
 
 
 ReachableSetConfiguration::ReachableSetConfiguration(YAML::Node const& node) {
-    auto node_reachable_set = node["config_reachable_set"];
+    auto node_reachable_set = node["reachable_set"];
 
     size_grid = node_reachable_set["size_grid"].as<double>();
     size_grid_2nd = node_reachable_set["size_grid_2nd"].as<double>();
@@ -107,7 +107,7 @@ ReachableSetConfiguration::ReachableSetConfiguration(YAML::Node const& node) {
 }
 
 DebugConfiguration::DebugConfiguration(YAML::Node const& node) {
-    auto node_debug = node["config_debug"];
+    auto node_debug = node["debug"];
 
     verbose_mode = node_debug["verbose_mode"].as<bool>();
     measure_time = node_debug["measure_time"].as<bool>();
