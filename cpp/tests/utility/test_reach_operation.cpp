@@ -47,8 +47,10 @@ TEST_CASE("propagate polygon returns correct vertices") {
     auto polygon_lon = make_shared<ReachPolygon>(vec_vertices);
     auto reach_set = ReachableSet(config);
 
-    auto polygon_lon_propagated = propagate_polygon(polygon_lon, reach_set.polygon_zero_state_lon,
-                                                    config->planning().dt, config->vehicle().ego.v_lon_min,
+    auto polygon_lon_propagated = propagate_polygon(polygon_lon,
+                                                    reach_set.polygon_zero_state_lon,
+                                                    config->planning().dt,
+                                                    config->vehicle().ego.v_lon_min,
                                                     config->vehicle().ego.v_lon_max);
 
 
@@ -76,11 +78,11 @@ TEST_CASE("compute minimum positions of polygons") {
 }
 
 TEST_CASE("discretize position rectangles") {
-    vector<tuple<double, double>> vec_vertices = {{2,    2},
-                                                  {6.3,  3.2},
+    vector<tuple<double, double>> vec_vertices = {{2, 2},
+                                                  {6.3, 3.2},
                                                   {12.7, 7.5},
-                                                  {8.3,  8.3},
-                                                  {3.7,  4.5}};
+                                                  {8.3, 8.3},
+                                                  {3.7, 4.5}};
     vector<ReachPolygonPtr> vec_rectangle = {make_shared<ReachPolygon>(vec_vertices)};
     auto tuple_p_min = compute_minimum_positions_of_rectangles(vec_rectangle);
 
@@ -157,41 +159,4 @@ TEST_CASE("overlapping relationship of rectangles") {
     CHECK(map_id_rectangle_a_to_vec_idx_rectangles_b[0] == vector<int>{0, 1});
     CHECK(map_id_rectangle_a_to_vec_idx_rectangles_b[1] == vector<int>{1, 2});
 }
-
-
-// TEST_CASE("create base set from position rectangles") {
-//     auto rectangle_drivable_area = ReachPolygon(0, 0, 10, 10);
-
-//     vector<ReachPolygonPtr> vec_polygons_lon = {
-//             ReachPolygon(-5, 10, 5, 15),
-//             ReachPolygon(5, 0, 15, 20)};
-
-//     vector<ReachPolygonPtr> vec_polygons_lat = {
-//             ReachPolygon(-3, -5, 3, 5),
-//             ReachPolygon(3, 0, 13, 12)};
-//     auto vec_base_sets = {make_shared<ReachBaseSet>(vec_polygons_lon[0], vec_polygons_lat[0]),
-//                           make_shared<ReachBaseSet>(vec_polygons_lon[1], vec_polygons_lat[1])};
-//     vector<int> vec_idx_base_sets_adjacent{0, 1};
-
-//     auto base_set_adapted = adapt_base_set_to_drivable_area(rectangle_drivable_area,
-//                                                             vec_base_sets,
-//                                                             vec_idx_base_sets_adjacent);
-//     vector<tuple<double, double>> vec_vertices_lon_expected = {{5,   10},
-//                                                                {9.5, 0.5},
-//                                                                {9.5, 14.5},
-//                                                                {9.5, 19.5}};
-
-//     vector<tuple<double, double>> vec_vertices_lat_expected = {{2, -4},
-//                                                                {5, 2},
-//                                                                {5, 7},
-//                                                                {5, 11.9}};
-
-//     for (auto const& vertex: vec_vertices_lon_expected) {
-//         CHECK(vertex_within_polygon(vertex, base_set_adapted->polygon_lon));
-//     }
-
-//     for (auto const& vertex: vec_vertices_lat_expected) {
-//         CHECK(vertex_within_polygon(vertex, base_set_adapted->polygon_lat));
-//     }
-// }
 }

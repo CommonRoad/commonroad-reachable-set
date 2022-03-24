@@ -59,9 +59,8 @@ if(ADD_TESTS)
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_polygon.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_node.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_set.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_minkowski.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
-            
+
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_sweep_line.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_collision_checker.cpp

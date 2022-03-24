@@ -16,10 +16,7 @@ TEST_CASE("node initialization") {
 }
 
 TEST_CASE("add/remove parent/child nodes") {
-    auto polygon_lon = make_shared<ReachPolygon>(0, 0, 5, 10);
-    auto polygon_lat = make_shared<ReachPolygon>(7, -5, 15, 5);
-    auto node = ReachNode{0, polygon_lon, polygon_lat};
-
+    auto node = ReachNode(0, nullptr, nullptr);
     auto node_parent = make_shared<ReachNode>(0, nullptr, nullptr);
     auto node_child = make_shared<ReachNode>(1, nullptr, nullptr);
 
@@ -56,6 +53,33 @@ TEST_CASE("add/remove parent/child nodes") {
     SUBCASE("removing invalid child node returns false") {
         auto result = node.remove_child_node(node_child);
         CHECK(not result);
+    }
+}
+
+TEST_CASE("position rectangle") {
+    ReachNode::reset_id_counter();
+    auto polygon_lon = make_shared<ReachPolygon>(0, 0, 5, 10);
+    auto polygon_lat = make_shared<ReachPolygon>(7, -5, 15, 5);
+    auto node = ReachNode(0, polygon_lon, polygon_lat);
+
+    SUBCASE("has correct position rectangle") {
+        CHECK(node.position_rectangle()->bounding_box() == tuple(0, 7, 5, 15));
+    }
+
+    SUBCASE("has correct vertices") {
+        CHECK(node.p_lon_min() == 0);
+        CHECK(node.p_lon_max() == 5);
+        CHECK(node.v_lon_min() == 0);
+        CHECK(node.v_lon_max() == 10);
+        CHECK(node.p_lat_min() == 7);
+        CHECK(node.p_lat_max() == 15);
+        CHECK(node.v_lat_min() == -5);
+        CHECK(node.v_lat_max() == 5);
+    }
+
+    SUBCASE("intersection in position domain") {
+        node.intersect_in_position_domain(1, 8, 4, 20);
+        CHECK(node.position_rectangle()->bounding_box() == tuple(1, 8, 4, 15));
     }
 }
 }

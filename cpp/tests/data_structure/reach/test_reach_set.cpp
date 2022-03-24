@@ -21,6 +21,5 @@ TEST_CASE("initialization") {
             CHECK(vertex_in_vertices(vertex_expected, drivable_area[0]->vertices()));
         }
     }
-
 }
 }

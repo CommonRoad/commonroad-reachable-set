@@ -50,13 +50,9 @@ public:
     ReachPolygonPtr polygon_zero_state_lon;
     ReachPolygonPtr polygon_zero_state_lat;
 
-    inline std::map<int, std::vector<ReachPolygonPtr>> drivable_area() const {
-        return map_time_to_drivable_area;
-    }
+    inline std::map<int, std::vector<ReachPolygonPtr>> drivable_area() const { return map_time_to_drivable_area; }
 
-    inline std::map<int, std::vector<ReachNodePtr>> reachable_set() const {
-        return map_time_to_reachable_set;
-    }
+    inline std::map<int, std::vector<ReachNodePtr>> reachable_set() const { return map_time_to_reachable_set; }
 
     inline std::vector<ReachPolygonPtr> drivable_area_at_time_step(int const& time_step) {
         if (find(_vec_time_steps_computed.begin(), _vec_time_steps_computed.end(), time_step)

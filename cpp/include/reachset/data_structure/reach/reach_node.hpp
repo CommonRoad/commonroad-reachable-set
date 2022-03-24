@@ -22,14 +22,12 @@ public:
     /// @param time_step time step of the node
     /// @param polygon_lon longitudinal polygon of the node
     /// @param polygon_lat lateral polygon of the node
-    ReachNode(int const& time_step, ReachPolygonPtr const& polygon_lon, ReachPolygonPtr const& polygon_lat);
+    ReachNode(int const& time_step, ReachPolygonPtr  polygon_lon, ReachPolygonPtr  polygon_lat);
 
     int id{};
     int time_step{};
     ReachPolygonPtr polygon_lon;
     ReachPolygonPtr polygon_lat;
-    std::tuple<double, double, double, double> box_lon;
-    std::tuple<double, double, double, double> box_lat;
     // vector of nodes from which the current node is originated
     std::vector<std::shared_ptr<ReachNode>> vec_nodes_source{};
 
@@ -44,21 +42,25 @@ public:
         return node_clone;
     }
 
-    inline double p_lon_min() const { return std::get<0>(this->box_lon); }
+    inline std::tuple<double, double, double, double> box_lon() const{ return polygon_lon->bounding_box();}
 
-    inline double p_lon_max() const { return std::get<2>(this->box_lon); }
+    inline std::tuple<double, double, double, double> box_lat() const{ return polygon_lat->bounding_box();}
 
-    inline double v_lon_min() const { return std::get<1>(this->box_lon); }
+    inline double p_lon_min() const { return std::get<0>(this->box_lon()); }
 
-    inline double v_lon_max() const { return std::get<3>(this->box_lon); }
+    inline double p_lon_max() const { return std::get<2>(this->box_lon()); }
 
-    inline double p_lat_min() const { return std::get<0>(this->box_lat); }
+    inline double v_lon_min() const { return std::get<1>(this->box_lon()); }
 
-    inline double p_lat_max() const { return std::get<2>(this->box_lat); }
+    inline double v_lon_max() const { return std::get<3>(this->box_lon()); }
 
-    inline double v_lat_min() const { return std::get<1>(this->box_lat); }
+    inline double p_lat_min() const { return std::get<0>(this->box_lat()); }
 
-    inline double v_lat_max() const { return std::get<3>(this->box_lat); }
+    inline double p_lat_max() const { return std::get<2>(this->box_lat()); }
+
+    inline double v_lat_min() const { return std::get<1>(this->box_lat()); }
+
+    inline double v_lat_max() const { return std::get<3>(this->box_lat()); }
 
     inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_parent() const { return this->_vec_nodes_parent; };
 

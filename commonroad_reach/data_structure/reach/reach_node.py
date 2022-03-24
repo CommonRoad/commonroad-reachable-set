@@ -202,6 +202,10 @@ class ReachNode:
         self._polygon_lat = self.polygon_lat.intersect_halfspace(1, 0, p_lat_max)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(-1, 0, -p_lat_min)
 
+        self._bounds_lon = self._polygon_lon.bounds
+        self._bounds_lat = self._polygon_lat.bounds
+        self.update_position_rectangle()
+
     def intersect_in_velocity_domain(self, v_lon_min, v_lat_min, v_lon_max, v_lat_max):
         """Intersects with the given velocity values in velocity domain """
         self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)

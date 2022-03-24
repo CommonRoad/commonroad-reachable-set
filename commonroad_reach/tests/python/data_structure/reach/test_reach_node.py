@@ -1,5 +1,7 @@
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from shapely.geometry import Polygon
+
+from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
 def test_new_node_has_id_0():
@@ -69,3 +71,20 @@ def test_removing_invalid_child_returns_false(node: ReachNode):
     node_child = ReachNode(None, None, 0)
     result = node.remove_child_node(node_child)
     assert not result
+
+
+def test_position_rectangle():
+    polygon_lon = ReachPolygon.from_rectangle_vertices(0, 0, 5, 10)
+    polygon_lat = ReachPolygon.from_rectangle_vertices(7, -5, 15, 5)
+    node = ReachNode(polygon_lon, polygon_lat)
+
+    assert node.position_rectangle.bounds == (0, 7, 5, 15)
+
+
+def test_intersection_in_position_domain():
+    polygon_lon = ReachPolygon.from_rectangle_vertices(0, 0, 5, 10)
+    polygon_lat = ReachPolygon.from_rectangle_vertices(7, -5, 15, 5)
+    node = ReachNode(polygon_lon, polygon_lat)
+
+    node.intersect_in_position_domain(1, 8, 4, 20)
+    assert node.position_rectangle.bounds == (1, 8, 4, 15)

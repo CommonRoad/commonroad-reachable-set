@@ -1,15 +1,15 @@
 #include "reachset/data_structure/reach/reach_node.hpp"
+
+#include <utility>
 #include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 
 int ReachNode::cnt_id = 0;
 
-ReachNode::ReachNode(int const& time_step, ReachPolygonPtr const& polygon_lon, ReachPolygonPtr const& polygon_lat) :
-        time_step(time_step), polygon_lon(polygon_lon), polygon_lat(polygon_lat) {
+ReachNode::ReachNode(int const& time_step, ReachPolygonPtr polygon_lon, ReachPolygonPtr polygon_lat) :
+        time_step(time_step), polygon_lon(std::move(polygon_lon)), polygon_lat(std::move(polygon_lat)) {
     id = ReachNode::cnt_id++;
-    if (polygon_lon != nullptr) box_lon = polygon_lon->bounding_box();
-    if (polygon_lat != nullptr) box_lat = polygon_lat->bounding_box();
 }
 
 bool ReachNode::add_parent_node(ReachNodePtr const& node_parent) {
