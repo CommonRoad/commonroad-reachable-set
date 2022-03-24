@@ -1,10 +1,10 @@
-#include "../test_utility.hpp"
+#include "../../test_utility.hpp"
 
 TEST_SUITE("TestContinuousReachabilityAnalysis") {
 TEST_CASE("initialization") {
-    auto config = Configuration::load_configuration("../../configurations/cpp.yaml");
-    auto continuous_reach = ReachabilityAnalysis(config);
-    auto drivable_area = continuous_reach.initial_drivable_area();
+    auto config = Configuration::load_configuration("../../configurations/test_cpp.yaml");
+    auto reach_set = ReachableSet(config);
+    auto drivable_area = reach_set.drivable_area_at_time_step(0);
 
     SUBCASE("has correct initial drivable area") {
         auto p_lon_min = -0.01;

@@ -16,12 +16,12 @@ TEST_CASE("node initialization") {
 }
 
 TEST_CASE("add/remove parent/child nodes") {
-    auto polygon_lon = ReachPolygon::from_rectangle_coordinates(0, 0, 5, 10);
-    auto polygon_lat = ReachPolygon::from_rectangle_coordinates(7, -5, 15, 5);
+    auto polygon_lon = make_shared<ReachPolygon>(0, 0, 5, 10);
+    auto polygon_lat = make_shared<ReachPolygon>(7, -5, 15, 5);
     auto node = ReachNode{0, polygon_lon, polygon_lat};
 
-    auto node_parent = std::make_shared<ReachNode>(0, nullptr, nullptr);
-    auto node_child = std::make_shared<ReachNode>(1, nullptr, nullptr);
+    auto node_parent = make_shared<ReachNode>(0, nullptr, nullptr);
+    auto node_child = make_shared<ReachNode>(1, nullptr, nullptr);
 
     SUBCASE("removing valid parent node returns true") {
         node.add_parent_node(node_parent);

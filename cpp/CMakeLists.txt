@@ -55,15 +55,17 @@ if(ADD_TESTS)
     add_executable(doctest_runner
             ${REACH_SOURCE}
             ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_polygon.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_node.cpp
+
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_polygon.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_node.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_set.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_minkowski.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
+            
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_minkowski.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_sweep_line.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_collision_checker.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/common/test_reachable_set_interface.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/continuous/test_continuous_reachability_analysis.cpp)
+            )
     # 2. include directories
     target_include_directories(doctest_runner PRIVATE
             ${REACH_INCLUDE_DIR}

@@ -31,9 +31,6 @@ Ego::Ego(YAML::Node const& node) {
     a_lat_min = node_vehicle["a_lat_min"].as<double>();
     a_lat_max = node_vehicle["a_lat_max"].as<double>();
     a_max = node_vehicle["a_max"].as<double>();
-
-    t_react = node_vehicle["t_react"].as<double>();
-    fov = node_vehicle["fov"].as<double>();
 }
 
 Other::Other(YAML::Node const& node) {
@@ -57,8 +54,6 @@ Other::Other(YAML::Node const& node) {
     a_lat_min = node_vehicle["a_lat_min"].as<double>();
     a_lat_max = node_vehicle["a_lat_max"].as<double>();
     a_max = node_vehicle["a_max"].as<double>();
-
-    t_react = node_vehicle["t_react"].as<double>();
 }
 
 VehicleConfiguration::VehicleConfiguration(YAML::Node const& node) {
@@ -108,9 +103,6 @@ ReachableSetConfiguration::ReachableSetConfiguration(YAML::Node const& node) {
 
 DebugConfiguration::DebugConfiguration(YAML::Node const& node) {
     auto node_debug = node["debug"];
-
-    verbose_mode = node_debug["verbose_mode"].as<bool>();
-    measure_time = node_debug["measure_time"].as<bool>();
 }
 
 Configuration::Configuration(YAML::Node const& node) :
@@ -123,6 +115,6 @@ Configuration::Configuration(YAML::Node const& node) :
 
 ConfigurationPtr Configuration::load_configuration(string const& file_yaml) {
     YAML::Node node = YAML::LoadFile(file_yaml);
-
+    auto config = Configuration(node);
     return make_shared<Configuration>(node);
 }

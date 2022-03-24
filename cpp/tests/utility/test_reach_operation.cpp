@@ -28,7 +28,7 @@ TEST_CASE("zero-state polygon has correct vertices") {
 }
 
 TEST_CASE("propagate polygon returns correct vertices") {
-    auto config = Configuration::load_configuration("../../configurations/cpp.yaml");
+    auto config = Configuration::load_configuration("../../configurations/test_cpp.yaml");
     config->planning().dt = 2.0;
     config->vehicle().ego.v_lon_min = 0;
     config->vehicle().ego.v_lon_max = 20;
@@ -45,9 +45,9 @@ TEST_CASE("propagate polygon returns correct vertices") {
                                                   {30, 20,},
                                                   {10, 20}};
     auto polygon_lon = make_shared<ReachPolygon>(vec_vertices);
-    auto reachability_analysis = ReachabilityAnalysis(config);
+    auto reach_set = ReachableSet(config);
 
-    auto polygon_lon_propagated = propagate_polygon(polygon_lon, reachability_analysis.polygon_zero_state_lon(),
+    auto polygon_lon_propagated = propagate_polygon(polygon_lon, reach_set.polygon_zero_state_lon,
                                                     config->planning().dt, config->vehicle().ego.v_lon_min,
                                                     config->vehicle().ego.v_lon_max);
 
@@ -66,9 +66,8 @@ TEST_CASE("propagate polygon returns correct vertices") {
 }
 
 TEST_CASE("compute minimum positions of polygons") {
-    vector<ReachPolygonPtr> vec_base_sets_propagated{
-            ReachPolygon::from_rectangle_coordinates(1, 1, 5, 5),
-            ReachPolygon::from_rectangle_coordinates(-5, 5, 10, 10)};
+    vector<ReachPolygonPtr> vec_base_sets_propagated{make_shared<ReachPolygon>(1, 1, 5, 5),
+                                                     make_shared<ReachPolygon>(-5, 5, 10, 10)};
 
     auto[p_lon_min, p_lat_min] = compute_minimum_positions_of_rectangles(vec_base_sets_propagated);
 
@@ -110,7 +109,7 @@ TEST_CASE("discretize position rectangles") {
 }
 
 TEST_CASE("undiscretize position rectangles") {
-    vector<ReachPolygonPtr> vec_rectangle = {ReachPolygon::from_rectangle_coordinates(0, 0, 22, 13)};
+    vector<ReachPolygonPtr> vec_rectangle = {make_shared<ReachPolygon>(0, 0, 22, 13)};
     tuple<double, double> tuple_p_min = {3, 3};
 
     SUBCASE("size_grid = 0.5") {
@@ -127,13 +126,13 @@ TEST_CASE("undiscretize position rectangles") {
 
 TEST_CASE("creating adjacency dictionary") {
     vector<ReachPolygonPtr> vec_rectangles_a = {
-            ReachPolygon::from_rectangle_coordinates(1, 0, 2, 1),
-            ReachPolygon::from_rectangle_coordinates(2, 0, 3, 1)};
+            make_shared<ReachPolygon>(1, 0, 2, 1),
+            make_shared<ReachPolygon>(2, 0, 3, 1)};
 
     vector<ReachPolygonPtr> vec_rectangles_b = {
-            ReachPolygon::from_rectangle_coordinates(0.5, 0.5, 1.5, 1.5),
-            ReachPolygon::from_rectangle_coordinates(1.5, 0.5, 2.5, 1.5),
-            ReachPolygon::from_rectangle_coordinates(2.5, 0.5, 3.5, 1.5)};
+            make_shared<ReachPolygon>(0.5, 0.5, 1.5, 1.5),
+            make_shared<ReachPolygon>(1.5, 0.5, 2.5, 1.5),
+            make_shared<ReachPolygon>(2.5, 0.5, 3.5, 1.5)};
 
     auto map_adjacency = create_adjacency_map(vec_rectangles_a, vec_rectangles_b);
 
@@ -145,13 +144,13 @@ TEST_CASE("creating adjacency dictionary") {
 
 TEST_CASE("overlapping relationship of rectangles") {
     vector<ReachPolygonPtr> vec_rectangles_a = {
-            ReachPolygon::from_rectangle_coordinates(0.5, 0.5, 1.5, 1.5),
-            ReachPolygon::from_rectangle_coordinates(1.5, 0.5, 2.5, 1.5)};
+            make_shared<ReachPolygon>(0.5, 0.5, 1.5, 1.5),
+            make_shared<ReachPolygon>(1.5, 0.5, 2.5, 1.5)};
 
     vector<ReachPolygonPtr> vec_rectangles_b = {
-            ReachPolygon::from_rectangle_coordinates(0, 0, 1, 1),
-            ReachPolygon::from_rectangle_coordinates(1, 0, 2, 1),
-            ReachPolygon::from_rectangle_coordinates(2, 0, 3, 1)};
+            make_shared<ReachPolygon>(0, 0, 1, 1),
+            make_shared<ReachPolygon>(1, 0, 2, 1),
+            make_shared<ReachPolygon>(2, 0, 3, 1)};
 
     auto map_id_rectangle_a_to_vec_idx_rectangles_b = create_adjacency_map(vec_rectangles_a, vec_rectangles_b);
 
@@ -161,15 +160,15 @@ TEST_CASE("overlapping relationship of rectangles") {
 
 
 // TEST_CASE("create base set from position rectangles") {
-//     auto rectangle_drivable_area = ReachPolygon::from_rectangle_coordinates(0, 0, 10, 10);
+//     auto rectangle_drivable_area = ReachPolygon(0, 0, 10, 10);
 
 //     vector<ReachPolygonPtr> vec_polygons_lon = {
-//             ReachPolygon::from_rectangle_coordinates(-5, 10, 5, 15),
-//             ReachPolygon::from_rectangle_coordinates(5, 0, 15, 20)};
+//             ReachPolygon(-5, 10, 5, 15),
+//             ReachPolygon(5, 0, 15, 20)};
 
 //     vector<ReachPolygonPtr> vec_polygons_lat = {
-//             ReachPolygon::from_rectangle_coordinates(-3, -5, 3, 5),
-//             ReachPolygon::from_rectangle_coordinates(3, 0, 13, 12)};
+//             ReachPolygon(-3, -5, 3, 5),
+//             ReachPolygon(3, 0, 13, 12)};
 //     auto vec_base_sets = {make_shared<ReachBaseSet>(vec_polygons_lon[0], vec_polygons_lat[0]),
 //                           make_shared<ReachBaseSet>(vec_polygons_lon[1], vec_polygons_lat[1])};
 //     vector<int> vec_idx_base_sets_adjacent{0, 1};

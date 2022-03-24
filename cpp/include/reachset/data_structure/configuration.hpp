@@ -145,8 +145,8 @@ struct ReachableSetConfiguration {
 
 /// Struct storing debugging configurations.
 struct DebugConfiguration {
-    bool verbose_mode{};
-    bool measure_time{};
+    bool verbose_mode{false};
+    bool measure_time{false};
 
     DebugConfiguration() = default;
 

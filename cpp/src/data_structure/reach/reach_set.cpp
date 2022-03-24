@@ -184,6 +184,7 @@ void ReachableSet::_compute_reachable_set_at_time_step(int const& time_step) {
     map_time_to_reachable_set[time_step] = reachable_set;
 }
 
+/// Iterates through reachability graph backward in time, discards nodes that don't have a child node.
 void ReachableSet::prune_nodes_not_reaching_final_time_step() {
     auto cnt_nodes_before_pruning = reachable_set_at_time_step(time_step_end).size();
     auto cnt_nodes_after_pruning = cnt_nodes_before_pruning;

@@ -32,12 +32,6 @@ private:
     /// Propagates the nodes of the reachable set.
     std::vector<ReachNodePtr> _propagate_reachable_set(const std::vector<ReachNodePtr>& vec_nodes);
 
-    // todo
-    void _prune_nodes_not_reaching_final_time_step() {
-        /// Iterates through reachability graph backward in time, discards nodes that don't have a child node.
-        _pruned = true;
-    }
-
 public:
     explicit ReachableSet(ConfigurationPtr config);
 

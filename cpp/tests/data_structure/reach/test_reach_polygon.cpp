@@ -6,7 +6,7 @@ TEST_CASE("creating polygons with less than three vertices throws exception") {
                                                   {10, 10}};
     CHECK_THROWS(ReachPolygon{vec_vertices});
 }
-
+// todo: add Gerald's test from Python
 TEST_CASE("intersect halfspace") {
     vector<tuple<double, double>> vec_vertices = {{10, 0},
                                                   {30, 0},

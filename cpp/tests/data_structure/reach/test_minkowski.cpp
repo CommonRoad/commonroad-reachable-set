@@ -15,9 +15,9 @@ TEST_CASE("minkowski sum returns correct result") {
                         {5, 1,},
                         {3, 1}};
         auto poly2 = ReachPolygon(vec_vertices);
+        poly2.convexify();
 
         poly2.minkowski_sum(poly1);
-        poly2.convexify();
 
         vector<tuple<double, double>> vec_vertices_expected = {{2, -2},
                                                                {6, -2},
