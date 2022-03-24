@@ -53,13 +53,3 @@ bool bound_in_bounds(tuple<double, double, double, double> const& bound,
 
     return result;
 }
-
-//bool vertex_within_polygon(tuple<double, double> const& tuple_vertex, ReachPolygonPtr const& polygon) {
-//    auto const&[p_lon, p_lat] = tuple_vertex;
-//    auto result = bg::within(GeometryPoint(p_lon, p_lat), *(polygon->geometry_polygon()));
-//
-//    if (not result)
-//        cout << "Failed at vertex: (" << std::get<0>(tuple_vertex) << ", " << std::get<1>(tuple_vertex) << ")" << endl;
-//
-//    return result;
-//}
