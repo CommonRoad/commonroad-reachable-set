@@ -1,6 +1,6 @@
 ## CommonRoad Reach: Reachability Analysis for Automated Vehicles
 
-In recent years, reachability analysis has gained increasing popularity in motion planning and safeguarding of automated vehicles (AVs). While existing tools for reachability analysis mainly focus on general-purpose algorithms for formal verification of dynamical systems, a toolbox tailored to AV-specific applications is not yet available. The CommonRoad Reach toolbox is tailored to AV-specific applications and
+In recent years, reachability analysis has gained increasing popularity in motion planning and safeguarding of automated vehicles (AVs). While existing tools for reachability analysis mainly focus on general-purpose algorithms for formal verification of dynamical systems, a toolbox tailored to AV-specific applications is not yet available. The CommonRoad Reach toolbox
 * integrates different methods for computing reachable sets using polytopic set propagation and graph-based propagation;
 * provides Python and C++ implementations of the algorithms, thus offering convenient prototyping and real-time computation for the users;
 * extracts collision-free driving corridors which can be used as planning spaces for motion planners; and
