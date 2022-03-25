@@ -164,7 +164,6 @@ class CppCollisionChecker:
 
         for time_step in range(time_start, time_end):
             list_vertices_polygons_dynamic = []
-
             for obstacle in list_obstacles_dynamic:
                 occupancy = obstacle.occupancy_at_time(time_step)
                 if not occupancy:

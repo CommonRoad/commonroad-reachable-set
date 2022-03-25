@@ -32,3 +32,5 @@ output/offline_data/offline_33_ms6_dx0.5_amax5.0_vmax30.0_ver0.0.1.pickle
 output/offline_data/offline_nt30_CART_amax8.0_vmax30.0_ms6_dx0.5_ver0.0.1.pickle
 
 output/offline_data/offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.4_ver0.0.1.pickle
+
+tutorials/.ipynb_checkpoints/

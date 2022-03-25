@@ -46,7 +46,7 @@ class Configuration:
         if self.reachable_set.mode_computation == 1:
             mode_computation = "polytopic, python backend"
         elif self.reachable_set.mode_computation == 2:
-            mode_computation = "polytopic, v++ backend"
+            mode_computation = "polytopic, c++ backend"
         elif self.reachable_set.mode_computation == 3:
             mode_computation = "graph-based (online)"
         elif self.reachable_set.mode_computation == 4:
@@ -67,6 +67,7 @@ class Configuration:
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
         string += f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {CLCS}\n"
+        string += "#\n"
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation} | repartition mode: {mode_repartition}\n"
         string += f"# \tgrid size: {self.reachable_set.size_grid}, terminal split radius: {self.reachable_set.radius_terminal_split}\n"
