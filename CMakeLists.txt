@@ -14,9 +14,9 @@ endif()
 
 # ========= set variables
 # path to FCL installation in drivability checker
-set(FCL_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/cmake/fcl)
+set(fcl_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/cmake/fcl)
 # path to CCD installation in drivability checker
-set(CCD_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/ccd)
+set(ccd_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/ccd)
 
 # ========= find necessary packages
 find_package(Eigen3 REQUIRED) # Eigen3
