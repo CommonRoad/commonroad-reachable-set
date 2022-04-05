@@ -14,6 +14,7 @@ reachable_set:
   size_grid_2nd: 0.05
   radius_terminal_split: 0.7
   num_threads: 4
+  name_pickle_offline: offline_nt35_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.4_ver0.0.1.pickle
 
 debug:
   draw_ref_path: True
