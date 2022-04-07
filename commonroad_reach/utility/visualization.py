@@ -335,6 +335,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
 
             if config.debug.save_plots:
                 save_format = "svg" if as_svg else "png"
+                print("\tSaving", os.path.join(path_output_lon_dc, f'{"lon_driving_corridor"}_{time_step:05d}.{save_format}'))
                 plt.savefig(
                     f'{path_output_lon_dc}{"lon_driving_corridor"}_{time_step:05d}.{save_format}',
                     format=save_format, bbox_inches="tight", transparent=False)

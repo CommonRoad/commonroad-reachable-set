@@ -9,12 +9,16 @@ import networkx as nx
 
 import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
+from commonroad_reach.utility import coordinate_system as util_coordinate_system
+from commonroad.geometry.shape import Shape
+from shapely.geometry import Polygon
 
 
 # TODO Integrate driving corridor extractions into ReachableSetInterface class
-# TODO add overlap with specific terminal set (e.g., goal region)
+# TODO rename class to DrivingCorridorExtractor
+# TODO Save driving corridors as class member variable -> Retrieve later from Reachable Set Interface
 
 # scaling factor (avoid numerical errors)
 DIGITS = 2
@@ -49,28 +53,33 @@ class DrivingCorridors:
         pass
 
     def extract_driving_corridors(self,
-                                  terminal_set = None,
+                                  terminal_set: Shape = None,
                                   lon_positions: Union[List[float], None] = None,
-                                  lon_driving_corridor: Union[Dict[int, List[pycrreachset.ReachNode]], None] = None)\
-            -> List[Dict[int, List[pycrreachset.ReachNode]]]:
+                                  lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None)\
+            -> List[Dict[int, List[pycrreach.ReachNode]]]:
         """
         Function identifies driving corridors within the reachable sets. If no parameters are passed, then a
         longitudinal driving corridor is computed. If the optional parameters are passed, a lateral driving corridor is
         computed for a given longitudinal driving corridor.
+        :param terminal_set: set of terminal states
         :param lon_positions: (optional) longitudinal position
         :param lon_driving_corridor: (optional) longitudinal driving corridor
         """
+        time_start = time.time()
         if lon_positions is None and lon_driving_corridor is None:
-            print("Computing longitudinal driving corridor...")
-            time_start = time.time()
             # compute longitudinal driving corridor
+            print("Computing longitudinal driving corridor...")
             lon_positions_dict = None
-            # determine connected components in last time step
-            connected_components = self._determine_connected_components(list(self.reach_set[self.time_steps[-1]]))
+            if terminal_set is not None:
+                # use base sets which overlap with given terminal set in last time step
+                overlapping_nodes = self._determine_terminal_set_overlap(terminal_set, self.reach_set[self.time_steps[-1]])
+                connected_components = self._determine_connected_components(list(overlapping_nodes))
+            else:
+                # use all base sets in last time step
+                connected_components = self._determine_connected_components(list(self.reach_set[self.time_steps[-1]]))
         elif lon_positions is not None and lon_driving_corridor is not None:
-            print("Computing lateral driving corridor...")
-            time_start = time.time()
             # compute lateral driving corridor for given longitudinal driving corridor
+            print("Computing lateral driving corridor...")
             assert (len(lon_positions) == len(self.time_steps))
             lon_positions_dict = dict(zip(self.time_steps, lon_positions))
             # determine reachable sets which contain the longitudinal position in last time step
@@ -112,6 +121,39 @@ class DrivingCorridors:
         print(f"\tComputation took: \t{time.time() - time_start:.3f}s")
 
         return driving_corridor_list
+
+    def _determine_terminal_set_overlap(self, terminal_set: Shape, reach_set_nodes):
+        """
+        :param terminal_set set of terminal positions (represented as CR Shape object)
+        :param reach_set_nodes List of reach set nodes at the final time step
+        :return: list of reach set node overlapping with terminal set
+        """
+        # TODO additionally check for velocity interval?
+        if self.config.planning.coordinate_system == "CVLN":
+            # computation in CVLN coordinates
+            ccosy = self.config.planning.CLCS
+            vert = terminal_set.shapely_object.exterior.coords
+            transformed_set, transformed_set_rasterized = ccosy.convert_list_of_polygons_to_curvilinear_coords_and_rasterize([vert], [0], 1, 4)
+            list_terminal_set_polygons = [Polygon([arr.tolist() for arr in transformed_set_rasterized[0][0]])]
+        else:
+            # computation in CART coordinates
+            # list with one entry
+            list_terminal_set_polygons = [ReachPolygon.from_polygon(terminal_set.shapely_object)]
+
+        # create_adjacency_dictionary
+        list_position_rectangles = []
+        # TODO: Convert to Py Data structure (implement function in CPP and avoid conversion later?)
+        if self.backend == 'CPP':
+            for node in reach_set_nodes:
+                vert = node.position_rectangle().vertices()
+                list_position_rectangles.append(ReachPolygon(list_vertices=vert))
+        elif self.backend == 'PYTHON':
+            list_position_rectangles = [node.position_rectangle for node in reach_set_nodes]
+
+        overlap = util_geometry.create_adjacency_dictionary(list_terminal_set_polygons, list_position_rectangles)
+        # return reach set nodes which overlap
+        overlapping_nodes = set([reach_set_nodes[j] for j in overlap[0]])
+        return overlapping_nodes
 
     def _create_reachset_connected_components_graph_backwards(self, driving_corridors_list: List[int], graph: nx.Graph,
                                                               node_id: int, time_idx: int,
@@ -198,7 +240,7 @@ class DrivingCorridors:
                 lon_pos,
                 lon_driving_corridor)
 
-    def _determine_connected_components(self, reach_set_nodes: List[Union[pycrreachset.ReachNode, ReachNode]], remove_small=False):
+    def _determine_connected_components(self, reach_set_nodes: List[Union[pycrreach.ReachNode, ReachNode]], remove_small=False):
         """
         Determines and returns the connected reachable sets in positions domain within the list of given base sets (i.e.,
         reachable set nodes)

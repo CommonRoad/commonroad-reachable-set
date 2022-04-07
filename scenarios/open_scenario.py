@@ -4,7 +4,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.visualization.mp_renderer import MPRenderer
 
 # load the CommonRoad scenario that has been created in the CommonRoad tutorial
-file_path = os.path.join(os.getcwd(), 'ARG_Carcarana-1_1_T-1.xml')
+file_path = os.path.join(os.getcwd(), 'DEU_Test-1_1_T-1.xml')
 
 scenario, planning_problem_set = CommonRoadFileReader(file_path).open()
 
