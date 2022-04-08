@@ -14,7 +14,7 @@ import numpy as np
 from commonroad.scenario.scenario import Scenario
 from scipy import sparse
 
-# from commonroad_reach.__version__ import __version__
+from commonroad_reach.__version__ import __version__
 from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration, VehicleConfiguration, ReachableSetConfiguration
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration, ReachNode
@@ -162,13 +162,13 @@ class PyGraphReachableSetOnline(ReachableSet):
         path_file_pickle = os.path.join(self.config.general.path_offline_data,
                                         self.config.reachable_set.name_pickle_offline)
         dict_data = pickle.load(open(path_file_pickle, "rb"))
-        # if dict_data["__version__"] != __version__:
-        #     raise ValueError(f"Offline data was created with an older version of commonroad-reach "
-        #                      f"{dict_data['__version__']}. "
-        #                      f"Please recreate the file with the current version {__version__} !")
-        # assert dict_data["coordinate_system"] == self.config.planning.coordinate_system, \
-        #     f"pickle file was created for coordinate_system={dict_data['coordinate_system']}," \
-        #     f"not {self.config.planning.coordinate_system}!"
+        if dict_data["__version__"] != __version__:
+            raise ValueError(f"Offline data was created with an older version of commonroad-reach "
+                             f"{dict_data['__version__']}. "
+                             f"Please recreate the file with the current version {__version__} !")
+        assert dict_data["coordinate_system"] == self.config.planning.coordinate_system, \
+            f"pickle file was created for coordinate_system={dict_data['coordinate_system']}," \
+            f"not {self.config.planning.coordinate_system}!"
 
         self._validate_configurations(self.config.reachable_set, self.config.vehicle,
                                       dict_data["config.reachable_set"], dict_data["config.vehicle"])

@@ -143,12 +143,6 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         list_rectangles_adapted = reach_operation.adapt_rectangles_to_grid(list_rectangles_repartitioned, size_grid)
 
-        # TODO: consider friction circle when regular grid is enforced in repartitioning
-        # drivable_area = \
-        #     reach_operation.remove_rectangles_out_of_kamms_circle(time_step * self.config.planning.dt,
-        #                                                           self.config.vehicle.ego.a_max,
-        #                                                           list_rectangles_adapted)
-
         self.dict_time_to_drivable_area[time_step] = list_rectangles_adapted
         self.dict_time_to_base_set_propagated[time_step] = list_base_sets_propagated
 
@@ -296,15 +290,9 @@ class PyGraphReachableSetOffline(ReachableSet):
 
     def create_projection_matrices(self):
         size_grid = self.config.reachable_set.size_grid
-        dx = size_grid / 2
         size_grid_div = 1 / size_grid
         for t, base_set_list in self.dict_time_to_drivable_area.items():
             assert (len(self.dict_time_to_drivable_area) == len(self.dict_time_to_reachable_set))
-            # l0 = min([x.p_lon_min for x in base_set_list])
-            # l1 = max([x.p_lon_max for x in base_set_list])
-            # l2 = min([x.p_lat_min for x in base_set_list])
-            # l3 = max([x.p_lat_max for x in base_set_list])
-
             lon_min = size_grid * math.floor(min([x.p_lon_center for x in base_set_list]) * size_grid_div)
             lon_max = size_grid * math.ceil(max([x.p_lon_center for x in base_set_list]) * size_grid_div)
             lat_min = size_grid * math.floor(min([x.p_lat_center for x in base_set_list]) * size_grid_div)
@@ -327,36 +315,10 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             # organize into grid
             grid_index_to_reachset = defaultdict(list)
-            # iii=3
-            # plt.figure()
             for index_reachset, reach_set in enumerate(self.dict_time_to_reachable_set[t]):
-                # iii *= 0.95
-                # v = np.array(reach_set.position_rectangle.vertices)
-                # plt.fill(v[:, 0], v[:, 1], fill=False, lw=1.5 * iii, alpha=0.3)
-                # continue
                 grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center,
                                                                 reach_set.position_rectangle.p_lat_center)].append(
                     index_reachset)
-                # continue
-                # if len(grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)])>1:
-                #     plt.figure()
-                #     x = np.arange(lon_min, lon_max+1e-6, size_grid)
-                #     y = np.arange(lat_min, lat_max+1e-6, size_grid)
-                #     vv = [(xx,yy) for xx in x for yy in y]
-                #     vv = np.array(vv)
-                #     plt.scatter(vv[:,0], vv[:,1])
-                #     bounds = np.array([[lon_min,lat_min], [lon_min,lat_max],[lon_max,lat_max], [lon_max,lat_min]])
-                #     plt.fill(bounds[:, 0], bounds[:, 1], fill=False)
-                #     bounds = np.array([[l0, l2], [l0, l3], [l1, l3], [l1, l2]])
-                #     plt.fill(bounds[:, 0], bounds[:, 1], fill=False)
-                #     iii=6
-                #     for inde in grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)]:
-                #         iii*=0.5
-                #         v= np.array(self.dict_time_to_reachable_set[t][inde].position_rectangle.vertices)
-                #         plt.fill(v[:,0], v[:,1], fill=False, lw=1.5*iii,alpha=0.3)
-                #
-                #     plt.title(f"{grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)]}")
-                #     plt.show(block=True)
 
             for reach_lists in grid_index_to_reachset.values():
                 assert len(reach_lists) == 1, f"more than 1 reachset assigned to a cell!"
@@ -365,14 +327,12 @@ class PyGraphReachableSetOffline(ReachableSet):
             coordinates.sort()
             projection_matrix = np.zeros(shape=[len(self.dict_time_to_reachable_set[t]), n_lon * n_lat], dtype=bool)
             for coordinate in coordinates:
-                # print(grid_index_to_reachset[coordinate])
                 projection_matrix[grid_index_to_reachset[coordinate], coordinate] = True
 
         raise
 
     def _extract_information(self):
         """Extracts essential information from the computation result."""
-        # self.create_projection_matrices()
         dict_time_to_list_tuples_reach_node_attributes = defaultdict(list)
         dict_time_to_adjacency_matrices_parent = dict()
         dict_time_to_adjacency_matrices_grandparent = defaultdict(dict)
