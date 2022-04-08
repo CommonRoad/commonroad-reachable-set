@@ -186,6 +186,7 @@ class VehicleConfiguration:
 
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width)
+            self.radius_inflation = util_configuration.compute_inflation_radius(self.length, self.width)
 
     class Other:
         def __init__(self, config: Union[ListConfig, DictConfig]):

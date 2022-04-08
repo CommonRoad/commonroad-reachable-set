@@ -15,7 +15,7 @@ from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
-class CppCollisionChecker:
+class CollisionChecker:
     """Collision checker using C++ backend.
 
     It handles collision checks in both Cartesian and curvilinear coordinate systems.
@@ -25,15 +25,15 @@ class CppCollisionChecker:
         self.config = config
         self._initialize()
 
-        logger.info("CppCollisionChecker initialized.")
+        logger.info("CollisionChecker initialized.")
 
     def _initialize(self):
         """Initializes the collision checker based on the specified coordinate system."""
         if self.config.planning.coordinate_system == "CART":
-            self.collision_checker = self._create_cartesian_collision_checker()
+            self.cpp_collision_checker = self._create_cartesian_collision_checker()
 
         elif self.config.planning.coordinate_system == "CVLN":
-            self.collision_checker = self._create_curvilinear_collision_checker()
+            self.cpp_collision_checker = self._create_curvilinear_collision_checker()
 
         else:
             message = "Undefined coordinate system."
@@ -48,7 +48,7 @@ class CppCollisionChecker:
         scenario_cc = self.create_scenario_with_road_boundaries(self.config)
         # parameter dictionary for inflation to consider the shape of the ego vehicle
         dict_param = {"minkowski_sum_circle": True,
-                      "minkowski_sum_circle_radius": self.config.vehicle.ego.radius_disc,
+                      "minkowski_sum_circle_radius": self.config.vehicle.ego.radius_inflation,
                       "resolution": 5}
 
         return self.create_cartesian_collision_checker_from_scenario(scenario_cc, params=dict_param)
@@ -119,7 +119,7 @@ class CppCollisionChecker:
         return reach.create_curvilinear_collision_checker(list_vertices_polygons_static,
                                                           dict_time_to_list_vertices_polygons_dynamic,
                                                           self.config.planning.CLCS,
-                                                          self.config.vehicle.ego.radius_disc, 4)
+                                                          self.config.vehicle.ego.radius_inflation, 4)
 
     @staticmethod
     def retrieve_static_obstacles(scenario: Scenario, consider_traffic: bool) -> List[StaticObstacle]:
@@ -190,7 +190,7 @@ class CppCollisionChecker:
         rect_collision = self.convert_reach_polygon_to_collision_object(input_rectangle)
 
         # create a query window, decreases computation time
-        collision_checker = self.collision_checker.window_query(rect_collision)
+        collision_checker = self.cpp_collision_checker.window_query(rect_collision)
 
         # slice collision checker with time
         collision_checker_time_slice = collision_checker.time_slice(time_idx)

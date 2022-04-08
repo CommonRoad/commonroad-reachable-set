@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 import pycrreach as reach
 
-from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration
 
 
@@ -16,7 +16,7 @@ class CppReachableSet(ReachableSet):
     def __init__(self, config: Configuration):
         super().__init__(config)
         self._reach = reach.ReachableSet(self.config.convert_to_cpp_configuration(),
-                                         CppCollisionChecker(self.config).collision_checker)
+                                         CollisionChecker(self.config).cpp_collision_checker)
 
         logger.info("CppReachableSet initialized.")
 

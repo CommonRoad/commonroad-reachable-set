@@ -15,7 +15,7 @@ from commonroad.scenario.scenario import Scenario
 from scipy import sparse
 
 # from commonroad_reach.__version__ import __version__
-from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration, VehicleConfiguration, ReachableSetConfiguration
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration, ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
@@ -32,7 +32,7 @@ class PyGraphReachableSetOnline(ReachableSet):
         super().__init__(config)
 
         self._num_time_steps_offline_computation = 0
-        self._collision_checker: Optional[CppCollisionChecker] = None
+        self._collision_checker: Optional[CollisionChecker] = None
 
         self._reachability_grid: Dict[int, np.ndarray] = {}
         self.obstacle_grid: ObstacleRegularGrid = None
@@ -256,7 +256,7 @@ class PyGraphReachableSetOnline(ReachableSet):
             self._initialize_collision_checker()
 
             self.obstacle_grid = ObstacleRegularGrid \
-                (self.reachset_bb_ll, self.reachset_bb_ur, self._collision_checker.collision_checker,
+                (self.reachset_bb_ll, self.reachset_bb_ur, self._collision_checker.cpp_collision_checker,
                  self.config.reachable_set.size_grid, self.config.reachable_set.size_grid,
                  self.config.planning,
                  a_x=self.config.vehicle.ego.a_max, a_y=self.config.vehicle.ego.a_max,
@@ -272,13 +272,13 @@ class PyGraphReachableSetOnline(ReachableSet):
 
     def _initialize_collision_checker(self) -> None:
         try:
-            from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+            from commonroad_reach.data_structure.collision_checker import CollisionChecker
         except ImportError:
             message = "Importing C++ collision checker failed."
             print(message)
             logger.exception(message)
         else:
-            self._collision_checker = CppCollisionChecker(self.config)
+            self._collision_checker = CollisionChecker(self.config)
 
     def compute(self, time_step_start: int = 1,
                 time_step_end: Optional[int] = None) -> None:

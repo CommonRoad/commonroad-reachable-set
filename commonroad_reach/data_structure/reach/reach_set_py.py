@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
@@ -20,7 +20,7 @@ class PyReachableSet(ReachableSet):
         self.dict_time_to_drivable_area[self.time_step_start] = self._construct_initial_drivable_area()
         self.dict_time_to_reachable_set[self.time_step_start] = self._construct_initial_reachable_set()
         self._initialize_zero_state_polygons()
-        self.collision_checker = CppCollisionChecker(self.config)
+        self.collision_checker = CollisionChecker(self.config)
 
         logger.info("PyReachableSet initialized.")
 
