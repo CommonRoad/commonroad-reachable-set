@@ -95,7 +95,6 @@ class PyGraphReachableSetOffline(ReachableSet):
         """Computes reachable sets for the specified time steps."""
         for step in range(step_start + 1, step_end + 1):
             message = f"\tTime step: {step}"
-            print(message)
             logger.debug(message)
 
             time_start = time.time()
@@ -104,7 +103,6 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             message = f"\t#Nodes: {len(self.reachable_set_at_step(step))}, " \
                       f"computation took: {time.time() - time_start:.3f}s"
-            print(message)
             logger.debug(message)
 
             if self.config.reachable_set.n_multi_steps >= 2:
@@ -310,7 +308,6 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             def position_to_grid_index1d(pos_lon: float, pos_lat: float) -> int:
                 lon, lat = position_to_grid_index2d(pos_lon, pos_lat)
-                print(lon, lat, lon * n_lat + lat, pos_lon, pos_lat)
                 return lon * n_lat + lat
 
             # organize into grid
