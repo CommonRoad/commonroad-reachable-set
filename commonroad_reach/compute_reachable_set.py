@@ -13,20 +13,15 @@ def main():
 
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
-    config.reachable_set.mode = 5
-    config.reachable_set.n_multi_steps = 0
-    # config.planning.coordinate_system = "CART"
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
 
     # ==== compute reachable sets using reachability interface
     reach_interface = ReachableSetInterface(config)
-    # for _ in range(1500):
-    #     reach_interface._reach.initialize_new_scenario()
-    reach_interface.compute_reachable_sets(1,time_step_end=40)
+    reach_interface.compute_reachable_sets()
 
     # ==== plot computation results
-    util_visual.plot_scenario_with_reachable_sets(reach_interface, as_svg=False)
+    util_visual.plot_scenario_with_reachable_sets(reach_interface)
 
 
 if __name__ == "__main__":

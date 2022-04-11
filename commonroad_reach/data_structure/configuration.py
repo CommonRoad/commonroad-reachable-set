@@ -66,11 +66,13 @@ class Configuration:
         string = "# ===== Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
-        string += f"# \ttime steps: {self.planning.time_steps_computation}, coordinate system: {CLCS}\n"
-        string += "#\n"
+        string += f"# \ttime steps: {self.planning.time_steps_computation}\n"
+        string += f"# \tcoordinate system: {CLCS}\n"
         string += "# Reachable set:\n"
-        string += f"# \tcomputation mode: {mode_computation} | repartition mode: {mode_repartition}\n"
-        string += f"# \tgrid size: {self.reachable_set.size_grid}, terminal split radius: {self.reachable_set.radius_terminal_split}\n"
+        string += f"# \tcomputation mode: {mode_computation}\n"
+        string += f"# \trepartition mode: {mode_repartition}\n"
+        string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
+        string += f"# \tterminal split radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_time_step}\n"
         string += "# ================================= #"
 
@@ -131,11 +133,13 @@ class Configuration:
 
         if self.planning.coordinate_system == "CART":
             config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
+
         else:
             config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
 
         if self.planning.reference_point == "REAR":
             config.planning.reference_point = reach.ReferencePoint.REAR
+
         else:
             config.planning.reference_point = reach.ReferencePoint.CENTER
 

@@ -29,6 +29,7 @@ def collision_checker_cpp(config: Configuration):
         print("Importing C++ collision checker failed.")
 
     else:
+        config.vehicle.ego.radius_inflation = config.vehicle.ego.radius_disc
         return CollisionChecker(config)
 
 

@@ -23,41 +23,55 @@ from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
-def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int = 0,
-                                      time_step_end: int = 0, plot_limits: Union[List] = None,
-                                      path_output: str = None, as_svg: bool = False):
+def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, figsize: Tuple = None,
+                                      time_step_start: int = 0, time_step_end: int = 0, time_steps: List[int] = None,
+                                      plot_limits: Union[List] = None, path_output: str = None,
+                                      save_gif: bool = True, duration: float = 0.1):
     config = reach_interface.config
     scenario = config.scenario
     planning_problem = config.planning_problem
     ref_path = config.planning.reference_path
 
-    time_step_start = time_step_start or reach_interface.time_step_start
-    time_step_end = time_step_end or reach_interface.time_step_end
-    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-
     path_output = path_output or config.general.path_output
     Path(path_output).mkdir(parents=True, exist_ok=True)
 
+    figsize = figsize if figsize else (25, 15)
+    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    time_step_start = time_step_start or reach_interface.time_step_start
+    time_step_end = time_step_end or reach_interface.time_step_end
+    if time_steps:
+        time_steps = [time_step for time_step in time_steps if time_step <= time_step_end + 1]
+
+    else:
+        time_steps = range(time_step_start, time_step_end + 1)
 
     message = "* Plotting reachable sets..."
     print(message)
     logger.info(message)
 
-    renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
-    for time_step in range(time_step_start, time_step_end + 1):
-        # clear plot
-        plt.cla()
-        list_nodes = reach_interface.reachable_set_at_time_step(time_step)
+    renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
+    for time_step in time_steps:
+        if config.debug.save_plots:
+            # clear previous plot
+            plt.cla()
+        else:
+            # create new figure
+            plt.figure(figsize=figsize)
+            renderer = MPRenderer(plot_limits=plot_limits)
 
+        # plot scenario and planning problem
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
                                              "trajectory": {"draw_trajectory": True},
                                              "time_begin": time_step})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
+
+        list_nodes = reach_interface.reachable_set_at_time_step(time_step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
         # settings and adjustments
@@ -75,49 +89,66 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
                              color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         if config.debug.save_plots:
-            save_fig(as_svg, path_output, time_step)
+            save_fig(save_gif, path_output, time_step)
+        else:
+            plt.show()
 
-    if config.debug.save_plots and not as_svg:
-        make_gif(path_output, "reachset_", time_step_end, str(scenario.scenario_id))
+    if config.debug.save_plots and save_gif:
+        make_gif(path_output, "reachset_", time_steps, str(scenario.scenario_id), duration)
 
     message = "\tReachable sets plotted."
     print(message)
     logger.info(message)
 
 
-def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, time_step_start: int = 0,
-                                     time_step_end: int = 0, plot_limits: Union[List] = None,
-                                     path_output: str = None, as_svg: bool = False):
+def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
+                                     time_step_start: int = 0, time_step_end: int = 0, time_steps: List[int] = None,
+                                     plot_limits: Union[List] = None, path_output: str = None, save_gif: bool = True):
     config = reach_interface.config
     scenario = config.scenario
     planning_problem = config.planning_problem
     ref_path = config.planning.reference_path
 
-    time_step_start = time_step_start or reach_interface.time_step_start
-    time_step_end = time_step_end or reach_interface.time_step_end
-    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-
     path_output = path_output or config.general.path_output
     Path(path_output).mkdir(parents=True, exist_ok=True)
 
+    figsize = figsize if figsize else (25, 15)
+    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    time_step_start = time_step_start or reach_interface.time_step_start
+    time_step_end = time_step_end or reach_interface.time_step_end
+    if time_steps:
+        time_steps = [time_step for time_step in time_steps if time_step <= time_step_end + 1]
+
+    else:
+        time_steps = range(time_step_start, time_step_end + 1)
 
     message = "* Plotting drivable area..."
     print(message)
     logger.info(message)
 
-    renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
-    for time_step in range(time_step_start, time_step_end + 1):
-        # clear plot
-        plt.cla()
-        list_nodes = reach_interface.drivable_area_at_time_step(time_step)
+    renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
+    for time_step in time_steps:
+        if config.debug.save_plots:
+            # clear previous plot
+            plt.cla()
+        else:
+            # create new figure
+            plt.figure(figsize=figsize)
+            renderer = MPRenderer(plot_limits=plot_limits)
 
-        scenario.draw(renderer, draw_params={"time_begin": time_step})
+        # plot scenario and planning problem
+        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
+                                             "trajectory": {"draw_trajectory": True},
+                                             "time_begin": time_step})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
+
+        list_nodes = reach_interface.drivable_area_at_time_step(time_step)
         draw_drivable_area(list_nodes, config, renderer, draw_params)
 
         # settings and adjustments
@@ -135,12 +166,14 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, tim
                              color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         if config.debug.save_plots:
-            save_fig(as_svg, path_output, time_step)
+            save_fig(save_gif, path_output, time_step)
+        else:
+            plt.show()
 
-    if config.debug.save_plots and not as_svg:
-        make_gif(path_output, "reachset_", time_step_end, str(scenario.scenario_id))
+    if config.debug.save_plots and save_gif:
+        make_gif(path_output, "reachset_", time_steps, str(scenario.scenario_id))
 
-    message = "\tReachable sets plotted."
+    message = "\tDrivable area plotted."
     print(message)
     logger.info(message)
 
@@ -215,25 +248,27 @@ def draw_drivable_area(list_rectangles, config, renderer, draw_params):
                 Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
 
 
-def save_fig(as_svg, path_output, time_step):
-    if as_svg:
-        # save as svg
-        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.svg'))
-        plt.savefig(f'{path_output}{"reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
-                    transparent=False)
-    else:
+def save_fig(save_gif: bool, path_output: str, time_step: int):
+    if save_gif:
         # save as png
         print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'))
         plt.savefig(os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
                     transparent=False)
 
+    else:
+        # save as svg
+        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.svg'))
+        plt.savefig(f'{path_output}{"reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
+                    transparent=False)
 
-def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="animation", duration=0.1):
+
+def make_gif(path: str, prefix: str, time_steps: Union[range, List[int]],
+             file_save_name="animation", duration: float = 0.1):
     images = []
     filenames = []
 
     print("\tCreating GIF...")
-    for i in range(number_of_figures):
+    for i in time_steps:
         im_path = os.path.join(path, prefix + "{:05d}.png".format(i))
         filenames.append(im_path)
 
@@ -241,6 +276,7 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
         images.append(imageio.imread(filename))
 
     imageio.mimsave(os.path.join(path, "../", file_save_name + ".gif"), images, duration=duration)
+    print("\tGIF created.")
 
 
 def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,

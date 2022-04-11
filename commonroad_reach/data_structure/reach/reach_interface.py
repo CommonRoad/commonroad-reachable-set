@@ -94,4 +94,5 @@ class ReachableSetInterface:
         logger.info(message)
         print(message)
 
-        return time_computation
+        # return computation time for benchmarking
+        # return time_computation
