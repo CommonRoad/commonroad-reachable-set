@@ -57,7 +57,7 @@ public:
     inline std::vector<ReachPolygonPtr> drivable_area_at_step(int const& time_step) {
         if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), time_step)
             == _vec_steps_computed.end()) {
-            cout << "Given time step for drivable area retrieval is out of range." << endl;
+            cout << "Given time step " << time_step << "for drivable area retrieval is out of range." << endl;
             return {};
         } else return map_time_to_drivable_area[time_step];
     }
@@ -65,7 +65,7 @@ public:
     inline std::vector<ReachNodePtr> reachable_set_at_step(int const& time_step) {
         if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), time_step)
             == _vec_steps_computed.end()) {
-            cout << "Given time step for reachable set retrieval is out of range." << endl;
+            cout << "Given time step " << time_step << "for reachable set retrieval is out of range." << endl;
             return {};
         } else return map_time_to_reachable_set[time_step];
     }

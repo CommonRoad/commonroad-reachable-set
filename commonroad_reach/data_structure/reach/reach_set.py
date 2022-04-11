@@ -39,7 +39,7 @@ class ReachableSet(ABC):
 
     def drivable_area_at_step(self, step: int):
         if step not in self._list_steps_computed:
-            message = "Given time step for drivable area retrieval is out of range."
+            message = f"Given time step {step} for drivable area retrieval is out of range."
             print(message)
             logger.warning(message)
             return []
@@ -49,7 +49,7 @@ class ReachableSet(ABC):
 
     def reachable_set_at_step(self, step: int):
         if step not in self._list_steps_computed:
-            message = "Given time step for reachable set retrieval is out of range."
+            message = f"Given time step {step} for reachable set retrieval is out of range."
             print(message)
             logger.warning(message)
             return []
