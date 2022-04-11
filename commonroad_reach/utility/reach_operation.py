@@ -260,7 +260,7 @@ def undiscretized_rectangles(list_rectangles_discretized: List[ReachPolygon],
     return list_rectangles_undiscretized
 
 
-def check_collision_and_split_rectangles(collision_checker, time_step: int, list_rectangles: List[ReachPolygon],
+def check_collision_and_split_rectangles(collision_checker, step: int, list_rectangles: List[ReachPolygon],
                                          radius_terminal_split: float) -> List[ReachPolygon]:
     """Check collision status of the rectangles and split them if they are colliding."""
     list_rectangles_collision_free = []
@@ -274,13 +274,13 @@ def check_collision_and_split_rectangles(collision_checker, time_step: int, list
     # check collision for each input rectangle
     radius_terminal_squared = radius_terminal_split ** 2
     for rectangle in list_rectangles:
-        list_rectangles_collision_free += create_collision_free_rectangles(time_step, collision_checker, rectangle,
+        list_rectangles_collision_free += create_collision_free_rectangles(step, collision_checker, rectangle,
                                                                            radius_terminal_squared)
 
     return list_rectangles_collision_free
 
 
-def create_collision_free_rectangles(time_step: int, collision_checker, rectangle: ReachPolygon,
+def create_collision_free_rectangles(step: int, collision_checker, rectangle: ReachPolygon,
                                      radius_terminal_squared: float) -> List[ReachPolygon]:
     """Recursively creates a list of collision-free rectangles.
 
@@ -288,7 +288,7 @@ def create_collision_free_rectangles(time_step: int, collision_checker, rectangl
     than the terminal radius, it is split into two new rectangles in whichever edge (lon/lat) that is longer.
     """
     # case 1: rectangle does not collide, return itself
-    if not collision_checker.collides_at_time_step(time_step, rectangle):
+    if not collision_checker.collides_at_step(step, rectangle):
         return [rectangle]
 
     # case 2: the diagonal is smaller than the terminal radius, return nothing
@@ -298,9 +298,9 @@ def create_collision_free_rectangles(time_step: int, collision_checker, rectangl
     # case 3: colliding but diagonal is long enough. split into two halves.
     else:
         rectangle_split_1, rectangle_split_2 = split_rectangle_into_two(rectangle)
-        list_rectangles_split_1 = create_collision_free_rectangles(time_step, collision_checker, rectangle_split_1,
+        list_rectangles_split_1 = create_collision_free_rectangles(step, collision_checker, rectangle_split_1,
                                                                    radius_terminal_squared)
-        list_rectangles_split_2 = create_collision_free_rectangles(time_step, collision_checker, rectangle_split_2,
+        list_rectangles_split_2 = create_collision_free_rectangles(step, collision_checker, rectangle_split_2,
                                                                    radius_terminal_squared)
 
         return list_rectangles_split_1 + list_rectangles_split_2
@@ -408,12 +408,12 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
         return reach_node
 
 
-def connect_children_to_parents(time_step: int, list_nodes: List[ReachNode]):
+def connect_children_to_parents(step: int, list_nodes: List[ReachNode]):
     """Connects the child reach nodes to their parent nodes."""
     list_nodes_reachable_set_new = []
 
     for node_child in list_nodes:
-        node_child.time_step = time_step
+        node_child.step = step
         # update parent-child relationship
         for node_parent in node_child.source_propagation:
             node_child.add_parent_node(node_parent)

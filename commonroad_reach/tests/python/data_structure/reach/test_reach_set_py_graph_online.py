@@ -62,7 +62,7 @@ def test_offline_reach():
     config.reachable_set.size_grid = 0.5
     reach_offline = PyGraphReachableSetOffline(config)
 
-    reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
+    reach_offline.compute(reach_offline.step_start, reach_offline.step_start + dt)
 
 
 def test_offline_online_compatibility():
@@ -77,7 +77,7 @@ def test_offline_online_compatibility():
         reach_offline = PyGraphReachableSetOffline(config)
 
         reach_offline.config.general.path_offline_data = offline_dir
-        reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
+        reach_offline.compute(reach_offline.step_start, reach_offline.step_start + dt)
 
         config.reachable_set.mode_computation = 4
         config.planning_problem.initial_state = State(position=np.array([15, 1.5]),

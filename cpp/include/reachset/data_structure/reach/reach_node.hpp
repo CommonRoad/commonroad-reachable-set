@@ -19,13 +19,13 @@ public:
     ReachNode() = default;
 
     /// Constructor of ReachNode.
-    /// @param time_step time step of the node
+    /// @param step time step of the node
     /// @param polygon_lon longitudinal polygon of the node
     /// @param polygon_lat lateral polygon of the node
-    ReachNode(int const& time_step, ReachPolygonPtr  polygon_lon, ReachPolygonPtr  polygon_lat);
+    ReachNode(int const& step, ReachPolygonPtr  polygon_lon, ReachPolygonPtr  polygon_lat);
 
     int id{};
-    int time_step{};
+    int step{};
     ReachPolygonPtr polygon_lon;
     ReachPolygonPtr polygon_lat;
     // vector of nodes from which the current node is originated
@@ -34,7 +34,7 @@ public:
 
     inline std::shared_ptr<ReachNode> clone() const {
         auto node_clone =
-                std::make_shared<ReachNode>(time_step, polygon_lon->clone(), polygon_lat->clone());
+                std::make_shared<ReachNode>(step, polygon_lon->clone(), polygon_lat->clone());
         node_clone->vec_nodes_child() = vec_nodes_child();
         node_clone->vec_nodes_parent() = vec_nodes_parent();
         node_clone->vec_nodes_source = vec_nodes_source;

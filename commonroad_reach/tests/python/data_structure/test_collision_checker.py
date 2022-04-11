@@ -30,7 +30,7 @@ def test_check_collision_and_split_rectangles_cpp(collision_checker_cpp):
                                               (64.375, 4.0, 65.0, 4.5)]
 
     list_rectangles_collision_free = check_collision_and_split_rectangles(collision_checker=collision_checker_cpp,
-                                                                          time_step=0, list_rectangles=list_rectangles,
+                                                                          step=0, list_rectangles=list_rectangles,
                                                                           radius_terminal_split=1.0)
 
     for rectangle in list_rectangles_collision_free:

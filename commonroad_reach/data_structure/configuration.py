@@ -67,14 +67,14 @@ class Configuration:
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
         string += f"# \tdt: {self.planning.dt}\n"
-        string += f"# \ttime steps: {self.planning.time_steps_computation}\n"
+        string += f"# \ttime steps: {self.planning.steps_computation}\n"
         string += f"# \tcoordinate system: {CLCS}\n"
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
         string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
         string += f"# \tsplit radius: {self.reachable_set.radius_terminal_split}\n"
-        string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_time_step}\n"
+        string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_step}\n"
         string += "# ================================= #"
 
         print(string)
@@ -119,8 +119,8 @@ class Configuration:
         config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
 
         config.planning.dt = self.planning.dt
-        config.planning.time_step_start = self.planning.time_step_start
-        config.planning.time_steps_computation = self.planning.time_steps_computation
+        config.planning.step_start = self.planning.step_start
+        config.planning.steps_computation = self.planning.steps_computation
         config.planning.p_lon_initial = self.planning.p_lon_initial
         config.planning.p_lat_initial = self.planning.p_lat_initial
         config.planning.uncertainty_p_lon = self.planning.uncertainty_p_lon
@@ -129,7 +129,7 @@ class Configuration:
         config.planning.v_lat_initial = self.planning.v_lat_initial
         config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
         config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
-        config.planning.time_step_start = self.planning.time_step_initial
+        config.planning.step_start = self.planning.step_initial
         config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
 
         if self.planning.coordinate_system == "CART":
@@ -149,7 +149,7 @@ class Configuration:
         config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
         config.reachable_set.num_threads = self.reachable_set.num_threads
-        config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_time_step
+        config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
 
         return config
 
@@ -229,8 +229,8 @@ class PlanningConfiguration:
         assert len(str(config_relevant.dt).split(".")[1]) == 1, \
             f"value of dt should be a multiple of 0.1, got {config_relevant.dt}."
         self.dt = config_relevant.dt
-        self.time_step_start = config_relevant.time_step_start
-        self.time_steps_computation = config_relevant.time_steps_computation
+        self.step_start = config_relevant.step_start
+        self.steps_computation = config_relevant.steps_computation
 
         self.p_lon_initial = None
         self.p_lat_initial = None
@@ -245,7 +245,7 @@ class PlanningConfiguration:
         self.o_initial = 0
 
         # related to specific planning problem
-        self.time_step_initial = None
+        self.step_initial = None
         self.id_lanelet_initial = 0
         self.route = None
         self.reference_path = None
@@ -260,7 +260,7 @@ class PlanningConfiguration:
         planning_problem = config.planning_problem
 
         self.lanelet_network = scenario.lanelet_network
-        self.time_step_initial = planning_problem.initial_state.time_step
+        self.step_initial = planning_problem.initial_state.time_step
 
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
@@ -304,7 +304,7 @@ class ReachableSetConfiguration:
         self.size_grid = config_relevant.size_grid
         self.size_grid_2nd = config_relevant.size_grid_2nd
         self.radius_terminal_split = config_relevant.radius_terminal_split
-        self.prune_nodes_not_reaching_final_time_step = config_relevant.prune_nodes_not_reaching_final_time_step
+        self.prune_nodes_not_reaching_final_step = config_relevant.prune_nodes_not_reaching_final_step
 
         self.consider_traffic = config_relevant.consider_traffic
         self.name_pickle_offline = config_relevant.name_pickle_offline

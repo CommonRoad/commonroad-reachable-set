@@ -7,14 +7,13 @@ using namespace reach;
 
 int ReachNode::cnt_id = 0;
 
-ReachNode::ReachNode(int const& time_step, ReachPolygonPtr polygon_lon, ReachPolygonPtr polygon_lat) :
-        time_step(time_step), polygon_lon(std::move(polygon_lon)), polygon_lat(std::move(polygon_lat)) {
+ReachNode::ReachNode(int const& step, ReachPolygonPtr polygon_lon, ReachPolygonPtr polygon_lat) :
+        step(step), polygon_lon(std::move(polygon_lon)), polygon_lat(std::move(polygon_lat)) {
     id = ReachNode::cnt_id++;
 }
 
 bool ReachNode::add_parent_node(ReachNodePtr const& node_parent) {
-    if (std::none_of(_vec_nodes_parent.cbegin(),
-                     _vec_nodes_parent.cend(),
+    if (std::none_of(_vec_nodes_parent.cbegin(), _vec_nodes_parent.cend(),
                      [&](auto const& node) { return node == node_parent; })) {
         _vec_nodes_parent.emplace_back(node_parent);
         return true;

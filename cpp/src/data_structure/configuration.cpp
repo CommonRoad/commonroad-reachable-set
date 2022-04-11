@@ -65,8 +65,8 @@ PlanningConfiguration::PlanningConfiguration(YAML::Node const& node) {
     auto node_planning = node["planning"];
 
     dt = node_planning["dt"].as<double>();
-    time_step_start = node_planning["time_step_start"].as<int>();
-    time_steps_computation = node_planning["time_steps_computation"].as<int>();
+    step_start = node_planning["step_start"].as<int>();
+    steps_computation = node_planning["steps_computation"].as<int>();
 
     p_lon_initial = 0;
     p_lat_initial = 0;

@@ -29,7 +29,6 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/miscellaneous.cpp
         CACHE STRING "" FORCE)
 
 # ========= building playground

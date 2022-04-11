@@ -40,7 +40,7 @@ class DrivingCorridors:
     @reach_set.setter
     def reach_set(self, reachable_sets):
         self._reach_set = reachable_sets
-        self.time_steps = sorted(list(reachable_sets.keys()))
+        self.steps = sorted(list(reachable_sets.keys()))
 
     def extract_lon_driving_corridor(self):
         pass
@@ -66,16 +66,16 @@ class DrivingCorridors:
             # compute longitudinal driving corridor
             lon_positions_dict = None
             # determine connected components in last time step
-            connected_components = self._determine_connected_components(list(self.reach_set[self.time_steps[-1]]))
+            connected_components = self._determine_connected_components(list(self.reach_set[self.steps[-1]]))
         elif lon_positions is not None and lon_driving_corridor is not None:
             print("Computing lateral driving corridor...")
             time_start = time.time()
             # compute lateral driving corridor for given longitudinal driving corridor
-            assert (len(lon_positions) == len(self.time_steps))
-            lon_positions_dict = dict(zip(self.time_steps, lon_positions))
+            assert (len(lon_positions) == len(self.steps))
+            lon_positions_dict = dict(zip(self.steps, lon_positions))
             # determine reachable sets which contain the longitudinal position in last time step
             overlapping_nodes = self._determine_reachset_overlap_with_longitudinal_position(
-                lon_driving_corridor[self.time_steps[-1]], lon_positions_dict[self.time_steps[-1]])
+                lon_driving_corridor[self.steps[-1]], lon_positions_dict[self.steps[-1]])
             # then determine connected components within the overlapping reachable sets
             connected_components = self._determine_connected_components(list(overlapping_nodes))
         else:
@@ -92,9 +92,9 @@ class DrivingCorridors:
         for cc in connected_components:
             driving_corridor_node_ids = list()
             graph = nx.DiGraph()
-            graph.add_node(1, time_idx=self.time_steps[-1], reach_set=cc)
+            graph.add_node(1, time_idx=self.steps[-1], reach_set=cc)
             self._create_reachset_connected_components_graph_backwards(
-                driving_corridor_node_ids, graph, 1, self.time_steps[-1], cc,
+                driving_corridor_node_ids, graph, 1, self.steps[-1], cc,
                 lon_positions_dict, lon_driving_corridor)
 
             for dc in driving_corridor_node_ids:
@@ -148,7 +148,7 @@ class DrivingCorridors:
             return
 
         # if initial time step reached: add initial reachable set node (id=1)
-        if time_idx == self.time_steps[0]:
+        if time_idx == self.steps[0]:
             # nx simple paths: graph, source node id, target node id
             driving_corridors_list.extend(nx.all_simple_paths(graph, node_id, 1))
             return

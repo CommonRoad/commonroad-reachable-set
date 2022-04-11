@@ -10,7 +10,6 @@
 #include "reachset/data_structure/reach/reach_set.hpp"
 #include "reachset/data_structure/reach/reach_polygon.hpp"
 #include "reachset/utility/collision_checker.hpp"
-#include "reachset/utility/miscellaneous.hpp"
 
 using namespace reach;
 using std::chrono::high_resolution_clock;

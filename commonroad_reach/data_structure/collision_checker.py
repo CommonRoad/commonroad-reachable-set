@@ -157,10 +157,10 @@ class CollisionChecker:
         return list_vertices_polygons_static
 
     def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic):
-        step_start = self.config.planning.time_step_start
-        step_end = step_start + self.config.planning.time_steps_computation + 1
+        step_start = self.config.planning.step_start
+        step_end = step_start + self.config.planning.steps_computation + 1
 
-        dict_time_to_list_vertices_polygons_dynamic = {time_step: [] for time_step in range(step_start, step_end)}
+        dict_time_to_list_vertices_polygons_dynamic = {step: [] for step in range(step_start, step_end)}
 
         for step in range(step_start, step_end):
             list_vertices_polygons_dynamic = []
@@ -182,7 +182,7 @@ class CollisionChecker:
 
         return dict_time_to_list_vertices_polygons_dynamic
 
-    def collides_at_time_step(self, time_idx: int, input_rectangle: ReachPolygon) -> bool:
+    def collides_at_step(self, step: int, input_rectangle: ReachPolygon) -> bool:
         """Checks for collision with obstacles in the scenario at time step.
 
         Note: creating a query windows significantly decreases computation time.
@@ -194,7 +194,7 @@ class CollisionChecker:
         collision_checker = self.cpp_collision_checker.window_query(rect_collision)
 
         # slice collision checker with time
-        collision_checker_time_slice = collision_checker.time_slice(time_idx)
+        collision_checker_time_slice = collision_checker.time_slice(step)
 
         # return collision result
         return collision_checker_time_slice.collide(rect_collision)

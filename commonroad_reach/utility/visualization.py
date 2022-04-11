@@ -41,10 +41,10 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
 
-    step_start = step_start or reach_interface.time_step_start
-    step_end = step_end or reach_interface.time_step_end
+    step_start = step_start or reach_interface.step_start
+    step_end = step_end or reach_interface.step_end
     if steps:
-        steps = [time_step for time_step in steps if time_step <= step_end + 1]
+        steps = [step for step in steps if step <= step_end + 1]
 
     else:
         steps = range(step_start, step_end + 1)
@@ -73,7 +73,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
 
-        list_nodes = reach_interface.reachable_set_at_time_step(step)
+        list_nodes = reach_interface.reachable_set_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
         # settings and adjustments
@@ -121,10 +121,10 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
 
-    step_start = step_start or reach_interface.time_step_start
-    step_end = step_end or reach_interface.time_step_end
+    step_start = step_start or reach_interface.step_start
+    step_end = step_end or reach_interface.step_end
     if steps:
-        steps = [time_step for time_step in steps if time_step <= step_end + 1]
+        steps = [step for step in steps if step <= step_end + 1]
 
     else:
         steps = range(step_start, step_end + 1)
@@ -153,7 +153,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
 
-        list_nodes = reach_interface.drivable_area_at_time_step(step)
+        list_nodes = reach_interface.drivable_area_at_step(step)
         draw_drivable_area(list_nodes, config, renderer, draw_params)
 
         # settings and adjustments
@@ -176,7 +176,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id))
+        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id), duration=duration)
 
     message = "\tDrivable area plotted."
     print(message)
@@ -191,8 +191,8 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
-        for time_step in range(reach_interface.time_step_start, reach_interface.time_step_end):
-            for rectangle in reach_interface.drivable_area_at_time_step(time_step):
+        for step in range(reach_interface.step_start, reach_interface.step_end):
+            for rectangle in reach_interface.drivable_area_at_step(step):
                 bounds = rectangle.bounds if backend == "PYTHON" else (rectangle.p_lon_min(), rectangle.p_lat_min(),
                                                                        rectangle.p_lon_max(), rectangle.p_lat_max())
                 x_min = min(x_min, bounds[0])
@@ -201,8 +201,8 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
                 y_max = max(y_max, bounds[3])
 
     elif config.planning.coordinate_system == "CVLN":
-        for time_step in range(reach_interface.time_step_start, reach_interface.time_step_end):
-            for rectangle_cvln in reach_interface.drivable_area_at_time_step(time_step):
+        for step in range(reach_interface.step_start, reach_interface.step_end):
+            for rectangle_cvln in reach_interface.drivable_area_at_step(step):
                 list_rectangles_cart = util_coordinate_system.convert_to_cartesian_polygons(rectangle_cvln,
                                                                                             config.planning.CLCS, False)
                 for rectangle_cart in list_rectangles_cart:
@@ -267,14 +267,14 @@ def save_fig(save_gif: bool, path_output: str, time_step: int):
                     transparent=False)
 
 
-def make_gif(path: str, prefix: str, time_steps: Union[range, List[int]],
+def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
              file_save_name="animation", duration: float = 0.1):
     images = []
     filenames = []
 
     print("\tCreating GIF...")
-    for i in time_steps:
-        im_path = os.path.join(path, prefix + "{:05d}.png".format(i))
+    for step in steps:
+        im_path = os.path.join(path, prefix + "{:05d}.png".format(step))
         filenames.append(im_path)
 
     for filename in filenames:
@@ -285,14 +285,14 @@ def make_gif(path: str, prefix: str, time_steps: Union[range, List[int]],
 
 
 def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,
-                                        time_step_end: Union[int, None] = None, animation: bool = False, as_svg=False):
+                                        step_end: Union[int, None] = None, animation: bool = False, as_svg=False):
     """2D visualization of a given driving corridor and scenario.
 
     :param driving_corridor: Driving corridor to visualize
     :param dc_id: id of driving corridor (idx in DC list)
     :param reach_interface: ReachableSetInterface object
-    :param time_step_end: end time step (if None: the entire driving corridor is plotted in a stacked visualization)
-    :param animation: make gif (works only if time_step_end is given)
+    :param step_end: end time step (if None: the entire driving corridor is plotted in a stacked visualization)
+    :param animation: make gif (works only if step_end is given)
     :param as_svg: save figures as svg for nice paper plots
     """
     # set ups
@@ -319,7 +319,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
 
-    if time_step_end is None:
+    if step_end is None:
         # draw only complete driving corridor over all time steps (stacked)
         plt.cla()
         scenario.draw(renderer, draw_params={"time_begin": 0, "lanelet": {"show_label": True}})
@@ -348,14 +348,15 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
                         format="png", bbox_inches="tight", transparent=False)
     else:
         # make separate plot of driving corridor for each time step + draw stacked corridor + create gif (optional)
-        assert time_step_end in range(reach_interface.time_step_end + 1), \
+        assert step_end in range(reach_interface.step_end + 1), \
             "Specified end time step for visualization is too high."
 
         # create separate output folder
         path_output_lon_dc = path_output + ('lon_driving_corridor_%s/' % dc_id)
         Path(path_output_lon_dc).mkdir(parents=True, exist_ok=True)
 
-        for time_step in range(time_step_end + 1):
+        for step in range(step_end + 1):
+            time_step = step * round(config.planning.dt * 10)
             # plot driving corridor and scenario at the specified time step
             plt.cla()
             scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True}, "time_begin": time_step})
@@ -364,7 +365,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
                 planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                     'draw_arrow': False, "radius": 0.5}}}})
             # reach set nodes in driving corridor at specified time step
-            list_nodes = driving_corridor[time_step]
+            list_nodes = driving_corridor[step]
             draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
             # plot
@@ -386,7 +387,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
                     format=save_format, bbox_inches="tight", transparent=False)
 
         if config.debug.save_plots and animation:
-            make_gif(path_output_lon_dc, "lon_driving_corridor_", time_step_end, ("lon_driving_corridor_%s" % dc_id))
+            make_gif(path_output_lon_dc, "lon_driving_corridor_", step_end, ("lon_driving_corridor_%s" % dc_id))
 
     message = ("\tDriving corridor %s plotted." % dc_id)
     print(message)
@@ -399,7 +400,7 @@ def plot_all_driving_corridors(list_driving_corridors: List, reach_interface: Re
     """
     dc_counter = 0
     for dc in list_driving_corridors:
-        plot_scenario_with_driving_corridor(dc, dc_counter, reach_interface, time_step_end=None, animation=False)
+        plot_scenario_with_driving_corridor(dc, dc_counter, reach_interface, step_end=None, animation=False)
         dc_counter += 1
 
 
@@ -416,7 +417,7 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
         if lanelet_ids else config.scenario.lanelet_network
 
     # temporal length of driving corridor
-    time_step_end = len(driving_corridor) - 1
+    step_end = len(driving_corridor) - 1
 
     # setup figure
     fig = plt.figure(figsize=(20, 10))
@@ -437,9 +438,10 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     # 3D rendering of lanelet network
     _render_lanelet_network_3d(lanelet_network, ax)
 
-    for time_step in range(time_step_end + 1):
+    for step in range(step_end + 1):
+        time_step = step * round(config.planning.dt * 10)
         # determine tuple (z_min, z_max) for polyhedron
-        z_tuple = (time_step * interval, time_step * interval + height)
+        z_tuple = (step * interval, step * interval + height)
 
         # 3D rendering of obstacles
         if list_obstacles:
@@ -448,7 +450,7 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
                 _render_obstacle_3d(occ_rectangle, ax, z_tuple)
 
         # 3D rendering of reachable sets
-        list_reach_nodes = driving_corridor[time_step]
+        list_reach_nodes = driving_corridor[step]
         _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette)
 
     # axis settings

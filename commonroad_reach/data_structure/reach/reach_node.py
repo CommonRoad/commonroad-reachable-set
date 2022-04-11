@@ -17,7 +17,7 @@ class ReachNode:
     """
     cnt_id = 0
 
-    def __init__(self, polygon_lon: ReachPolygon, polygon_lat: ReachPolygon, time_step: int = -1):
+    def __init__(self, polygon_lon: ReachPolygon, polygon_lat: ReachPolygon, step: int = -1):
         self._polygon_lon: ReachPolygon = polygon_lon
         self._polygon_lat: ReachPolygon = polygon_lat
         self._bounds_lon = polygon_lon.bounds if polygon_lon else None
@@ -29,7 +29,7 @@ class ReachNode:
 
         self.id = ReachNode.cnt_id
         ReachNode.cnt_id += 1
-        self.time_step = time_step
+        self.step = step
         self.list_nodes_parent: List[ReachNode] = list()
         self.list_nodes_child: List[ReachNode] = list()
 
@@ -37,17 +37,17 @@ class ReachNode:
         self.source_propagation = None
 
     def __repr__(self):
-        return f"ReachNode(time_step={self.time_step}, id={self.id})"
+        return f"ReachNode(step={self.step}, id={self.id})"
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ReachNode):
-            return self.id == other.id and self.time_step == other.time_step
+            return self.id == other.id and self.step == other.step
 
         else:
             return False
 
     def __key(self):
-        return self.id, self.time_step
+        return self.id, self.step
 
     def __hash__(self):
         return hash(self.__key())
@@ -145,7 +145,7 @@ class ReachNode:
     def clone(self) -> "ReachNode":
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
-                               self.time_step)
+                               self.step)
         node_clone.list_nodes_parent = copy.deepcopy(self.list_nodes_parent)
         node_clone.list_nodes_child = copy.deepcopy(self.list_nodes_child)
         node_clone.source_propagation = self.source_propagation
@@ -163,7 +163,7 @@ class ReachNode:
         return ReachNode(
             ReachPolygon.from_polygon(affinity.translate(self.polygon_lon, xoff=p_lon_off, yoff=v_lon_off)),
             ReachPolygon.from_polygon(affinity.translate(self.polygon_lat, xoff=p_lat_off, yoff=v_lat_off)),
-            time_step=self.time_step)
+            step=self.step)
 
     @classmethod
     def reset_class_id_counter(cls):
@@ -220,16 +220,16 @@ class ReachNodeMultiGeneration(ReachNode):
     In addition to the ReachNode class, this class holds additional lists for grandparent and grandchild nodes.
     """
 
-    def __init__(self, polygon_lon, polygon_lat, time_step: int = -1):
-        super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, time_step)
+    def __init__(self, polygon_lon, polygon_lat, step: int = -1):
+        super(ReachNodeMultiGeneration, self).__init__(polygon_lon, polygon_lat, step)
         self.dict_time_to_set_nodes_grandparent: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
         self.dict_time_to_set_nodes_grandchild: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
 
     def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandparent node into the list."""
-        delta_steps = self.time_step - node_grandparent.time_step
-        assert delta_steps > 1, f"not a grand_parent: node_grandparent.time_step={node_grandparent.time_step}, " \
-                                f"self.time_step={self.time_step}"
+        delta_steps = self.step - node_grandparent.step
+        assert delta_steps > 1, f"not a grand_parent: node_grandparent.step={node_grandparent.step}, " \
+                                f"self.step={self.step}"
         if node_grandparent not in self.dict_time_to_set_nodes_grandparent[delta_steps]:
             self.dict_time_to_set_nodes_grandparent[delta_steps].add(node_grandparent)
             return True
@@ -238,7 +238,7 @@ class ReachNodeMultiGeneration(ReachNode):
 
     def remove_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
         """Removes a grandparent node from the list."""
-        delta_steps = self.time_step - node_grandparent.time_step
+        delta_steps = self.step - node_grandparent.step
         if node_grandparent in self.dict_time_to_set_nodes_grandparent[delta_steps]:
             self.dict_time_to_set_nodes_grandparent[delta_steps].remove(node_grandparent)
             return True
@@ -247,9 +247,9 @@ class ReachNodeMultiGeneration(ReachNode):
 
     def add_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
         """Adds a grandchild node into the list."""
-        delta_steps = node_grandchild.time_step - self.time_step
-        assert delta_steps > 1, f"not a grandchild: node_grandchild.time_step={node_grandchild.time_step}, " \
-                                f"self.time_step={self.time_step}"
+        delta_steps = node_grandchild.step - self.step
+        assert delta_steps > 1, f"not a grandchild: node_grandchild.step={node_grandchild.step}, " \
+                                f"self.step={self.step}"
         if node_grandchild not in self.dict_time_to_set_nodes_grandchild[delta_steps]:
             self.dict_time_to_set_nodes_grandchild[delta_steps].add(node_grandchild)
             return True
@@ -258,7 +258,7 @@ class ReachNodeMultiGeneration(ReachNode):
 
     def remove_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
         """Removes a grandchild node from the list."""
-        delta_steps = node_grandchild.time_step - self.time_step
+        delta_steps = node_grandchild.step - self.step
         if node_grandchild in self.dict_time_to_set_nodes_grandchild[delta_steps]:
             self.dict_time_to_set_nodes_grandchild[delta_steps].remove(node_grandchild)
             return True

@@ -58,4 +58,4 @@ def test_reachable_set_computation_python_offline():
     [config.scenario.remove_obstacle(obs) for obs in config.scenario.obstacles]
     config.reachable_set.size_grid = 0.5
     reach_offline = PyGraphReachableSetOffline(config)
-    reach_offline.compute(reach_offline.time_step_start, reach_offline.time_step_start + dt)
+    reach_offline.compute(reach_offline.step_start, reach_offline.step_start + dt)

@@ -12,17 +12,17 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 def create_curvilinear_aabb_from_obstacle(
         obstacle, CLCS: pycrccosy.CurvilinearCoordinateSystem,
-        radius_disc: float, time_step: int = None, resolution: int = 5, ) -> List[pycrcc.RectAABB]:
+        radius_disc: float, step: int = None, resolution: int = 5, ) -> List[pycrcc.RectAABB]:
     """Returns a list of axis-aligned bounding boxes from an obstacle in Curvilinear coordinate system.
 
     The shapes are dilated with the disc radius of the ego vehicle to consider its shape.
     """
     list_aabb_cvln = []
 
-    if time_step is None:
-        time_step = obstacle.initial_state.time_step
+    if step is None:
+        step = obstacle.initial_state.step
 
-    occupancy = obstacle.occupancy_at_time(time_step)
+    occupancy = obstacle.occupancy_at_time(step)
     if not occupancy:
         return []
 

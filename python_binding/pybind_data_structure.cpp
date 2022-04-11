@@ -52,7 +52,7 @@ void export_reach_node(py::module& m) {
             .def("vec_nodes_parent", &ReachNode::vec_nodes_parent)
             .def("vec_nodes_child", &ReachNode::vec_nodes_child)
             .def_readonly("id", &ReachNode::id)
-            .def_readonly("time_step", &ReachNode::time_step)
+            .def_readonly("step", &ReachNode::step)
             .def_readonly("polygon_lon", &ReachNode::polygon_lon)
             .def_readonly("polygon_lat", &ReachNode::polygon_lat)
             .def("__repr__", [](ReachNode const& node) {
@@ -132,8 +132,8 @@ void export_configuration(py::module& m) {
     py::class_<PlanningConfiguration, shared_ptr<PlanningConfiguration>>(m, "PlanningConfiguration")
             .def(py::init<>())
             .def_readwrite("dt", &PlanningConfiguration::dt)
-            .def_readwrite("time_step_start", &PlanningConfiguration::time_step_start)
-            .def_readwrite("time_steps_computation", &PlanningConfiguration::time_steps_computation)
+            .def_readwrite("step_start", &PlanningConfiguration::step_start)
+            .def_readwrite("steps_computation", &PlanningConfiguration::steps_computation)
             .def_readwrite("p_lon_initial", &PlanningConfiguration::p_lon_initial)
             .def_readwrite("p_lat_initial", &PlanningConfiguration::p_lat_initial)
             .def_readwrite("uncertainty_p_lon", &PlanningConfiguration::uncertainty_p_lon)
@@ -142,7 +142,7 @@ void export_configuration(py::module& m) {
             .def_readwrite("v_lat_initial", &PlanningConfiguration::v_lat_initial)
             .def_readwrite("uncertainty_v_lon", &PlanningConfiguration::uncertainty_v_lon)
             .def_readwrite("uncertainty_v_lat", &PlanningConfiguration::uncertainty_v_lat)
-            .def_readwrite("time_step_start", &PlanningConfiguration::time_step_start)
+            .def_readwrite("step_start", &PlanningConfiguration::step_start)
             .def_readwrite("id_lanelet_initial", &PlanningConfiguration::id_lanelet_initial)
             .def_readwrite("coordinate_system", &PlanningConfiguration::coordinate_system)
             .def_readwrite("reference_point", &PlanningConfiguration::reference_point);

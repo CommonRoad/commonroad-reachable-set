@@ -30,12 +30,12 @@ class ReachableSetInterface:
             raise Exception(message)
 
     @property
-    def time_step_start(self):
-        return self._reach.time_step_start
+    def step_start(self):
+        return self._reach.step_start
 
     @property
-    def time_step_end(self):
-        return self._reach.time_step_end
+    def step_end(self):
+        return self._reach.step_end
 
     @property
     def drivable_area(self):
@@ -45,27 +45,27 @@ class ReachableSetInterface:
     def reachable_set(self):
         return self._reach.reachable_set
 
-    def drivable_area_at_time_step(self, time_step: int):
-        if not self._reachable_set_computed and time_step != 0:
+    def drivable_area_at_step(self, step: int):
+        if not self._reachable_set_computed and step != 0:
             message = "Reachable set is not computed, retrieving drivable area failed."
             logger.warning(message)
             print(message)
             return []
 
         else:
-            return self._reach.drivable_area_at_time_step(time_step)
+            return self._reach.drivable_area_at_step(step)
 
-    def reachable_set_at_time_step(self, time_step: int):
-        if not self._reachable_set_computed and time_step != 0:
+    def reachable_set_at_step(self, step: int):
+        if not self._reachable_set_computed and step != 0:
             message = "Reachable set is not computed, retrieving reachable set failed."
             logger.warning(message)
             print(message)
             return []
 
         else:
-            return self._reach.reachable_set_at_time_step(time_step)
+            return self._reach.reachable_set_at_step(step)
 
-    def compute_reachable_sets(self, time_step_start: int = 1, time_step_end: int = 0):
+    def compute_reachable_sets(self, step_start: int = 1, step_end: int = 0):
         message = "* Computing reachable sets..."
         logger.info(message)
         print(message)
@@ -76,17 +76,16 @@ class ReachableSetInterface:
             print(message)
             return None
 
-        if not time_step_end:
-            time_step_end = self.time_step_end
+        step_end = step_end if step_end else self.step_end
 
-        if not (0 < time_step_start < time_step_end):
+        if not (0 < step_start < step_end):
             message = "Time steps for computation are invalid, aborting computation."
             logger.warning(message)
             print(message)
             return None
 
         time_start = time.time()
-        self._reach.compute(time_step_start, time_step_end)
+        self._reach.compute(step_start, step_end)
         self._reachable_set_computed = True
         time_computation = time.time() - time_start
 

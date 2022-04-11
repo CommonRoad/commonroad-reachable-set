@@ -79,7 +79,7 @@ std::vector<ReachPolygonPtr> undiscretize_rectangles(std::vector<ReachPolygonPtr
                                                      double const& size_grid);
 
 /// Check collision status of the rectangles and split them if colliding.
-std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& time_step,
+std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& step,
                                                                   CollisionCheckerPtr const& collision_checker,
                                                                   std::vector<ReachPolygonPtr> const& vec_rectangles,
                                                                   double const& radius_terminal_split,
@@ -128,7 +128,7 @@ ReachNodePtr construct_reach_node(ReachPolygonPtr const& rectangle_drivable_area
                                   std::vector<int> const& vec_idx_base_sets_adjacent);
 
 /// Connects the child reach nodes to their parent nodes.
-std::vector<ReachNodePtr> connect_children_to_parents(int const& time_step,
+std::vector<ReachNodePtr> connect_children_to_parents(int const& step,
                                                       std::vector<ReachNodePtr> const& vec_base_sets_adapted,
                                                       int const& num_threads);
 }

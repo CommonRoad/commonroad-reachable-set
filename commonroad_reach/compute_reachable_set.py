@@ -15,7 +15,6 @@ def main():
     config = ConfigurationBuilder.build_configuration(name_scenario)
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
-
     # ==== compute reachable sets using reachability interface
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()

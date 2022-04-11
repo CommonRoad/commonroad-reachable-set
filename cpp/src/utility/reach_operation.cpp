@@ -236,7 +236,7 @@ vector<ReachPolygonPtr> reach::repartition_rectangle(vector<ReachPolygonPtr> con
     return vec_rectangles_repartitioned;
 }
 
-vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& time_step,
+vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& step,
                                                                     CollisionCheckerPtr const& collision_checker,
                                                                     vector<ReachPolygonPtr> const& vec_rectangles,
                                                                     double const& radius_terminal_split,
@@ -246,7 +246,7 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& t
     vector<ReachPolygonPtr> vec_rectangles_collision_free;
     auto radius_terminal_squared = pow(radius_terminal_split, 2);
     // make a window query w.r.t rectangles to speed up the collision check
-    auto collision_checker_sliced = collision_checker->timeSlice(time_step)->
+    auto collision_checker_sliced = collision_checker->timeSlice(step)->
             windowQuery(obtain_bounding_box_of_rectangles(vec_rectangles));
 
     for (auto const& rectangle: vec_rectangles) {
@@ -403,8 +403,8 @@ vector<ReachNodePtr> reach::construct_reach_nodes(
 #pragma omp parallel num_threads(num_threads) default(none) shared(drivable_area, map_rectangle_adjacency, \
 vec_rectangles_drivable_area, vec_base_sets_propagated, reachable_set)
     {
-        vector<ReachNodePtr> reachable_set_time_step_current_thread;
-        reachable_set_time_step_current_thread.reserve(drivable_area.size());
+        vector<ReachNodePtr> reachable_set_step_current_thread;
+        reachable_set_step_current_thread.reserve(drivable_area.size());
 
 #pragma omp for nowait
         for (int idx = 0; idx < map_rectangle_adjacency.size(); idx++) {
@@ -419,12 +419,12 @@ vec_rectangles_drivable_area, vec_base_sets_propagated, reachable_set)
                                                    vec_base_sets_propagated,
                                                    vec_idx_base_sets_adjacent);
             if (reach_node != nullptr)
-                reachable_set_time_step_current_thread.emplace_back(reach_node);
+                reachable_set_step_current_thread.emplace_back(reach_node);
         }
 #pragma omp critical
         reachable_set.insert(reachable_set.end(),
-                             std::make_move_iterator(reachable_set_time_step_current_thread.begin()),
-                             std::make_move_iterator(reachable_set_time_step_current_thread.end()));
+                             std::make_move_iterator(reachable_set_step_current_thread.begin()),
+                             std::make_move_iterator(reachable_set_step_current_thread.end()));
     }
 
     return reachable_set;
@@ -508,11 +508,11 @@ ReachNodePtr reach::construct_reach_node(ReachPolygonPtr const& rectangle_drivab
         return nullptr;
 }
 
-vector<ReachNodePtr> reach::connect_children_to_parents(int const& time_step,
+vector<ReachNodePtr> reach::connect_children_to_parents(int const& step,
                                                         vector<ReachNodePtr> const& vec_base_sets_adapted,
                                                         int const& num_threads) {
     for (auto& node_child: vec_base_sets_adapted) {
-        node_child->time_step = time_step;
+        node_child->step = step;
         // update parent-child relationship
         for (auto& node_parent: node_child->vec_nodes_source) {
             node_child->add_parent_node(node_parent);

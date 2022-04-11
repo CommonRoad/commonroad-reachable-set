@@ -101,8 +101,8 @@ struct VehicleConfiguration {
 /// Struct storing planning configurations.
 struct PlanningConfiguration {
     double dt{};
-    int time_step_start{};
-    int time_steps_computation{};
+    int step_start{};
+    int steps_computation{};
     // initial positions
     double p_lon_initial{};
     double p_lat_initial{};
