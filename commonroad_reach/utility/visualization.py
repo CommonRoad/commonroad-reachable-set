@@ -24,9 +24,9 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, figsize: Tuple = None,
-                                      time_step_start: int = 0, time_step_end: int = 0, time_steps: List[int] = None,
+                                      step_start: int = 0, step_end: int = 0, steps: List[int] = None,
                                       plot_limits: Union[List] = None, path_output: str = None,
-                                      save_gif: bool = True, duration: float = 0.1):
+                                      save_gif: bool = True, duration: float = None):
     config = reach_interface.config
     scenario = config.scenario
     planning_problem = config.planning_problem
@@ -41,20 +41,22 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
 
-    time_step_start = time_step_start or reach_interface.time_step_start
-    time_step_end = time_step_end or reach_interface.time_step_end
-    if time_steps:
-        time_steps = [time_step for time_step in time_steps if time_step <= time_step_end + 1]
+    step_start = step_start or reach_interface.time_step_start
+    step_end = step_end or reach_interface.time_step_end
+    if steps:
+        steps = [time_step for time_step in steps if time_step <= step_end + 1]
 
     else:
-        time_steps = range(time_step_start, time_step_end + 1)
+        steps = range(step_start, step_end + 1)
+    duration = duration if duration else config.planning.dt
 
     message = "* Plotting reachable sets..."
     print(message)
     logger.info(message)
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
-    for time_step in time_steps:
+    for step in steps:
+        time_step = step * int(config.planning.dt * 10)
         if config.debug.save_plots:
             # clear previous plot
             plt.cla()
@@ -71,7 +73,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
 
-        list_nodes = reach_interface.reachable_set_at_time_step(time_step)
+        list_nodes = reach_interface.reachable_set_at_time_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
         # settings and adjustments
@@ -89,12 +91,12 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
                              color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         if config.debug.save_plots:
-            save_fig(save_gif, path_output, time_step)
+            save_fig(save_gif, path_output, step)
         else:
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", time_steps, str(scenario.scenario_id), duration)
+        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id), duration)
 
     message = "\tReachable sets plotted."
     print(message)
@@ -102,8 +104,9 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
 
 
 def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
-                                     time_step_start: int = 0, time_step_end: int = 0, time_steps: List[int] = None,
-                                     plot_limits: Union[List] = None, path_output: str = None, save_gif: bool = True):
+                                     step_start: int = 0, step_end: int = 0, steps: List[int] = None,
+                                     plot_limits: Union[List] = None, path_output: str = None,
+                                     save_gif: bool = True, duration: float = None):
     config = reach_interface.config
     scenario = config.scenario
     planning_problem = config.planning_problem
@@ -118,20 +121,22 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
     draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
 
-    time_step_start = time_step_start or reach_interface.time_step_start
-    time_step_end = time_step_end or reach_interface.time_step_end
-    if time_steps:
-        time_steps = [time_step for time_step in time_steps if time_step <= time_step_end + 1]
+    step_start = step_start or reach_interface.time_step_start
+    step_end = step_end or reach_interface.time_step_end
+    if steps:
+        steps = [time_step for time_step in steps if time_step <= step_end + 1]
 
     else:
-        time_steps = range(time_step_start, time_step_end + 1)
+        steps = range(step_start, step_end + 1)
+    duration = duration if duration else config.planning.dt
 
     message = "* Plotting drivable area..."
     print(message)
     logger.info(message)
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
-    for time_step in time_steps:
+    for step in steps:
+        time_step = step * int(config.planning.dt * 10)
         if config.debug.save_plots:
             # clear previous plot
             plt.cla()
@@ -148,7 +153,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
 
-        list_nodes = reach_interface.drivable_area_at_time_step(time_step)
+        list_nodes = reach_interface.drivable_area_at_time_step(step)
         draw_drivable_area(list_nodes, config, renderer, draw_params)
 
         # settings and adjustments
@@ -171,7 +176,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", time_steps, str(scenario.scenario_id))
+        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id))
 
     message = "\tDrivable area plotted."
     print(message)

@@ -157,13 +157,14 @@ class CollisionChecker:
         return list_vertices_polygons_static
 
     def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic):
-        time_start = self.config.planning.time_step_start
-        time_end = time_start + self.config.planning.time_steps_computation + 1
+        step_start = self.config.planning.time_step_start
+        step_end = step_start + self.config.planning.time_steps_computation + 1
 
-        dict_time_to_list_vertices_polygons_dynamic = {time_step: [] for time_step in range(time_start, time_end)}
+        dict_time_to_list_vertices_polygons_dynamic = {time_step: [] for time_step in range(step_start, step_end)}
 
-        for time_step in range(time_start, time_end):
+        for step in range(step_start, step_end):
             list_vertices_polygons_dynamic = []
+            time_step = step * round(self.config.planning.dt * 10)
             for obstacle in list_obstacles_dynamic:
                 occupancy = obstacle.occupancy_at_time(time_step)
                 if not occupancy:
@@ -177,7 +178,7 @@ class CollisionChecker:
                     for shape in shape.shapes:
                         list_vertices_polygons_dynamic.append(shape.vertices)
 
-            dict_time_to_list_vertices_polygons_dynamic[time_step] += list_vertices_polygons_dynamic
+            dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
 
         return dict_time_to_list_vertices_polygons_dynamic
 

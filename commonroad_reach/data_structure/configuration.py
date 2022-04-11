@@ -66,13 +66,14 @@ class Configuration:
         string = "# ===== Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
+        string += f"# \tdt: {self.planning.dt}\n"
         string += f"# \ttime steps: {self.planning.time_steps_computation}\n"
         string += f"# \tcoordinate system: {CLCS}\n"
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
         string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
-        string += f"# \tterminal split radius: {self.reachable_set.radius_terminal_split}\n"
+        string += f"# \tsplit radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_time_step}\n"
         string += "# ================================= #"
 
@@ -225,6 +226,8 @@ class PlanningConfiguration:
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.planning
 
+        assert len(str(config_relevant.dt).split(".")[1]) == 1, \
+            f"value of dt should be a multiple of 0.1, got {config_relevant.dt}."
         self.dt = config_relevant.dt
         self.time_step_start = config_relevant.time_step_start
         self.time_steps_computation = config_relevant.time_steps_computation

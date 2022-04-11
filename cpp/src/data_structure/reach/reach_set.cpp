@@ -93,13 +93,13 @@ void ReachableSet::_compute_drivable_area_at_time_step(int const& time_step) {
                 vec_rectangles_projected, config->reachable_set().size_grid);
 
         drivable_area_collision_free = check_collision_and_split_rectangles(
-                std::floor(time_step * config->planning().dt * 10), collision_checker,
+                time_step, collision_checker,
                 vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
                 config->reachable_set().num_threads);
         // collision check, then repartition
     } else if (config->reachable_set().mode_repartition == 2) {
         auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
-                std::floor(time_step * config->planning().dt * 10), collision_checker,
+                time_step, collision_checker,
                 vec_rectangles_projected, config->reachable_set().radius_terminal_split,
                 config->reachable_set().num_threads);
 
@@ -111,7 +111,7 @@ void ReachableSet::_compute_drivable_area_at_time_step(int const& time_step) {
                 vec_rectangles_projected, config->reachable_set().size_grid);
 
         auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
-                std::floor(time_step * config->planning().dt * 10), collision_checker,
+                time_step, collision_checker,
                 vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
                 config->reachable_set().num_threads);
 

@@ -25,9 +25,9 @@ int main() {
     py::scoped_interpreter python{};
 
     // ======== settings
-    string name_scenario = "USA_US101-6_1_T-1";
+    //string name_scenario = "USA_US101-6_1_T-1";
     //string name_scenario = "DEU_Test-1_1_T-1";
-    //string name_scenario = "ARG_Carcarana-1_1_T-1";
+    string name_scenario = "ARG_Carcarana-1_1_T-1";
     //string name_scenario = "ZAM_Tjunction-1_313_T-1";
 
     // append path to interpreter
@@ -49,9 +49,10 @@ int main() {
 
     // ======== collision checker from python collision checker
     auto cls_CollisionChecker_py =
-            py::module_::import("commonroad_reach.data_structure.collision_checker_cpp").attr("CppCollisionChecker");
+            py::module_::import("commonroad_reach.data_structure.collision_checker").attr("CollisionChecker");
     auto obj_collision_checker_py = cls_CollisionChecker_py(obj_config_py);
-    auto collision_checker = obj_collision_checker_py.attr("collision_checker").cast<CollisionCheckerPtr>();
+    auto collision_checker =
+            obj_collision_checker_py.attr("cpp_collision_checker").cast<CollisionCheckerPtr>();
 
     // ======== reachable set computation
     auto reachable_set = ReachableSet(config, collision_checker);
