@@ -62,7 +62,6 @@ class PyGraphReachableSetOnline(ReachableSet):
     def reachable_set_at_step(self, step: int) -> List[ReachNodeMultiGeneration]:
         if step not in self._list_steps_computed:
             message = "Given time step for drivable area retrieval is out of range."
-            print(message)
             logger.warning(message)
             return []
 
@@ -111,7 +110,6 @@ class PyGraphReachableSetOnline(ReachableSet):
     def drivable_area_at_step(self, step: int) -> List[ReachPolygon]:
         if step not in self._list_steps_computed:
             message = "Given time step for drivable area retrieval is out of range."
-            print(message)
             logger.warning(message)
             return []
 
@@ -156,7 +154,6 @@ class PyGraphReachableSetOnline(ReachableSet):
     def _load_offline_computation_result(self) -> tuple:
         """Loads pickle file generated in the offline computation step."""
         message = "* Loading offline computation result..."
-        print(message)
         logger.info(message)
 
         path_file_pickle = os.path.join(self.config.general.path_offline_data,
@@ -275,7 +272,6 @@ class PyGraphReachableSetOnline(ReachableSet):
             from commonroad_reach.data_structure.collision_checker import CollisionChecker
         except ImportError:
             message = "Importing C++ collision checker failed."
-            print(message)
             logger.exception(message)
         else:
             self._collision_checker = CollisionChecker(self.config)
@@ -289,7 +285,6 @@ class PyGraphReachableSetOnline(ReachableSet):
             if time_step > self._num_time_steps_offline_computation:
                 message = f"Time step {time_step} is out of range, max allowed: " \
                           f"{self._num_time_steps_offline_computation}"
-                print(message)
                 logger.warning(message)
                 return
 
