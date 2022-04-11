@@ -3,28 +3,29 @@ from collections import defaultdict
 import warnings
 import math
 import time
+import sys
 
 import numpy as np
 import networkx as nx
 
-import pycrreach
+try:
+    import pycrreach
+except ImportError:
+    pass
+
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
-from commonroad_reach.utility import coordinate_system as util_coordinate_system
-from commonroad.geometry.shape import Shape
-from shapely.geometry import Polygon
-
+from commonroad.geometry.shape import Shape, Rectangle, Polygon
 
 # TODO Integrate driving corridor extractions into ReachableSetInterface class
-# TODO rename class to DrivingCorridorExtractor
 # TODO Save driving corridors as class member variable -> Retrieve later from Reachable Set Interface
 
 # scaling factor (avoid numerical errors)
 DIGITS = 2
 
 
-class DrivingCorridors:
+class DrivingCorridorExtractor:
     """
     Class to compute driving corridors based on previous computation of reachable sets and drivable area
     """
@@ -34,6 +35,8 @@ class DrivingCorridors:
         self.reach_set = reachable_sets
         if config.reachable_set.mode == 3:
             self.backend = "CPP"        # using C++ backend
+            if 'pycrreach' not in sys.modules:
+                raise ImportError("C++ backend library (pycrreach) has not been found")
         else:
             self.backend = "PYTHON"     # using Python backend
 
@@ -53,7 +56,7 @@ class DrivingCorridors:
         pass
 
     def extract_driving_corridors(self,
-                                  terminal_set: Shape = None,
+                                  terminal_set: Union[Rectangle, Polygon] = None,
                                   lon_positions: Union[List[float], None] = None,
                                   lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None)\
             -> List[Dict[int, List[pycrreach.ReachNode]]]:
@@ -122,35 +125,35 @@ class DrivingCorridors:
 
         return driving_corridor_list
 
-    def _determine_terminal_set_overlap(self, terminal_set: Shape, reach_set_nodes):
+    def _determine_terminal_set_overlap(self, terminal_set: Union[Rectangle, Polygon], reach_set_nodes):
         """
-        :param terminal_set set of terminal positions (represented as CR Shape object)
+        :param terminal_set set of terminal positions (e.g., goal region), represented as CR Shape object in Cartesian frame
         :param reach_set_nodes List of reach set nodes at the final time step
         :return: list of reach set node overlapping with terminal set
         """
-        # TODO additionally check for velocity interval?
         if self.config.planning.coordinate_system == "CVLN":
             # computation in CVLN coordinates
             ccosy = self.config.planning.CLCS
             vert = terminal_set.shapely_object.exterior.coords
             transformed_set, transformed_set_rasterized = ccosy.convert_list_of_polygons_to_curvilinear_coords_and_rasterize([vert], [0], 1, 4)
-            list_terminal_set_polygons = [Polygon([arr.tolist() for arr in transformed_set_rasterized[0][0]])]
+            terminal_set_vertices = [arr.tolist() for arr in transformed_set[0][0]]
         else:
             # computation in CART coordinates
-            # list with one entry
-            list_terminal_set_polygons = [ReachPolygon.from_polygon(terminal_set.shapely_object)]
+            ts_x, ts_y = terminal_set.shapely_object.exterior.coords.xy
+            terminal_set_vertices = [vertex for vertex in zip(ts_x, ts_y)]
 
-        # create_adjacency_dictionary
-        list_position_rectangles = []
-        # TODO: Convert to Py Data structure (implement function in CPP and avoid conversion later?)
-        if self.backend == 'CPP':
-            for node in reach_set_nodes:
-                vert = node.position_rectangle().vertices()
-                list_position_rectangles.append(ReachPolygon(list_vertices=vert))
-        elif self.backend == 'PYTHON':
+        if self.backend == 'PYTHON':
+            list_terminal_set_polygons = [ReachPolygon(terminal_set_vertices)]
             list_position_rectangles = [node.position_rectangle for node in reach_set_nodes]
+            overlap = util_geometry.create_adjacency_dictionary(list_terminal_set_polygons, list_position_rectangles)
+        elif self.backend == 'CPP':
+            list_terminal_set_polygons = [pycrreach.ReachPolygon(terminal_set_vertices)]
+            list_position_rectangles = [node.position_rectangle() for node in reach_set_nodes]
+            overlap = pycrreach.create_adjacency_dictionary_boost(list_terminal_set_polygons, list_position_rectangles)
+        else:
+            err_msg = "Invalid backend (CPP or PYTHON)"
+            raise ValueError(err_msg)
 
-        overlap = util_geometry.create_adjacency_dictionary(list_terminal_set_polygons, list_position_rectangles)
         # return reach set nodes which overlap
         overlapping_nodes = set([reach_set_nodes[j] for j in overlap[0]])
         return overlapping_nodes

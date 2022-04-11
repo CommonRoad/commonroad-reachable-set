@@ -1,7 +1,7 @@
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.utility import visualization as util_visual
-from commonroad_reach.data_structure.driving_corridors import DrivingCorridors
+from commonroad_reach.data_structure.driving_corridors import DrivingCorridorExtractor
 from commonroad.visualization.mp_renderer import MPRenderer
 import numpy as np
 from matplotlib import pyplot as plt
@@ -47,7 +47,7 @@ def main():
 
     reachable_set = reach_interface.reachable_set
 
-    driving_corridors = DrivingCorridors(reachable_set, config)
+    driving_corridors = DrivingCorridorExtractor(reachable_set, config)
     # longitudinal_driving_corridors = driving_corridors.extract_driving_corridors()
     longitudinal_driving_corridors = driving_corridors.extract_driving_corridors(terminal_set=config.planning_problem.goal.state_list[0].position.shapes[0])
     print("Number of longitudinal driving corridors %s:" % len(longitudinal_driving_corridors))
