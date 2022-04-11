@@ -45,11 +45,8 @@ def main():
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
 
-    reachable_set = reach_interface.reachable_set
+    longitudinal_driving_corridors = reach_interface.extract_driving_corridors(to_goal_region=True)
 
-    driving_corridors = DrivingCorridorExtractor(reachable_set, config)
-    # longitudinal_driving_corridors = driving_corridors.extract_driving_corridors()
-    longitudinal_driving_corridors = driving_corridors.extract_driving_corridors(terminal_set=config.planning_problem.goal.state_list[0].position.shapes[0])
     print("Number of longitudinal driving corridors %s:" % len(longitudinal_driving_corridors))
 
 
