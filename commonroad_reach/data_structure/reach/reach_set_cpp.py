@@ -4,7 +4,7 @@ from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 
 logger = logging.getLogger(__name__)
 
-import pycrreach as reach
+import commonroad_reach.pycrreach as reach
 
 from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration

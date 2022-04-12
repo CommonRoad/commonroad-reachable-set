@@ -9,7 +9,7 @@ import numpy as np
 import networkx as nx
 
 try:
-    import pycrreach
+    from commonroad_reach import pycrreach
 except ImportError:
     pass
 
@@ -50,7 +50,7 @@ class DrivingCorridorExtractor:
         self._config = configuration
         if self._config.reachable_set.mode == 3:
             self.backend = "CPP"        # using C++ backend
-            if 'pycrreach' not in sys.modules:
+            if 'commonroad_reach.pycrreach' not in sys.modules:
                 raise ImportError("C++ backend library (pycrreach) has not been found")
         else:
             self.backend = "PYTHON"     # using Python backend

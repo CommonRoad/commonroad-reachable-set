@@ -95,6 +95,7 @@ class CMakeBuild(build_ext):
         extension_install_dir = pathlib.Path(install_dir).parent.joinpath(ext.name).resolve()
         for file in glob.glob((f'{pathlib.Path(build_dir).parent.resolve()}/' + 'pycrreach.*.so')):
             self.copy_file(file, extension_install_dir)
+            self.copy_file(file, os.path.join(os.getcwd(), 'commonroad_reach'))
 
 
 setup(name='commonroad-reach', version=__version__,
@@ -109,7 +110,7 @@ setup(name='commonroad-reach', version=__version__,
       author='Cyber-Physical Systems Group, Technical University of Munich',
       author_email='commonroad@lists.lrz.de',
       license="BSD",
-      packages=find_packages(exclude=['tests']),
+      packages=find_packages(exclude=['commonroad_reach.tests']),
 
       ext_modules=[
           CMakeExtension("commonroad_reach"),
