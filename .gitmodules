@@ -1,0 +1,3 @@
+[submodule "external/spot-cpp"]
+	path = external/spot-cpp
+	url = git@gitlab.lrz.de:cps/spot-cpp.git
