@@ -276,7 +276,8 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     if time_step_end is None:
         # draw only complete driving corridor over all time steps (stacked)
         plt.cla()
-        scenario.draw(renderer, draw_params={"time_begin": 0, "lanelet": {"show_label": True}})
+        scenario.draw(renderer, draw_params={"time_begin": 0, "lanelet": {"show_label": True},
+                                             "occupancy": {"draw_occupancies": 0}})
         # draw planning problem
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
