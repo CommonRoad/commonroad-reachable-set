@@ -5,8 +5,6 @@ from setuptools import setup, find_packages
 
 this_directory = path.abspath(path.dirname(__file__))
 
-from Cython.Build import cythonize
-
 # TODO: does not build/install C++ code
 setup(name='commonroad-reach', version=__version__,
       description='',
@@ -36,6 +34,4 @@ setup(name='commonroad-reach', version=__version__,
                    "Operating System :: POSIX :: Linux",],
       data_files=[],
       include_package_data=True,
-      ext_modules=cythonize("commonroad_reach/utility/util_py_grid_online_reach.pyx",
-                            build_dir="build-cython")
       )
