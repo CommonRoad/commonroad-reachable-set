@@ -58,7 +58,7 @@ def main():
     if plot == "2D":
         util_visual.plot_scenario_with_driving_corridor(longitudinal_driving_corridors[dc_idx], dc_idx, reach_interface,
                                                         step_end=reach_interface.step_end, animation=True,
-                                                        as_svg=True)
+                                                        as_svg=False)
     elif plot == "3D":
         # plot 3D corridor
 

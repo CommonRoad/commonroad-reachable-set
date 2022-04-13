@@ -48,7 +48,7 @@ class DrivingCorridorExtractor:
     @config.setter
     def config(self, configuration):
         self._config = configuration
-        if self._config.reachable_set.mode == 3:
+        if self._config.reachable_set.mode_computation == 2:
             self.backend = "CPP"        # using C++ backend
             if 'commonroad_reach.pycrreach' not in sys.modules:
                 raise ImportError("C++ backend library (pycrreach) has not been found")
