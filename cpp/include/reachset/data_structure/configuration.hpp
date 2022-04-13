@@ -101,8 +101,8 @@ struct VehicleConfiguration {
 /// Struct storing planning configurations.
 struct PlanningConfiguration {
     double dt{};
-    int time_step_start{};
-    int time_steps_computation{};
+    int step_start{};
+    int steps_computation{};
     // initial positions
     double p_lon_initial{};
     double p_lat_initial{};
@@ -126,14 +126,17 @@ struct PlanningConfiguration {
 
 /// Struct storing reachable set configurations.
 struct ReachableSetConfiguration {
-    // grid size for repartitioning rectangles (before collision check)
+    int mode_repartition{};
+    // grid size for repartitioning rectangles
     double size_grid{};
-    // grid size for repartitioning rectangles (after collision check)
+    // grid size for repartitioning rectangles (second time)
     double size_grid_2nd{};
     // terminal radius for splitting of rectangles
     double radius_terminal_split{};
     // number of threads in parallel computation
     int num_threads{};
+    // flag whether to prune reach nodes not reaching the final time step
+    bool prune_nodes{};
 
     ReachableSetConfiguration() = default;
 
@@ -142,8 +145,8 @@ struct ReachableSetConfiguration {
 
 /// Struct storing debugging configurations.
 struct DebugConfiguration {
-    bool verbose_mode{};
-    bool measure_time{};
+    bool verbose_mode{false};
+    bool measure_time{false};
 
     DebugConfiguration() = default;
 

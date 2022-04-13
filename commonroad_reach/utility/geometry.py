@@ -1,14 +1,13 @@
 import math
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import commonroad_dc.pycrcc as pycrcc
 import numpy as np
-import skgeom as sg
-from skgeom import minkowski
 
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reach.data_structure.reach.reach_vertex import Vertex
 
 
 def linear_mapping(polygon, tuple_coefficients: Tuple):
@@ -25,22 +24,23 @@ def linear_mapping(polygon, tuple_coefficients: Tuple):
     return ReachPolygon(list_vertices_mapped)
 
 
-def minkowski_sum(polygon1: ReachPolygon, polygon2: ReachPolygon) -> ReachPolygon:
-    """Returns the Minkowski sum of two polygons.
+def minkowski_sum(polygon1: ReachPolygon, polygon2: ReachPolygon) -> Optional[ReachPolygon]:
+    """Returns the Minkowski sum of two polygons."""
+    if polygon1.is_empty or polygon2.is_empty:
+        return None
 
-    Shapely polygon requires identical initial and final vertices; scikit-geometry polygon requires different
-    initial and final vertices. Minkowski sum in scikit-geometry requires sorting in counterclockwise direction.
-    """
-    list_vertices = sort_vertices_counterclockwise([vertex for vertex in polygon1.vertices])
-    sg_polygon_1 = sg.Polygon(list_vertices)
+    list_vertices_sum = list()
+    list_vertices_1 = sort_vertices_counterclockwise(polygon1.vertices)
+    list_vertices_2 = sort_vertices_counterclockwise(polygon2.vertices)
 
-    list_vertices = sort_vertices_counterclockwise([vertex for vertex in polygon2.vertices])
-    sg_polygon_2 = sg.Polygon(list_vertices)
+    for vertex_1 in list_vertices_1:
+        for vertex_2 in list_vertices_2:
+            list_vertices_sum.append(Vertex(vertex_1[0] + vertex_2[0], vertex_1[1] + vertex_2[1]))
 
-    result = minkowski.minkowski_sum(sg_polygon_1, sg_polygon_2)
-    list_vertices_sum = [list(vertex) for vertex in result.outer_boundary().coords]
+    list_vertices_sum = list(set(list_vertices_sum))
+    list_vertices_sum = [(vertex.x, vertex.y) for vertex in list_vertices_sum]
 
-    return ReachPolygon(list_vertices_sum)
+    return ReachPolygon.from_polygon(ReachPolygon(list_vertices_sum).convex_hull)
 
 
 def sort_vertices_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple]:

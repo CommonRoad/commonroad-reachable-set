@@ -16,7 +16,7 @@ BufferConfig::BufferConfig(double const& buffer_distance) :
 
 CollisionCheckerPtr reach::create_curvilinear_collision_checker(
         vector<Polyline> const& vec_polylines_static,
-        map<int, vector<Polyline>> const& map_time_step_to_vec_polylines_dynamic,
+        map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         CurvilinearCoordinateSystemPtr const& CLCS,
         double const& radius_disc_vehicle,
         int const& num_omp_threads) {
@@ -33,8 +33,8 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
     }
 
     // 2. process dynamic obstacles - create a shape group for each time step and add aabbs (from polylines) into it
-    auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_time_step_to_vec_polylines_dynamic.cbegin()->first);
-    for (auto const&[time_step, vec_polylines_dynamic]: map_time_step_to_vec_polylines_dynamic) {
+    auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
+    for (auto const&[step, vec_polylines_dynamic]: map_step_to_vec_polylines_dynamic) {
         auto vec_aabb_CVLN_dynamic = create_curvilinear_aabbs_from_cartesian_polylines(
                 vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config);
 
@@ -183,12 +183,12 @@ void reach::print_collision_checker(CollisionCheckerPtr const& collision_checker
     for (auto const& obs: vec_obstacles) {
         if (obs->getCollisionObjectClass() == collision::OBJ_CLASS_TVOBSTACLE) {
             cout << "TVO:" << endl;
-            for (int time_step = 0; time_step < 10; ++time_step) {
-                auto obj_at_time = obs->timeSlice(time_step, obs);
+            for (int step = 0; step < 10; ++step) {
+                auto obj_at_time = obs->timeSlice(step, obs);
                 auto aabb = obj_at_time->getAABB();
                 cout << aabb->r_x() << ", " << aabb->r_y() << endl;
 
-                cout << "\t" << time_step << ": " << aabb->center_x() << ", " << aabb->center_y() << endl;
+                cout << "\t" << step << ": " << aabb->center_x() << ", " << aabb->center_y() << endl;
             }
         }
     }

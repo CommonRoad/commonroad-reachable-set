@@ -18,7 +18,8 @@ TEST_CASE("obtain extremum coordinates of polyline") {
     polyline.emplace_back(Eigen::Vector2d(3.0, 3.0));
     polyline.emplace_back(Eigen::Vector2d(4.0, 5.0));
 
-    auto[p_lon_min, p_lat_min, p_lon_max, p_lat_max] = obtain_extremum_coordinates_of_polyline(polyline);
+    auto[p_lon_min, p_lat_min, p_lon_max, p_lat_max] =
+            obtain_extremum_coordinates_of_polyline(polyline);
 
     CHECK(p_lon_min == 0.0);
     CHECK(p_lat_min == -2.0);

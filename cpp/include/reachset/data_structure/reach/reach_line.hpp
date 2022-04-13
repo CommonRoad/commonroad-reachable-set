@@ -4,24 +4,24 @@
 
 namespace reach {
 /// Line segment used in geometric operations.
-/// A line segment segment is formed with two vertices.
-struct ReachSegment {
+/// A line segment is formed with two vertices.
+struct ReachLine {
     double p_lon_min;
     double p_lat_min;
     double p_lon_max;
     double p_lat_max;
 
-    ReachSegment() = default;
+    ReachLine() = default;
 
-    /// Constructor of ReachSegment.
+    /// Constructor of ReachLine.
     /// @param p_lon_min minimum longitudinal position
     /// @param p_lat_min minimum lateral position
     /// @param p_lon_max maximum longitudinal position
     /// @param p_lat_max maximum lateral position
-    ReachSegment(double p_lon_min, double p_lat_min, double p_lon_max, double p_lat_max);
+    ReachLine(double p_lon_min, double p_lat_min, double p_lon_max, double p_lat_max);
 
-    bool operator==(ReachSegment const& other) const;
+    bool operator==(ReachLine const& other) const;
 };
 
-using ReachSegmentPtr = std::shared_ptr<ReachSegment>;
+using ReachLinePtr = std::shared_ptr<ReachLine>;
 }

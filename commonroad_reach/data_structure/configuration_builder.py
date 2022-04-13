@@ -2,9 +2,10 @@ import glob
 import os
 from typing import Union
 
+from omegaconf import OmegaConf, ListConfig, DictConfig
+
 import commonroad_reach.utility.general as util_general
 from commonroad_reach.data_structure.configuration import Configuration
-from omegaconf import OmegaConf, ListConfig, DictConfig
 
 
 class ConfigurationBuilder:
@@ -13,18 +14,9 @@ class ConfigurationBuilder:
     path_config_default: str = None
 
     @classmethod
-    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1,
-                            path_root: str = os.path.normpath(os.path.join(os.path.dirname(__file__), "../..")),
+    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1, path_root: str = None,
                             dir_config: str = "configurations", dir_config_default: str = "defaults") -> Configuration:
-        """Builds configuration from default and scenario-specific config files.
-
-        Steps:
-            1. (Optional) Set paths of the configuration builder
-            2. Load default configuration files
-            3. Load scenario-specific configuration files
-            4. Load configuration from command line interface
-            5. Merge all configurations, create a config object
-            6. Complete configuration with scenario and planning problem
+        """Builds configuration from default, scenario-specific, and commandline config files.
 
         Args:
             name_scenario (str): considered scenario
@@ -33,18 +25,15 @@ class ConfigurationBuilder:
             dir_config (str): directory storing configurations
             dir_config_default (str): directory storing default configurations
         """
+        if path_root is None:
+            path_root = os.path.normpath(os.path.join(os.path.dirname(__file__), "../.."))
+
         if cls.path_root is None:
             cls.set_paths(path_root=path_root, dir_config=dir_config, dir_config_default=dir_config_default)
 
-        # default configurations
         config_default = cls.construct_default_configuration()
-
-        # scenario-specific configurations
         config_scenario = cls.construct_scenario_configuration(name_scenario)
-
-        # command line interface configurations
         config_cli = OmegaConf.from_cli()
-
         # configurations coming after overrides the ones coming before
         config_combined = OmegaConf.merge(config_default, config_scenario, config_cli)
         config = Configuration(config_combined)
@@ -56,7 +45,7 @@ class ConfigurationBuilder:
 
     @classmethod
     def set_paths(cls, path_root: str, dir_config: str, dir_config_default: str):
-        """Sets root path, path to configurations, and path to default configurations.
+        """Sets necessary paths of the configuration builder.
 
         Args:
             path_root (str): root directory
@@ -71,7 +60,7 @@ class ConfigurationBuilder:
     def construct_default_configuration(cls) -> Union[ListConfig, DictConfig]:
         """Constructs default configuration by accumulating yaml files.
 
-        Collects all configuration files ending with '.yaml' under path_config_default.
+        Collects all configuration files ending with '.yaml'.
         """
         config_default = OmegaConf.create()
         for path_file in glob.glob(cls.path_config_default + "/*.yaml"):
@@ -91,9 +80,8 @@ class ConfigurationBuilder:
         return config_default
 
     @classmethod
-    def convert_to_absolute_paths(cls, config_default: Union[ListConfig, DictConfig]):
-        """Converts paths from relative to absolute."""
-
+    def convert_to_absolute_paths(cls, config_default: Union[ListConfig, DictConfig]) -> Union[ListConfig, DictConfig]:
+        """Converts relative paths to absolute paths."""
         for key, path in config_default["general"].items():
             path_relative = os.path.join(cls.path_root, path)
             if os.path.exists(path_relative):
@@ -102,7 +90,7 @@ class ConfigurationBuilder:
         return config_default
 
     @classmethod
-    def construct_scenario_configuration(cls, name_scenario: str):
+    def construct_scenario_configuration(cls, name_scenario: str) -> Union[DictConfig, ListConfig]:
         """Constructs scenario-specific configuration."""
         config_scenario = OmegaConf.create()
 

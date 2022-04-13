@@ -188,8 +188,7 @@ stack<double> CounterSegmentTree::get_stack_of_non_active_intervals(double const
 
 void CounterSegmentTree::get_stack_of_non_active_intervals(double const& low, double const& high,
                                                            CounterTreeNodePtr const& node, stack<double>& stack) const {
-    if (node->status == TreeNodeStatus::ACTIVE)
-        return;
+    if (node->status == TreeNodeStatus::ACTIVE) return;
 
     else if (node->status == TreeNodeStatus::NONACTIVE and node->enclosed_by_interval(low, high))
         add_node_interval_to_stack(node->low, node->high, stack);
@@ -315,8 +314,7 @@ ToggleSegmentTree::toggle_node(double const& low, double const& high, std::share
 
 void ToggleSegmentTree::create_and_toggle_children(double const& low, double const& high,
                                                    std::shared_ptr<ToggleTreeNode> const& node) {
-    if (low >= node->high or high <= node->low)
-        return;
+    if (low >= node->high or high <= node->low) return;
     else {
         if (node->child_left == nullptr)
             node->create_left_child(node->status);

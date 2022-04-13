@@ -37,3 +37,4 @@ output/offline_data/offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4
 
 *.egg-info/
 
+tutorials/.ipynb_checkpoints/

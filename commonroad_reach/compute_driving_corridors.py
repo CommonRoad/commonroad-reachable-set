@@ -1,7 +1,8 @@
+import os
+
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.utility import visualization as util_visual
-from commonroad_reach.data_structure.driving_corridors import DrivingCorridorExtractor
 from commonroad.visualization.mp_renderer import MPRenderer
 import numpy as np
 from matplotlib import pyplot as plt
@@ -56,8 +57,8 @@ def main():
 
     if plot == "2D":
         util_visual.plot_scenario_with_driving_corridor(longitudinal_driving_corridors[dc_idx], dc_idx, reach_interface,
-                                                        time_step_end=reach_interface.time_step_end, animation=True,
-                                                        as_svg=False)
+                                                        step_end=reach_interface.step_end, animation=True,
+                                                        as_svg=True)
     elif plot == "3D":
         # plot 3D corridor
 
@@ -74,6 +75,7 @@ def main():
 
     # plot all driving corridors (complete corridors are plotted in one plot)
     # util_visual.plot_all_driving_corridors(longitudinal_driving_corridors, reach_interface)
+
 
 if __name__ == "__main__":
     main()

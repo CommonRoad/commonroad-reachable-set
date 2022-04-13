@@ -1,0 +1,121 @@
+debug:
+  save_plots: 1
+  save_config: 1
+
+  # visualization settings
+  # draw the reference the path
+  draw_ref_path: False
+  # draw the planning problem
+  draw_planning_problem: False
+  # visualize dynamic obstacles with icons
+  draw_icons: False
+  # plot limits: [x_min, x_max, y_min, y_max]; if set to !!null, they will be computed automatically from reachable sets
+  plot_limits: !!null
+  # settings for 3D plots
+  plot_azimuth: -120
+  plot_elevation: 30
+  ax_distance: 7
+
+general:
+  name_scenario: "DEU_Test-1_1_T-1"
+  # paths are relative to the root directory
+  path_scenarios: scenarios/
+  path_output: output/
+  path_logs: output/logs/
+  path_offline_data: output/offline_data/
+
+
+planning:
+  dt: 0.1
+  time_step_start: 0
+  time_steps_computation: 30
+
+  # position uncertainty in two directions
+  uncertainty_p_lon: 0.01
+  uncertainty_p_lat: 0.01
+  uncertainty_v_lon: 0.01
+  uncertainty_v_lat: 0.01
+
+  # this can either be "CART" (Cartesian) or "CVLN" (Curvilinear)
+  coordinate_system: "CVLN"
+  # this can either be "CENTER" or "REAR"
+  reference_point: "CENTER"
+
+reachable_set:
+  # mode for reachable set computation
+  # 1: Polytopic set propagation with Python backend
+  # 2: Polytopic set propagation with C++ backend
+  # 3: Online stage of the Graph-based propagation
+  # 4: Offline stage of the Graph-based propagation
+  mode_computation: 2
+  # mode for drivable area repartition
+  # 1: Repartition, then collision check (results in more nodes)
+  # 2: Collision check, then repartition (reduces number of nodes)
+  # 3: Repartition, collision check, then repartition again (reduces number of nodes)
+  mode_repartition: 2
+  # grid size for rectangle alignment (before collision check)
+  size_grid: 0.2
+  # grid size for second time rectangle alignment (after collision check)
+  size_grid_2nd: 0.05
+  # threshold for terminating the split of reachable sets in collision checks
+  radius_terminal_split: 0.5
+  # if set to false, static and dynamic obstacles will be omitted
+  consider_traffic: true
+  # number of thread for C++ reachable set computation
+  num_threads: 4
+  # flag whether to prune reach nodes not reaching the final time step
+  prune_nodes_not_reaching_final_time_step: true
+  # name of the pickle file of the offline computation
+  name_pickle_offline: offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.4_ver0.0.1.pickle
+  #name_pickle_offline: offline_nt30_CART_amax8.0_vmax30.0_ms6_dx0.5_ver0.0.1.pickle
+  # number of multi-steps for graph-based propagation
+  n_multi_steps: 6
+
+vehicle:
+  ego:
+    # 1 = Ford Escord, 2 = BMW 320i, 3 = VW Vanagon, 4 = Semi-trailer truck
+    id_type_vehicle: 2
+
+    # physical dimension
+    length: 4.5
+    width: 1.8
+
+    # velocity in m/s
+    v_lon_min: -0.0
+    v_lon_max: 20.0
+    v_lat_min: -4.0
+    v_lat_max: 4.0
+    # absolute max velocity
+    v_max: 20.0
+
+    # acceleration in m/s^2
+    a_lon_min: -6.0
+    a_lon_max: 4.0
+    a_lat_min: -2.0
+    a_lat_max: 2.0
+    # maximum engine power
+    a_max: 8.0
+
+  other:
+    # 1 = Ford Escord, 2 = BMW 320i, 3 = VW Vanagon, 4 = Semi-trailer truck
+    id_type_vehicle: 2
+
+    # physical dimension
+    length: 4.5
+    width: 1.8
+
+    # velocity in m/s
+    v_lon_min: -0.0
+    v_lon_max: 20.0
+    v_lat_min: -4.0
+    v_lat_max: 4.0
+    # absolute max velocity
+    v_max: 20.0
+
+    # acceleration in m/s^2
+    a_lon_min: -6.0
+    a_lon_max: 4.0
+    a_lat_min: -2.0
+    a_lat_max: 2.0
+    # maximum engine power
+    a_max: 8.0
