@@ -7,16 +7,18 @@ import pathlib
 import glob
 
 from commonroad_reach.__version__ import __version__
-from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools import setup, find_packages, Extension
 from sysconfig import get_paths
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
-from Cython.Build import cythonize
+import Cython.Build
 
 
 class CMakeExtension(Extension):
+    name: str  # IDE somehow doesn't detect name without this line
+
     def __init__(self, name, sourcedir=''):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
@@ -24,17 +26,25 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        try:
-            _ = subprocess.check_output(['cmake', '--version'])
-        except OSError:
-            raise RuntimeError("CMake must be installed to build the following extensions: " +
-                               ", ".join(e.name for e in self.extensions))
-
-        for ext in self.extensions:
-            print(ext)
-            self.build_extension(ext)
+        self.validate_cmake()
+        super().run()
 
     def build_extension(self, ext):
+        if isinstance(ext, CMakeExtension):
+            self.build_cmake_extension(ext)
+        else:
+            super().build_extension(ext)
+
+    def validate_cmake(self):
+        cmake_extensions = [x for x in self.extensions if isinstance(x, CMakeExtension)]
+        if len(cmake_extensions) > 0:
+            try:
+                _ = subprocess.check_output(['cmake', '--version'])
+            except OSError:
+                raise RuntimeError("CMake must be installed to build the following extensions: " +
+                                   ", ".join(e.name for e in self.extensions))
+
+    def build_cmake_extension(self, ext: CMakeExtension):
         build_dir = os.path.abspath(self.build_temp)
 
         default_python_include_dir = get_paths()['include']
@@ -55,7 +65,7 @@ class CMakeBuild(build_ext):
             "-DPYTHON_EXECUTABLE=" + python_executable,
         ]
 
-        # get path the drivability checker root
+        # get path to the drivability checker root
         if 'CRDC_DIR' in os.environ:
             cmake_args += ['-DCRDC_DIR=' + os.environ['CRDC_DIR']]
         else:
@@ -114,7 +124,7 @@ setup(name='commonroad-reach', version=__version__,
 
       ext_modules=[
           CMakeExtension("commonroad_reach"),
-          # cythonize("commonroad_reach/utility/util_py_grid_online_reach.pyx", build_dir="build-cython")
+          Cython.Build.cythonize([Extension("onlinereach.cython_extension", sources=["commonroad_reach/utility/util_py_grid_online_reach.pyx"])], build_dir="build-cython")[0],
       ],
       cmdclass={"build_ext": CMakeBuild},
 
