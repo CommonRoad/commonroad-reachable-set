@@ -57,15 +57,14 @@ The Python dependencies are listed in `requirements.txt`.
 * Build the code using the following commands:
 
   ```bash
-  $ mkdir build
-  $ cd build
-  $ cmake -DPYTHON_VER=3.7 -DCRDC_DIR="/path/to/drivability-checker-folder"  ..
-  $ make -j6
+  $ CRDC_DIR="/path/to/commonroad-drivability-checker" pip install -v .
   ```
 
   Replace `"/path/to/drivability-checker-folder"` with the path to the Drivability Checker folder on your machine.
 
-  `Optional:` add flag `-DADD_TESTS=ON` to build unit tests; add flag `-DCMAKE_BUILD_TYPE=Release` to build the code in release mode.
+  `Optional:`
+  * to add unit tests you can add the environment variable `ADD_TESTS=ON` before the `pip install` command
+  * to build the code in CMake Debug Mode: set `debug=1` in the setup configuration file (`setup.cfg`)
 
 ### Running the code
 
