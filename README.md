@@ -54,23 +54,25 @@ The Python dependencies are listed in `requirements.txt`.
   $ sudo apt upgrade libomp-dev
   ```
 
-* Build the code using the following commands:
+* Build the package and install it in your conda environment via pip:
 
   ```bash
-  $ mkdir build
-  $ cd build
-  $ cmake -DPYTHON_VER=3.7 -DCRDC_DIR="/path/to/drivability-checker-folder"  ..
-  $ make -j6
+  $ CRDC_DIR="/path/to/commonroad-drivability-checker" pip install -v .
   ```
+  
+**Note**: 
 
-  Replace `"/path/to/drivability-checker-folder"` with the path to the Drivability Checker folder on your machine.
+  * Replace `"/path/to/drivability-checker-folder"` with the path to the Drivability Checker folder on your machine.
+  * the `-v` flag (verbose) prints information about the build progress
 
-  `Optional:` add flag `-DADD_TESTS=ON` to build unit tests; add flag `-DCMAKE_BUILD_TYPE=Release` to build the code in release mode.
+**Optional:**
+  * to add unit tests you can add the environment variable `ADD_TESTS=ON` before the `pip install` command
+  * to build the code in CMake Debug Mode: set `debug=1` in the setup configuration file (`setup.cfg`)
 
 ### Running the code
 
-* `Optional:` If using PyCharm or other IDEs, add the root folder of the CommonRoad Reach toolbox to the paths of the Python interpreter.
 * Run `commonroad_reachset/compute_reachable_set.py` , the outputs will be stored in the `./output/` folder.
+* Run `commonroad_reachset/compute_driving_corridors.py`, the outputs will be stored in the `./output/` folder
 
 ### Documentation
 
