@@ -37,15 +37,18 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     return radius_disc, wheelbase
 
 
-def compute_inflation_radius(length: float, width: float):
+def compute_inflation_radius(mode_inflation: int, length: float, width: float):
     """Computes the radius to inflate the obstacles for collision check.
 
-    The radius is half of the smaller one of the length and the width, since we required under-approximation of
-    the shape of the vehicle.
+    Based on the specified mode, we obtain either under- or over-approximation of the shape of the ego vehicle.
     """
     assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
 
-    return length / 2 if length < width else width / 2
+    if mode_inflation == 1:
+        return length / 2 if length < width else width / 2
+
+    elif mode_inflation == 2:
+        return length / 2 if length > width else width / 2
 
 
 def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,

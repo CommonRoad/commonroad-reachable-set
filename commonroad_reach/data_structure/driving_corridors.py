@@ -84,7 +84,7 @@ class DrivingCorridorExtractor:
         time_start = time.time()
         if lon_positions is None and lon_driving_corridor is None:
             # compute longitudinal driving corridor
-            print("Computing longitudinal driving corridor...")
+            print("* Computing longitudinal driving corridor...")
             lon_positions_dict = None
             if terminal_set is not None:
                 # use base sets which overlap with given terminal set in last time step

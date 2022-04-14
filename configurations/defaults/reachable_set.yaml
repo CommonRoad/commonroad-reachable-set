@@ -9,6 +9,10 @@ mode_computation: 2
 # 2: Collision check, then repartition (reduces number of nodes)
 # 3: Repartition, collision check, then repartition again (reduces number of nodes)
 mode_repartition: 2
+# mode for considering the shape of the ego vehicle
+# 1: Inscribed circle (under-approximation of the shape of the ego vehicle)
+# 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
+mode_inflation: 1
 # grid size for discretizing drivable area
 size_grid: 0.2
 # grid size for discretizing drivable area (second time)

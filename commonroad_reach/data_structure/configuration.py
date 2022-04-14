@@ -63,6 +63,13 @@ class Configuration:
         else:
             mode_repartition = "undefined"
 
+        if self.reachable_set.mode_inflation == 1:
+            mode_inflation = "inscribed circle"
+        elif self.reachable_set.mode_inflation == 2:
+            mode_inflation = "circumscribed circle"
+        else:
+            mode_inflation = "undefined"
+
         string = "# ===== Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
@@ -72,6 +79,7 @@ class Configuration:
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
+        string += f"# \tinflation mode: {mode_inflation}\n"
         string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
         string += f"# \tsplit radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_step}\n"
@@ -191,7 +199,8 @@ class VehicleConfiguration:
 
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width)
-            self.radius_inflation = util_configuration.compute_inflation_radius(self.length, self.width)
+            self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
+                                                                                self.length, self.width)
 
     class Other:
         def __init__(self, config: Union[ListConfig, DictConfig]):
@@ -300,15 +309,18 @@ class ReachableSetConfiguration:
 
         self.mode_computation = config_relevant.mode_computation
         self.mode_repartition = config_relevant.mode_repartition
-        self.num_threads = config_relevant.num_threads
+        self.mode_inflation = config_relevant.mode_inflation
+        self.consider_traffic = config_relevant.consider_traffic
+
         self.size_grid = config_relevant.size_grid
         self.size_grid_2nd = config_relevant.size_grid_2nd
         self.radius_terminal_split = config_relevant.radius_terminal_split
         self.prune_nodes_not_reaching_final_step = config_relevant.prune_nodes_not_reaching_final_step
 
-        self.consider_traffic = config_relevant.consider_traffic
         self.name_pickle_offline = config_relevant.name_pickle_offline
         self.n_multi_steps = config_relevant.n_multi_steps
+
+        self.num_threads = config_relevant.num_threads
 
 
 class DebugConfiguration:

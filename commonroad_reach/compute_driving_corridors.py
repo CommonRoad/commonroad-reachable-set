@@ -36,7 +36,6 @@ def main():
 
     print("Number of longitudinal driving corridors %s:" % len(longitudinal_driving_corridors))
 
-
     # plot specific driving corridor (dc_idx: idx in list)
     dc_idx = 0
     plot = "2D"

@@ -107,7 +107,7 @@ class CMakeBuild(build_ext):
 
 
 setup(name='commonroad-reach', version=__version__,
-      description='CommonRoad-Reach: A Toolbox for Computing Reachable Sets of Automated Vehicles',
+      description='CommonRoad Reach: A Toolbox for Computing Reachable Sets of Automated Vehicles',
       keywords='autonomous automated vehicles driving motion planning',
       url='https://commonroad.in.tum.de/',
       project_urls={
@@ -140,7 +140,7 @@ setup(name='commonroad-reach', version=__version__,
                         "opencv-python>=4.5"],
       extras_require={"tests": ["pytest>=3.8.0"]},
       classifiers=["Programming Language :: C++",
-                   "Programming Language :: Python :: 3.8",
+                   "Programming Language :: Python :: 3.7",
                    "License :: OSI Approved :: BSD License",
                    "Operating System :: POSIX :: Linux",],
       data_files=[],
