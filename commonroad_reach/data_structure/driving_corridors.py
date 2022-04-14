@@ -1,37 +1,33 @@
 import math
 import time
+import sys
 import warnings
 from collections import defaultdict
 from typing import Union, List, Dict
 
-import networkx as nx
 import numpy as np
-import pycrreach
+import networkx as nx
+
+from commonroad_reach import pycrreach
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_node import ReachNode
+from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
+from commonroad.geometry.shape import Rectangle, Polygon
 
-# TODO Integrate driving corridor extractions into ReachableSetInterface class
-# TODO add overlap with specific terminal set (e.g., goal region)
 
 # scaling factor (avoid numerical errors)
 DIGITS = 2
 
 
-class DrivingCorridors:
+class DrivingCorridorExtractor:
     """
     Class to compute driving corridors based on previous computation of reachable sets and drivable area
     """
-
     def __init__(self, reachable_sets: Dict[int, List[Union[pycrreach.ReachNode, ReachNode]]],
                  config: Configuration):
         self.config = config
         self.reach_set = reachable_sets
-        if config.reachable_set.mode_computation == 3:
-            self.backend = "CPP"  # using C++ backend
-        else:
-            self.backend = "PYTHON"  # using Python backend
 
     @property
     def reach_set(self):
@@ -42,35 +38,64 @@ class DrivingCorridors:
         self._reach_set = reachable_sets
         self.steps = sorted(list(reachable_sets.keys()))
 
-    def extract_lon_driving_corridor(self):
-        pass
+    @property
+    def config(self):
+        return self._config
 
-    def extract_lat_driving_corridor(self):
-        pass
+    @config.setter
+    def config(self, configuration):
+        self._config = configuration
+        if self._config.reachable_set.mode_computation == 2:
+            self.backend = "CPP"        # using C++ backend
+            if 'commonroad_reach.pycrreach' not in sys.modules:
+                raise ImportError("C++ backend library (pycrreach) has not been found")
+        else:
+            self.backend = "PYTHON"     # using Python backend
 
-    def extract_driving_corridors(self,
-                                  terminal_set=None,
-                                  lon_positions: Union[List[float], None] = None,
-                                  lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None) \
+    def extract_lon_driving_corridor(self, terminal_set=None):
+        """
+        Extract a longitudinal driving corridor. Optionally, a terminal set can be passed
+        """
+        return self._extract_driving_corridors(terminal_set=terminal_set)
+
+    def extract_lat_driving_corridor(self, longitudinal_positions: Union[List[float], None] = None,
+                                     longitudinal_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None):
+        """
+        Extract a lateral driving corridor from a given longitudinal driving corridor and a given longitudinal trajectory.
+        """
+        return self._extract_driving_corridors(lon_positions=longitudinal_positions,
+                                               lon_driving_corridor=longitudinal_driving_corridor)
+
+    def _extract_driving_corridors(self,
+                                   terminal_set: Union[Rectangle, Polygon] = None,
+                                   lon_positions: Union[List[float], None] = None,
+                                   lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None)\
             -> List[Dict[int, List[pycrreach.ReachNode]]]:
         """
-        Function identifies driving corridors within the reachable sets. If no parameters are passed, then a
-        longitudinal driving corridor is computed. If the optional parameters are passed, a lateral driving corridor is
-        computed for a given longitudinal driving corridor.
+        Function identifies driving corridors within the reachable sets.
+        If no parameters are passed, then a longitudinal driving corridor is computed. To constrain the driving corridor
+        to end in a specified set (e.g., goal region), a terminal_set can optionally be passed.
+        If the optional parameters are passed, a lateral driving corridor is computed for a given longitudinal
+        driving corridor and a given longitudinal trajectory.
+        :param terminal_set: set of terminal states
         :param lon_positions: (optional) longitudinal position
         :param lon_driving_corridor: (optional) longitudinal driving corridor
         """
+        time_start = time.time()
         if lon_positions is None and lon_driving_corridor is None:
-            print("Computing longitudinal driving corridor...")
-            time_start = time.time()
             # compute longitudinal driving corridor
+            print("Computing longitudinal driving corridor...")
             lon_positions_dict = None
-            # determine connected components in last time step
-            connected_components = self._determine_connected_components(list(self.reach_set[self.steps[-1]]))
+            if terminal_set is not None:
+                # use base sets which overlap with given terminal set in last time step
+                overlapping_nodes = self._determine_terminal_set_overlap(terminal_set, self.reach_set[self.steps[-1]])
+                connected_components = self._determine_connected_components(list(overlapping_nodes))
+            else:
+                # use all base sets in last time step
+                connected_components = self._determine_connected_components(list(self.reach_set[self.steps[-1]]))
         elif lon_positions is not None and lon_driving_corridor is not None:
-            print("Computing lateral driving corridor...")
-            time_start = time.time()
             # compute lateral driving corridor for given longitudinal driving corridor
+            print("Computing lateral driving corridor...")
             assert (len(lon_positions) == len(self.steps))
             lon_positions_dict = dict(zip(self.steps, lon_positions))
             # determine reachable sets which contain the longitudinal position in last time step
@@ -113,13 +138,46 @@ class DrivingCorridors:
 
         return driving_corridor_list
 
+    def _determine_terminal_set_overlap(self, terminal_set: Union[Rectangle, Polygon], reach_set_nodes):
+        """
+        :param terminal_set set of terminal positions (e.g., goal region), represented as CR Shape object in Cartesian frame
+        :param reach_set_nodes List of reach set nodes at the final time step
+        :return: list of reach set node overlapping with terminal set
+        """
+        if self.config.planning.coordinate_system == "CVLN":
+            # computation in CVLN coordinates
+            ccosy = self.config.planning.CLCS
+            vert = terminal_set.shapely_object.exterior.coords
+            transformed_set, transformed_set_rasterized = ccosy.\
+                convert_list_of_polygons_to_curvilinear_coords_and_rasterize([vert], [0], 1, 4)
+            terminal_set_vertices = [arr.tolist() for arr in transformed_set[0][0]]
+        else:
+            # computation in CART coordinates
+            ts_x, ts_y = terminal_set.shapely_object.exterior.coords.xy
+            terminal_set_vertices = [vertex for vertex in zip(ts_x, ts_y)]
+
+        if self.backend == 'PYTHON':
+            list_terminal_set_polygons = [ReachPolygon(terminal_set_vertices)]
+            list_position_rectangles = [node.position_rectangle for node in reach_set_nodes]
+            overlap = util_geometry.create_adjacency_dictionary(list_terminal_set_polygons, list_position_rectangles)
+        elif self.backend == 'CPP':
+            list_terminal_set_polygons = [pycrreach.ReachPolygon(terminal_set_vertices)]
+            list_position_rectangles = [node.position_rectangle() for node in reach_set_nodes]
+            overlap = pycrreach.create_adjacency_dictionary_boost(list_terminal_set_polygons, list_position_rectangles)
+        else:
+            err_msg = "Invalid backend (CPP or PYTHON)"
+            raise ValueError(err_msg)
+
+        # return reach set nodes which overlap
+        overlapping_nodes = set([reach_set_nodes[j] for j in overlap[0]])
+        # TODO: add warning if overlapping nodes are empty (i.e., reachable sets in last time step don't intersect with goal region)
+        return overlapping_nodes
+
     def _create_reachset_connected_components_graph_backwards(self, driving_corridors_list: List[int], graph: nx.Graph,
                                                               node_id: int, time_idx: int,
-                                                              reach_set_nodes: List[
-                                                                  Union[pycrreach.ReachNode, ReachNode]],
+                                                              reach_set_nodes: List[Union[pycrreach.ReachNode, ReachNode]],
                                                               lon_pos: Union[Dict[int, float], None] = None,
-                                                              lon_driving_corridor: Union[
-                                                                  Dict[int, List[pycrreach.ReachNode]], None] = None):
+                                                              lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None):
         """
         Traverses graph of connected reachable sets backwards in time and extracts paths starting from a terminal set.
         A path within the graph corresponds to a possible driving corridor

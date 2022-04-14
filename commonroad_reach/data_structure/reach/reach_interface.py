@@ -3,6 +3,7 @@ import time
 
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.data_structure.configuration import Configuration
+from commonroad_reach.data_structure.driving_corridors import DrivingCorridorExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ class ReachableSetInterface:
         self._reach = None
         self._reachable_set_computed = False
         self._initialize_reachable_set()
+        self._driving_corridor_extractor = None
 
         logger.info("Reachable set interface initialized.")
 
@@ -93,5 +95,25 @@ class ReachableSetInterface:
         logger.info(message)
         print(message)
 
-        # return computation time for benchmarking
-        # return time_computation
+    def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False):
+        if self._driving_corridor_extractor is None:
+            if self.reachable_set is not None:
+                self._driving_corridor_extractor = DrivingCorridorExtractor(self.reachable_set, self.config)
+            else:
+                message = "Reachable sets are empty; please compute reachable sets before extracting driving corridors."
+                logger.warning(message)
+                print(message)
+                return None
+
+        if longitudinal_dc is None or longitudinal_positions is None:
+            if to_goal_region:
+                goal_region = self.config.planning_problem.goal.state_list[0].position.shapes[0]
+                driving_corridors_list = self._driving_corridor_extractor.\
+                    extract_lon_driving_corridor(terminal_set=goal_region)
+            else:
+                driving_corridors_list = self._driving_corridor_extractor.extract_lon_driving_corridor(terminal_set=None)
+        else:
+            driving_corridors_list = self._driving_corridor_extractor.extract_lat_driving_corridor(
+                longitudinal_positions, longitudinal_dc)
+
+        return driving_corridors_list
