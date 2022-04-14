@@ -71,8 +71,8 @@ The Python dependencies are listed in `requirements.txt`.
 
 ### Running the code
 
-* `Optional:` If using PyCharm or other IDEs, add the root folder of the CommonRoad Reach toolbox to the paths of the Python interpreter.
 * Run `commonroad_reachset/compute_reachable_set.py` , the outputs will be stored in the `./output/` folder.
+* Run `commonroad_reachset/compute_driving_corridors.py`, the outputs will be stored in the `./output/` folder
 
 ### Documentation
 
