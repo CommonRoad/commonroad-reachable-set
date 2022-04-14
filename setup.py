@@ -13,8 +13,6 @@ from sysconfig import get_paths
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
-import Cython.Build
-
 
 class CMakeExtension(Extension):
     name: str  # IDE somehow doesn't detect name without this line
@@ -124,7 +122,6 @@ setup(name='commonroad-reach', version=__version__,
 
       ext_modules=[
           CMakeExtension("commonroad_reach"),
-          Cython.Build.cythonize([Extension("onlinereach.cython_extension", sources=["commonroad_reach/utility/util_py_grid_online_reach.pyx"])], build_dir="build-cython")[0],
       ],
       cmdclass={"build_ext": CMakeBuild},
 
