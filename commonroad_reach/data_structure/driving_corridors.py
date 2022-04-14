@@ -8,10 +8,7 @@ from typing import Union, List, Dict
 import numpy as np
 import networkx as nx
 
-try:
-    from commonroad_reach import pycrreach
-except ImportError:
-    pass
+from commonroad_reach import pycrreach
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon

@@ -54,15 +54,18 @@ The Python dependencies are listed in `requirements.txt`.
   $ sudo apt upgrade libomp-dev
   ```
 
-* Build the code using the following commands:
+* Build the package and install it in your conda environment via pip:
 
   ```bash
   $ CRDC_DIR="/path/to/commonroad-drivability-checker" pip install -v .
   ```
+  
+**Note**: 
 
-  Replace `"/path/to/drivability-checker-folder"` with the path to the Drivability Checker folder on your machine.
+  * Replace `"/path/to/drivability-checker-folder"` with the path to the Drivability Checker folder on your machine.
+  * the `-v` flag (verbose) prints information about the build progress
 
-  `Optional:`
+**Optional:**
   * to add unit tests you can add the environment variable `ADD_TESTS=ON` before the `pip install` command
   * to build the code in CMake Debug Mode: set `debug=1` in the setup configuration file (`setup.cfg`)
 
