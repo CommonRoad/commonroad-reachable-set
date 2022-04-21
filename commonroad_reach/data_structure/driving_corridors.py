@@ -55,11 +55,11 @@ class DrivingCorridorExtractor:
         else:
             self.backend = "PYTHON"     # using Python backend
 
-    def extract_lon_driving_corridor(self, terminal_set=None):
+    def extract_lon_driving_corridor(self, terminal_set=None, cartesian_terminal_set=True):
         """
         Extract a longitudinal driving corridor. Optionally, a terminal set can be passed
         """
-        return self._extract_driving_corridors(terminal_set=terminal_set)
+        return self._extract_driving_corridors(terminal_set=terminal_set, cartesian_terminal_set=cartesian_terminal_set)
 
     def extract_lat_driving_corridor(self, longitudinal_positions: Union[List[float], None] = None,
                                      longitudinal_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None):
@@ -72,7 +72,8 @@ class DrivingCorridorExtractor:
     def _extract_driving_corridors(self,
                                    terminal_set: Union[Rectangle, Polygon] = None,
                                    lon_positions: Union[List[float], None] = None,
-                                   lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None)\
+                                   lon_driving_corridor: Union[Dict[int, List[pycrreach.ReachNode]], None] = None,
+                                   cartesian_terminal_set: bool = True)\
             -> List[Dict[int, List[pycrreach.ReachNode]]]:
         """
         Function identifies driving corridors within the reachable sets.
@@ -91,7 +92,8 @@ class DrivingCorridorExtractor:
             lon_positions_dict = None
             if terminal_set is not None:
                 # use base sets which overlap with given terminal set in last time step
-                overlapping_nodes = self._determine_terminal_set_overlap(terminal_set, self.reach_set[self.time_steps[-1]])
+                overlapping_nodes = self._determine_terminal_set_overlap(
+                    terminal_set, self.reach_set[self.time_steps[-1]], cartesian_terminal_set=cartesian_terminal_set)
                 connected_components = self._determine_connected_components(list(overlapping_nodes))
             else:
                 # use all base sets in last time step
@@ -141,13 +143,14 @@ class DrivingCorridorExtractor:
 
         return driving_corridor_list
 
-    def _determine_terminal_set_overlap(self, terminal_set: Union[Rectangle, Polygon], reach_set_nodes):
+    def _determine_terminal_set_overlap(self, terminal_set: Union[Rectangle, Polygon], reach_set_nodes, cartesian_terminal_set=True):
         """
         :param terminal_set set of terminal positions (e.g., goal region), represented as CR Shape object in Cartesian frame
         :param reach_set_nodes List of reach set nodes at the final time step
         :return: list of reach set node overlapping with terminal set
         """
-        if self.config.planning.coordinate_system == "CVLN":
+        # TODO: not convert ISS terminal set
+        if self.config.planning.coordinate_system == "CVLN" and cartesian_terminal_set:
             # computation in CVLN coordinates
             ccosy = self.config.planning.CLCS
             vert = terminal_set.shapely_object.exterior.coords

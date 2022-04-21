@@ -100,7 +100,8 @@ class ReachableSetInterface:
 
         return time_computation
 
-    def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False):
+    def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False,
+                                  terminal_set=None):
         if self._driving_corridor_extractor is None:
             if self.reachable_set is not None:
                 self._driving_corridor_extractor = DrivingCorridorExtractor(self.reachable_set, self.config)
@@ -113,10 +114,14 @@ class ReachableSetInterface:
         if longitudinal_dc is None or longitudinal_positions is None:
             if to_goal_region:
                 goal_region = self.config.planning_problem.goal.state_list[0].position.shapes[0]
-                driving_corridors_list = self._driving_corridor_extractor.\
+                driving_corridors_list = self._driving_corridor_extractor. \
                     extract_lon_driving_corridor(terminal_set=goal_region)
+            elif terminal_set is not None:
+                driving_corridors_list = self._driving_corridor_extractor. \
+                    extract_lon_driving_corridor(terminal_set=terminal_set, cartesian_terminal_set=False)
             else:
-                driving_corridors_list = self._driving_corridor_extractor.extract_lon_driving_corridor(terminal_set=None)
+                driving_corridors_list = self._driving_corridor_extractor.extract_lon_driving_corridor(
+                    terminal_set=None)
         else:
             driving_corridors_list = self._driving_corridor_extractor.extract_lat_driving_corridor(
                 longitudinal_positions, longitudinal_dc)

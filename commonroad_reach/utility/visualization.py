@@ -26,8 +26,7 @@ from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
-
-def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int= 0,
+def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, time_step_start: int = 0,
                                       time_step_end: int = 0, plot_limits: Union[List, None] = None,
                                       path_output: str = None, as_svg: bool = False):
     config = reach_interface.config
@@ -77,7 +76,8 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, ti
         renderer.render()
 
         if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
+                             linewidth=2.0)
 
         if config.debug.save_plots:
             save_fig(as_svg, path_output, time_step)
@@ -238,7 +238,8 @@ def make_gif(path: str, prefix: str, number_of_figures: int, file_save_name="ani
 
 
 def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,
-                                        time_step_end: Union[int, None] = None, animation: bool = False, as_svg=False):
+                                        time_step_end: Union[int, None] = None, animation: bool = False, as_svg=False,
+                                        terminal_set=None):
     """
     2D-Visualization of a given driving corridor and scenario
     :param driving_corridor: Driving corridor to visualize
@@ -278,6 +279,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         plt.cla()
         scenario.draw(renderer, draw_params={"time_begin": 0, "lanelet": {"show_label": True},
                                              "occupancy": {"draw_occupancies": 0}})
+
         # draw planning problem
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
@@ -314,6 +316,28 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
             # plot driving corridor and scenario at the specified time step
             plt.cla()
             scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True}, "time_begin": time_step})
+
+            # draw terminal_set
+            if terminal_set is not None:
+                from commonroad.geometry.shape import Polygon
+                # convert terminal_set to Cartesian
+                ccosy = config.planning.CLCS
+                # ts_x, ts_y = terminal_set.shapely_object.exterior.coords.xy
+                # terminal_set_vertices = [vertex for vertex in zip(ts_x, ts_y)]
+                transformed_rectangle, triangle_mesh = ccosy.convert_rectangle_to_cartesian_coords(
+                    terminal_set[0], terminal_set[1], terminal_set[2], terminal_set[3])  #
+                # create CommonRoad Polygon
+                terminal_shape = Polygon(vertices=np.array(transformed_rectangle))
+                terminal_shape.draw(renderer,
+                                    draw_params={"polygon":
+                                        {
+                                            "opacity": 1.0,
+                                            "linewidth": 0.5,
+                                            "facecolor": "#f1b514",
+                                            "edgecolor": "#302404",
+                                            "zorder": 15
+                                        }})
+
             # draw planning problem
             if config.debug.draw_planning_problem:
                 planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
@@ -336,7 +360,8 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
 
             if config.debug.save_plots:
                 save_format = "svg" if as_svg else "png"
-                print("\tSaving", os.path.join(path_output_lon_dc, f'{"lon_driving_corridor"}_{time_step:05d}.{save_format}'))
+                print("\tSaving",
+                      os.path.join(path_output_lon_dc, f'{"lon_driving_corridor"}_{time_step:05d}.{save_format}'))
                 plt.savefig(
                     f'{path_output_lon_dc}{"lon_driving_corridor"}_{time_step:05d}.{save_format}',
                     format=save_format, bbox_inches="tight", transparent=False)
@@ -541,7 +566,7 @@ def _render_lanelet_network_3d(lanelet_network, ax):
 
 
 # TODO: can be merged with _compute_vertices_of_polyhedron
-def _render_obstacle_3d(occupancy_rect: Rectangle, ax,  z_tuple: Tuple):
+def _render_obstacle_3d(occupancy_rect: Rectangle, ax, z_tuple: Tuple):
     """
     Renders a 3d visualization of a CR obstacle occupancy (given as a CommonRoad Rectangle shape)
     """
@@ -581,5 +606,3 @@ def _render_obstacle_3d(occupancy_rect: Rectangle, ax,  z_tuple: Tuple):
     pc.set_alpha(0.9)
     pc.set_zorder(20)
     ax.add_collection3d(pc)
-
-

@@ -4,7 +4,7 @@ from commonroad_reach.utility import visualization as util_visual
 import numpy as np
 
 from commonroad.prediction.prediction import Occupancy, SetBasedPrediction
-from commonroad.geometry.shape import Polygon, ShapeGroup
+from commonroad.geometry.shape import Rectangle, Polygon, ShapeGroup
 
 
 def create_shape_group(polygon_vertices):
@@ -84,6 +84,25 @@ def spot_prediction(config):
     spot_result_to_SetBasedPrediction(spot_results, config.scenario, time_step_start, time_step_end)
     spot.removeScenario(spot_scenario_id)
 
+def get_bounding_box_from_iss(iss_results_list):
+    # TODO: extract s-d 2d shape for ego lane
+    # s_min, s_max = np.inf, -np.inf
+    ego_lane_result_dict = iss_results_list[-1].iss_lanelet_result_dict[iss_results_list[-1].ego_lanelet_id].slice_res
+    d_samples = list(ego_lane_result_dict.keys())
+    d_min = np.min(d_samples)
+    d_max = np.max(d_samples)
+    ego_lane_result = list(ego_lane_result_dict.values())[0]
+    polygon_vertices_s = ego_lane_result.braking_result[-1].poly_vertices[:, 0]
+    s_min = np.min(polygon_vertices_s)
+    s_max = np.max(polygon_vertices_s)
+    # for d_result in ego_lane_result:
+    #     polygon_vertices_s = d_result.braking_result[0].poly_vertices[0, :]
+    #     s_min = np.min([s_min, np.min(polygon_vertices_s)])
+    #     s_max = np.max([s_max, np.max(polygon_vertices_s)])
+
+    return Rectangle(length=s_max-s_min, width=d_max-d_min, center=np.array([0.5*(s_min+s_max), 0.5*(d_min+d_max)])), \
+           [s_min, s_max, d_min, d_max]
+
 def main():
     # ==== build configuration
     name_scenario = "DEU_Test-1_1_T-1"
@@ -102,14 +121,51 @@ def main():
     # rnd.ax.plot(proj_domain_border[:, 0], proj_domain_border[:, 1], zorder=100, color='orange')
     # plt.show()
 
+    # TODO: extract terminal set from ISS (s, d) box
+    # compute ISS
+    from commonroad_iss.iss_highD.iss_highD import ISSHighD
+    from commonroad_iss.data_structure.commonroad_iss_configurations import CommonRoadISSConfigurations
+    # TODO: check difference between default configs in iss and safe wrapper repo
+    default_config_path = "/home/xiao/projects/safe_RL/commonroad-reachable-set/" \
+                          "external/commonroad-invariably-safe-set/configurations/defaults"
+    iss_config = CommonRoadISSConfigurations.load_default_configuration(default_config_path)
+    iss_highD = ISSHighD(config.scenario, config.planning_problem, iss_config)
+    iss_results_list, computation_time_ms, _ = iss_highD.compute(
+        ego_state=config.planning_problem.initial_state,
+        scenario_time_step=0,
+        iss_horizon_start=config.planning.time_step_start + config.planning.time_steps_computation,
+        iss_horizon_length=1,
+        bounding_box=(-500., 500., -50., 50.),
+    )
+    iss_rectangle, bb_box = get_bounding_box_from_iss(iss_results_list)
+
+    # set config.planning.CLCS TODO: debug why no driving corridors after setting CLCS
+    original_ref_path = np.array(config.planning.CLCS.reference_path())
+    ego_lanelet_id = iss_results_list[-1].ego_lanelet_id
+    config.planning.CLCS = iss_results_list[-1].iss_lanelet_result_dict[ego_lanelet_id].cvln_lanelet.CLCS
+    new_ref_path = np.array(config.planning.CLCS.reference_path())
+
+    from commonroad_reach.utility import configuration as util_configuration
+    p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+
+    config.planning.p_lon_initial, config.planning.p_lat_initial = p_initial
+    config.planning.v_lon_initial, config.planning.v_lat_initial = v_initial
+    config.planning.reference_path = new_ref_path
+
+    import matplotlib.pyplot as plt
+    # plt.plot(original_ref_path[:, 0], original_ref_path[:, 1], marker="+", color="black")
+    plt.plot(new_ref_path[:, 0], new_ref_path[:, 1], marker="*", color="blue")
+    plt.show()
+
     # ==== construct reachability interface and compute reachable sets
     # TODO: move calling of spot in ReachableSetInterface and add flag in config
     spot_prediction(config)
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
 
-    # TODO: extract terminal set from ISS (s, d) box
-    longitudinal_driving_corridors = reach_interface.extract_driving_corridors(to_goal_region=True)
+    # util_visual.plot_scenario_with_reachable_sets(reach_interface, as_svg=False)
+    # longitudinal_driving_corridors = reach_interface.extract_driving_corridors(to_goal_region=True)
+    longitudinal_driving_corridors = reach_interface.extract_driving_corridors(terminal_set=iss_rectangle)
     print("Number of longitudinal driving corridors %s:" % len(longitudinal_driving_corridors))
 
     # plot specific driving corridor (dc_idx: idx in list)
@@ -117,9 +173,50 @@ def main():
     plot = "2D"
 
     if plot == "2D":
-        util_visual.plot_scenario_with_driving_corridor(longitudinal_driving_corridors[dc_idx], dc_idx, reach_interface,
-                                                        time_step_end=reach_interface.time_step_end, animation=True,
-                                                        as_svg=False)
+        if len(longitudinal_driving_corridors) > 0:
+            util_visual.plot_scenario_with_driving_corridor(longitudinal_driving_corridors[dc_idx], dc_idx, reach_interface,
+                                                            time_step_end=reach_interface.time_step_end, animation=True,
+                                                            as_svg=False, terminal_set=bb_box)
+        else:
+            # plot scenario to debug
+            import matplotlib.pyplot as plt
+            from commonroad.visualization.mp_renderer import MPRenderer
+
+            plot_limits = config.debug.plot_limits
+            renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+            config.scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True}, "time_begin": 0})
+
+            # draw terminal_set
+            from commonroad.geometry.shape import Polygon
+            # convert terminal_set to Cartesian
+            ccosy = config.planning.CLCS
+            # ts_x, ts_y = terminal_set.shapely_object.exterior.coords.xy
+            # terminal_set_vertices = [vertex for vertex in zip(ts_x, ts_y)]
+            transformed_rectangle, triangle_mesh = ccosy.convert_rectangle_to_cartesian_coords(
+                bb_box[0], bb_box[1], bb_box[2], bb_box[3])  #
+            # create CommonRoad Polygon
+            terminal_shape = Polygon(vertices=np.array(transformed_rectangle))
+            # terminal_shape.draw(renderer,
+            #                     draw_params={"polygon":
+            #                         {
+            #                             "opacity": 1.0,
+            #                             "linewidth": 0.5,
+            #                             "facecolor": "#f1b514",
+            #                             "edgecolor": "#302404",
+            #                             "zorder": 15
+            #                         }})
+            # config.planning_problem.initial_state.draw(renderer)
+            config.planning_problem.draw(renderer)
+            # plot
+            plt.rc("axes", axisbelow=True)
+            ax = plt.gca()
+            ax.plot(original_ref_path[:, 0], original_ref_path[:, 1], marker="+", color="black", zorder=50)
+            ax.plot(new_ref_path[:, 0], new_ref_path[:, 1], marker="+", color="blue", zorder=50)
+            ax.set_aspect("equal")
+
+            plt.margins(0, 0)
+            renderer.render(show=True)
+
     elif plot == "3D":
         # plot 3D corridor
 
@@ -134,7 +231,7 @@ def main():
         #                                      list_obstacles=ret_obstacles_by_id(config, [352]),
         #                                      as_svg=True)
 
-    # plot all driving corridors (complete corridors are plotted in one plot)
+    # # plot all driving corridors (complete corridors are plotted in one plot)
     # util_visual.plot_all_driving_corridors(longitudinal_driving_corridors, reach_interface)
 
 
