@@ -36,7 +36,10 @@ The Python dependencies are listed in `requirements.txt`.
   pip install -r requirements.txt
   ```
 
-* Update GCC and G++ to version 9 or above; upgrade CMake to version 3.15 or above.
+* Check the following minimum required versions and update if necessary:
+  * **GCC and G++**: version 9 or above
+  * **CMake**: version 3.15 or above.
+  * **Pip**: version 21.3 or above
 
 * Install [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker). Please refer to its [documentation](https://commonroad.in.tum.de/docs/commonroad-drivability-checker/sphinx/installation.html) for installation.
 
