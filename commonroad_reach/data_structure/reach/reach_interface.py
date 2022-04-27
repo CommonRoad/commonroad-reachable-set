@@ -1,6 +1,7 @@
 import logging
 import time
 
+from commonroad.geometry.shape import ShapeGroup, Rectangle, Polygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.driving_corridors import DrivingCorridorExtractor
@@ -107,7 +108,12 @@ class ReachableSetInterface:
 
         if longitudinal_dc is None or longitudinal_positions is None:
             if to_goal_region:
-                goal_region = self.config.planning_problem.goal.state_list[0].position.shapes[0]
+                goal_position = self.config.planning_problem.goal.state_list[0].position
+                if type(goal_position)==ShapeGroup:
+                    # TODO also consider additional Shapes in ShapeGroup
+                    goal_region = self.config.planning_problem.goal.state_list[0].position.shapes[0]
+                else:
+                    goal_region = goal_position
                 driving_corridors_list = self._driving_corridor_extractor.\
                     extract_lon_driving_corridor(terminal_set=goal_region)
             else:
