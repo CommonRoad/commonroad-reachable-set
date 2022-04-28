@@ -14,6 +14,7 @@ from omegaconf import ListConfig, DictConfig
 
 from commonroad_reach.utility import configuration as util_configuration
 
+from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 
 class Configuration:
     """Class holding all relevant configurations"""
@@ -257,7 +258,7 @@ class PlanningConfiguration:
             candidate_holder = route_planner.plan_routes()
             route = candidate_holder.retrieve_first_route()
 
-            self.route = route
+            self.route = route # TODO: is self.route used somewhere???
             self.reference_path = route.reference_path
             self.id_lanelet_initial = route.list_ids_lanelets[0]
 
@@ -266,7 +267,26 @@ class PlanningConfiguration:
 
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
-    
+
+    def complete_configuration_for_given_routes(self, config: Configuration, CLCS: CurvilinearCoordinateSystem):
+        assert self.coordinate_system == "CVLN"
+        self.time_step_initial = config.planning_problem.initial_state.time_step
+
+        # plans a route from the initial lanelet to the goal lanelet
+        # route_planner = RoutePlanner(scenario, planning_problem)
+        # candidate_holder = route_planner.plan_routes()
+        # route = candidate_holder.retrieve_first_route()
+        #
+        # self.route = route # TODO: is self.route used somewhere???
+        self.CLCS = CLCS
+        self.reference_path = np.array(self.CLCS.reference_path()) #route.reference_path
+        # self.id_lanelet_initial = route.list_ids_lanelets[0]
+
+        p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+
+        self.p_lon_initial, self.p_lat_initial = p_initial
+        self.v_lon_initial, self.v_lat_initial = v_initial
+
     @property
     def p_lon_lat_initial(self):
         return np.array([self.p_lon_initial, self.p_lat_initial])

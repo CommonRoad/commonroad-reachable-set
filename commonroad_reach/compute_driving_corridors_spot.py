@@ -110,8 +110,15 @@ def main():
     # name_scenario = "ZAM_Tjunction-1_313_T-1"
     # name_scenario = "USA_US101-6_1_T-1"
 
-    config = ConfigurationBuilder.build_configuration(name_scenario)
-    config.print_configuration_summary()
+    # config = ConfigurationBuilder.build_configuration(name_scenario)
+    # config.print_configuration_summary()
+
+    from commonroad.common.file_reader import CommonRoadFileReader
+    scenario, planning_problem_set = CommonRoadFileReader("../scenarios/DEU_Test-1_1_T-1.xml").open()
+    planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
+
+    time_step_start = 0
+    time_steps_computation = 40
 
     # rnd = MPRenderer(figsize=(20, 10))
     # config.scenario.draw(rnd, draw_params={'time_begin': 0})
@@ -129,33 +136,39 @@ def main():
     default_config_path = "/home/xiao/projects/safe_RL/commonroad-reachable-set/" \
                           "external/commonroad-invariably-safe-set/configurations/defaults"
     iss_config = CommonRoadISSConfigurations.load_default_configuration(default_config_path)
-    iss_highD = ISSHighD(config.scenario, config.planning_problem, iss_config)
+    iss_highD = ISSHighD(scenario, planning_problem, iss_config)
     iss_results_list, computation_time_ms, _ = iss_highD.compute(
-        ego_state=config.planning_problem.initial_state,
+        ego_state=planning_problem.initial_state,
         scenario_time_step=0,
-        iss_horizon_start=config.planning.time_step_start + config.planning.time_steps_computation,
+        iss_horizon_start=time_step_start + time_steps_computation,
         iss_horizon_length=1,
         bounding_box=(-500., 500., -50., 50.),
     )
     iss_rectangle, bb_box = get_bounding_box_from_iss(iss_results_list)
 
-    # set config.planning.CLCS TODO: debug why no driving corridors after setting CLCS
-    original_ref_path = np.array(config.planning.CLCS.reference_path())
+    # TODO: create config from scratch
     ego_lanelet_id = iss_results_list[-1].ego_lanelet_id
-    config.planning.CLCS = iss_results_list[-1].iss_lanelet_result_dict[ego_lanelet_id].cvln_lanelet.CLCS
-    new_ref_path = np.array(config.planning.CLCS.reference_path())
+    ego_CLCS = iss_results_list[-1].iss_lanelet_result_dict[ego_lanelet_id].cvln_lanelet.CLCS
+    config = ConfigurationBuilder.construct_configuration_for_given_scenario(
+        scenario=scenario, planning_problem=planning_problem, CLCS=ego_CLCS
+    )
 
-    from commonroad_reach.utility import configuration as util_configuration
-    p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+    # # set config.planning.CLCS
+    # original_ref_path = np.array(config.planning.CLCS.reference_path())
+    # config.planning.CLCS = ego_CLCS
+    # new_ref_path = np.array(config.planning.CLCS.reference_path())
+    #
+    # from commonroad_reach.utility import configuration as util_configuration
+    # p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+    #
+    # config.planning.p_lon_initial, config.planning.p_lat_initial = p_initial
+    # config.planning.v_lon_initial, config.planning.v_lat_initial = v_initial
+    # config.planning.reference_path = new_ref_path
 
-    config.planning.p_lon_initial, config.planning.p_lat_initial = p_initial
-    config.planning.v_lon_initial, config.planning.v_lat_initial = v_initial
-    config.planning.reference_path = new_ref_path
-
-    import matplotlib.pyplot as plt
-    # plt.plot(original_ref_path[:, 0], original_ref_path[:, 1], marker="+", color="black")
-    plt.plot(new_ref_path[:, 0], new_ref_path[:, 1], marker="*", color="blue")
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # # plt.plot(original_ref_path[:, 0], original_ref_path[:, 1], marker="+", color="black")
+    # plt.plot(new_ref_path[:, 0], new_ref_path[:, 1], marker="*", color="blue")
+    # plt.show()
 
     # ==== construct reachability interface and compute reachable sets
     # TODO: move calling of spot in ReachableSetInterface and add flag in config

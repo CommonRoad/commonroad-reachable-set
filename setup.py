@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 
-from commonroad_reach.__version__ import __version__
+# from commonroad_reach.__version__ import __version__
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from sysconfig import get_paths
@@ -78,7 +78,7 @@ class CMakeBuild(build_ext):
 
 
 # TODO: does not build/install C++ code
-setup(name='commonroad-reach', version=__version__,
+setup(name='commonroad-reach', version=2022.1, #__version__,
       description='CommonRoad-Reach: A Toolbox for Computing Reachable Sets of Automated Vehicles',
       keywords='autonomous automated vehicles driving motion planning',
       url='https://commonroad.in.tum.de/',
