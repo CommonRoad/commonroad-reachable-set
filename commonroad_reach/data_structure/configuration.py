@@ -278,9 +278,20 @@ class PlanningConfiguration:
         # route = candidate_holder.retrieve_first_route()
         #
         # self.route = route # TODO: is self.route used somewhere???
-        self.CLCS = CLCS
-        self.reference_path = np.array(self.CLCS.reference_path()) #route.reference_path
-        # self.id_lanelet_initial = route.list_ids_lanelets[0]
+        if CLCS is not None:
+            self.CLCS = CLCS
+            self.reference_path = np.array(self.CLCS.reference_path())
+            # self.id_lanelet_initial = route.list_ids_lanelets[0]
+        else:
+            route_planner = RoutePlanner(config.scenario, config.planning_problem)
+            candidate_holder = route_planner.plan_routes()
+            route = candidate_holder.retrieve_first_route()
+
+            self.route = route # TODO: is self.route used somewhere???
+            self.reference_path = route.reference_path
+            self.id_lanelet_initial = route.list_ids_lanelets[0]
+
+            self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
 
         p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 

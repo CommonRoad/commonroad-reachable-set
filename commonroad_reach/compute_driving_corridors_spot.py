@@ -248,5 +248,43 @@ def main():
     # util_visual.plot_all_driving_corridors(longitudinal_driving_corridors, reach_interface)
 
 
+def debug():
+    import pickle
+    with open("debug.pickle", "rb") as f:
+        data = pickle.load(f)
+        config = data["config"]
+
+    config.planning_problem.initial_state.position = np.array([145.685, -27.])
+
+    # create a new config
+    new_config = ConfigurationBuilder.construct_configuration_for_given_scenario(
+        scenario=config.scenario, planning_problem=config.planning_problem, CLCS=None
+    )
+    config.reachable_set.prune_nodes_not_reaching_final_time_step = False
+    config.vehicle.ego.v_lon_max = 65.
+    config.vehicle.ego.v_max = 65.
+    reach_interface = ReachableSetInterface(config)
+    reach_interface.compute_reachable_sets()
+
+    # util_visual.plot_scenario_with_reachable_sets(reach_interface, plot_limits=[50, 250, -40, -20], as_svg=False)
+    ref_path = np.array(config.planning.CLCS.reference_path())
+    #
+    import matplotlib.pyplot as plt
+    from commonroad.visualization.mp_renderer import MPRenderer
+
+    renderer = MPRenderer(figsize=(30, 10))
+    config.scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True, "show_label": True}, "time_begin": 0})
+    config.planning_problem.draw(renderer)
+    # plot
+    plt.rc("axes", axisbelow=True)
+    ax = plt.gca()
+    ax.plot(ref_path[:, 0], ref_path[:, 1], marker="+", color="blue", zorder=100)
+    ax.set_aspect("equal")
+    plt.margins(0, 0)
+    renderer.render(show=True)
+    print(ref_path)
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    debug()
