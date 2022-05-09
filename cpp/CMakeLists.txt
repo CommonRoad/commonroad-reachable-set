@@ -18,16 +18,17 @@ set(REACH_INCLUDE_DIR
 
 # set a variable to hold all relevant cpp source files of reachable sets
 set(REACH_SOURCE
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_vertex.cpp
+#        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_node.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_segment.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_set.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/miscellaneous.cpp
         CACHE STRING "" FORCE)
 
 # ========= building playground
@@ -53,16 +54,16 @@ if(ADD_TESTS)
     add_executable(doctest_runner
             ${REACH_SOURCE}
             ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_polygon.cpp
-            # ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_base_set.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_reach_node.cpp
+
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_polygon.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_node.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_set.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
+
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_minkowski.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_sweep_line.cpp
             ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_collision_checker.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/common/test_reachable_set_interface.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/continuous/test_continuous_reachability_analysis.cpp)
+            )
     # 2. include directories
     target_include_directories(doctest_runner PRIVATE
             ${REACH_INCLUDE_DIR}

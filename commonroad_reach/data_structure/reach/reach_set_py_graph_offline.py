@@ -3,13 +3,13 @@ import math
 import os
 import pickle
 import time
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
 
-from commonroad_dc.pycrcc import CollisionChecker, RectAABB
-from commonroad_reach.__version__ import __version__
 import numpy as np
+from commonroad_dc.pycrcc import CollisionChecker, RectAABB
 from scipy import sparse
 
+from commonroad_reach.__version__ import __version__
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
@@ -26,16 +26,18 @@ class PyGraphReachableSetOffline(ReachableSet):
     """Offline step in the graph-based reachable set computation with Python backend."""
 
     def __init__(self, config: Configuration):
-        self._dict_time_to_drivable_area: Dict[int, List[ReachPolygon]]
-        self._dict_time_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]
+        self.dict_time_to_drivable_area: Dict[int, List[ReachPolygon]]
+        self.dict_time_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]
         super().__init__(config)
 
         self.polygon_zero_state_lon: Dict[int, ReachPolygon] = dict()
         self.polygon_zero_state_lat: Dict[int, ReachPolygon] = dict()
         self._initialize_zero_state_polygons()
 
-        self._dict_time_to_drivable_area[self.time_step_start] = self.initial_drivable_area
-        self._dict_time_to_reachable_set[self.time_step_start] = self.initial_reachable_set
+        self.dict_time_to_drivable_area[self.step_start] = self.initial_drivable_area
+        self.dict_time_to_reachable_set[self.step_start] = self.initial_reachable_set
+
+        logger.info("PyGraphReachableSetOffline initialized.")
 
     @property
     def path_offline_file(self):
@@ -87,36 +89,34 @@ class PyGraphReachableSetOffline(ReachableSet):
         polygon_lon = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lon)
         polygon_lat = ReachPolygon.from_rectangle_vertices(*tuple_vertices_polygon_lat)
 
-        return [ReachNodeMultiGeneration(polygon_lon, polygon_lat, self.config.planning.time_step_start)]
+        return [ReachNodeMultiGeneration(polygon_lon, polygon_lat, self.config.planning.step_start)]
 
-    def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
+    def compute(self, step_start: int, step_end: int):
         """Computes reachable sets for the specified time steps."""
-        for time_step in range(time_step_start + 1, time_step_end + 1):
-            message = f"\tTime step: {time_step}"
-            print(message)
+        for step in range(step_start + 1, step_end + 1):
+            message = f"\tTime step: {step}"
             logger.debug(message)
 
             time_start = time.time()
-            self._compute_at_time_step(time_step)
-            self._list_time_steps_computed.append(time_step)
+            self._compute_at_step(step)
+            self._list_steps_computed.append(step)
 
-            message = f"\t#Nodes: {len(self.reachable_set_at_time_step(time_step))}, " \
+            message = f"\t#Nodes: {len(self.reachable_set_at_step(step))}, " \
                       f"computation took: {time.time() - time_start:.3f}s"
-            print(message)
             logger.debug(message)
 
             if self.config.reachable_set.n_multi_steps >= 2:
-                self._determine_grandparent_relationship(time_step)
+                self._determine_grandparent_relationship(step)
 
             # save computation result to pickle file
             self._save_to_pickle()
 
-    def _compute_at_time_step(self, time_step: int):
+    def _compute_at_step(self, step: int):
         """Computes drivable area and reachable set of the time step."""
-        self._compute_drivable_area_at_time_step(time_step)
-        self._compute_reachable_set_at_time_step(time_step)
+        self._compute_drivable_area_at_step(step)
+        self._compute_reachable_set_at_step(step)
 
-    def _compute_drivable_area_at_time_step(self, time_step: int):
+    def _compute_drivable_area_at_step(self, step: int):
         """Computes the drivable area for the given time step.
 
         Steps:
@@ -126,7 +126,7 @@ class PyGraphReachableSetOffline(ReachableSet):
             4. Adapt position rectangles to Cartesian grid.
             5. Remove rectangles out of Kamm's friction circle.
         """
-        reachable_set_previous = self._dict_time_to_reachable_set[time_step - 1]
+        reachable_set_previous = self.dict_time_to_reachable_set[step - 1]
         if len(reachable_set_previous) < 1:
             return [], []
 
@@ -141,14 +141,8 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         list_rectangles_adapted = reach_operation.adapt_rectangles_to_grid(list_rectangles_repartitioned, size_grid)
 
-        # TODO: consider friction circle when regular grid is enforced in repartitioning
-        # drivable_area = \
-        #     reach_operation.remove_rectangles_out_of_kamms_circle(time_step * self.config.planning.dt,
-        #                                                           self.config.vehicle.ego.a_max,
-        #                                                           list_rectangles_adapted)
-
-        self._dict_time_to_drivable_area[time_step] = list_rectangles_adapted
-        self._dict_time_to_base_set_propagated[time_step] = list_base_sets_propagated
+        self.dict_time_to_drivable_area[step] = list_rectangles_adapted
+        self.dict_time_to_base_set_propagated[step] = list_base_sets_propagated
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration], steps=1) -> List[
         ReachNodeMultiGeneration]:
@@ -185,34 +179,34 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             else:
                 base_set_propagated = ReachNodeMultiGeneration(polygon_lon_propagated, polygon_lat_propagated,
-                                                               node.time_step)
+                                                               node.step)
                 base_set_propagated.source_propagation = node
                 list_base_sets_propagated.append(base_set_propagated)
 
         return list_base_sets_propagated
 
-    def _compute_reachable_set_at_time_step(self, time_step):
+    def _compute_reachable_set_at_step(self, step):
         """Computes the reachable set for the given time step.
 
         Steps:
             1. create a list of base sets adapted to the drivable area.
             2. create a list of reach nodes from the list of adapted base sets.
         """
-        base_sets_propagated = self._dict_time_to_base_set_propagated[time_step]
-        drivable_area = self._dict_time_to_drivable_area[time_step]
+        base_sets_propagated = self.dict_time_to_base_set_propagated[step]
+        drivable_area = self.dict_time_to_drivable_area[step]
         if not drivable_area:
             return []
 
-        list_base_sets_adapted = reach_operation.adapt_base_sets_to_drivable_area(drivable_area,
-                                                                                  base_sets_propagated,
-                                                                                  has_multi_generation=True)
+        list_base_sets_adapted = reach_operation.construct_reach_nodes(drivable_area,
+                                                                       base_sets_propagated,
+                                                                       has_multi_generation=True)
 
-        reachable_set_time_step_current = reach_operation.create_nodes_of_reachable_set(time_step,
-                                                                                        list_base_sets_adapted)
+        reachable_set_step_current = reach_operation.connect_children_to_parents(step,
+                                                                                 list_base_sets_adapted)
 
-        self._dict_time_to_reachable_set[time_step] = reachable_set_time_step_current
+        self.dict_time_to_reachable_set[step] = reachable_set_step_current
 
-    def _determine_grandparent_relationship(self, time_step: int):
+    def _determine_grandparent_relationship(self, step: int):
         """Determines grandparent-child relationship between nodes.
 
         The grandparent-child relationship is established if the grandparent can reach the grandchild by propagating
@@ -222,8 +216,9 @@ class PyGraphReachableSetOffline(ReachableSet):
         cc_at_time: Dict[int, Tuple[CollisionChecker, Dict[RectAABB, ReachNodeMultiGeneration]]] = dict()
 
         def create_cc(nodes: List[ReachNodeMultiGeneration],
-                      list_nodes_keys:List[ReachNodeMultiGeneration]) -> Tuple[CollisionChecker,
-                                                                      Dict[RectAABB, ReachNodeMultiGeneration]]:
+                      list_nodes_keys: List[ReachNodeMultiGeneration]) -> Tuple[CollisionChecker,
+                                                                                Dict[
+                                                                                    RectAABB, ReachNodeMultiGeneration]]:
             """Create collision checker from reachable sets."""
             cc = CollisionChecker()
             cc_obj_2_node = dict()
@@ -237,7 +232,7 @@ class PyGraphReachableSetOffline(ReachableSet):
                 cc.add_collision_object(cc_obj)
             return cc, cc_obj_2_node
 
-        def get_cc_at_time(time_step: int) -> Tuple[CollisionChecker, Dict[RectAABB,ReachNodeMultiGeneration]]:
+        def get_cc_at_time(time_step: int) -> Tuple[CollisionChecker, Dict[RectAABB, ReachNodeMultiGeneration]]:
             """Returns collision checker from reachable sets at time_step."""
             if time_step not in cc_at_time:
                 cc_at_time[time_step] = create_cc(self.dict_time_to_reachable_set[time_step],
@@ -245,11 +240,11 @@ class PyGraphReachableSetOffline(ReachableSet):
             return cc_at_time[time_step]
 
         for delta_steps in range(2, self.config.reachable_set.n_multi_steps):
-            for time_step in list(self.dict_time_to_reachable_set.keys())[delta_steps:time_step + 1]:
-                list_nodes_grand_parent = self.dict_time_to_reachable_set[time_step - delta_steps]
+            for step in list(self.dict_time_to_reachable_set.keys())[delta_steps:step + 1]:
+                list_nodes_grand_parent = self.dict_time_to_reachable_set[step - delta_steps]
                 list_nodes_grand_parent_propagated = self._propagate_reachable_set(list_nodes_grand_parent,
                                                                                    steps=delta_steps)
-                cc_nodes, cc_obj_2_node = get_cc_at_time(time_step)
+                cc_nodes, cc_obj_2_node = get_cc_at_time(step)
                 cc_grandparents_prop, cc_obj_2_grandparent_node_prop = create_cc(list_nodes_grand_parent_propagated,
                                                                                  list_nodes_grand_parent)
                 for rect_gp_prop, node_grand_parent in cc_obj_2_grandparent_node_prop.items():
@@ -277,7 +272,7 @@ class PyGraphReachableSetOffline(ReachableSet):
                       f"vlatmax{self.config.vehicle.ego.v_lat_max}_"
 
         self.config.reachable_set.name_pickle_offline = \
-            f"offline_nt{self.max_evaluated_time_step}_" \
+            f"offline_nt{self.max_evaluated_step}_" \
             f"{self.config.planning.coordinate_system}_" \
             + a_v_str + \
             f"ms{self.config.reachable_set.n_multi_steps}_" \
@@ -293,15 +288,9 @@ class PyGraphReachableSetOffline(ReachableSet):
 
     def create_projection_matrices(self):
         size_grid = self.config.reachable_set.size_grid
-        dx = size_grid / 2
         size_grid_div = 1 / size_grid
-        for t, base_set_list in self._dict_time_to_drivable_area.items():
+        for t, base_set_list in self.dict_time_to_drivable_area.items():
             assert (len(self.dict_time_to_drivable_area) == len(self.dict_time_to_reachable_set))
-            # l0 = min([x.p_lon_min for x in base_set_list])
-            # l1 = max([x.p_lon_max for x in base_set_list])
-            # l2 = min([x.p_lat_min for x in base_set_list])
-            # l3 = max([x.p_lat_max for x in base_set_list])
-
             lon_min = size_grid * math.floor(min([x.p_lon_center for x in base_set_list]) * size_grid_div)
             lon_max = size_grid * math.ceil(max([x.p_lon_center for x in base_set_list]) * size_grid_div)
             lat_min = size_grid * math.floor(min([x.p_lat_center for x in base_set_list]) * size_grid_div)
@@ -319,41 +308,14 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             def position_to_grid_index1d(pos_lon: float, pos_lat: float) -> int:
                 lon, lat = position_to_grid_index2d(pos_lon, pos_lat)
-                print(lon, lat, lon * n_lat + lat, pos_lon, pos_lat)
                 return lon * n_lat + lat
 
             # organize into grid
             grid_index_to_reachset = defaultdict(list)
-            # iii=3
-            # plt.figure()
             for index_reachset, reach_set in enumerate(self.dict_time_to_reachable_set[t]):
-                # iii *= 0.95
-                # v = np.array(reach_set.position_rectangle.vertices)
-                # plt.fill(v[:, 0], v[:, 1], fill=False, lw=1.5 * iii, alpha=0.3)
-                # continue
                 grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center,
                                                                 reach_set.position_rectangle.p_lat_center)].append(
                     index_reachset)
-                # continue
-                # if len(grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)])>1:
-                #     plt.figure()
-                #     x = np.arange(lon_min, lon_max+1e-6, size_grid)
-                #     y = np.arange(lat_min, lat_max+1e-6, size_grid)
-                #     vv = [(xx,yy) for xx in x for yy in y]
-                #     vv = np.array(vv)
-                #     plt.scatter(vv[:,0], vv[:,1])
-                #     bounds = np.array([[lon_min,lat_min], [lon_min,lat_max],[lon_max,lat_max], [lon_max,lat_min]])
-                #     plt.fill(bounds[:, 0], bounds[:, 1], fill=False)
-                #     bounds = np.array([[l0, l2], [l0, l3], [l1, l3], [l1, l2]])
-                #     plt.fill(bounds[:, 0], bounds[:, 1], fill=False)
-                #     iii=6
-                #     for inde in grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)]:
-                #         iii*=0.5
-                #         v= np.array(self.dict_time_to_reachable_set[t][inde].position_rectangle.vertices)
-                #         plt.fill(v[:,0], v[:,1], fill=False, lw=1.5*iii,alpha=0.3)
-                #
-                #     plt.title(f"{grid_index_to_reachset[position_to_grid_index1d(reach_set.position_rectangle.p_lon_center, reach_set.position_rectangle.p_lat_center)]}")
-                #     plt.show(block=True)
 
             for reach_lists in grid_index_to_reachset.values():
                 assert len(reach_lists) == 1, f"more than 1 reachset assigned to a cell!"
@@ -362,14 +324,12 @@ class PyGraphReachableSetOffline(ReachableSet):
             coordinates.sort()
             projection_matrix = np.zeros(shape=[len(self.dict_time_to_reachable_set[t]), n_lon * n_lat], dtype=bool)
             for coordinate in coordinates:
-                # print(grid_index_to_reachset[coordinate])
                 projection_matrix[grid_index_to_reachset[coordinate], coordinate] = True
 
         raise
 
     def _extract_information(self):
         """Extracts essential information from the computation result."""
-        # self.create_projection_matrices()
         dict_time_to_list_tuples_reach_node_attributes = defaultdict(list)
         dict_time_to_adjacency_matrices_parent = dict()
         dict_time_to_adjacency_matrices_grandparent = defaultdict(dict)
@@ -377,7 +337,7 @@ class PyGraphReachableSetOffline(ReachableSet):
         reachset_bb_ur = dict()
         size_grid = self.config.reachable_set.size_grid
         size_grid_div = 1 / size_grid
-        for time_step, list_nodes in self._dict_time_to_reachable_set.items():
+        for time_step, list_nodes in self.dict_time_to_reachable_set.items():
             lon_min = size_grid * math.floor(
                 min([x.position_rectangle.p_lon_center for x in list_nodes]) * size_grid_div)
             lon_max = size_grid * math.ceil(
@@ -409,11 +369,11 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             # parent-child relationship
             if time_step >= 1:
-                list_nodes_parent = self._dict_time_to_reachable_set[time_step - 1]
+                list_nodes_parent = self.dict_time_to_reachable_set[time_step - 1]
 
                 matrix_adjacency_tmp = list()
                 for node in list_nodes:
-                    list_adjacency = [(node_parent in node.nodes_parent) for node_parent in list_nodes_parent]
+                    list_adjacency = [(node_parent in node.list_nodes_parent) for node_parent in list_nodes_parent]
                     matrix_adjacency_tmp.append(list_adjacency)
 
                 matrix_adjacency_dense = np.array(matrix_adjacency_tmp, dtype=bool)
@@ -422,12 +382,12 @@ class PyGraphReachableSetOffline(ReachableSet):
 
             # grandparent-grandchild relationship
             for delta_steps in range(2, self.config.reachable_set.n_multi_steps):
-                if time_step - delta_steps not in self._dict_time_to_reachable_set:
+                if time_step - delta_steps not in self.dict_time_to_reachable_set:
                     break
-                list_nodes_grandparent = self._dict_time_to_reachable_set[time_step - delta_steps]
+                list_nodes_grandparent = self.dict_time_to_reachable_set[time_step - delta_steps]
                 matrix_adjacency_tmp = list()
                 for node in list_nodes:
-                    list_adjacency = [(node_grandparent in node.list_nodes_grandparent[delta_steps])
+                    list_adjacency = [(node_grandparent in node.dict_time_to_set_nodes_grandparent[delta_steps])
                                       for node_grandparent in list_nodes_grandparent]
                     matrix_adjacency_tmp.append(list_adjacency)
 
@@ -446,5 +406,5 @@ class PyGraphReachableSetOffline(ReachableSet):
         dict_data["__version__"] = __version__
         return dict_data
 
-    def _prune_nodes_not_reaching_final_time_step(self):
+    def _prune_nodes_not_reaching_final_step(self):
         raise NotImplementedError

@@ -2,12 +2,11 @@
 
 #include "test_utility.hpp"
 
-bool vertex_in_vertices(tuple<double, double> const& tuple_vertex, vector<GeometryPoint> const& vertices) {
-    GeometryPoint vertex_examine{std::get<0>(tuple_vertex), std::get<1>(tuple_vertex)};
-
+bool vertex_in_vertices(tuple<double, double> const& tuple_vertex, vector<Vertex> const& vertices) {
     auto result = std::any_of(vertices.begin(), vertices.end(),
-                              [&](auto const& vertex) {
-                                  return bg::equals(vertex_examine, vertex);
+                              [&](Vertex const& vertex) {
+                                  return vertex.x == std::get<0>(tuple_vertex) and
+                                         vertex.y == std::get<1>(tuple_vertex);
                               });
 
     if (not result)
@@ -34,7 +33,7 @@ bool event_in_events(SweepLine::Event const& event, vector<SweepLine::Event> con
     return result;
 }
 
-bool segment_in_segments(ReachSegment const& segment, vector<ReachSegment> const& vec_segments) {
+bool segment_in_segments(ReachLine const& segment, vector<ReachLine> const& vec_segments) {
     auto result = std::find(vec_segments.begin(), vec_segments.end(), segment) != vec_segments.end();
 
     if (not result)
@@ -51,16 +50,6 @@ bool bound_in_bounds(tuple<double, double, double, double> const& bound,
     if (not result)
         cout << "Failed at bound: (" << std::get<0>(bound) << ", " << std::get<1>(bound) << ", "
              << std::get<2>(bound) << ", " << std::get<3>(bound) << ")" << endl;
-
-    return result;
-}
-
-bool vertex_within_polygon(tuple<double, double> const& tuple_vertex, ReachPolygonPtr const& polygon) {
-    auto const&[p_lon, p_lat] = tuple_vertex;
-    auto result = bg::within(GeometryPoint(p_lon, p_lat), *(polygon->geometry_polygon()));
-
-    if (not result)
-        cout << "Failed at vertex: (" << std::get<0>(tuple_vertex) << ", " << std::get<1>(tuple_vertex) << ")" << endl;
 
     return result;
 }

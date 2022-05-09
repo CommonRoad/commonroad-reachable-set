@@ -1,7 +1,7 @@
 #pragma once
 
 #include "shared_include.hpp"
-#include "reachset/data_structure/reach/reach_segment.hpp"
+#include "reachset/data_structure/reach/reach_line.hpp"
 #include "reachset/data_structure/reach/reach_polygon.hpp"
 #include "reachset/data_structure/segment_tree.hpp"
 
@@ -34,7 +34,7 @@ struct SweepLine {
     inline static ToggleSegmentTree tree_toggle = ToggleSegmentTree();
 
     /// Returns a vector of vertical segments for the input rectangles.
-    static std::vector<ReachSegmentPtr>
+    static std::vector<ReachLinePtr>
     obtain_vertical_segments_from_rectangles(std::vector<ReachPolygonPtr> const& vec_rectangles);
 
     static std::tuple<double, double>
@@ -47,23 +47,23 @@ struct SweepLine {
     static void sort_events(std::vector<std::shared_ptr<SweepLine::Event>>& vector);
 
     /// Creates a vector of vertical segments from vector of events.
-    static std::vector<ReachSegmentPtr>
+    static std::vector<ReachLinePtr>
     create_vertical_segments_from_events(std::vector<std::shared_ptr<Event>> const& vec_events);
 
     /// Returns a vector of vertical segments with the tree and event.
-    static std::vector<ReachSegmentPtr> create_vertical_segments_from_event(std::shared_ptr<Event> const& event);
+    static std::vector<ReachLinePtr> create_vertical_segments_from_event(std::shared_ptr<Event> const& event);
 
     /// Returns a vector of rectangles from the given vertical segments.
     static std::vector<ReachPolygonPtr>
-    create_rectangles_from_vertical_segments(std::vector<ReachSegmentPtr> const& vec_rectangles);
+    create_rectangles_from_vertical_segments(std::vector<ReachLinePtr> const& vec_rectangles);
 
     /// Computes the extremum lateral positions of a vector of segments.
     static std::tuple<double, double>
-    compute_extremum_lateral_positions_of_segments(std::vector<ReachSegmentPtr> const& vec_segments);
+    compute_extremum_lateral_positions_of_segments(std::vector<ReachLinePtr> const& vec_segments);
 
     /// Create a map that maps p_lon to a vector of rectangles whose left edge is aligned with p_lon.
     static std::map<double, std::vector<ReachPolygonPtr>>
-    create_p_lon_to_rectangles_map(std::vector<ReachSegmentPtr> const& vec_segments);
+    create_p_lon_to_rectangles_map(std::vector<ReachLinePtr> const& vec_segments);
 
     /// Return a vector of rectangles with possible merging.
     static std::vector<ReachPolygonPtr> merge_rectangles_with_same_lateral_coordinates(

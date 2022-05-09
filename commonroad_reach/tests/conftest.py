@@ -5,12 +5,11 @@ import sys
 
 import pytest
 
-from commonroad_reach.data_structure.collision_checker_py import PyCollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
-from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
 
 sys.path.append(os.getcwd())
 
@@ -22,20 +21,16 @@ def config():
 
 
 @pytest.fixture
-def collision_checker_py(config: Configuration):
-    return PyCollisionChecker(config)
-
-
-@pytest.fixture
 def collision_checker_cpp(config: Configuration):
     try:
-        from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+        from commonroad_reach.data_structure.collision_checker import CollisionChecker
 
     except ImportError:
         print("Importing C++ collision checker failed.")
 
     else:
-        return CppCollisionChecker(config)
+        config.vehicle.ego.radius_inflation = config.vehicle.ego.radius_disc
+        return CollisionChecker(config)
 
 
 @pytest.fixture
@@ -68,5 +63,5 @@ def list_rectangles_discritized():
 
 
 @pytest.fixture
-def reachability_analysis(config):
-    return ReachableSetInterface(config)
+def reachable_set_py(config):
+    return PyReachableSet(config)

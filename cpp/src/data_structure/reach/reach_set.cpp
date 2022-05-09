@@ -16,17 +16,37 @@ ReachableSet::ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collisio
 }
 
 void ReachableSet::_initialize() {
-    time_step_start = config->planning().time_step_start;
-    time_step_end = time_step_start + config->planning().time_steps_computation;
-    time_step_start = config->planning().time_step_start;
-    map_time_to_drivable_area[time_step_start] = _construct_initial_drivable_area();
-    map_time_to_reachable_set[time_step_start] = _construct_initial_reachable_set();
-
+    step_start = config->planning().step_start;
+    step_end = step_start + config->planning().steps_computation;
+    map_time_to_drivable_area[step_start] = _construct_initial_drivable_area();
+    map_time_to_reachable_set[step_start] = _construct_initial_reachable_set();
     _initialize_zero_state_polygons();
 }
 
-/// @note Computation of the reachable set of an LTI system requires the zero-state response and
-/// the zero-input response of the system.
+vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
+    vector<ReachPolygonPtr> vec_polygon;
+
+    auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(config);
+    vec_polygon.emplace_back(make_shared<ReachPolygon>(std::get<0>(tuple_vertices),
+                                                       std::get<1>(tuple_vertices),
+                                                       std::get<2>(tuple_vertices),
+                                                       std::get<3>(tuple_vertices)));
+    return vec_polygon;
+}
+
+std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const {
+    vector<ReachNodePtr> vec_node;
+
+    auto[tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] =
+    generate_tuples_vertices_polygons_initial(config);
+    auto polygon_lon = make_shared<ReachPolygon>(tuple_vertices_polygon_lon);
+    auto polygon_lat = make_shared<ReachPolygon>(tuple_vertices_polygon_lat);
+    vec_node.emplace_back(make_shared<ReachNode>(config->planning().step_start, polygon_lon, polygon_lat));
+
+    return vec_node;
+}
+
+/// @note Computation of the reachable set of an LTI system requires the zero-state response of the system.
 void ReachableSet::_initialize_zero_state_polygons() {
     polygon_zero_state_lon = create_zero_state_polygon(config->planning().dt,
                                                        config->vehicle().ego.a_lon_min,
@@ -37,37 +57,19 @@ void ReachableSet::_initialize_zero_state_polygons() {
                                                        config->vehicle().ego.a_lat_max);
 }
 
-vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
-    vector<ReachPolygonPtr> vec_polygon;
-
-    auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(config);
-    vec_polygon.emplace_back(std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices));
-
-    return vec_polygon;
-}
-
-std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const {
-    vector<ReachNodePtr> vec_node;
-
-    auto[tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] = generate_tuples_vertices_polygons_initial(config);
-    auto polygon_lon = std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices_polygon_lon);
-    auto polygon_lat = std::apply(ReachPolygon::from_rectangle_coordinates, tuple_vertices_polygon_lat);
-    vec_node.emplace_back(make_shared<ReachNode>(config->planning().time_step_start, polygon_lon, polygon_lat));
-
-    return vec_node;
-}
 
 void ReachableSet::compute(int step_start, int step_end) {
-    if (step_start == 0) step_start = time_step_start;
-    if (step_end == 0) step_end = time_step_end;
-    for (auto time_step = step_start; time_step < step_end + 1; time_step++) {
-        _compute_drivable_area_at_time_step(time_step);
-        _compute_reachable_set_at_time_step(time_step);
-        _vec_time_steps_computed.emplace_back(time_step);
+    if (step_start == 0) step_start = this->step_start + 1;
+    if (step_end == 0) step_end = this->step_end;
+
+    for (auto step = step_start; step < step_end + 1; step++) {
+        _compute_drivable_area_at_step(step);
+        _compute_reachable_set_at_step(step);
+        _vec_steps_computed.emplace_back(step);
     }
 
-    if (_prune_reachable_set) {
-        _prune_nodes_not_reaching_final_time_step();
+    if (step_start != step_end and config->reachable_set().prune_nodes) {
+        prune_nodes_not_reaching_final_step();
     }
 }
 
@@ -77,30 +79,50 @@ void ReachableSet::compute(int step_start, int step_end) {
 /// 3. Merge and repartition these rectangles to reduce computation load.
 /// 4. Check for collision and split the repartitioned rectangles into collision-free rectangles.
 /// 5. Merge and repartition the collision-free rectangles again to reduce number of nodes.
-void ReachableSet::_compute_drivable_area_at_time_step(int const& time_step) {
-    auto reachable_set_previous = map_time_to_reachable_set[time_step - 1];
-    if (reachable_set_previous.empty()) {
-        return;
-    }
+void ReachableSet::_compute_drivable_area_at_step(int const& step) {
+    auto reachable_set_previous = map_time_to_reachable_set[step - 1];
+    if (reachable_set_previous.empty()) return;
 
     auto vec_base_sets_propagated = _propagate_reachable_set(reachable_set_previous);
 
     auto vec_rectangles_projected = project_base_sets_to_position_domain(vec_base_sets_propagated);
 
-    auto vec_rectangles_repartitioned = create_repartitioned_rectangles(vec_rectangles_projected,
-                                                                        config->reachable_set().size_grid);
-    auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
-            std::floor(time_step * config->planning().dt * 10),
-            collision_checker,
-            vec_rectangles_repartitioned,
-            config->reachable_set().radius_terminal_split,
-            config->reachable_set().num_threads);
+    vector<ReachPolygonPtr> drivable_area_collision_free{};
+    // repartition, then collision check
+    if (config->reachable_set().mode_repartition == 1) {
+        auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
+                vec_rectangles_projected, config->reachable_set().size_grid);
 
-    auto drivable_area = create_repartitioned_rectangles(vec_rectangles_collision_free,
-                                                         config->reachable_set().size_grid_2nd);
+        drivable_area_collision_free = check_collision_and_split_rectangles(
+                step, collision_checker,
+                vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
+                config->reachable_set().num_threads);
+        // collision check, then repartition
+    } else if (config->reachable_set().mode_repartition == 2) {
+        auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
+                step, collision_checker,
+                vec_rectangles_projected, config->reachable_set().radius_terminal_split,
+                config->reachable_set().num_threads);
 
-    map_time_to_drivable_area[time_step] = drivable_area;
-    map_time_to_base_set_propagated[time_step] = vec_base_sets_propagated;
+        drivable_area_collision_free = create_repartitioned_rectangles(
+                vec_rectangles_collision_free, config->reachable_set().size_grid);
+        // repartition, collision check, then repartition again
+    } else if (config->reachable_set().mode_repartition == 3) {
+        auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
+                vec_rectangles_projected, config->reachable_set().size_grid);
+
+        auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
+                step, collision_checker,
+                vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
+                config->reachable_set().num_threads);
+
+        drivable_area_collision_free = create_repartitioned_rectangles(
+                vec_rectangles_collision_free, config->reachable_set().size_grid);
+
+    } else throw std::logic_error("Invalid mode for repartition.");
+
+    map_time_to_drivable_area[step] = drivable_area_collision_free;
+    map_time_to_base_set_propagated[step] = vec_base_sets_propagated;
 }
 
 vector<ReachNodePtr> ReachableSet::_propagate_reachable_set(vector<ReachNodePtr> const& vec_nodes) {
@@ -128,8 +150,9 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
                                                                 config->vehicle().ego.v_lat_min,
                                                                 config->vehicle().ego.v_lat_max);
 
-                auto base_set_propagated = make_shared<ReachNode>(node->time_step,
-                                                                  polygon_lon_propagated, polygon_lat_propagated);
+                auto base_set_propagated = make_shared<ReachNode>(node->step,
+                                                                  polygon_lon_propagated,
+                                                                  polygon_lat_propagated);
                 base_set_propagated->vec_nodes_source.emplace_back(node);
                 vec_base_sets_propagated_thread.emplace_back(base_set_propagated);
             }
@@ -146,19 +169,64 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
 }
 
 /// *Steps*:
-/// 1. create a list of new base sets cut down with rectangles of the drivable area.
-/// 2. create the list of nodes of the new reachable set.
-void ReachableSet::_compute_reachable_set_at_time_step(int const& time_step) {
-    auto drivable_area = map_time_to_drivable_area[time_step];
-    auto vec_base_sets_propagated = map_time_to_base_set_propagated[time_step];
-    if (drivable_area.empty())
-        return;
+/// 1. construct reach nodes from drivable area and the propagated base sets.
+/// 2. update parent-child relationship of the nodes.
+void ReachableSet::_compute_reachable_set_at_step(int const& step) {
+    auto drivable_area = map_time_to_drivable_area[step];
+    auto vec_base_sets_propagated = map_time_to_base_set_propagated[step];
+    auto num_threads = config->reachable_set().num_threads;
 
-    auto vec_base_sets_adapted = adapt_base_sets_to_drivable_area(drivable_area, vec_base_sets_propagated,
-                                                                  config->reachable_set().num_threads);
+    if (drivable_area.empty()) return;
 
-    auto reachable_set_current_step = create_reachable_set_nodes(time_step, vec_base_sets_adapted,
-                                                                 config->reachable_set().num_threads);
+    auto vec_nodes = construct_reach_nodes(drivable_area, vec_base_sets_propagated, num_threads);
 
-    map_time_to_reachable_set[time_step] = reachable_set_current_step;
+    auto reachable_set = connect_children_to_parents(step, vec_nodes, num_threads);
+
+    map_time_to_reachable_set[step] = reachable_set;
+}
+
+/// Iterates through reachability graph backward in time, discards nodes that don't have a child node.
+void ReachableSet::prune_nodes_not_reaching_final_step() {
+    auto cnt_nodes_before_pruning = reachable_set_at_step(step_end).size();
+    auto cnt_nodes_after_pruning = cnt_nodes_before_pruning;
+
+    for (auto step = step_end - 1; step > step_start - 1; step--) {
+        auto vec_nodes = reachable_set_at_step(step);
+        cnt_nodes_before_pruning += vec_nodes.size();
+
+        vector<int> vec_idx_nodes_to_be_deleted{};
+        for (int idx_node = 0; idx_node < vec_nodes.size(); idx_node++) {
+            // discard the node if it has no child node
+            auto node = vec_nodes[idx_node];
+            if (node->vec_nodes_child().empty()) {
+                vec_idx_nodes_to_be_deleted.push_back(idx_node);
+                // iterate through its parent nodes and disconnect them
+                for (auto const& node_parent: node->vec_nodes_parent()) {
+                    node_parent->remove_child_node(node);
+                }
+            }
+        }
+        // discard nodes without a child
+        vector<ReachPolygonPtr> vec_drivable_area_updated{};
+        vector<ReachNodePtr> vec_reachable_set_updated{};
+        for (int idx_node = 0; idx_node < vec_nodes.size(); idx_node++) {
+            auto result = std::find(vec_idx_nodes_to_be_deleted.begin(),
+                                    vec_idx_nodes_to_be_deleted.end(),
+                                    idx_node) != vec_idx_nodes_to_be_deleted.end();
+
+            if (not result) {
+                auto node = vec_nodes[idx_node];
+                vec_drivable_area_updated.emplace_back(node->position_rectangle());
+                vec_reachable_set_updated.emplace_back(node);
+            }
+        }
+        // update drivable area and reachable set dictionaries
+        map_time_to_drivable_area[step] = vec_drivable_area_updated;
+        map_time_to_reachable_set[step] = vec_reachable_set_updated;
+        cnt_nodes_after_pruning += map_time_to_reachable_set[step].size();
+    }
+
+    _pruned = true;
+    cout << "\t#Nodes before pruning: \t" << cnt_nodes_before_pruning << endl;
+    cout << "\t#Nodes after pruning: \t" << cnt_nodes_after_pruning << endl;
 }

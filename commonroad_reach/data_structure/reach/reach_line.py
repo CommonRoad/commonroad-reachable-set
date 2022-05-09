@@ -2,7 +2,10 @@ from shapely.geometry import LineString
 
 
 class ReachLine(LineString):
-    """LineString class used in geometric operation."""
+    """Line segment used in geometric operations.
+
+    A line segment is formed with two vertices.
+    """
 
     def __init__(self, p_lon_min, p_lat_min, p_lon_max, p_lat_max):
         self.p_lon_min = p_lon_min

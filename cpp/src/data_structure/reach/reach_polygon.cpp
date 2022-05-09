@@ -1,183 +1,309 @@
 #include "reachset/data_structure/reach/reach_polygon.hpp"
-#include "reachset/data_structure/reach/reach_vertex.hpp"
 #include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 
+ReachPolygon::ReachPolygon() {
+    _sorting_state = unsorted;
+}
+
+ReachPolygon::ReachPolygon(vector<Vertex> const& vec_vertices) {
+    if (vec_vertices.size() < 3)
+        throw std::invalid_argument("A polygon requires at least 3 vertices.");
+
+    for (auto const& vertex: vec_vertices) {
+        this->vec_vertices.emplace_back(vertex);
+    }
+    compute_bounding_box();
+    _sorting_state = unsorted;
+}
+
 ReachPolygon::ReachPolygon(vector<tuple<double, double>> const& vec_vertices) {
     if (vec_vertices.size() < 3)
-        throw std::invalid_argument("<ReachPolygon> A polygon requires at least 3 vertices.");
+        throw std::invalid_argument("A polygon requires at least 3 vertices.");
 
-    // prepare a vector of Boost.Geometry points
-    vector<GeometryPoint> vec_points_geometry;
-    vec_points_geometry.reserve(vec_vertices.size());
     for (auto const& vertex: vec_vertices) {
-        vec_points_geometry.emplace_back(GeometryPoint{std::get<0>(vertex), std::get<1>(vertex)});
+        this->vec_vertices.emplace_back(Vertex{std::get<0>(vertex), std::get<1>(vertex)});
     }
-
-    // create Boost.Geometry polygon
-    _polygon = make_shared<GeometryPolygon>();
-    _polygon->outer().assign(vec_points_geometry.begin(), vec_points_geometry.end());
-    bg::correct(*_polygon);
-
-    // update bounding box of the polygon
-    update_bounding_box();
+    compute_bounding_box();
+    _sorting_state = unsorted;
 }
 
-ReachPolygon::ReachPolygon(GeometryPolygon const& polygon, bool const& correct) {
-    _polygon = make_shared<GeometryPolygon>();
-    _polygon->outer().assign(polygon.outer().cbegin(), polygon.outer().cend());
-    if (correct) bg::correct(*_polygon);
-
-    // update bounding box of the polygon
-    update_bounding_box();
-}
-
-
-ReachPolygonPtr ReachPolygon::clone() const {
-    return make_shared<ReachPolygon>(*_polygon, false);
-}
-
-
-void ReachPolygon::update_bounding_box() {
-    auto envelope = bg::return_envelope<GeometryBox>(*(_polygon));
-    _box = {envelope.min_corner().x(), envelope.min_corner().y(),
-            envelope.max_corner().x(), envelope.max_corner().y()};
-}
-
-ReachPolygonPtr ReachPolygon::from_rectangle_coordinates(double const& p_lon_min, double const& p_lat_min,
-                                                         double const& p_lon_max, double const& p_lat_max) {
-    vector<tuple<double, double>> vec_tuples{{p_lon_min, p_lat_min},
-                                             {p_lon_max, p_lat_min},
-                                             {p_lon_max, p_lat_max},
-                                             {p_lon_min, p_lat_max}};
-
-    return make_shared<ReachPolygon>(vec_tuples);
-}
-
-void ReachPolygon::intersect_halfspace(double const& a, double const& b, double const& c) {
-    if (a == 0 and b == 0)
-        throw std::invalid_argument("<ReachPolygon> Halfspace parameters not valid.");
-
-    if (_polygon == nullptr)
-        return;
-
-    // construct halfspace polygon
-    ReachPolygonPtr polygon_halfspace = construct_halfspace_polygon(a, b, c, _box);
-
-    // take intersection
-    vector<GeometryPolygon> vec_polygons_intersected;
-    bg::intersection(*(_polygon), *(polygon_halfspace->_polygon), vec_polygons_intersected);
-
-    if (not vec_polygons_intersected.empty()) {
-        if (vec_polygons_intersected.size() != 1)
-            cout << "<ReachPolygon> Intersection created multiple polygons.";
-
-        _polygon = make_shared<GeometryPolygon>(vec_polygons_intersected[0]);
-
-        // update bounding box of the polygon
-        update_bounding_box();
-    } else {
-        _polygon = nullptr;
-        _box = {{},
-                {},
-                {},
-                {}};
+ReachPolygon::ReachPolygon(double const& p_lon_min, double const& p_lat_min,
+                           double const& p_lon_max, double const& p_lat_max) {
+    vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_max},
+                                     Vertex{p_lon_min, p_lat_max}};
+    for (auto const& vertex: vec_vertices_temp) {
+        this->vec_vertices.emplace_back(vertex);
     }
+    compute_bounding_box();
+    _sorting_state = ccw;
 }
 
+ReachPolygon::ReachPolygon(std::tuple<double, double, double, double> const& tuple_coordinates) {
+    auto[p_lon_min, p_lat_min, p_lon_max, p_lat_max] = tuple_coordinates;
+    vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_min},
+                                     Vertex{p_lon_max, p_lat_max},
+                                     Vertex{p_lon_min, p_lat_max}};
+    for (auto const& vertex: vec_vertices_temp) {
+        this->vec_vertices.emplace_back(vertex);
+    }
+    compute_bounding_box();
+    _sorting_state = ccw;
+}
 
-ReachPolygonPtr ReachPolygon::construct_halfspace_polygon(double const& a, double const& b, double const& c,
-                                                          tuple<double, double, double, double> const& bounding_box) {
-    // margin to enlarge the polygon at the boundaries
-    auto margin = 10;
-    auto[x_min, y_min, x_max, y_max] = bounding_box;
-    auto dist_diagonal = std::sqrt(std::pow(x_max - x_min, 2) + std::pow(y_max - y_min, 2));
+ReachPolygon::ReachPolygon(vector<ReachPolygonPtr> const& vec_polygons) {
+    auto num_vertices = vec_vertices.size();
+    for (auto const& polygon: vec_polygons) {
+        num_vertices += polygon->vec_vertices.size();
+    }
+    vec_vertices.reserve(num_vertices);
 
-    vector<tuple<double, double>> vec_vertices;
-    if (b == 0) { // horizontal
-        if (a > 0) { // ax <= c
-            vec_vertices.emplace_back(make_tuple(c / a, y_min - margin));
-            vec_vertices.emplace_back(make_tuple(c / a, y_max + margin));
-            vec_vertices.emplace_back(make_tuple(x_min - margin, y_max + margin));
-            vec_vertices.emplace_back(make_tuple(x_min - margin, y_min - margin));
-        } else { // -ax <= c
-            vec_vertices.emplace_back(make_tuple(c / a, y_min - margin));
-            vec_vertices.emplace_back(make_tuple(c / a, y_max + margin));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, y_max + margin));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, y_min - margin));
-        }
-    } else if (a == 0) { // vertical
-        if (b > 0) { // by <= c
-            vec_vertices.emplace_back(make_tuple(x_min - margin, c / b));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, c / b));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, y_min - margin));
-            vec_vertices.emplace_back(make_tuple(x_min - margin, y_min - margin));
-        } else { // -by <= c
-            vec_vertices.emplace_back(make_tuple(x_min - margin, c / b));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, c / b));
-            vec_vertices.emplace_back(make_tuple(x_max + margin, y_max + margin));
-            vec_vertices.emplace_back(make_tuple(x_min - margin, y_max + margin));
-        }
-    } else { // general case
-        // First compute two arbitrary vertices that are far away from the x coordinates, then compute the slope of the
-        // vector that is perpendicular to the vector connecting these two vertices to look for remaining two vertices
-        // necessary for the polygon construction.
-        margin = 100;
-        for (auto const& x: {x_min - margin, x_max + margin}) {
-            double y = (-a * x + c) / b;
-            vec_vertices.emplace_back(make_tuple(x, y));
-        }
-        auto vertex1 = vec_vertices[0];
-        auto vertex2 = vec_vertices[1];
-
-        auto sign = a > 0 ? -1 : 1;
-        auto slope_perpendicular = make_tuple(1 * sign, b / a * sign);
-        auto theta = std::atan2(std::get<1>(slope_perpendicular), std::get<0>(slope_perpendicular));
-
-        for (auto const& vertex: {vertex2, vertex1}) {
-            // dist_diagonal * 100 is just an arbitrarily large distance
-            auto x_new = std::get<0>(vertex) + dist_diagonal * 100 * std::cos(theta);
-            auto y_new = std::get<1>(vertex) + dist_diagonal * 100 * std::sin(theta);
-            vec_vertices.emplace_back(make_tuple(x_new, y_new));
+    for (auto const& polygon: vec_polygons) {
+        for (auto const& vertex: polygon->vec_vertices) {
+            vec_vertices.emplace_back(vertex);
         }
     }
 
-    return make_shared<ReachPolygon>(vec_vertices);
+    if (vec_vertices.size() < 3)
+        throw std::invalid_argument("A polygon requires at least 3 vertices.");
+
+    compute_bounding_box();
+    _sorting_state = unsorted;
+}
+
+void ReachPolygon::_sort_vertices_left_to_right() {
+    if (_sorting_state == left_to_right) { return; }
+
+    std::sort(vec_vertices.begin(), vec_vertices.end(),
+              [](Vertex const& vertex1, Vertex const& vertex2) {
+                  if (vertex1.x < vertex2.x) { return true; }
+                  if (vertex1.x > vertex2.x) { return false; }
+                  if (vertex1.y < vertex2.y) { return true; }
+                  if (vertex1.y > vertex2.y) { return false; }
+                  return false;
+              });
+
+    _sorting_state = left_to_right;
+}
+
+/// Removes an element if it is equal to its predecessor is equal. The first element is compared with the last
+/// element. The meaning of the operation depends on how the vertex array is sorted.
+void ReachPolygon::_remove_duplicated_vertices() {
+    // obtain unique vertices
+    auto idx_last = std::unique(vec_vertices.begin(), vec_vertices.end(),
+                                [](Vertex const& vertex1, Vertex const& vertex2) {
+                                    return vertex1.x == vertex2.x && vertex1.y == vertex2.y;
+                                });
+    vec_vertices.erase(idx_last, vec_vertices.end());
+
+    if (vec_vertices.size() > 1 &&
+        vec_vertices[vec_vertices.size() - 1].x == vec_vertices[0].x &&
+        vec_vertices[vec_vertices.size() - 1].y == vec_vertices[0].y) {
+        vec_vertices.erase(vec_vertices.begin());
+    }
+}
+
+void ReachPolygon::print_info() const {
+    auto num_vertices = vec_vertices.size();
+    cout << "==============" << endl;
+    cout << "# of vertices: " << num_vertices << endl;
+    cout << "bounding box: " << p_lon_min() << ", " << p_lat_min() << ", " << p_lon_max() << ", " << p_lat_max()
+         << endl;
+
+    for (auto const& vec: vec_vertices) {
+        cout << "(" << vec.x << ", " << vec.y << ")" << endl;
+    }
+}
+
+void ReachPolygon::compute_bounding_box() {
+    auto p_lon_min = std::numeric_limits<double>::infinity();
+    auto p_lat_min = std::numeric_limits<double>::infinity();
+    auto p_lon_max = -std::numeric_limits<double>::infinity();
+    auto p_lat_max = -std::numeric_limits<double>::infinity();
+
+    for (auto const& vertex: vec_vertices) {
+        p_lon_min = std::min(p_lon_min, vertex.p_lon());
+        p_lat_min = std::min(p_lat_min, vertex.p_lat());
+        p_lon_max = std::max(p_lon_max, vertex.p_lon());
+        p_lat_max = std::max(p_lat_max, vertex.p_lat());
+    }
+
+    _box = {p_lon_min, p_lat_min, p_lon_max, p_lat_max};
+}
+
+
+void ReachPolygon::sort_vertices_bottom_left_first() {
+    if (_sorting_state == ccw_bottom_left_first) { return; }
+    convexify();
+
+    // find bottom left element
+    int min_i = 0;
+    for (int i = 1; i < vec_vertices.size(); i++) {
+        if (vec_vertices[min_i].y > vec_vertices[i].y) {
+            min_i = i;
+        } else if (vec_vertices[min_i].y == vec_vertices[i].y) {
+            if (vec_vertices[min_i].x > vec_vertices[i].x) {
+                min_i = i;
+            }
+        }
+    }
+
+    // swap all elements
+    vector<Vertex> vertices_swap;
+    vertices_swap.resize(vec_vertices.size());
+    for (int i = 0; i < vec_vertices.size(); i++) {
+        vertices_swap[i] = get_vertex_with_cyclic_index(min_i + i);
+    }
+
+    vec_vertices = vertices_swap;
+    _sorting_state = ccw_bottom_left_first;
 }
 
 void ReachPolygon::convexify() {
-    GeometryPolygon polygon_convexified;
+    if (_sorting_state == ccw || _sorting_state == ccw_bottom_left_first) return;
 
-    bg::convex_hull(*(_polygon), polygon_convexified);
-    bg::assign(_polygon->outer(), polygon_convexified.outer());
+    _sort_vertices_left_to_right();
+    _remove_duplicated_vertices();
 
-    update_bounding_box();
-}
-
-void ReachPolygon::linear_mapping(double const& a11, double const& a12, double const& a21, double const& a22) {
-    for (auto& vertex: _polygon->outer()) {
-        auto x_new = a11 * vertex.x() + a12 * vertex.y();
-        auto y_new = a21 * vertex.x() + a22 * vertex.y();
-        vertex.set<0>(x_new);
-        vertex.set<1>(y_new);
-    }
-    bg::correct(*(_polygon));
-
-    update_bounding_box();
-}
-
-
-void ReachPolygon::print_vertices() const {
-    for (auto const& vertex: vertices()) {
-        cout << "\t(" << bg::get<0>(vertex) << ", " << bg::get<1>(vertex) << "), " << endl;
-    }
-}
-
-void ReachPolygon::minkowski_sum(ReachPolygonPtr const& polygon_other) {
-    if (this->empty() or polygon_other->empty()) {
+    if (vec_vertices.size() < 3) {
+        _sorting_state = ccw;
         return;
     }
+
+    auto cross = [](Vertex const& o, Vertex const& a, Vertex const& b) {
+        return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+    };
+
+    int k = 0;
+    vector<Vertex> hull(2 * vec_vertices.size());
+
+    // Build lower hull
+    for (auto& vertex: vec_vertices) {
+        while (k >= 2 && cross(hull[k - 2], hull[k - 1], vertex) <= 0) {
+            k--;
+        }
+        hull[k++] = vertex;
+    }
+
+    // Build upper hull
+    for (int i = static_cast<int>(vec_vertices.size()) - 2, t = k + 1; i >= 0; i--) {
+        while (k >= t && cross(hull[k - 2], hull[k - 1], vec_vertices[i]) <= 0) {
+            k--;
+        }
+        hull[k++] = vec_vertices[i];
+    }
+
+    hull.resize(k - 1); // modified from original version
+    vec_vertices = hull;
+    _sorting_state = ccw;
+    compute_bounding_box();
+}
+
+/// Searches in counter-clockwise order through vertices for two vertices marked by index r and q:
+/// vertex[q] is inside the intersected polyhedron, but its previous vertex not
+/// vertex[r] is inside the intersected polyhedron, but its successor vertex not
+/// If the intersected polyhedron is empty or equals the original one, then there is no valid q and r.
+/// The new polygon is constructed using the vertices[r..q] plus the two intersections point with the halfspace.
+void ReachPolygon::intersect_halfspace(double a, double b, double c) {
+    if (a == 0 and b == 0) {
+        cout << "Halfspace parameters are invalid." << endl;
+        return;
+    }
+    if (vec_vertices.empty()) { return; }
+
+    bool any_inside = false;
+
+    auto inside = [&a, &b, &c, &any_inside, this](std::size_t i) {
+        bool ret = (a * vec_vertices[i].x + b * vec_vertices[i].y < c);
+        if (ret) { any_inside = true; }
+        return ret;
+    };
+
+    // intersection between a line in parametric representation and another line
+    // given by two points
+    auto intersection = [&a, &b, &c](Vertex& pt1, Vertex& pt2) {
+        double a21 = pt2.y - pt1.y;
+        double a22 = -(pt2.x - pt1.x);
+        double b2 = a21 * pt2.x + a22 * pt2.y;
+        double detA = a * a22 - b * a21;
+
+        return Vertex{(c * a22 - b2 * b) / detA, (a * b2 - a21 * c) / detA};
+    };
+
+    if (vec_vertices.size() == 1) {
+        if (inside(0)) return;
+        else {
+            vec_vertices.clear();
+            _sorting_state = ccw;
+            return;
+        }
+    }
+
+    int q = -1; // q is inside, prev(q) is not inside
+    int r = -1; // r is inside, next(r) is not inside
+
+    for (int i = 1; i < vec_vertices.size() - 1; i++) {
+        if (inside(i)) {
+            if (!inside(i - 1)) { q = i; }
+            if (!inside(i + 1)) { r = i; }
+        }
+    }
+    if (!inside(vec_vertices.size() - 1) && inside(0)) { q = 0; }
+    if (!inside(vec_vertices.size() - 2) && inside(vec_vertices.size() - 1)) {
+        q = static_cast<int>(vec_vertices.size()) - 1;
+    }
+
+    if (inside(vec_vertices.size() - 1) && !inside(0)) {
+        r = static_cast<int>(vec_vertices.size()) - 1;
+    }
+    if (inside(0) && !inside(1)) { r = 0; }
+
+    assert(q == -1 ? r == q : true); // if q==-1 then also r==-1
+    if (q == -1) {
+        if (any_inside) return;
+        else {
+            // polyhedron is empty
+            vec_vertices.clear();
+            _sorting_state = ccw;
+            return;
+        }
+    }
+
+    int qq = q - 1 < 0 ? static_cast<int>(vec_vertices.size()) - 1 : q - 1; // qq = prev(q)
+    int rr = r + 1 > vec_vertices.size() - 1 ? 0 : r + 1; // rr = next(rr)
+
+    // create new polygon by taking i elements from old and add two intersection
+    // points.
+    // This is not correct if the polyhedron has only two vertices, but
+    // "removeDuplicateVec2" corrects this.
+    size_t n = (r >= q ? r - q + 1 : r + vec_vertices.size() - q + 1);
+    vector<Vertex> vertices_new;
+    vertices_new.reserve(n + 2);
+    for (size_t i = 0; i < n; i++) {
+        vertices_new.push_back(get_vertex_with_cyclic_index(q + i));
+    }
+
+    vertices_new.emplace_back(intersection(vec_vertices[r], vec_vertices[rr]));
+    vertices_new.emplace_back(intersection(vec_vertices[q], vec_vertices[qq]));
+
+    vec_vertices = vertices_new;
+    _sorting_state = ccw;
+    _remove_duplicated_vertices();
+    compute_bounding_box();
+}
+
+
+void ReachPolygon::minkowski_sum(std::shared_ptr<ReachPolygon> const& polygon_other) {
+    if (this->empty() or polygon_other->empty()) return;
+
+    auto polygon_sum = make_shared<ReachPolygon>();
+    vector<tuple<double, double>> vec_vertices_sum;
+    // prepare for summation by convexify and sorting the vertices of the polygons
+    sort_vertices_bottom_left_first();
 
     auto vertices_self = this->vertices();
     auto vertices_other = polygon_other->vertices();
@@ -187,27 +313,17 @@ void ReachPolygon::minkowski_sum(ReachPolygonPtr const& polygon_other) {
     auto idx_self = 0, idx_other = 0;
 
     Vertex vector_self, vector_other;
-    vector<tuple<double, double>> vec_vertices_sum;
     while (true) {
-        // insert summed vertex
-        auto x_sum = vertices_self.at(idx_self % num_vertices_self).x() +
-                     vertices_other.at(idx_other % num_vertices_other).x();
-        auto y_sum = vertices_self.at(idx_self % num_vertices_self).y() +
-                     vertices_other.at(idx_other % num_vertices_other).y();
-        vec_vertices_sum.emplace_back(make_tuple(x_sum, y_sum));
-
-        // shift to next vertex
-        vector_self.x = vertices_self.at((idx_self + 1) % num_vertices_self).x() -
-                        vertices_self.at(idx_self % num_vertices_self).x();
-        vector_self.y = vertices_self.at((idx_self + 1) % num_vertices_self).y() -
-                        vertices_self.at(idx_self % num_vertices_self).y();
-        vector_other.x = vertices_other.at((idx_other + 1) % num_vertices_other).x() -
-                         vertices_other.at(idx_other % num_vertices_other).x();
-        vector_other.y = vertices_other.at((idx_other + 1) % num_vertices_other).y() -
-                         vertices_other.at(idx_other % num_vertices_other).y();
+        polygon_sum->add_vertex(get_vertex_with_cyclic_index(idx_self) +
+                                polygon_other->get_vertex_with_cyclic_index(idx_other));
+        vector_self = get_vertex_with_cyclic_index(idx_self + 1) -
+                      get_vertex_with_cyclic_index(idx_self);
+        vector_other = polygon_other->get_vertex_with_cyclic_index(idx_other + 1) -
+                       polygon_other->get_vertex_with_cyclic_index(idx_other);
 
         if (reach_end_self)
             idx_other++;
+
         else if (reach_end_other)
             idx_self++;
 
@@ -237,43 +353,13 @@ void ReachPolygon::minkowski_sum(ReachPolygonPtr const& polygon_other) {
         if (reach_end_self and reach_end_other) {
             break;
         }
+
     }
 
-    // remove duplicated vertices
-    auto it_end = std::unique(vec_vertices_sum.begin(), vec_vertices_sum.end(),
-                              [](tuple<double, double> const& a, tuple<double, double> const& b) {
-                                  return std::get<0>(a) == std::get<0>(b) and
-                                         std::get<1>(a) == std::get<1>(b);
-                              });
-    vec_vertices_sum.erase(it_end, vec_vertices_sum.end());
+    polygon_sum->_remove_duplicated_vertices();
 
-    if (vec_vertices_sum.size() > 1 and
-        std::get<0>(*(vec_vertices_sum.end())) == std::get<0>(*(vec_vertices_sum.cbegin())) and
-        std::get<1>(*(vec_vertices_sum.end())) == std::get<1>(*(vec_vertices_sum.cbegin()))) {
-        vec_vertices_sum.erase(vec_vertices_sum.begin());
-    }
-
-    auto polygon_sum = ReachPolygon(vec_vertices_sum);
-    bg::correct(*(polygon_sum.geometry_polygon()));
-    polygon_sum.convexify();
-    bg::assign(_polygon->outer(), polygon_sum.geometry_polygon()->outer());
-    update_bounding_box();
-}
-
-bool ReachPolygon::intersects(ReachPolygonPtr const& polygon_other) const {
-    return bg::intersects(*_polygon, *(polygon_other->geometry_polygon()));
-}
-
-vector<ReachPolygonPtr> ReachPolygon::intersection(ReachPolygonPtr const& polygon_other) const {
-    std::deque<GeometryPolygon> intersection;
-    vector<ReachPolygonPtr> result;
-
-    bg::intersection(*_polygon, *(polygon_other->geometry_polygon()), intersection);
-
-    result.reserve(intersection.size());
-    for (auto const& polygon: intersection) {
-        result.emplace_back(make_shared<ReachPolygon>(polygon));
-    }
-
-    return result;
+    vec_vertices.clear();
+    vec_vertices = polygon_sum->vertices();
+    _sorting_state = ccw_bottom_left_first;
+    compute_bounding_box();
 }

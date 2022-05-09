@@ -1,6 +1,6 @@
 dt: 0.1
-time_step_start: 0
-time_steps_computation: 30
+step_start: 0
+steps_computation: 30
 
 # position uncertainty in two directions
 uncertainty_p_lon: 0.01
@@ -9,8 +9,6 @@ uncertainty_v_lon: 0.01
 uncertainty_v_lat: 0.01
 
 # this can either be "CART" (Cartesian) or "CVLN" (Curvilinear)
-#coordinate_system: "CART"
 coordinate_system: "CVLN"
-
 # this can either be "CENTER" or "REAR"
 reference_point: "CENTER"

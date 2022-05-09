@@ -11,7 +11,8 @@ void export_data_structures(py::module& m) {
 
 void export_reach_polygon(py::module& m) {
     py::class_<ReachPolygon, shared_ptr<ReachPolygon>>(m, "ReachPolygon")
-            .def(py::init<vector<tuple<double, double>> const&>(), py::arg("vec_vertices"))
+            .def(py::init<vector<tuple<double, double>> const&>(),
+                    py::arg("vec_vertices"))
             .def("p_min", &ReachPolygon::p_min)
             .def("p_max", &ReachPolygon::p_max)
             .def("v_min", &ReachPolygon::v_min)
@@ -25,7 +26,7 @@ void export_reach_polygon(py::module& m) {
             .def("vertices", [](ReachPolygon const& polygon) {
                 py::list list_tuples_vertices;
                 for (auto const& vertex: polygon.vertices()) {
-                    list_tuples_vertices.append(py::make_tuple(bg::get<0>(vertex), bg::get<1>(vertex)));
+                    list_tuples_vertices.append(py::make_tuple(vertex.p_lon(), vertex.p_lat()));
                 }
                 return list_tuples_vertices;
             })
@@ -51,10 +52,9 @@ void export_reach_node(py::module& m) {
             .def("vec_nodes_parent", &ReachNode::vec_nodes_parent)
             .def("vec_nodes_child", &ReachNode::vec_nodes_child)
             .def_readonly("id", &ReachNode::id)
-            .def_readonly("time_step", &ReachNode::time_step)
+            .def_readonly("step", &ReachNode::step)
             .def_readonly("polygon_lon", &ReachNode::polygon_lon)
             .def_readonly("polygon_lat", &ReachNode::polygon_lat)
-            .def_readonly("set_propositions", &ReachNode::set_propositions)
             .def("__repr__", [](ReachNode const& node) {
                 return "(" + std::to_string(node.p_lon_min()) + ", " + std::to_string(node.p_lat_min())
                        + ", " + std::to_string(node.p_lon_max()) + ", " + std::to_string(node.p_lat_max()) + ")";
@@ -132,8 +132,8 @@ void export_configuration(py::module& m) {
     py::class_<PlanningConfiguration, shared_ptr<PlanningConfiguration>>(m, "PlanningConfiguration")
             .def(py::init<>())
             .def_readwrite("dt", &PlanningConfiguration::dt)
-            .def_readwrite("time_step_start", &PlanningConfiguration::time_step_start)
-            .def_readwrite("time_steps_computation", &PlanningConfiguration::time_steps_computation)
+            .def_readwrite("step_start", &PlanningConfiguration::step_start)
+            .def_readwrite("steps_computation", &PlanningConfiguration::steps_computation)
             .def_readwrite("p_lon_initial", &PlanningConfiguration::p_lon_initial)
             .def_readwrite("p_lat_initial", &PlanningConfiguration::p_lat_initial)
             .def_readwrite("uncertainty_p_lon", &PlanningConfiguration::uncertainty_p_lon)
@@ -142,17 +142,19 @@ void export_configuration(py::module& m) {
             .def_readwrite("v_lat_initial", &PlanningConfiguration::v_lat_initial)
             .def_readwrite("uncertainty_v_lon", &PlanningConfiguration::uncertainty_v_lon)
             .def_readwrite("uncertainty_v_lat", &PlanningConfiguration::uncertainty_v_lat)
-            .def_readwrite("time_step_start", &PlanningConfiguration::time_step_start)
+            .def_readwrite("step_start", &PlanningConfiguration::step_start)
             .def_readwrite("id_lanelet_initial", &PlanningConfiguration::id_lanelet_initial)
             .def_readwrite("coordinate_system", &PlanningConfiguration::coordinate_system)
             .def_readwrite("reference_point", &PlanningConfiguration::reference_point);
 
     py::class_<ReachableSetConfiguration, shared_ptr<ReachableSetConfiguration>>(m, "ReachableSetConfiguration")
             .def(py::init<>())
+            .def_readwrite("mode_repartition", &ReachableSetConfiguration::mode_repartition)
             .def_readwrite("size_grid", &ReachableSetConfiguration::size_grid)
             .def_readwrite("size_grid_2nd", &ReachableSetConfiguration::size_grid_2nd)
             .def_readwrite("radius_terminal_split", &ReachableSetConfiguration::radius_terminal_split)
-            .def_readwrite("num_threads", &ReachableSetConfiguration::num_threads);
+            .def_readwrite("num_threads", &ReachableSetConfiguration::num_threads)
+            .def_readwrite("prune_nodes",&ReachableSetConfiguration::prune_nodes);
 
     py::class_<DebugConfiguration, shared_ptr<DebugConfiguration>>(m, "DebugConfiguration")
             .def(py::init<>())

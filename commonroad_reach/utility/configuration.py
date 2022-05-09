@@ -6,7 +6,7 @@ import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
 
 
-def compute_disc_radius_and_wheelbase(length, width, wheelbase: float = None):
+def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: float = None):
     """Computes the radius of the discs to approximate the shape of vehicle.
     
     If wheelbase is not given, it is assumed that the front and rear axles are positioned at length/6
@@ -35,6 +35,20 @@ def compute_disc_radius_and_wheelbase(length, width, wheelbase: float = None):
     radius_disc = ceil(radius * 10) / 10
 
     return radius_disc, wheelbase
+
+
+def compute_inflation_radius(mode_inflation: int, length: float, width: float):
+    """Computes the radius to inflate the obstacles for collision check.
+
+    Based on the specified mode, we obtain either under- or over-approximation of the shape of the ego vehicle.
+    """
+    assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
+
+    if mode_inflation == 1:
+        return length / 2 if length < width else width / 2
+
+    elif mode_inflation == 2:
+        return length / 2 if length > width else width / 2
 
 
 def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,

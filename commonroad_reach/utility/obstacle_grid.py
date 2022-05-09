@@ -1,11 +1,9 @@
-import math
+from typing import Tuple, Dict
 
 import commonroad_dc.pycrcc as pycrcc
-
-from typing import Tuple, Dict
-from collections import defaultdict
 import cv2 as cv
 import numpy as np
+
 from commonroad_reach.data_structure.configuration import PlanningConfiguration
 from commonroad_reach.utility.util_py_grid_online_reach import convert_cart2pixel_coordinates_c, get_vertices_from_rect
 
@@ -16,7 +14,7 @@ CONVEX_SHAPE = True
 class ObstacleRegularGrid:
     def __init__(self, ll: Dict[int, np.ndarray], ur: Dict[int, np.ndarray], collision_checker: pycrcc.CollisionChecker,
                  dx: float, dy: float, planning_config: PlanningConfiguration, a_x: float, a_y: float, t_f: float,
-                 grid_shapes: Dict[int, Tuple[int,int]]):
+                 grid_shapes: Dict[int, Tuple[int, int]]):
         """
         Class for computing uniformly spatial partitioned grid of obstacles
         :param collision_object_dict:
@@ -62,18 +60,18 @@ class ObstacleRegularGrid:
         self.ll: Dict[int, np.ndarray] = ll
         self.ur: Dict[int, np.ndarray] = ur
 
-    def occupancy_grid_at_time(self, time_step: int, translate_reachset: np.ndarray) -> np.ndarray:
+    def occupancy_grid_at_time(self, step: int, translate_reachset: np.ndarray) -> np.ndarray:
         """
         Get occupancy matrix defined over regular grid with 0 = occupied, 1 = free space.
-        :param time_step: time step of evaluation
+        :param step: step of evaluation
         :param translate_reachset: translation of reachable set
         :return:
         """
-        occupancy_grid = np.ones(self.grid_shapes[time_step], dtype=np.uint8)
+        occupancy_grid = np.ones(self.grid_shapes[step], dtype=np.uint8)
 
         # origin of rect grid
-        ur_translated = self.ur[time_step] + translate_reachset
-        ll_translated = self.ll[time_step] + translate_reachset
+        ur_translated = self.ur[step] + translate_reachset
+        ll_translated = self.ll[step] + translate_reachset
         collision_reachable_area_tmp = pycrcc.RectAABB((ur_translated[0] - ll_translated[0]) / 2,
                                                        (ur_translated[1] - ll_translated[1]) / 2,
                                                        (ur_translated[0] + ll_translated[0]) / 2,
@@ -87,7 +85,7 @@ class ObstacleRegularGrid:
                                                                ll_translated=ll_translated)
 
         cc_dynamic: pycrcc.CollisionChecker = \
-            self.cc_dynamic.time_slice(time_step).window_query(collision_reachable_area_tmp)
+            self.cc_dynamic.time_slice(step).window_query(collision_reachable_area_tmp)
 
         for obs in cc_dynamic.obstacles():
             occupancy_grid = self._add_obstacle_at_time_opencv(obs, occupancy_grid,

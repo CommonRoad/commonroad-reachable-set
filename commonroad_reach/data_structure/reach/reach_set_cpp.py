@@ -4,9 +4,9 @@ from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 
 logger = logging.getLogger(__name__)
 
-import pycrreach as reach
+import commonroad_reach.pycrreach as reach
 
-from commonroad_reach.data_structure.collision_checker_cpp import CppCollisionChecker
+from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration
 
 
@@ -15,24 +15,23 @@ class CppReachableSet(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
-        config_cpp = self.config.convert_to_cpp_configuration()
+        self._reach = reach.ReachableSet(self.config.convert_to_cpp_configuration(),
+                                         CollisionChecker(self.config).cpp_collision_checker)
 
-        cc = CppCollisionChecker(self.config)
-        self._reach = reach.ReachableSet(config_cpp, cc.collision_checker)
+        logger.info("CppReachableSet initialized.")
 
-    def compute_reachable_sets(self, time_step_start: int, time_step_end: int):
+    def compute(self, step_start: int, step_end: int):
         """Computes reachable sets for the specified time steps."""
-        for time_step in range(time_step_start, time_step_end + 1):
-            logger.debug(f"Computing reachable set for time step {time_step}")
-            self._reach.compute(time_step, time_step)
-            self._list_time_steps_computed.append(time_step)
+        for step in range(step_start, step_end + 1):
+            logger.debug(f"Computing reachable set for time step {step}")
+            self._reach.compute(step, step)
+            self._list_steps_computed.append(step)
 
-        self._dict_time_to_drivable_area = self._reach.drivable_area()
-        self._dict_time_to_reachable_set = self._reach.reachable_set()
+        self.dict_time_to_drivable_area = self._reach.drivable_area()
+        self.dict_time_to_reachable_set = self._reach.reachable_set()
 
-        if self.config.reachable_set.prune_nodes_not_reaching_final_time_step:
-            self._prune_nodes_not_reaching_final_time_step()
+        if self.config.reachable_set.prune_nodes_not_reaching_final_step:
+            self._prune_nodes_not_reaching_final_step()
 
-    def _prune_nodes_not_reaching_final_time_step(self):
-        # todo: add pruning in the C++ side
-        pass
+    def _prune_nodes_not_reaching_final_step(self):
+        self._reach.prune_nodes_not_reaching_final_step()

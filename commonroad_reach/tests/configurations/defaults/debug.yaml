@@ -1,2 +1,16 @@
 save_plots: 1
 save_config: 1
+
+# visualization settings
+# draw the reference the path
+draw_ref_path: False
+# draw the planning problem
+draw_planning_problem: False
+# visualize dynamic obstacles with icons
+draw_icons: False
+# plot limits: [x_min, x_max, y_min, y_max]; if set to !!null, they will be computed automatically from reachable sets
+plot_limits: !!null
+# settings for 3D plots
+plot_azimuth: -120
+plot_elevation: 30
+ax_distance: 7

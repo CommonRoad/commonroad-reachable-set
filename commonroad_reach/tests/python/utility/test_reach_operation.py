@@ -5,9 +5,9 @@ import pytest
 from shapely.geometry.point import Point
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.reach_analysis import ReachabilityAnalysis
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
 from commonroad_reach.utility import reach_operation
 
 
@@ -89,7 +89,7 @@ def test_propagate_polygon(config: Configuration):
                               (46.0, 20.0),
                               (72.0, 20.0)]
 
-    reachability_analysis = ReachabilityAnalysis(config)
+    reachability_analysis = PyReachableSet(config)
     polygon_lon = ReachPolygon(list_vertices)
     polygon_propagated = reach_operation.propagate_polygon(polygon_lon,
                                                            reachability_analysis.polygon_zero_state_lon,
@@ -163,8 +163,8 @@ def test_create_base_set_from_position_region():
     list_vertices_lon_expected = [(5, 10), (9.5, 0.5), (9.5, 14.5), (9.5, 19.5)]
     list_vertices_lat_expected = [(2, -4), (5, 2), (5, 7), (5, 11.9)]
 
-    base_set_adapted = reach_operation.adapt_base_set_to_drivable_area(rectangle_drivable_area,
-                                                                       list_idx_base_sets_adjacent, list_base_sets)
+    base_set_adapted = reach_operation.construct_reach_node(rectangle_drivable_area, list_base_sets,
+                                                            list_idx_base_sets_adjacent)
 
     for vertex in list_vertices_lon_expected:
         assert base_set_adapted.polygon_lon.contains(Point(vertex))
