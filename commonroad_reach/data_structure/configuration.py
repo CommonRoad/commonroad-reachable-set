@@ -8,6 +8,8 @@ from typing import Optional, Union
 import commonroad_reach.pycrreach as reach
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
+from commonroad.common.solution import VehicleType
+from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import ListConfig, DictConfig
 
@@ -182,23 +184,27 @@ class VehicleConfiguration:
             self.id_type_vehicle = config_relevant.id_type_vehicle
             self.id_vehicle = None
 
-            self.length = config_relevant.length
-            self.width = config_relevant.width
+            #load vehicle parameters according to id_type_vehicle
+            vehicle_parameters = VehicleParameterMapping.from_vehicle_type(VehicleType(self.id_type_vehicle))
 
-            self.v_lon_min = config_relevant.v_lon_min
-            self.v_lon_max = config_relevant.v_lon_max
-            self.v_lat_min = config_relevant.v_lat_min
+            self.length = vehicle_parameters.l
+            self.width = vehicle_parameters.w
+
+            self.v_lon_min = vehicle_parameters.longitudinal.v_min
+            self.v_lon_max = vehicle_parameters.longitudinal.v_max
+            self.v_lat_min = config_relevant.v_lat_min # TODO:extract from vehicle parameters?
             self.v_lat_max = config_relevant.v_lat_max
-            self.v_max = config_relevant.v_max
+            self.v_max = vehicle_parameters.longitudinal.v_max #config_relevant.v_max
 
-            self.a_lon_max = config_relevant.a_lon_max
-            self.a_lon_min = config_relevant.a_lon_min
-            self.a_lat_max = config_relevant.a_lat_max
-            self.a_lat_min = config_relevant.a_lat_min
-            self.a_max = config_relevant.a_max
+            self.a_lon_max = vehicle_parameters.longitudinal.a_max # config_relevant.a_lon_max
+            self.a_lon_min = -vehicle_parameters.longitudinal.a_max
+            self.a_lat_max = vehicle_parameters.longitudinal.a_max
+            self.a_lat_min = -vehicle_parameters.longitudinal.a_max
+            self.a_max = vehicle_parameters.longitudinal.a_max
 
+            self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
             self.radius_disc, self.wheelbase = \
-                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width)
+                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width)
 
@@ -209,22 +215,26 @@ class VehicleConfiguration:
             self.id_type_vehicle = config_relevant.id_type_vehicle
             self.id_vehicle = None
 
-            self.length = config_relevant.length
-            self.width = config_relevant.width
+            vehicle_parameters = VehicleParameterMapping.from_vehicle_type(VehicleType(self.id_type_vehicle))
 
-            self.v_lon_min = config_relevant.v_lon_min
-            self.v_lon_max = config_relevant.v_lon_max
-            self.v_lat_min = config_relevant.v_lat_min
+            self.length = vehicle_parameters.l
+            self.width = vehicle_parameters.w
+
+            self.v_lon_min = vehicle_parameters.longitudinal.v_min
+            self.v_lon_max = vehicle_parameters.longitudinal.v_max
+            self.v_lat_min = config_relevant.v_lat_min # TODO:extract from vehicle parameters?
             self.v_lat_max = config_relevant.v_lat_max
+            self.v_max = vehicle_parameters.longitudinal.v_max #config_relevant.v_max
 
-            self.a_lon_max = config_relevant.a_lon_max
-            self.a_lon_min = config_relevant.a_lon_min
-            self.a_lat_max = config_relevant.a_lat_max
-            self.a_lat_min = config_relevant.a_lat_min
-            self.a_max = config_relevant.a_max
+            self.a_lon_max = vehicle_parameters.longitudinal.a_max # config_relevant.a_lon_max
+            self.a_lon_min = -vehicle_parameters.longitudinal.a_max
+            self.a_lat_max = vehicle_parameters.longitudinal.a_max
+            self.a_lat_min = -vehicle_parameters.longitudinal.a_max
+            self.a_max = vehicle_parameters.longitudinal.a_max
 
+            self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
             self.radius_disc, self.wheelbase = \
-                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width)
+                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
 
     def __init__(self, config: Union[ListConfig, DictConfig]):
         self.ego = VehicleConfiguration.Ego(config)
