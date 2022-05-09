@@ -203,6 +203,10 @@ class VehicleConfiguration:
             self.a_max = vehicle_parameters.longitudinal.a_max
 
             self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
+
+            # overwrite if there exists parameter defined in config file
+            for key, value in config_relevant.items():
+                setattr(self, key, value)
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
