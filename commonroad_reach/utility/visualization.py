@@ -96,7 +96,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id), duration)
+        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration)
 
     message = "\tReachable sets plotted."
     print(message)
@@ -176,7 +176,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id), duration=duration)
+        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration=duration)
 
     message = "\tDrivable area plotted."
     print(message)
@@ -256,14 +256,14 @@ def draw_drivable_area(list_rectangles, config, renderer, draw_params):
 def save_fig(save_gif: bool, path_output: str, time_step: int):
     if save_gif:
         # save as png
-        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'))
-        plt.savefig(os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
+        print("\tSaving", os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'))
+        plt.savefig(os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
                     transparent=False)
 
     else:
         # save as svg
-        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.svg'))
-        plt.savefig(f'{path_output}{"reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
+        print("\tSaving", os.path.join(path_output, f'{"svg_reachset"}_{time_step:05d}.svg'))
+        plt.savefig(f'{path_output}{"svg_reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
                     transparent=False)
 
 
@@ -281,7 +281,6 @@ def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
         images.append(imageio.imread(filename))
 
     imageio.mimsave(os.path.join(path, "../", file_save_name + ".gif"), images, duration=duration)
-    print("\tGIF created.")
 
 
 def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,

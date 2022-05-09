@@ -1,5 +1,3 @@
-from math import ceil
-
 import commonroad_dc.pycrccosy as pycrccosy
 import numpy as np
 
@@ -32,7 +30,7 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
     # ceil up to 1 digit
-    radius_disc = ceil(radius * 10) / 10
+    radius_disc = np.ceil(radius * 10) / 10
 
     return radius_disc, wheelbase
 

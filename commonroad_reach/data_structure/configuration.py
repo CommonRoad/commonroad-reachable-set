@@ -78,6 +78,7 @@ class Configuration:
         string += f"# \tdt: {self.planning.dt}\n"
         string += f"# \ttime steps: {self.planning.steps_computation}\n"
         string += f"# \tcoordinate system: {CLCS}\n"
+        string += f"# \tvehicle type id: {self.vehicle.ego.id_type_vehicle}\n"
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
@@ -182,31 +183,37 @@ class VehicleConfiguration:
             config_relevant = config.vehicle.ego
 
             self.id_type_vehicle = config_relevant.id_type_vehicle
-            self.id_vehicle = None
 
-            #load vehicle parameters according to id_type_vehicle
-            vehicle_parameters = VehicleParameterMapping.from_vehicle_type(VehicleType(self.id_type_vehicle))
+            # load vehicle parameters according to id_type_vehicle
+            try:
+                vehicle_parameters = VehicleParameterMapping.from_vehicle_type(VehicleType(self.id_type_vehicle))
+
+            except KeyError:
+                raise Exception(f"Given vehicle type id {self.id_type_vehicle} is not valid.")
 
             self.length = vehicle_parameters.l
             self.width = vehicle_parameters.w
 
             self.v_lon_min = vehicle_parameters.longitudinal.v_min
             self.v_lon_max = vehicle_parameters.longitudinal.v_max
-            self.v_lat_min = config_relevant.v_lat_min # TODO:extract from vehicle parameters?
-            self.v_lat_max = config_relevant.v_lat_max
-            self.v_max = vehicle_parameters.longitudinal.v_max #config_relevant.v_max
+            # not present in vehicle parameters
+            self.v_lat_min = None
+            self.v_lat_max = None
+            self.v_max = vehicle_parameters.longitudinal.v_max
 
-            self.a_lon_max = vehicle_parameters.longitudinal.a_max # config_relevant.a_lon_max
             self.a_lon_min = -vehicle_parameters.longitudinal.a_max
-            self.a_lat_max = vehicle_parameters.longitudinal.a_max
-            self.a_lat_min = -vehicle_parameters.longitudinal.a_max
+            self.a_lon_max = vehicle_parameters.longitudinal.a_max
+            # not present in vehicle parameters
+            self.a_lat_min = None
+            self.a_lat_max = None
             self.a_max = vehicle_parameters.longitudinal.a_max
 
             self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
 
-            # overwrite if there exists parameter defined in config file
+            # overwrite with parameters in the config file
             for key, value in config_relevant.items():
                 setattr(self, key, value)
+
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
@@ -217,26 +224,47 @@ class VehicleConfiguration:
             config_relevant = config.vehicle.other
 
             self.id_type_vehicle = config_relevant.id_type_vehicle
-            self.id_vehicle = None
+            # load vehicle parameters according to id_type_vehicle
+            try:
+                vehicle_parameters = VehicleParameterMapping.from_vehicle_type(VehicleType(self.id_type_vehicle))
 
-            vehicle_parameters = VehicleParameterMapping.from_vehicle_type(VehicleType(self.id_type_vehicle))
+            except KeyError:
+                raise Exception(f"Given vehicle type id {self.id_type_vehicle} is not valid.")
 
             self.length = vehicle_parameters.l
             self.width = vehicle_parameters.w
 
             self.v_lon_min = vehicle_parameters.longitudinal.v_min
             self.v_lon_max = vehicle_parameters.longitudinal.v_max
-            self.v_lat_min = config_relevant.v_lat_min # TODO:extract from vehicle parameters?
-            self.v_lat_max = config_relevant.v_lat_max
-            self.v_max = vehicle_parameters.longitudinal.v_max #config_relevant.v_max
+            # not present in vehicle parameters
+            self.v_lat_min = None
+            self.v_lat_max = None
+            self.v_max = vehicle_parameters.longitudinal.v_max
 
-            self.a_lon_max = vehicle_parameters.longitudinal.a_max # config_relevant.a_lon_max
             self.a_lon_min = -vehicle_parameters.longitudinal.a_max
-            self.a_lat_max = vehicle_parameters.longitudinal.a_max
-            self.a_lat_min = -vehicle_parameters.longitudinal.a_max
+            self.a_lon_max = vehicle_parameters.longitudinal.a_max
+            # not present in vehicle parameters
+            self.a_lat_min = None
+            self.a_lat_max = None
             self.a_max = vehicle_parameters.longitudinal.a_max
 
             self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
+
+            # overwrite with parameters in the config file
+            for key, value in config_relevant.items():
+                setattr(self, key, value)
+
+            self.radius_disc, self.wheelbase = \
+                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
+            self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
+                                                                                self.length, self.width)
+
+            self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
+
+            # overwrite with parameters in the config file
+            for key, value in config_relevant.items():
+                setattr(self, key, value)
+
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
 
