@@ -16,7 +16,7 @@ ego:
   v_max: 20.0
 
   # acceleration in m/s^2
-  a_lon_min: -6.0
+  a_lon_min: -4.0
   a_lon_max: 4.0
   a_lat_min: -2.0
   a_lat_max: 2.0

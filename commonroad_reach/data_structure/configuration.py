@@ -191,10 +191,10 @@ class VehicleConfiguration:
             self.v_lat_max = config_relevant.v_lat_max
             self.v_max = config_relevant.v_max
 
-            self.a_lon_max = config_relevant.a_lon_max
             self.a_lon_min = config_relevant.a_lon_min
-            self.a_lat_max = config_relevant.a_lat_max
+            self.a_lon_max = config_relevant.a_lon_max
             self.a_lat_min = config_relevant.a_lat_min
+            self.a_lat_max = config_relevant.a_lat_max
             self.a_max = config_relevant.a_max
 
             self.radius_disc, self.wheelbase = \
@@ -217,10 +217,10 @@ class VehicleConfiguration:
             self.v_lat_min = config_relevant.v_lat_min
             self.v_lat_max = config_relevant.v_lat_max
 
-            self.a_lon_max = config_relevant.a_lon_max
             self.a_lon_min = config_relevant.a_lon_min
-            self.a_lat_max = config_relevant.a_lat_max
+            self.a_lon_max = config_relevant.a_lon_max
             self.a_lat_min = config_relevant.a_lat_min
+            self.a_lat_max = config_relevant.a_lat_max
             self.a_max = config_relevant.a_max
 
             self.radius_disc, self.wheelbase = \
@@ -273,7 +273,6 @@ class PlanningConfiguration:
 
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
-
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
             self.o_initial = o_initial

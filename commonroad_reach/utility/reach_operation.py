@@ -350,7 +350,7 @@ def construct_reach_nodes(drivable_area: List[ReachPolygon],
         rectangle_drivable_area = list_rectangles_drivable_area[idx_drivable_area]
 
         reach_node = construct_reach_node(rectangle_drivable_area, list_base_sets_propagated,
-                                                list_idx_base_sets_adjacent, has_multi_generation)
+                                          list_idx_base_sets_adjacent, has_multi_generation)
         if reach_node:
             reachable_set.append(reach_node)
 
