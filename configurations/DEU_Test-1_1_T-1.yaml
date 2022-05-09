@@ -1,11 +1,11 @@
 planning:
-  steps_computation: 40
+  steps_computation: 30
   dt: 0.1
   coordinate_system: "CVLN"
 
 reachable_set:
   mode_computation: 2
-  mode_repartition: 3
+  mode_repartition: 2
   size_grid: 0.25
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
@@ -23,7 +23,7 @@ vehicle:
     v_max: 30.0
 
     # acceleration in m/s^2
-    a_lon_min: -6.0
+    a_lon_min: -4.0
     a_lon_max: 4.0
     a_lat_min: -2.0
     a_lat_max: 2.0

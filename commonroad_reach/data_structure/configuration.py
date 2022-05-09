@@ -287,7 +287,6 @@ class PlanningConfiguration:
 
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
-
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
             self.o_initial = o_initial
