@@ -1,3 +1,4 @@
+from collections import defaultdict
 import commonroad_dc.pycrccosy as pycrccosy
 import numpy as np
 
@@ -25,7 +26,7 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     # wheelbase is the distance between the front and rear axles
     wheelbase = wheelbase or (length / 3 * 2)
 
-    length_square = wheelbase / 4
+    length_square = length / 3
     width_square = width / 2
     radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
@@ -35,7 +36,7 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     return radius_disc, wheelbase
 
 
-def compute_inflation_radius(mode_inflation: int, length: float, width: float):
+def compute_inflation_radius(mode_inflation: int, length: float, width: float, radius_disc: float):
     """Computes the radius to inflate the obstacles for collision check.
 
     Based on the specified mode, we obtain either under- or over-approximation of the shape of the ego vehicle.
@@ -48,6 +49,9 @@ def compute_inflation_radius(mode_inflation: int, length: float, width: float):
     elif mode_inflation == 2:
         return length / 2 if length > width else width / 2
 
+    elif mode_inflation == 3:
+        return radius_disc
+
 
 def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,
                                          eps: float = 0.1) -> pycrccosy.CurvilinearCoordinateSystem:
@@ -56,6 +60,7 @@ def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_proje
     return CLCS
 
 
+# TODO can be replaced by function in commonroad_dc.geometry -> Remove
 def compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
     """Computes the curvature of a given polyline
 
@@ -138,6 +143,7 @@ def compute_initial_state_cvln(config):
     return (p_lon, p_lat), (v_lon, v_lat)
 
 
+# TODO can be replaced by function in commonroad_dc.geometry -> Remove
 def compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
     """Computes the orientation of a given polyline"""
     assert isinstance(polyline, np.ndarray) and len(polyline) > 1 and polyline.ndim == 2 and len(polyline[0, :]) == 2, \
@@ -162,6 +168,7 @@ def compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
     return np.array(orientation)
 
 
+# TODO can be replaced by function in commonroad_dc.geometry -> Remove
 def compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
     """Computes the path length of a given polyline"""
     assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2, \
@@ -171,3 +178,27 @@ def compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
         distance.append(distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1]))
 
     return np.array(distance)
+
+
+def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, path_to_lut: str) -> dict:
+    """
+    Reads look-up table for longitudinal enlargement for collision checking in the reachability analysis.
+    :param reference_point
+    :param wheelbase
+    :param path_to_lut: path where look-up table is stored
+    :return: look-up table as dictionary
+    """
+    if reference_point == "REAR":
+        base_name = 'lut_ref_rear_wheelbase_'
+    elif reference_point == "CENTER":
+        base_name = 'lut_wheelbase_'
+    else:
+        raise ValueError("<read_lut_longitudinal_enlargement>: unknown reference point: {}".format(reference_point))
+
+    table = np.loadtxt(path_to_lut + base_name + str(int(wheelbase * 10)) + '.txt', skiprows=1, delimiter=',')
+
+    lut_lon = defaultdict(dict)
+    # table entries: lateral position, min curvature, max curvature, enlargement
+    for row in table:
+        lut_lon[row[0]].update({tuple(row[1:3]): row[3]})
+    return lut_lon

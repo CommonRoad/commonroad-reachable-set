@@ -6,6 +6,7 @@ ego:
   # physical dimension
   length: 4.5
   width: 1.8
+  wheelbase: 3.0
 
   # velocity in m/s
   v_lon_min: -0.0

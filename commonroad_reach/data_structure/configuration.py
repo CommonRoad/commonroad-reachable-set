@@ -34,6 +34,7 @@ class Configuration:
         self.scenario = scenario
         self.planning_problem = planning_problem
 
+        # TODO. Wrong? Why overwrite with planning prob ID??
         self.vehicle.id_type_vehicle = planning_problem.planning_problem_id
         self.planning.complete_configuration(self)
 
@@ -69,6 +70,8 @@ class Configuration:
             mode_inflation = "inscribed circle"
         elif self.reachable_set.mode_inflation == 2:
             mode_inflation = "circumscribed circle"
+        elif self.reachable_set.mode_inflation == 3:
+            mode_inflation = "three circle approximation of vehicle occupancy"
         else:
             mode_inflation = "undefined"
 
@@ -162,6 +165,10 @@ class Configuration:
         config.reachable_set.num_threads = self.reachable_set.num_threads
         config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
 
+        # TODO convert lut dict to CPP configuration via PyBind function
+        config.reachable_set.lut_lon_enlargement = reach.LUTLongitudinalEnlargement(
+            self.reachable_set.lut_longitudinal_enlargement)
+
         return config
 
 
@@ -217,7 +224,7 @@ class VehicleConfiguration:
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
-                                                                                self.length, self.width)
+                                                                                self.length, self.width, self.radius_disc)
 
     class Other:
         def __init__(self, config: Union[ListConfig, DictConfig]):
@@ -257,7 +264,7 @@ class VehicleConfiguration:
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
-                                                                                self.length, self.width)
+                                                                                self.length, self.width, self.radius_disc)
 
             self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
 
@@ -362,6 +369,9 @@ class ReachableSetConfiguration:
         self.n_multi_steps = config_relevant.n_multi_steps
 
         self.num_threads = config_relevant.num_threads
+
+        self.lut_longitudinal_enlargement = util_configuration.read_lut_longitudinal_enlargement(
+            config.planning.reference_point, config.vehicle.ego.wheelbase, config_relevant.path_to_lut)
 
 
 class DebugConfiguration:
