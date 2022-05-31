@@ -1,4 +1,5 @@
 #include "pybind.hpp"
+#include "reachset/data_structure/reach/lut_longitudinal_enlargement.hpp"
 
 #include <boost/polygon/polygon.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -82,5 +83,13 @@ void export_utility(py::module& m) {
 
     }, "Function returns adjacency dictionary with overlapping polygons of two given lists of polygons"
        "E.g.: {0 : [1, 2]} means that ReachPolygon 0 from first list overlaps with ReachPolygons 1,2 from second list");
+
+    // TODO: check if this can be simplified
+    py::class_<reach::LUTLongitudinalEnlargement,
+             std::shared_ptr<reach::LUTLongitudinalEnlargement> >(
+             m, "LUTLongitudinalEnlargement")
+      .def(py::init([](std::map<double, std::map<std::pair<double, double>, double>> lut) {
+        return new reach::LUTLongitudinalEnlargement(lut);
+      }));
 
 }

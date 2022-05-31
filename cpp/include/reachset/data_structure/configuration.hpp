@@ -2,6 +2,7 @@
 
 #include "reachset/utility/shared_include.hpp"
 #include "reachset/utility/shared_using.hpp"
+#include "reachset/data_structure/reach/lut_longitudinal_enlargement.hpp"
 #include <yaml-cpp/yaml.h>
 
 namespace reach {
@@ -137,6 +138,8 @@ struct ReachableSetConfiguration {
     int num_threads{};
     // flag whether to prune reach nodes not reaching the final time step
     bool prune_nodes{};
+    // look-up table for longitudinal enlargement for collision checking
+    LUTLongitudinalEnlargementConstPtr lut_lon_enlargement;
 
     ReachableSetConfiguration() = default;
 

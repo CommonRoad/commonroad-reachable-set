@@ -26,6 +26,7 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_set.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/lut_longitudinal_enlargement.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp

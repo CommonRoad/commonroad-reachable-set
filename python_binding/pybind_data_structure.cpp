@@ -154,7 +154,8 @@ void export_configuration(py::module& m) {
             .def_readwrite("size_grid_2nd", &ReachableSetConfiguration::size_grid_2nd)
             .def_readwrite("radius_terminal_split", &ReachableSetConfiguration::radius_terminal_split)
             .def_readwrite("num_threads", &ReachableSetConfiguration::num_threads)
-            .def_readwrite("prune_nodes",&ReachableSetConfiguration::prune_nodes);
+            .def_readwrite("prune_nodes",&ReachableSetConfiguration::prune_nodes)
+            .def_readwrite("lut_lon_enlargement", &ReachableSetConfiguration::lut_lon_enlargement);
 
     py::class_<DebugConfiguration, shared_ptr<DebugConfiguration>>(m, "DebugConfiguration")
             .def(py::init<>())
