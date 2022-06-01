@@ -1,5 +1,4 @@
-#ifndef LUT_LONGITUDINAL_ENLARGEMENT_H
-#define LUT_LONGITUDINAL_ENLARGEMENT_H
+#pragma once
 
 #include "reachset/utility/shared_include.hpp"
 #include <utility>
@@ -14,10 +13,11 @@ struct cmpByFirst {
 
 typedef std::map<std::pair < double, double>, double, cmpByFirst> LookUpTable;
 
+// TODO add docstring/comments
 
 class LUTLongitudinalEnlargement {
  public:
-  LUTLongitudinalEnlargement(std::map<double, std::map<std::pair<double, double>, double>> lut);
+  explicit LUTLongitudinalEnlargement(std::map<double, std::map<std::pair<double, double>, double>> lut);
   std::map<double, LookUpTable>::const_iterator lateralPositionHigherOrEqual(double y_hi) const;
   double maximumEnlargementInCurvatureRange(double y, double min_curvature, double max_curvature) const;
 
@@ -28,6 +28,4 @@ class LUTLongitudinalEnlargement {
 
 typedef std::shared_ptr<const LUTLongitudinalEnlargement> LUTLongitudinalEnlargementConstPtr;
 
-}
-
-#endif //LUT_LONGITUDINAL_ENLARGEMENT_H
+} // namespace reach
