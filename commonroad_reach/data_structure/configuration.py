@@ -34,8 +34,6 @@ class Configuration:
         self.scenario = scenario
         self.planning_problem = planning_problem
 
-        # TODO. Wrong? Why overwrite with planning prob ID??
-        self.vehicle.id_type_vehicle = planning_problem.planning_problem_id
         self.planning.complete_configuration(self)
 
     def print_configuration_summary(self):
@@ -217,9 +215,10 @@ class VehicleConfiguration:
 
             self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
 
-            # overwrite with parameters in the config file
+            # overwrite with parameters given by vehicle ID if they are explicitly provided in the *.yaml file
             for key, value in config_relevant.items():
-                setattr(self, key, value)
+                if value is not None:
+                    setattr(self, key, value)
 
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
