@@ -95,6 +95,8 @@ PlanningConfiguration::PlanningConfiguration(YAML::Node const& node) {
 ReachableSetConfiguration::ReachableSetConfiguration(YAML::Node const& node) {
     auto node_reachable_set = node["reachable_set"];
 
+    mode_repartition = node_reachable_set["mode_repartition"].as<int>();
+    mode_inflation = node_reachable_set["mode_inflation"].as<int>();
     size_grid = node_reachable_set["size_grid"].as<double>();
     size_grid_2nd = node_reachable_set["size_grid_2nd"].as<double>();
     radius_terminal_split = node_reachable_set["radius_terminal_split"].as<double>();

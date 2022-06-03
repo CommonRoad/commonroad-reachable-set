@@ -127,7 +127,10 @@ struct PlanningConfiguration {
 
 /// Struct storing reachable set configurations.
 struct ReachableSetConfiguration {
+    // mode for drivable area repartition
     int mode_repartition{};
+    // mode for considering the shape of the ego vehicle
+    int mode_inflation{};
     // grid size for repartitioning rectangles
     double size_grid{};
     // grid size for repartitioning rectangles (second time)

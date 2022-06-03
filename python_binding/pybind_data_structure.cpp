@@ -150,6 +150,7 @@ void export_configuration(py::module& m) {
     py::class_<ReachableSetConfiguration, shared_ptr<ReachableSetConfiguration>>(m, "ReachableSetConfiguration")
             .def(py::init<>())
             .def_readwrite("mode_repartition", &ReachableSetConfiguration::mode_repartition)
+            .def_readwrite("mode_inflation", &ReachableSetConfiguration::mode_inflation)
             .def_readwrite("size_grid", &ReachableSetConfiguration::size_grid)
             .def_readwrite("size_grid_2nd", &ReachableSetConfiguration::size_grid_2nd)
             .def_readwrite("radius_terminal_split", &ReachableSetConfiguration::radius_terminal_split)

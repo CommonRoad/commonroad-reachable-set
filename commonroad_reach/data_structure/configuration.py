@@ -157,6 +157,7 @@ class Configuration:
             config.planning.reference_point = reach.ReferencePoint.CENTER
 
         config.reachable_set.mode_repartition = self.reachable_set.mode_repartition
+        config.reachable_set.mode_inflation = self.reachable_set.mode_inflation
         config.reachable_set.size_grid = self.reachable_set.size_grid
         config.reachable_set.size_grid_2nd = self.reachable_set.size_grid_2nd
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
