@@ -1,4 +1,4 @@
-#include "reachset/data_structure/reach/enlargement.hpp"
+#include "reachset/utility/enlargement.hpp"
 
 namespace reach {
 

@@ -2,7 +2,7 @@
 
 #include "reachset/utility/shared_include.hpp"
 #include "reachset/utility/shared_using.hpp"
-#include "reachset/data_structure/reach/lut_longitudinal_enlargement.hpp"
+#include "reachset/utility/lut_longitudinal_enlargement.hpp"
 #include <yaml-cpp/yaml.h>
 #include "geometry/curvilinear_coordinate_system.h"
 

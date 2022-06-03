@@ -2,7 +2,7 @@
 
 #include "geometry/curvilinear_coordinate_system.h"
 #include "reachset/utility/shared_include.hpp"
-#include "reachset/data_structure/reach/lut_longitudinal_enlargement.hpp"
+#include "reachset/utility/lut_longitudinal_enlargement.hpp"
 #include "reachset/data_structure/configuration.hpp"
 
 namespace reach {

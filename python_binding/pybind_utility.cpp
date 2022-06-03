@@ -1,5 +1,5 @@
 #include "pybind.hpp"
-#include "reachset/data_structure/reach/lut_longitudinal_enlargement.hpp"
+#include "reachset/utility/lut_longitudinal_enlargement.hpp"
 
 #include <boost/polygon/polygon.hpp>
 #include <boost/numeric/conversion/cast.hpp>
