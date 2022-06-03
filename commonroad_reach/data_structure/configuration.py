@@ -149,6 +149,7 @@ class Configuration:
 
         else:
             config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
+            config.planning.CLCS = self.planning.CLCS
 
         if self.planning.reference_point == "REAR":
             config.planning.reference_point = reach.ReferencePoint.REAR
@@ -259,21 +260,13 @@ class VehicleConfiguration:
 
             # overwrite with parameters in the config file
             for key, value in config_relevant.items():
-                setattr(self, key, value)
+                if value is not None:
+                    setattr(self, key, value)
 
             self.radius_disc, self.wheelbase = \
                 util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width, self.radius_disc)
-
-            self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
-
-            # overwrite with parameters in the config file
-            for key, value in config_relevant.items():
-                setattr(self, key, value)
-
-            self.radius_disc, self.wheelbase = \
-                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
 
     def __init__(self, config: Union[ListConfig, DictConfig]):
         self.ego = VehicleConfiguration.Ego(config)

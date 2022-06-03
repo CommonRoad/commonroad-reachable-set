@@ -145,7 +145,8 @@ void export_configuration(py::module& m) {
             .def_readwrite("step_start", &PlanningConfiguration::step_start)
             .def_readwrite("id_lanelet_initial", &PlanningConfiguration::id_lanelet_initial)
             .def_readwrite("coordinate_system", &PlanningConfiguration::coordinate_system)
-            .def_readwrite("reference_point", &PlanningConfiguration::reference_point);
+            .def_readwrite("reference_point", &PlanningConfiguration::reference_point)
+            .def_readwrite("CLCS", &PlanningConfiguration::CLCS);
 
     py::class_<ReachableSetConfiguration, shared_ptr<ReachableSetConfiguration>>(m, "ReachableSetConfiguration")
             .def(py::init<>())

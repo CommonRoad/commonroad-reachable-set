@@ -28,7 +28,7 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
 
     length_square = length / 3
     width_square = width / 2
-    radius = (length_square ** 2 + width_square ** 2) ** 0.5
+    radius = (length_square/2 ** 2 + width_square ** 2) ** 0.5
 
     # ceil up to 1 digit
     radius_disc = np.ceil(radius * 10) / 10
@@ -55,7 +55,9 @@ def compute_inflation_radius(mode_inflation: int, length: float, width: float, r
 
 def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,
                                          eps: float = 0.1) -> pycrccosy.CurvilinearCoordinateSystem:
+    # create new Curvilinear Coordinate System and set curvature values for reference path
     CLCS = pycrccosy.CurvilinearCoordinateSystem(reference_path, limit_projection_domain, eps)
+    CLCS.compute_and_set_curvature()
 
     return CLCS
 
