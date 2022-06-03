@@ -84,7 +84,6 @@ void export_utility(py::module& m) {
     }, "Function returns adjacency dictionary with overlapping polygons of two given lists of polygons"
        "E.g.: {0 : [1, 2]} means that ReachPolygon 0 from first list overlaps with ReachPolygons 1,2 from second list");
 
-    // TODO: check if this can be simplified
     py::class_<reach::LUTLongitudinalEnlargement,
              std::shared_ptr<reach::LUTLongitudinalEnlargement> >(
              m, "LUTLongitudinalEnlargement")

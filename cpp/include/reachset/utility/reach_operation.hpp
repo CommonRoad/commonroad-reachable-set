@@ -88,8 +88,8 @@ std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& ste
                                                                   int const& num_threads);
 
 /// Check collision status of the rectangles and split them if colliding.
-/// This function considers the enlargement of rectangles when approximating the ego vehicle's occupancy with
-/// three circles
+/// This function enlarges the rectangles before collision checking to consider the occupancy of the full vehicle
+/// which is approximated by three circles
 std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& step,
                                                                   CollisionCheckerPtr const& collision_checker,
                                                                   std::vector<ReachPolygonPtr> const& vec_rectangles,
@@ -119,8 +119,8 @@ std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerP
                                                                double const& radius_terminal_squared);
 
 /// Recursively creates a list of collision-free rectangles.
-/// This function enlarges rectangles for collision checking to consider the three-circle approximation of the
-/// ego vehicle's occupancy
+/// This function enlarges rectangles before collision checking to consider the occupancy of the full vehicle which is
+/// approximated by three circles
 std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
                                                                RectangleAABBPtr const& rectangle,
                                                                double const& radius_terminal_squared,
