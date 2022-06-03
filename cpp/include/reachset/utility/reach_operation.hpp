@@ -5,6 +5,8 @@
 #include "reachset/data_structure/reach/reach_node.hpp"
 #include "reachset/data_structure/configuration.hpp"
 #include "collision/collision_checker.h"
+#include "reachset/data_structure/reach/enlargement.hpp"
+#include "geometry/curvilinear_coordinate_system.h"
 
 using CollisionCheckerPtr = collision::CollisionCheckerPtr;
 using RectangleAABBPtr = collision::RectangleAABBPtr;
@@ -85,6 +87,19 @@ std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& ste
                                                                   double const& radius_terminal_split,
                                                                   int const& num_threads);
 
+/// Check collision status of the rectangles and split them if colliding.
+/// This function considers the enlargement of rectangles when approximating the ego vehicle's occupancy with
+/// three circles
+std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& step,
+                                                                  CollisionCheckerPtr const& collision_checker,
+                                                                  std::vector<ReachPolygonPtr> const& vec_rectangles,
+                                                                  double const& radius_terminal_split,
+                                                                  int const& num_threads,
+                                                                  double const& wheelbase,
+                                                                  const geometry::CurvilinearCoordinateSystem &cosy,
+                                                                  const LUTLongitudinalEnlargement& lut_lon_enlargement,
+                                                                  ReferencePoint reference_point);
+
 /// Returns the bounding box of polygons
 tuple<double, double, double, double>
 obtain_extremum_coordinates_of_polygons(vector<ReachPolygonPtr> const& vec_polygons);
@@ -102,6 +117,17 @@ vector<ReachPolygonPtr> convert_collision_aabbs_to_reach_polygons(vector<Rectang
 std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
                                                                RectangleAABBPtr const& rectangle,
                                                                double const& radius_terminal_squared);
+
+/// Recursively creates a list of collision-free rectangles.
+/// This function enlarges rectangles for collision checking to consider the three-circle approximation of the
+/// ego vehicle's occupancy
+std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
+                                                               RectangleAABBPtr const& rectangle,
+                                                               double const& radius_terminal_squared,
+                                                               double const& wheelbase,
+                                                               const geometry::CurvilinearCoordinateSystem &cosy,
+                                                               const LUTLongitudinalEnlargement& lut_lon_enlargement,
+                                                               ReferencePoint reference_point);
 
 /// Returns the squared diagonal of the rectangle.
 inline double diagonal_squared(RectangleAABBPtr const& rectangle) {
