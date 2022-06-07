@@ -6,6 +6,7 @@ planning:
 reachable_set:
   mode_computation: 2
   mode_repartition: 2
+  mode_inflation: 1
   size_grid: 0.25
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
@@ -15,7 +16,7 @@ reachable_set:
 vehicle:
   ego:
     # velocity in m/s
-    v_lon_min: 0
+    v_lon_min: -20.0
     v_lon_max: 20.0
     v_lat_min: -4.0
     v_lat_max: 4.0
@@ -29,6 +30,8 @@ vehicle:
     a_lat_max: 2.0
     # maximum engine power
     a_max: 6.0
+
+    wheelbase: 3.0
 
 debug:
   draw_ref_path: True

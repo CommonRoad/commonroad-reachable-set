@@ -1,8 +1,65 @@
+from typing import Tuple
 from collections import defaultdict
 import commonroad_dc.pycrccosy as pycrccosy
 import numpy as np
 
 np.seterr(divide='ignore', invalid='ignore')
+
+
+def compute_disc_radius_and_distance(length: float, width: float, ref_point="CENTER", rear_axle_dist=None) \
+        -> Tuple[float, float]:
+    """
+    Vehicle occupancy is approximated by three equally sized discs with equidistant centerpoints.
+    (see Ziegler, J. and Stiller, C. (2010) "Fast collision checking for intelligent vehicle motion planning", IEEE IV
+    Returns radius of discs and distance between the first and third disc.
+    :param length: vehicle length
+    :param width: vehicle width
+    :param ref_point: either "CENTER" or "REAR"
+    :param rear_axle_dist: if ref_point == "REAR", the distance between vehicle center and rear axle has to be provided
+    :return: radius_disc: radius of discs
+    :return: circle_distance: distance between first and third circle
+    """
+    assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
+
+    if np.isclose(length, 0.0) and np.isclose(width, 0.0):
+        return 0.0, 0.0
+
+    # half width of the ego vehicle
+    width_square = width / 2
+
+    if ref_point == "CENTER":
+        # second circle center point is exactly at the geometric center of vehicle model
+        # the other circles are placed equidistant along the longitudinal axis
+        length_square = (length / 3)/2
+        radius = (length_square ** 2 + width_square ** 2) ** 0.5
+
+        # ceil up to 1 digit
+        # radius_disc = np.ceil(radius * 10) / 10
+        radius_disc = radius
+        circle_distance = (length / 3 * 2)
+
+    elif ref_point == "REAR":
+        # first circle center point has to be exactly on rear axis position of vehicle model
+        assert rear_axle_dist >= 0, f"Please provide a valid value for the rear axle distance (rear_axle_distance = " \
+                                    f"{rear_axle_dist})"
+        if rear_axle_dist < length/3:
+            length_square = length/2 - rear_axle_dist
+            radius = (length_square ** 2 + width_square ** 2) ** 0.5
+
+            # ceil up to 1 digit
+            # radius_disc = np.ceil(radius * 10) / 10
+            radius_disc = radius
+            circle_distance = rear_axle_dist * 2
+        else:
+            length_square = (length / 3)/2 + (rear_axle_dist - length/3)
+            radius = (length_square ** 2 + width_square ** 2) ** 0.5
+
+            radius_disc = radius
+            circle_distance = rear_axle_dist * 2
+    else:
+        raise Exception("reference point has to be either CENTER or REAR")
+
+    return radius_disc, circle_distance
 
 
 def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: float = None):
@@ -26,12 +83,13 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     # wheelbase is the distance between the front and rear axles
     wheelbase = wheelbase or (length / 3 * 2)
 
-    length_square = length / 3
+    length_square = (length / 3)/2
     width_square = width / 2
-    radius = (length_square/2 ** 2 + width_square ** 2) ** 0.5
+    radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
     # ceil up to 1 digit
-    radius_disc = np.ceil(radius * 10) / 10
+    # radius_disc = np.ceil(radius * 10) / 10
+    radius_disc = radius
 
     return radius_disc, wheelbase
 
@@ -43,12 +101,15 @@ def compute_inflation_radius(mode_inflation: int, length: float, width: float, r
     """
     assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
 
+    # Inscribed circle (under-approximation of the shape of the ego vehicle)
     if mode_inflation == 1:
         return length / 2 if length < width else width / 2
 
+    # 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
     elif mode_inflation == 2:
         return length / 2 if length > width else width / 2
 
+    # 3: Three disc approximation of vehicle occupancy
     elif mode_inflation == 3:
         return radius_disc
 

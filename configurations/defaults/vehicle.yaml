@@ -1,6 +1,6 @@
 ego:
   &physical_parameters
-  # 1 = Ford Escord, 2 = BMW 320i, 3 = VW Vanagon, 4 = Semi-trailer truck
+  # 1 = Ford Escord, 2 = BMW 320i (default), 3 = VW Vanagon, 4 = Semi-trailer truck
   id_type_vehicle: 2
 
   # physical dimensions (explicitly provide to overwrite the default parameters of CR vehicle type)

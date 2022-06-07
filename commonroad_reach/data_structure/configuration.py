@@ -35,6 +35,7 @@ class Configuration:
         self.planning_problem = planning_problem
 
         self.planning.complete_configuration(self)
+        self.reachable_set.complete_configuration(self)
 
     def print_configuration_summary(self):
         if self.planning.coordinate_system == "CART":
@@ -113,7 +114,11 @@ class Configuration:
         config.vehicle.ego.a_lat_max = self.vehicle.ego.a_lat_max
         config.vehicle.ego.a_max = self.vehicle.ego.a_max
         config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
-        config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
+
+        if self.reachable_set.mode_inflation != 3:
+            config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
+        else:
+            config.vehicle.ego.wheelbase = self.vehicle.ego.circle_distance
 
         config.vehicle.other.id_type_vehicle = self.vehicle.other.id_type_vehicle
         config.vehicle.other.length = self.vehicle.other.length
@@ -128,7 +133,12 @@ class Configuration:
         config.vehicle.other.a_lat_max = self.vehicle.other.a_lat_max
         config.vehicle.other.a_max = self.vehicle.other.a_max
         config.vehicle.other.radius_disc = self.vehicle.other.radius_disc
-        config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
+
+        # if three circle approximation is used, store the computed circle distance as wheelbase in CPP config
+        if self.reachable_set.mode_inflation != 3:
+            config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
+        else:
+            config.vehicle.other.wheelbase = self.vehicle.other.circle_distance
 
         config.planning.dt = self.planning.dt
         config.planning.step_start = self.planning.step_start
@@ -165,9 +175,10 @@ class Configuration:
         config.reachable_set.num_threads = self.reachable_set.num_threads
         config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
 
-        # TODO convert lut dict to CPP configuration via PyBind function
-        config.reachable_set.lut_lon_enlargement = reach.LUTLongitudinalEnlargement(
-            self.reachable_set.lut_longitudinal_enlargement)
+        # convert lut dict to CPP configuration via PyBind function
+        if self.reachable_set.mode_inflation == 3:
+            config.reachable_set.lut_lon_enlargement = reach.LUTLongitudinalEnlargement(
+                self.reachable_set.lut_longitudinal_enlargement)
 
         return config
 
@@ -222,8 +233,12 @@ class VehicleConfiguration:
                 if value is not None:
                     setattr(self, key, value)
 
-            self.radius_disc, self.wheelbase = \
-                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
+            rear_axle_distance = vehicle_parameters.b
+            self.radius_disc, self.circle_distance = \
+                util_configuration.compute_disc_radius_and_distance(self.length, self.width,
+                                                                    ref_point=config.planning.reference_point,
+                                                                    rear_axle_dist=rear_axle_distance)
+
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width, self.radius_disc)
 
@@ -263,8 +278,12 @@ class VehicleConfiguration:
                 if value is not None:
                     setattr(self, key, value)
 
-            self.radius_disc, self.wheelbase = \
-                util_configuration.compute_disc_radius_and_wheelbase(self.length, self.width, wheelbase=self.wheelbase)
+            rear_axle_distance = vehicle_parameters.b
+            self.radius_disc, self.circle_distance = \
+                util_configuration.compute_disc_radius_and_distance(self.length, self.width,
+                                                                    ref_point=config.planning.reference_point,
+                                                                    rear_axle_dist=rear_axle_distance)
+
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width, self.radius_disc)
 
@@ -363,8 +382,13 @@ class ReachableSetConfiguration:
 
         self.num_threads = config_relevant.num_threads
 
-        self.lut_longitudinal_enlargement = util_configuration.read_lut_longitudinal_enlargement(
-            config.planning.reference_point, config.vehicle.ego.wheelbase, config_relevant.path_to_lut)
+        self.path_to_lut = config_relevant.path_to_lut
+        self.lut_longitudinal_enlargement = None
+
+    def complete_configuration(self, config: Configuration):
+        if self.mode_inflation == 3:
+            self.lut_longitudinal_enlargement = util_configuration.read_lut_longitudinal_enlargement(
+                config.planning.reference_point, config.vehicle.ego.circle_distance, self.path_to_lut)
 
 
 class DebugConfiguration:
