@@ -29,8 +29,6 @@ vehicle:
     # maximum engine power
     a_max: 6.0
 
-    wheelbase: 3.0
-
 debug:
   draw_ref_path: True
   draw_planning_problem: True

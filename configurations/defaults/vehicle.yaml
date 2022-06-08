@@ -6,7 +6,9 @@ ego:
   # physical dimensions (explicitly provide to overwrite the default parameters of CR vehicle type)
   length: !!null
   width: !!null
-  wheelbase: !!null
+  # distance front/rear axle to vehicle center
+  wb_front_axle: !!null
+  wb_rear_axle: !!null
 
   # longitudinal velocity bounds in m/s (explicitly provide to overwrite the default parameters of CR vehicle type)
   v_lon_min: !!null

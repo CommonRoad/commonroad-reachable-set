@@ -227,7 +227,11 @@ class VehicleConfiguration:
             self.a_lat_max = None
             self.a_max = vehicle_parameters.longitudinal.a_max
 
-            self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
+            # distances front/rear axle to vehicle center
+            self.wb_front_axle = vehicle_parameters.a
+            self.wb_rear_axle = vehicle_parameters.b
+            # wheelbase
+            self.wheelbase = self.wb_front_axle + self.wb_rear_axle
 
             # overwrite with parameters given by vehicle ID if they are explicitly provided in the *.yaml file
             for key, value in config_relevant.items():
@@ -272,7 +276,11 @@ class VehicleConfiguration:
             self.a_lat_max = None
             self.a_max = vehicle_parameters.longitudinal.a_max
 
-            self.wheelbase = vehicle_parameters.a + vehicle_parameters.b
+            # distances front/rear axle to vehicle center
+            self.wb_front_axle = vehicle_parameters.a
+            self.wb_rear_axle = vehicle_parameters.b
+            # wheelbase
+            self.wheelbase = self.wb_front_axle + self.wb_rear_axle
 
             # overwrite with parameters in the config file
             for key, value in config_relevant.items():

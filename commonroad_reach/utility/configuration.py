@@ -127,7 +127,7 @@ def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_proje
 def compute_initial_state_cart(config):
     """Computes the initial Cartesian state of the ego vehicle given a planning problem."""
     planning_problem = config.planning_problem
-    wheelbase = config.vehicle.ego.wheelbase
+    wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = planning_problem.initial_state.position
     o = planning_problem.initial_state.orientation
@@ -137,9 +137,8 @@ def compute_initial_state_cart(config):
         pass
 
     elif config.planning.reference_point == "REAR":
-        # TODO not correct: use rear axes distance instead of wheelbase/2!
-        x = x - wheelbase / 2 * np.cos(o)
-        y = y - wheelbase / 2 * np.sin(o)
+        x = x - wb_rear_axle * np.cos(o)
+        y = y - wb_rear_axle * np.sin(o)
 
     else:
         raise Exception(f"Unknown reference point: {config.planning.reference_point}")
@@ -158,7 +157,7 @@ def compute_initial_state_cvln(config):
     is the curvature of the reference path
     """
     planning_problem = config.planning_problem
-    wheelbase = config.vehicle.ego.wheelbase
+    wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = planning_problem.initial_state.position
     orientation = planning_problem.initial_state.orientation
@@ -168,9 +167,8 @@ def compute_initial_state_cvln(config):
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(x, y)
 
     elif config.planning.reference_point == "REAR":
-        # TODO not correct: use rear axes distance instead of wheelbase/2!
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(
-            x - wheelbase / 2 * np.cos(orientation), y - wheelbase / 2 * np.sin(orientation))
+            x - wb_rear_axle * np.cos(orientation), y - wb_rear_axle * np.sin(orientation))
     else:
         raise Exception(f"Unknown reference point: {config.planning.reference_point}")
 
@@ -185,6 +183,7 @@ def compute_initial_state_cvln(config):
     return (p_lon, p_lat), (v_lon, v_lat)
 
 
+#TODO rename wheelbase parameter to circle distance
 def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, path_to_lut: str) -> dict:
     """
     Reads look-up table for longitudinal enlargement for collision checking in the reachability analysis.
