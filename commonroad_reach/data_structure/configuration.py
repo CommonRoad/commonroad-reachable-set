@@ -140,7 +140,7 @@ class Configuration:
         config.planning.v_lat_initial = self.planning.v_lat_initial
         config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
         config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
-        config.planning.step_start = self.planning.step_initial
+        # config.planning.step_start = self.planning.step_initial
         config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
 
         if self.planning.coordinate_system == "CART":
@@ -269,7 +269,7 @@ class PlanningConfiguration:
         self.o_initial = 0
 
         # related to specific planning problem
-        self.step_initial = None
+        # self.step_initial = None # TODO: what's the difference between step_start and step_initial
         self.id_lanelet_initial = 0
         self.route = None
         self.reference_path = None
@@ -284,7 +284,7 @@ class PlanningConfiguration:
         planning_problem = config.planning_problem
 
         self.lanelet_network = scenario.lanelet_network
-        self.step_initial = planning_problem.initial_state.time_step
+        self.step_start = planning_problem.initial_state.time_step
 
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
@@ -311,7 +311,7 @@ class PlanningConfiguration:
 
     def complete_configuration_for_given_routes(self, config: Configuration, CLCS: CurvilinearCoordinateSystem):
         assert self.coordinate_system == "CVLN"
-        self.time_step_initial = config.planning_problem.initial_state.time_step
+        # self.step_start = config.planning_problem.initial_state.time_step
 
         # plans a route from the initial lanelet to the goal lanelet
         # route_planner = RoutePlanner(scenario, planning_problem)
