@@ -3,7 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, List, Tuple
 
 import commonroad_reach.pycrreach as reach
 from commonroad.planning.planning_problem import PlanningProblem
@@ -115,6 +115,7 @@ class Configuration:
         config.vehicle.ego.a_max = self.vehicle.ego.a_max
         config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
 
+        # if three circle approximation is used, store the computed circle distance as wheelbase in CPP config
         if self.reachable_set.mode_inflation != 3:
             config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
         else:
@@ -345,22 +346,63 @@ class PlanningConfiguration:
             route = candidate_holder.retrieve_first_route()
 
             self.route = route
-            self.reference_path = route.reference_path
-            self.id_lanelet_initial = route.list_ids_lanelets[0]
+            self.set_reference_path(config, route.reference_path, route.list_ids_lanelets[0])
 
-            self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+    def set_reference_path(self, config: Configuration, ref_path: np.ndarray, id_lanelets: List[int] = None):
+        """
+        Args: config, reference path and list of lanelet IDs from route planner (optional)
+        Function sets/updates the following parameters:
+        - reference_path
+        - id_lanelet_initial
+        - CLCS (curvilinear coordinate system)
+        - p_lon/lat_initial
+        - v_lon/lat_initial
+        """
+        # set reference path
+        self.reference_path = ref_path
+        # set route lanelet IDs
+        if id_lanelets is not None:
+            self.id_lanelet_initial = id_lanelets
+        # set curvilinear coordinate system
+        self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+        p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
-            self.p_lon_initial, self.p_lat_initial = p_initial
-            self.v_lon_initial, self.v_lat_initial = v_initial
+        self.p_lon_initial, self.p_lat_initial = p_initial
+        self.v_lon_initial, self.v_lat_initial = v_initial
 
     @property
     def p_lon_lat_initial(self):
         return np.array([self.p_lon_initial, self.p_lat_initial])
 
+    @p_lon_lat_initial.setter
+    def p_lon_lat_initial(self, p_lon_lat_initial: Tuple):
+        """
+        :param p_lon_lat_initial: Tuple of length 2 with
+                                  p_lon_lat_initial[0]: longitudinal position
+                                  p_lon_lat_initial[1]: lateral position
+        """
+        assert (type(p_lon_lat_initial is tuple)), "Initial lon/lat position must be of type tuple with length 2"
+        assert (len(p_lon_lat_initial) == 2), "Initial lon/lat position must be of type tuple with length 2"
+
+        self.p_lon_initial = p_lon_lat_initial[0]
+        self.p_lat_initial = p_lon_lat_initial[1]
+
     @property
     def v_lon_lat_initial(self):
         return np.array([self.v_lon_initial, self.v_lat_initial])
+
+    @v_lon_lat_initial.setter
+    def v_lon_lat_initial(self, v_lon_lat_initial: Tuple):
+        """
+        :param v_lon_lat_initial: Tuple of length 2 with
+                                  v_lon_lat_initial[0]: longitudinal velocity
+                                  v_lon_lat_initial[1]: lateral velocity
+        """
+        assert (type(v_lon_lat_initial is tuple)), "Initial lon/lat velocity must be of type tuple with length 2"
+        assert (len(v_lon_lat_initial) == 2), "Initial lon/lat velocity must be of type tuple with length 2"
+
+        self.v_lon_initial = v_lon_lat_initial[0]
+        self.v_lat_initial = v_lon_lat_initial[1]
 
 
 class ReachableSetConfiguration:

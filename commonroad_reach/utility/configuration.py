@@ -137,6 +137,7 @@ def compute_initial_state_cart(config):
         pass
 
     elif config.planning.reference_point == "REAR":
+        # TODO not correct: use rear axes distance instead of wheelbase/2!
         x = x - wheelbase / 2 * np.cos(o)
         y = y - wheelbase / 2 * np.sin(o)
 
@@ -167,6 +168,7 @@ def compute_initial_state_cvln(config):
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(x, y)
 
     elif config.planning.reference_point == "REAR":
+        # TODO not correct: use rear axes distance instead of wheelbase/2!
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(
             x - wheelbase / 2 * np.cos(orientation), y - wheelbase / 2 * np.sin(orientation))
     else:
