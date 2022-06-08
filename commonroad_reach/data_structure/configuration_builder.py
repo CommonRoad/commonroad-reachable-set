@@ -132,7 +132,7 @@ class ConfigurationBuilder:
             cls.set_paths(path_root=path_root, dir_config=dir_config, dir_config_default=dir_config_default)
         config_default = cls.construct_default_configuration()
 
-        # read scenario-specific configurations #TODO: defaults?
+        # read scenario-specific configurations
         config_scenario = cls.construct_scenario_configuration(str(scenario.scenario_id))
 
         # command line interface configurations
@@ -145,7 +145,7 @@ class ConfigurationBuilder:
         # TODO: define a new method in Configuration for following
         config.scenario = scenario
         config.planning_problem = planning_problem
-        config.vehicle.id_type_vehicle = planning_problem.planning_problem_id
+        config.vehicle.id_vehicle = planning_problem.planning_problem_id
         config.planning.complete_configuration_for_given_routes(config, CLCS=CLCS)
 
         return config

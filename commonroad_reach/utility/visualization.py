@@ -26,7 +26,7 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, figsize: Tuple = None,
                                       step_start: int = 0, step_end: int = 0, steps: List[int] = None,
                                       plot_limits: Union[List] = None, path_output: str = None,
-                                      save_gif: bool = True, duration: float = None):
+                                      save_gif: bool = True, duration: float = None, terminal_set=None):
     config = reach_interface.config
     scenario = config.scenario
     planning_problem = config.planning_problem
@@ -68,13 +68,25 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         # plot scenario and planning problem
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
                                              "trajectory": {"draw_trajectory": True},
-                                             "time_begin": time_step})
+                                             "time_begin": time_step,
+                                             "lanelet": {"show_label": True}})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
 
         list_nodes = reach_interface.reachable_set_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
+
+        if terminal_set is not None:
+            terminal_set.draw(renderer,
+                draw_params={"polygon":
+                    {
+                        "opacity": 1.0,
+                        "linewidth": 0.5,
+                        "facecolor": "#f1b514",
+                        "edgecolor": "#302404",
+                        "zorder": 15
+                    }})
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)

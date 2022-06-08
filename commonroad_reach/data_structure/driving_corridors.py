@@ -90,7 +90,7 @@ class DrivingCorridorExtractor:
             if terminal_set is not None:
                 # use base sets which overlap with given terminal set in last time step
                 overlapping_nodes = self._determine_terminal_set_overlap(
-                    terminal_set, self.reach_set[self.time_steps[-1]], cartesian_terminal_set=cartesian_terminal_set)
+                    terminal_set, self.reach_set[self.steps[-1]], cartesian_terminal_set=cartesian_terminal_set)
                 connected_components = self._determine_connected_components(list(overlapping_nodes))
             else:
                 # use all base sets in last time step
