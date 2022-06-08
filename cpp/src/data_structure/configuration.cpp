@@ -19,6 +19,7 @@ Ego::Ego(YAML::Node const& node) {
     length = node_vehicle["length"].as<double>();
     width = node_vehicle["width"].as<double>();
     radius_disc = 1.2;
+    circle_distance = 2.0;
     wheelbase = 2.0;
 
     v_lon_min = node_vehicle["v_lon_min"].as<double>();
@@ -42,6 +43,7 @@ Other::Other(YAML::Node const& node) {
     length = node_vehicle["length"].as<double>();
     width = node_vehicle["width"].as<double>();
     radius_disc = 1.2;
+    circle_distance = 2.0;
     wheelbase = 2.0;
 
     v_lon_min = node_vehicle["v_lon_min"].as<double>();

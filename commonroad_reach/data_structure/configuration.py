@@ -114,12 +114,8 @@ class Configuration:
         config.vehicle.ego.a_lat_max = self.vehicle.ego.a_lat_max
         config.vehicle.ego.a_max = self.vehicle.ego.a_max
         config.vehicle.ego.radius_disc = self.vehicle.ego.radius_disc
-
-        # if three circle approximation is used, store the computed circle distance as wheelbase in CPP config
-        if self.reachable_set.mode_inflation != 3:
-            config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
-        else:
-            config.vehicle.ego.wheelbase = self.vehicle.ego.circle_distance
+        config.vehicle.ego.circle_distance = self.vehicle.ego.circle_distance
+        config.vehicle.ego.wheelbase = self.vehicle.ego.wheelbase
 
         config.vehicle.other.id_type_vehicle = self.vehicle.other.id_type_vehicle
         config.vehicle.other.length = self.vehicle.other.length
@@ -134,12 +130,8 @@ class Configuration:
         config.vehicle.other.a_lat_max = self.vehicle.other.a_lat_max
         config.vehicle.other.a_max = self.vehicle.other.a_max
         config.vehicle.other.radius_disc = self.vehicle.other.radius_disc
-
-        # if three circle approximation is used, store the computed circle distance as wheelbase in CPP config
-        if self.reachable_set.mode_inflation != 3:
-            config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
-        else:
-            config.vehicle.other.wheelbase = self.vehicle.other.circle_distance
+        config.vehicle.other.circle_distance = self.vehicle.other.circle_distance
+        config.vehicle.other.wheelbase = self.vehicle.other.wheelbase
 
         config.planning.dt = self.planning.dt
         config.planning.step_start = self.planning.step_start

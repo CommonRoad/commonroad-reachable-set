@@ -16,14 +16,14 @@ namespace reach {
  * @param cosy Curvilinear Coordinate System
  * @param lut_lon_enlargement Look-up table with precomputed longitudinal enlargements for different curvature intervals
  * @param reference_point Reference point of the vehicle (CENTER or REAR)
- * @param wheelbase wheelbase (i.e., distance between first and last circle)
+ * @param circle_distance distance between first and third circle
  * @param coords coordinates (x_min, x_max, y_min, y_max) of the original rectangle
  * @return coordinates (x_min, x_max, y_min, y_max) of the enlarged rectangle
  */
 std::tuple<double, double, double, double> computeEnlargedRectangle(const geometry::CurvilinearCoordinateSystem &cosy,
                                                                            const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                            ReferencePoint reference_point,
-                                                                           double wheelbase,
+                                                                           double circle_distance,
                                                                            std::tuple<double, double, double, double> coords);
 
 } // namespace reach

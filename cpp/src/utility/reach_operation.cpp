@@ -269,7 +269,7 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& s
                                                                     vector<ReachPolygonPtr> const& vec_rectangles,
                                                                     double const& radius_terminal_split,
                                                                     int const& num_threads,
-                                                                    double const& wheelbase,
+                                                                    double const& circle_distance,
                                                                     const geometry::CurvilinearCoordinateSystem &cosy,
                                                                     const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                     ReferencePoint reference_point) {
@@ -285,7 +285,7 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& s
         std::tie(x_lo, x_hi, y_lo, y_hi) = computeEnlargedRectangle(cosy,
                                                                     lut_lon_enlargement,
                                                                     reference_point,
-                                                                    wheelbase,
+                                                                    circle_distance,
                                                                     std::make_tuple(rectangle->p_lon_min(),
                                                                                     rectangle->p_lon_max(),
                                                                                     rectangle->p_lat_min(),
@@ -308,7 +308,7 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& s
         auto vec_aabbs_split = create_collision_free_rectangles(collision_checker_sliced,
                                                                 aabb,
                                                                 radius_terminal_squared,
-                                                                wheelbase,
+                                                                circle_distance,
                                                                 cosy,
                                                                 lut_lon_enlargement,
                                                                 reference_point);
@@ -420,7 +420,7 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
 vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
                                                                  RectangleAABBPtr const& rectangle,
                                                                  double const& radius_terminal_squared,
-                                                                 double const& wheelbase,
+                                                                 double const& circle_distance,
                                                                  const geometry::CurvilinearCoordinateSystem &cosy,
                                                                  const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                  ReferencePoint reference_point) {
@@ -437,7 +437,7 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
     std::tie(x_lo, x_hi, y_lo, y_hi) = computeEnlargedRectangle(cosy,
                                                                 lut_lon_enlargement,
                                                                 reference_point,
-                                                                wheelbase,
+                                                                circle_distance,
                                                                 std::make_tuple(c_x - r_x,
                                                                                 c_x + r_x,
                                                                                 c_y - r_y,
@@ -466,7 +466,7 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
                 create_collision_free_rectangles(collision_checker,
                                                  rectangle_split_a,
                                                  radius_terminal_squared,
-                                                 wheelbase,
+                                                 circle_distance,
                                                  cosy,
                                                  lut_lon_enlargement,
                                                  reference_point);
@@ -476,7 +476,7 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
                 create_collision_free_rectangles(collision_checker,
                                                  rectangle_split_b,
                                                  radius_terminal_squared,
-                                                 wheelbase,
+                                                 circle_distance,
                                                  cosy,
                                                  lut_lon_enlargement,
                                                  reference_point);

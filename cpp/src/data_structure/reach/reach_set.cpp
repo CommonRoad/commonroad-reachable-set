@@ -103,7 +103,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
                     step, collision_checker, vec_rectangles_repartitioned,
                     config->reachable_set().radius_terminal_split,
                     config->reachable_set().num_threads,
-                    config->vehicle().ego.wheelbase,
+                    config->vehicle().ego.circle_distance,
                     *config->planning().CLCS,
                     *config->reachable_set().lut_lon_enlargement,
                     config->planning().reference_point);
@@ -122,7 +122,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
                     step, collision_checker, vec_rectangles_projected,
                     config->reachable_set().radius_terminal_split,
                     config->reachable_set().num_threads,
-                    config->vehicle().ego.wheelbase,
+                    config->vehicle().ego.circle_distance,
                     *config->planning().CLCS,
                     *config->reachable_set().lut_lon_enlargement,
                     config->planning().reference_point);
@@ -146,7 +146,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
                     step, collision_checker, vec_rectangles_projected,
                     config->reachable_set().radius_terminal_split,
                     config->reachable_set().num_threads,
-                    config->vehicle().ego.wheelbase,
+                    config->vehicle().ego.circle_distance,
                     *config->planning().CLCS,
                     *config->reachable_set().lut_lon_enlargement,
                     config->planning().reference_point);

@@ -60,7 +60,7 @@ static double computeLongitudinalEnlargement(
  * Returns the value for lateral enlargement of the rectangle for a given curvature range
  * @param min_curvature minimum of curvature range
  * @param max_curvature maximum of curvature range
- * @param l length = wheelbase (ref point REAR), length = wheelbase/2 (ref point CENTER)
+ * @param l length = circle_distance (ref point REAR), length = circle_distance/2 (ref point CENTER)
  * @param y_lo
  * @param y_hi
  * @return tuple of values (y_lo, y_hi) for enlargement in lateral direction
@@ -99,7 +99,7 @@ static std::tuple<double, double> computeLateralEnlargement(
  * @param cosy Curvilinear Coordinate System
  * @param lut_lon_enlargement Look-up table with precomputed longitudinal enlargements for different curvature intervals
  * @param reference_point Reference point of the vehicle (CENTER or REAR)
- * @param wheelbase wheelbase (i.e., distance between first and last circle)
+ * @param circle_distance distance between first and third circle
  * @param x_lo minimum longitudinal coordinate of rectangle
  * @param x_hi maximum longitudinal coordinate of rectangle
  * @param y_lo minimum lateral coordinate of rectangle
@@ -110,7 +110,7 @@ static std::tuple<double, double, double> computeEnlargement(
         const geometry::CurvilinearCoordinateSystem &cosy,
         const LUTLongitudinalEnlargement& lut_lon_enlargement,
         const ReferencePoint reference_point,
-        const double wheelbase,
+        const double circle_distance,
         const double x_lo,
         const double x_hi,
         const double y_lo,
@@ -122,11 +122,11 @@ static std::tuple<double, double, double> computeEnlargement(
     double min_curvature, max_curvature, l;
     switch (reference_point) {
         case ReferencePoint::CENTER:
-            l = wheelbase / 2.0;
+            l = circle_distance / 2.0;
             std::tie(min_curvature, max_curvature) = cosy.curvatureRange(x_lo - dx, x_hi + dx);
             break;
         case ReferencePoint::REAR:
-            l = wheelbase;
+            l = circle_distance;
             std::tie(min_curvature, max_curvature) = cosy.curvatureRange(x_lo, x_hi + dx);
             break;
         default:
@@ -146,11 +146,11 @@ std::tuple<double, double, double, double> computeEnlargedRectangle(
         const geometry::CurvilinearCoordinateSystem &cosy,
         const LUTLongitudinalEnlargement& lut_lon_enlargement,
         const ReferencePoint reference_point,
-        const double wheelbase,
+        const double circle_distance,
         std::tuple<double, double, double, double> coords) {
     double dx, dy_lo, dy_hi;
     std::tie(dx, dy_lo, dy_hi) = computeEnlargement(
-            cosy, lut_lon_enlargement, reference_point, wheelbase,
+            cosy, lut_lon_enlargement, reference_point, circle_distance,
             std::get<0>(coords), std::get<1>(coords),
             std::get<2>(coords), std::get<3>(coords));
 

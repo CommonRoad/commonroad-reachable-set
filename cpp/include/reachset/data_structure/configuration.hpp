@@ -41,6 +41,7 @@ struct Ego {
     double length{};
     double width{};
     double radius_disc{};
+    double circle_distance{};
     double wheelbase{};
     // velocity profile
     double v_lon_min{};
@@ -70,6 +71,7 @@ struct Other {
     double length{};
     double width{};
     double radius_disc{};
+    double circle_distance{};
     double wheelbase{};
     // velocity profile
     double v_lon_min{};

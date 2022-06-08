@@ -95,7 +95,7 @@ std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& ste
                                                                   std::vector<ReachPolygonPtr> const& vec_rectangles,
                                                                   double const& radius_terminal_split,
                                                                   int const& num_threads,
-                                                                  double const& wheelbase,
+                                                                  double const& circle_distance,
                                                                   const geometry::CurvilinearCoordinateSystem &cosy,
                                                                   const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                   ReferencePoint reference_point);
@@ -124,7 +124,7 @@ std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerP
 std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
                                                                RectangleAABBPtr const& rectangle,
                                                                double const& radius_terminal_squared,
-                                                               double const& wheelbase,
+                                                               double const& circle_distance,
                                                                const geometry::CurvilinearCoordinateSystem &cosy,
                                                                const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                ReferencePoint reference_point);
