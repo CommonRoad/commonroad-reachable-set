@@ -175,10 +175,10 @@ def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: i
     # preprocess
     for reach_node in list_reach_set_nodes:
         # enlarge position rectangles
-        vertices_rectangle_scaled = (reach_node.p_lon_min * coefficient,
-                                     reach_node.p_lat_min * coefficient,
-                                     reach_node.p_lon_max * coefficient,
-                                     reach_node.p_lat_max * coefficient)
+        vertices_rectangle_scaled = (math.floor(reach_node.p_lon_min * coefficient),
+                                     math.floor(reach_node.p_lat_min * coefficient),
+                                     math.ceil(reach_node.p_lon_max * coefficient),
+                                     math.ceil(reach_node.p_lat_max * coefficient))
         list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
 
     # iterate over all rectangles in list
