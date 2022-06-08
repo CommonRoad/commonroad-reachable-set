@@ -110,13 +110,15 @@ class ReachableSetInterface:
         if longitudinal_dc is None or longitudinal_positions is None:
             if to_goal_region:
                 goal_position = self.config.planning_problem.goal.state_list[0].position
-                if type(goal_position)==ShapeGroup:
-                    # TODO also consider additional Shapes in ShapeGroup
-                    goal_region = self.config.planning_problem.goal.state_list[0].position.shapes[0]
+                if type(goal_position) == ShapeGroup:
+                    # extract all driving corridors reaching any of the shape in shape group
+                    driving_corridors_list = []
+                    for goal_region in self.config.planning_problem.goal.state_list[0].position.shapes:
+                        driving_corridors_list += self._driving_corridor_extractor.\
+                            extract_lon_driving_corridor(terminal_set=goal_region)
                 else:
-                    goal_region = goal_position
-                driving_corridors_list = self._driving_corridor_extractor.\
-                    extract_lon_driving_corridor(terminal_set=goal_region)
+                    driving_corridors_list = self._driving_corridor_extractor.\
+                        extract_lon_driving_corridor(terminal_set=goal_position)
             elif terminal_set is not None:
                 driving_corridors_list = self._driving_corridor_extractor. \
                     extract_lon_driving_corridor(terminal_set=terminal_set, cartesian_terminal_set=False)
