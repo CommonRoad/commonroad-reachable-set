@@ -44,16 +44,18 @@ with open(yaml_file, 'r') as stream:
     except yaml.YAMLError as exc:
         print(exc)
 
-# get scenario, planning problem, reference path from reach config
+# get scenario, planning problem, reference path, cosy from reach config
 scenario = config_reach.scenario
 planning_problem = config_reach.planning_problem
 reference_path = config_reach.planning.reference_path
 lanelets_to_goal = config_reach.planning.route.list_ids_lanelets
+curvilinear_cosy = config_reach.planning.CLCS
 
 # construct qp vehicle configuration
 configuration_qp = \
     create_optimization_configuration_vehicle(scenario, planning_problem, settings_qp["vehicle_settings"],
-                                              reference_path=reference_path, lanelets_leading_to_goal=lanelets_to_goal)
+                                              reference_path=reference_path, lanelets_leading_to_goal=lanelets_to_goal,
+                                              cosy=curvilinear_cosy)
 
 # Initialize QP Planner
 qp_planner = QPPlanner(scenario,
