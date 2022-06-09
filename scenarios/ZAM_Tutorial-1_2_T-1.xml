@@ -6431,18 +6431,5 @@
         <exact>0.0</exact>
       </slipAngle>
     </initialState>
-    <goalState>
-      <position>
-        <lanelet ref="1"/>
-      </position>
-      <orientation>
-        <intervalStart>-1.0491</intervalStart>
-        <intervalEnd>0.95091</intervalEnd>
-      </orientation>
-      <time>
-        <intervalStart>35</intervalStart>
-        <intervalEnd>40</intervalEnd>
-      </time>
-    </goalState>
   </planningProblem>
 </commonRoad>
