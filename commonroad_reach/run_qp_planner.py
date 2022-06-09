@@ -1,18 +1,19 @@
 import yaml
 import logging
+from matplotlib import pyplot as plt
 
 # commonroad_reach
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
-from commonroad_reach.utility import visualization as util_visual
 
 # commonroad_qp_planner
-from commonroad_qp_planner.qp_planner import QPPlanner, QPLongDesired, QPLongState, LongitudinalTrajectoryPlanningError
+from commonroad_qp_planner.qp_planner import QPPlanner, QPLongDesired, QPLongState, LongitudinalTrajectoryPlanningError, \
+    LateralTrajectoryPlanningError
 from commonroad_qp_planner.initialization import create_optimization_configuration_vehicle
-from commonroad_qp_planner.constraints import LatConstraints, LonConstraints, TVConstraints
+from commonroad_qp_planner.constraints import LatConstraints, LonConstraints
 from commonroad_qp_planner.utility.compute_constraints import longitudinal_position_constraints, \
     lateral_position_constraints
-
+from commonroad_qp_planner.utils import plot_result
 
 # name of scenario
 name_scenario = "ZAM_Tutorial-1_2_T-1"
@@ -57,7 +58,7 @@ configuration_qp = \
 # Initialize QP Planner
 qp_planner = QPPlanner(scenario,
                        planning_problem,
-                       settings_qp["general_planning_settings"]["time_horizon"],
+                       config_reach.planning.steps_computation * config_reach.planning.dt,
                        configuration_qp,
                        qp_long_parameters=settings_qp["qp_planner"]["longitudinal_parameters"],
                        qp_lat_parameters=settings_qp["qp_planner"]["lateral_parameters"],
@@ -105,14 +106,42 @@ d_min, d_max = lateral_position_constraints(lat_dc, lon_dc, traj_lon_positions,
 c_tv_lat = LatConstraints.construct_constraints(d_min, d_max, d_min, d_max)
 
 # Plan lateral trajectory
-trajectory, status = qp_planner.lateral_trajectory_planning(traj_lon, c_tv_lat)
+trajectory_cvln, status = qp_planner.lateral_trajectory_planning(traj_lon, c_tv_lat)
+if status == 'optimal':
+    pass
+else:
+    raise LateralTrajectoryPlanningError(f'<QPPlanner/_longitudinal_trajectory_planning> '
+                                         f'failed, status: {status}')
 
-# Transform trajectory back to Cartesian and create ego vehicle object
-trajectory_cartesian = qp_planner.transform_trajectory_to_cartesian_coordinates(trajectory)
-ego_vehicle = trajectory_cartesian.convert_to_cr_ego_vehicle(configuration_qp.width, configuration_qp.length,
-                                                             configuration_qp.wheelbase, configuration_qp.vehicle_id)
+# Transform trajectory back to Cartesian
+trajectory_cartesian = qp_planner.transform_trajectory_to_cartesian_coordinates(trajectory_cvln)
 
 
 # ****************************************************
 # Visualization and Evaluation
 # ****************************************************
+# create ego vehicle object
+ego_vehicle = trajectory_cartesian.convert_to_cr_ego_vehicle(configuration_qp.width, configuration_qp.length,
+                                                             configuration_qp.wheelbase, configuration_qp.vehicle_id)
+
+# plot trajectory
+fig, axs = plt.subplots(3)
+plot_result(scenario, ego_vehicle, axs[0])
+
+# s_limit
+axs[1].plot(list(range(len(s_min))), s_min, color="red")
+axs[1].plot(list(range(len(s_max))), s_max, color="red")
+axs[1].plot(list(range(len(trajectory_cvln.states) - 1)),
+            [state.position[0] for state in trajectory_cvln.states[1:]], color="black")
+axs[1].set_xlabel("time step")
+axs[1].set_ylabel("s")
+
+# d_limit
+axs[2].plot(list(range(len(d_min))), d_min, color="red")
+axs[2].plot(list(range(len(d_max))), d_max, color="red")
+axs[2].plot(list(range(len(trajectory_cvln.states) - 1)),
+            [state.position[1] for state in trajectory_cvln.states[1:]], color="black")
+axs[2].set_xlabel("time step")
+axs[2].set_ylabel("d")
+
+plt.show()

@@ -84,7 +84,7 @@ class DrivingCorridorExtractor:
         time_start = time.time()
         if lon_positions is None and lon_driving_corridor is None:
             # compute longitudinal driving corridor
-            print("* Computing longitudinal driving corridor...")
+            print("*** Computing longitudinal driving corridor...")
             lon_positions_dict = None
             if terminal_set is not None:
                 # use base sets which overlap with given terminal set in last time step
@@ -95,7 +95,7 @@ class DrivingCorridorExtractor:
                 connected_components = self._determine_connected_components(list(self.reach_set[self.steps[-1]]))
         elif lon_positions is not None and lon_driving_corridor is not None:
             # compute lateral driving corridor for given longitudinal driving corridor
-            print("Computing lateral driving corridor...")
+            print("*** Computing lateral driving corridor...")
             assert (len(lon_positions) == len(self.steps))
             lon_positions_dict = dict(zip(self.steps, lon_positions))
             # determine reachable sets which contain the longitudinal position in last time step
@@ -311,8 +311,8 @@ class DrivingCorridorExtractor:
         """
         reach_set_nodes_overlap = set()
         for reach_node in reach_set_nodes:
-            if np.greater_equal(round(lon_pos * 10.0 ** DIGITS), math.floor(reach_node.x_min() * 10.0 ** DIGITS)) and \
-                    np.greater_equal(math.ceil(reach_node.x_max() * 10.0 ** DIGITS), round(lon_pos * 10.0 ** DIGITS)):
+            if np.greater_equal(round(lon_pos * 10.0 ** DIGITS), math.floor(reach_node.p_lon_min() * 10.0 ** DIGITS)) and \
+                    np.greater_equal(math.ceil(reach_node.p_lon_max() * 10.0 ** DIGITS), round(lon_pos * 10.0 ** DIGITS)):
                 reach_set_nodes_overlap.add(reach_node)
         return reach_set_nodes_overlap
 
