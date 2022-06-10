@@ -2,6 +2,7 @@ import yaml
 import logging
 from matplotlib import pyplot as plt
 import numpy as np
+import os
 
 # commonroad_reach
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
@@ -37,9 +38,11 @@ reach_interface.compute_reachable_sets()
 # ****************************************************
 # QP Planner
 # ****************************************************
+# path to QP root folder
+path_qp = "/home/gerald/Documents/CommonRoad/cps/commonroad-qp-planner"
+
 # load qp YAML settings
-yaml_file = "/home/gerald/Documents/CommonRoad/cps/commonroad-qp-planner/test/config_files/config_%s.yaml" \
-            % name_scenario
+yaml_file = os.path.join(path_qp, "test/config_files/config_%s.yaml" % name_scenario)
 with open(yaml_file, 'r') as stream:
     try:
         settings_qp = yaml.load(stream, Loader=yaml.Loader)
@@ -134,6 +137,6 @@ plot_result(scenario, ego_vehicle)
 # plot position constraints
 plot_position_constraints(trajectory_cvln, (s_min, s_max), (d_min, d_max))
 
-# plot lateral driving corridor
+# plot full driving corridor with trajectory
 trajectory_positions = np.asarray([state.position for state in ego_vehicle.prediction.trajectory.state_list])
 draw_driving_corridor_2d(lat_dc, 0, reach_interface, trajectory_positions)
