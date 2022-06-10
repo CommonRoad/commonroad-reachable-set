@@ -62,6 +62,8 @@ The Python dependencies are listed in `requirements.txt`.
   ```bash
   $ CRDC_DIR="/path/to/commonroad-drivability-checker" pip install -v .
   ```
+  If you wish to install the package in "editable" mode, simply add the `-e` flag to the 
+above pip install command.
   
 **Note**: 
 
