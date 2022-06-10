@@ -1,10 +1,12 @@
 import yaml
 import logging
 from matplotlib import pyplot as plt
+import numpy as np
 
 # commonroad_reach
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
+from commonroad_reach.utility.visualization import plot_scenario_with_driving_corridor, draw_driving_corridor_2d
 
 # commonroad_qp_planner
 from commonroad_qp_planner.qp_planner import QPPlanner, QPLongDesired, QPLongState, LongitudinalTrajectoryPlanningError, \
@@ -13,7 +15,7 @@ from commonroad_qp_planner.initialization import create_optimization_configurati
 from commonroad_qp_planner.constraints import LatConstraints, LonConstraints
 from commonroad_qp_planner.utility.compute_constraints import longitudinal_position_constraints, \
     lateral_position_constraints
-from commonroad_qp_planner.utils import plot_result
+from commonroad_qp_planner.utils import plot_result, plot_position_constraints
 
 # name of scenario
 name_scenario = "ZAM_Tutorial-1_2_T-1"
@@ -64,7 +66,7 @@ qp_planner = QPPlanner(scenario,
                        configuration_qp,
                        qp_long_parameters=settings_qp["qp_planner"]["longitudinal_parameters"],
                        qp_lat_parameters=settings_qp["qp_planner"]["lateral_parameters"],
-                       verbose=True, logger_level=logging.INFO)
+                       verbose=False, logger_level=logging.INFO)
 
 
 # Longitudinal Trajectory Planning
@@ -127,23 +129,11 @@ ego_vehicle = trajectory_cartesian.convert_to_cr_ego_vehicle(configuration_qp.wi
                                                              configuration_qp.wheelbase, configuration_qp.vehicle_id)
 
 # plot trajectory
-fig, axs = plt.subplots(3)
-plot_result(scenario, ego_vehicle, axs[0])
+plot_result(scenario, ego_vehicle)
 
-# s_limit
-axs[1].plot(list(range(len(s_min))), s_min, color="red")
-axs[1].plot(list(range(len(s_max))), s_max, color="red")
-axs[1].plot(list(range(len(trajectory_cvln.states) - 1)),
-            [state.position[0] for state in trajectory_cvln.states[1:]], color="black")
-axs[1].set_xlabel("time step")
-axs[1].set_ylabel("s")
+# plot position constraints
+plot_position_constraints(trajectory_cvln, (s_min, s_max), (d_min, d_max))
 
-# d_limit
-axs[2].plot(list(range(len(d_min))), d_min, color="red")
-axs[2].plot(list(range(len(d_max))), d_max, color="red")
-axs[2].plot(list(range(len(trajectory_cvln.states) - 1)),
-            [state.position[1] for state in trajectory_cvln.states[1:]], color="black")
-axs[2].set_xlabel("time step")
-axs[2].set_ylabel("d")
-
-plt.show()
+# plot lateral driving corridor
+trajectory_positions = np.asarray([state.position for state in ego_vehicle.prediction.trajectory.state_list])
+draw_driving_corridor_2d(lat_dc, 0, reach_interface, trajectory_positions)

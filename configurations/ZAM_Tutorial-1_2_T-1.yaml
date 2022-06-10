@@ -31,7 +31,7 @@ vehicle:
     a_max: 9.81
 
 debug:
-  draw_ref_path: True
+  draw_ref_path: False
   draw_planning_problem: True
   draw_icons: False
   plot_azimuth: -120
