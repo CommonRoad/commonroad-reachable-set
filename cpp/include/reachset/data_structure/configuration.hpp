@@ -2,7 +2,9 @@
 
 #include "reachset/utility/shared_include.hpp"
 #include "reachset/utility/shared_using.hpp"
+#include "reachset/utility/lut_longitudinal_enlargement.hpp"
 #include <yaml-cpp/yaml.h>
+#include "geometry/curvilinear_coordinate_system.h"
 
 namespace reach {
 
@@ -39,6 +41,7 @@ struct Ego {
     double length{};
     double width{};
     double radius_disc{};
+    double circle_distance{};
     double wheelbase{};
     // velocity profile
     double v_lon_min{};
@@ -68,6 +71,7 @@ struct Other {
     double length{};
     double width{};
     double radius_disc{};
+    double circle_distance{};
     double wheelbase{};
     // velocity profile
     double v_lon_min{};
@@ -119,6 +123,9 @@ struct PlanningConfiguration {
     CoordinateSystem coordinate_system{CoordinateSystem::CURVILINEAR};
     ReferencePoint reference_point{ReferencePoint::CENTER};
 
+    // curvilinear coordinate system object
+    std::shared_ptr<const geometry::CurvilinearCoordinateSystem> CLCS;
+
     PlanningConfiguration() = default;
 
     explicit PlanningConfiguration(YAML::Node const& node);
@@ -126,7 +133,10 @@ struct PlanningConfiguration {
 
 /// Struct storing reachable set configurations.
 struct ReachableSetConfiguration {
+    // mode for drivable area repartition
     int mode_repartition{};
+    // mode for considering the shape of the ego vehicle
+    int mode_inflation{};
     // grid size for repartitioning rectangles
     double size_grid{};
     // grid size for repartitioning rectangles (second time)
@@ -137,6 +147,8 @@ struct ReachableSetConfiguration {
     int num_threads{};
     // flag whether to prune reach nodes not reaching the final time step
     bool prune_nodes{};
+    // look-up table for longitudinal enlargement for collision checking
+    LUTLongitudinalEnlargementConstPtr lut_lon_enlargement;
 
     ReachableSetConfiguration() = default;
 

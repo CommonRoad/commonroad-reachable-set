@@ -108,7 +108,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id), duration)
+        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration)
 
     message = "\tReachable sets plotted."
     print(message)
@@ -188,7 +188,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "reachset_", steps, str(scenario.scenario_id), duration=duration)
+        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration=duration)
 
     message = "\tDrivable area plotted."
     print(message)
@@ -268,14 +268,14 @@ def draw_drivable_area(list_rectangles, config, renderer, draw_params):
 def save_fig(save_gif: bool, path_output: str, time_step: int):
     if save_gif:
         # save as png
-        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'))
-        plt.savefig(os.path.join(path_output, f'{"reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
+        print("\tSaving", os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'))
+        plt.savefig(os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
                     transparent=False)
 
     else:
         # save as svg
-        print("\tSaving", os.path.join(path_output, f'{"reachset"}_{time_step:05d}.svg'))
-        plt.savefig(f'{path_output}{"reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
+        print("\tSaving", os.path.join(path_output, f'{"svg_reachset"}_{time_step:05d}.svg'))
+        plt.savefig(f'{path_output}{"svg_reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
                     transparent=False)
 
 
@@ -293,7 +293,6 @@ def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
         images.append(imageio.imread(filename))
 
     imageio.mimsave(os.path.join(path, "../", file_save_name + ".gif"), images, duration=duration)
-    print("\tGIF created.")
 
 
 def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,
@@ -352,7 +351,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
 
     # create separate output folder
-    path_output_lon_dc = path_output + ('lon_driving_corridor_%s/' % dc_id)
+    path_output_lon_dc = path_output + ('driving_corridor_%s/' % dc_id)
     Path(path_output_lon_dc).mkdir(parents=True, exist_ok=True)
 
     # make separate plot of driving corridor for each time step + create gif (optional)
@@ -383,13 +382,13 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
 
         if config.debug.save_plots:
             save_format = "svg" if as_svg else "png"
-            print("\tSaving", os.path.join(path_output_lon_dc, f'{"lon_driving_corridor"}_{time_step:05d}.{save_format}'))
+            print("\tSaving", os.path.join(path_output_lon_dc, f'{"driving_corridor"}_{time_step:05d}.{save_format}'))
             plt.savefig(
-                f'{path_output_lon_dc}{"lon_driving_corridor"}_{time_step:05d}.{save_format}',
+                f'{path_output_lon_dc}{"driving_corridor"}_{time_step:05d}.{save_format}',
                 format=save_format, bbox_inches="tight", transparent=False)
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output_lon_dc, "lon_driving_corridor_", steps, ("lon_driving_corridor_%s" % dc_id), duration)
+        make_gif(path_output_lon_dc, "driving_corridor_", steps, ("driving_corridor_%s" % dc_id), duration)
 
         for time_step in range(time_step_end + 1):
             # plot driving corridor and scenario at the specified time step
@@ -453,10 +452,70 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     logger.info(message)
 
 
+def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
+                             trajectory: np.ndarray=None, as_svg=False):
+    """Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor"""
+    message = "* Plotting full 2D driving corridor ..."
+    print(message)
+    logger.info(message)
+
+    # set ups
+    config = reach_interface.config
+    scenario = config.scenario
+
+    planning_problem = config.planning_problem
+
+    # set color
+    palette = sns.color_palette("GnBu_d", 3)
+    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
+    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # create output directory
+    path_output = config.general.path_output
+    Path(path_output).mkdir(parents=True, exist_ok=True)
+
+    # set plot limits & create renderer
+    plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
+    renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+
+    # draw scenario at first time step
+    plt.cla()
+    scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons,
+                                                              "trajectory": {"draw_trajectory": False}},
+                                         "time_begin": 0})
+    # draw planning problem
+    if config.debug.draw_planning_problem:
+        planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
+            'draw_arrow': False, "radius": 0.5}}}})
+
+    # plot full driving corridor (for all time steps)
+    for step in driving_corridor.keys():
+        # reach set nodes in driving corridor at specified time step
+        list_nodes = driving_corridor[step]
+        draw_reachable_sets(list_nodes, config, renderer, draw_params)
+
+    # plot
+    plt.rc("axes", axisbelow=True)
+    ax = plt.gca()
+    ax.set_aspect("equal")
+    plt.margins(0, 0)
+    renderer.render()
+
+    if trajectory is not None:
+        renderer.ax.plot(trajectory[:, 0], trajectory[:, 1],
+                         color='k', marker='.', markersize=10, zorder=50, linewidth=3.0)
+
+    if config.debug.save_plots:
+        save_format = "svg" if as_svg else "png"
+        plt.savefig(
+            f'{path_output}{"driving_corridor"}_{dc_id}_2D.{save_format}', format=save_format,
+            bbox_inches="tight", transparent=False)
+
+
 def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
                              lanelet_ids: List[int] = None, list_obstacles: List = None, as_svg=False):
-    """Draws a driving corridor with 3D projection."""
-    message = "* Plotting 3D driving corridor ..."
+    """Draws full driving corridor with 3D projection."""
+    message = "* Plotting full 3D driving corridor ..."
     print(message)
     logger.info(message)
 

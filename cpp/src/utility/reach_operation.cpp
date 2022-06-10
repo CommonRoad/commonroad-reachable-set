@@ -264,6 +264,66 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& s
     return vec_rectangles_collision_free;
 }
 
+vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& step,
+                                                                    CollisionCheckerPtr const& collision_checker,
+                                                                    vector<ReachPolygonPtr> const& vec_rectangles,
+                                                                    double const& radius_terminal_split,
+                                                                    int const& num_threads,
+                                                                    double const& circle_distance,
+                                                                    const geometry::CurvilinearCoordinateSystem &cosy,
+                                                                    const LUTLongitudinalEnlargement& lut_lon_enlargement,
+                                                                    ReferencePoint reference_point) {
+    if (vec_rectangles.empty()) return {};
+
+    vector<ReachPolygonPtr> vec_rectangles_collision_free;
+    auto radius_terminal_squared = pow(radius_terminal_split, 2);
+
+    // loop over rectangles (ReachPolygons)
+    for (auto const& rectangle: vec_rectangles) {
+        // enlarge rectangle for windowQuery
+        double x_lo, x_hi, y_lo, y_hi = 0.;
+        std::tie(x_lo, x_hi, y_lo, y_hi) = computeEnlargedRectangle(cosy,
+                                                                    lut_lon_enlargement,
+                                                                    reference_point,
+                                                                    circle_distance,
+                                                                    std::make_tuple(rectangle->p_lon_min(),
+                                                                                    rectangle->p_lon_max(),
+                                                                                    rectangle->p_lat_min(),
+                                                                                    rectangle->p_lat_max()));
+
+        // create collision object RectangleAABB for enlarged rectangle
+        collision::RectangleAABB enlarged_rect = collision::RectangleAABB{(x_hi - x_lo) / 2.0,
+                                                                          (y_hi - y_lo) / 2.0,
+                                                                          Eigen::Vector2d((x_hi + x_lo) / 2.0,
+                                                                                          (y_hi + y_lo) / 2.0)};
+
+
+        // make a window query w.r.t enlarged rectangle to speed up the collision check
+        auto collision_checker_sliced = collision_checker->timeSlice(step)->windowQuery(enlarged_rect);
+
+        // create collision object RectangleAABB from (non-enlarged) ReachPolygon rectangle
+        auto aabb = convert_reach_polygon_to_collision_aabb(rectangle);
+
+        // check for collisions considering enlargement of sets
+        auto vec_aabbs_split = create_collision_free_rectangles(collision_checker_sliced,
+                                                                aabb,
+                                                                radius_terminal_squared,
+                                                                circle_distance,
+                                                                cosy,
+                                                                lut_lon_enlargement,
+                                                                reference_point);
+
+        // convert collision-free rectangles back to ReachPolygons
+        auto vec_rectangles_split = convert_collision_aabbs_to_reach_polygons(vec_aabbs_split);
+
+        vec_rectangles_collision_free.insert(vec_rectangles_collision_free.end(),
+                                             std::make_move_iterator(vec_rectangles_split.begin()),
+                                             std::make_move_iterator(vec_rectangles_split.end()));
+    }
+
+    return vec_rectangles_collision_free;
+}
+
 tuple<double, double, double, double>
 reach::obtain_extremum_coordinates_of_polygons(vector<ReachPolygonPtr> const& vec_polygons) {
     vector<double> vec_p_lon;
@@ -356,6 +416,80 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
         return vec_rectangles_split_a;
     }
 }
+
+vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
+                                                                 RectangleAABBPtr const& rectangle,
+                                                                 double const& radius_terminal_squared,
+                                                                 double const& circle_distance,
+                                                                 const geometry::CurvilinearCoordinateSystem &cosy,
+                                                                 const LUTLongitudinalEnlargement& lut_lon_enlargement,
+                                                                 ReferencePoint reference_point) {
+
+    // enlarge rectangle for collision checking
+    // center-radius representation of collision RectangleAABB
+    double c_x = rectangle->center_x();
+    double c_y = rectangle->center_y();
+    double r_x = rectangle->r_x();
+    double r_y = rectangle->r_y();
+
+    // extremum points of enlarged rectangle
+    double x_lo, x_hi, y_lo, y_hi = 0.;
+    std::tie(x_lo, x_hi, y_lo, y_hi) = computeEnlargedRectangle(cosy,
+                                                                lut_lon_enlargement,
+                                                                reference_point,
+                                                                circle_distance,
+                                                                std::make_tuple(c_x - r_x,
+                                                                                c_x + r_x,
+                                                                                c_y - r_y,
+                                                                                c_y + r_y));
+
+    // create collision object (RectangleAABB) for enlarged rectangle
+    collision::RectangleAABBConstPtr enlarged_rect = std::make_shared<collision::RectangleAABB>(
+            (x_hi - x_lo) / 2.0,
+            (y_hi - y_lo) / 2.0,
+            Eigen::Vector2d((x_hi + x_lo) / 2.0,(y_hi + y_lo) / 2.0));
+
+    // check for collision with enlarged rectangle
+    bool col_res = false;
+    col_res = collision_checker->collide(enlarged_rect);
+    // case 1: enlarged rectangle does not collide, return original rectangle as collision free
+    if (not col_res) return {rectangle};
+    // case 2: the diagonal of the original rectangle is smaller than the terminal radius, return nothing
+    else if (diagonal_squared(rectangle) < radius_terminal_squared) return {};
+    // case 3: colliding but diagonal is long enough. split original rectangle into two halves.
+    else {
+        // split rectangles into two
+        auto[rectangle_split_a, rectangle_split_b] = split_rectangle_into_two(rectangle);
+
+        // recursion: check first rectangle for collision
+        auto vec_rectangles_split_a =
+                create_collision_free_rectangles(collision_checker,
+                                                 rectangle_split_a,
+                                                 radius_terminal_squared,
+                                                 circle_distance,
+                                                 cosy,
+                                                 lut_lon_enlargement,
+                                                 reference_point);
+
+        // recursion: check second rectangle for collision
+        auto vec_rectangles_split_b =
+                create_collision_free_rectangles(collision_checker,
+                                                 rectangle_split_b,
+                                                 radius_terminal_squared,
+                                                 circle_distance,
+                                                 cosy,
+                                                 lut_lon_enlargement,
+                                                 reference_point);
+
+        // add all collision-free rectangles to return vector
+        vec_rectangles_split_a.insert(vec_rectangles_split_a.end(),
+                                      std::make_move_iterator(vec_rectangles_split_b.begin()),
+                                      std::make_move_iterator(vec_rectangles_split_b.end()));
+
+        return vec_rectangles_split_a;
+    }
+}
+
 
 /// Splits in the longer axis of the two.
 tuple<RectangleAABBPtr, RectangleAABBPtr> reach::split_rectangle_into_two(RectangleAABBPtr const& rectangle) {

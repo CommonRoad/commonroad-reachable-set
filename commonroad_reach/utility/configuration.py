@@ -1,9 +1,66 @@
-from math import ceil
-
+from typing import Tuple
+from collections import defaultdict
 import commonroad_dc.pycrccosy as pycrccosy
+from commonroad_dc.geometry.util import compute_orientation_from_polyline, compute_pathlength_from_polyline
 import numpy as np
 
 np.seterr(divide='ignore', invalid='ignore')
+
+
+def compute_disc_radius_and_distance(length: float, width: float, ref_point="CENTER", rear_axle_dist=None) \
+        -> Tuple[float, float]:
+    """
+    Vehicle occupancy is approximated by three equally sized discs with equidistant centerpoints.
+    (see Ziegler, J. and Stiller, C. (2010) "Fast collision checking for intelligent vehicle motion planning", IEEE IV
+    Returns radius of discs and distance between the first and third disc.
+    :param length: vehicle length
+    :param width: vehicle width
+    :param ref_point: either "CENTER" or "REAR"
+    :param rear_axle_dist: if ref_point == "REAR", the distance between vehicle center and rear axle has to be provided
+    :return: radius_disc: radius of discs
+    :return: circle_distance: distance between first and third circle
+    """
+    assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
+
+    if np.isclose(length, 0.0) and np.isclose(width, 0.0):
+        return 0.0, 0.0
+
+    # half width of the ego vehicle
+    width_square = width / 2
+
+    if ref_point == "CENTER":
+        # second circle center point is exactly at the geometric center of vehicle model
+        # the other circles are placed equidistant along the longitudinal axis
+        length_square = (length / 3)/2
+        radius = (length_square ** 2 + width_square ** 2) ** 0.5
+
+        # ceil up to 1 digit
+        # radius_disc = np.ceil(radius * 10) / 10
+        radius_disc = radius
+        circle_distance = (length / 3 * 2)
+
+    elif ref_point == "REAR":
+        # first circle center point has to be exactly on rear axis position of vehicle model
+        assert rear_axle_dist >= 0, f"Please provide a valid value for the rear axle distance (rear_axle_distance = " \
+                                    f"{rear_axle_dist})"
+        if rear_axle_dist < length/3:
+            length_square = length/2 - rear_axle_dist
+            radius = (length_square ** 2 + width_square ** 2) ** 0.5
+
+            # ceil up to 1 digit
+            # radius_disc = np.ceil(radius * 10) / 10
+            radius_disc = radius
+            circle_distance = rear_axle_dist * 2
+        else:
+            length_square = (length / 3)/2 + (rear_axle_dist - length/3)
+            radius = (length_square ** 2 + width_square ** 2) ** 0.5
+
+            radius_disc = radius
+            circle_distance = rear_axle_dist * 2
+    else:
+        raise Exception("reference point has to be either CENTER or REAR")
+
+    return radius_disc, circle_distance
 
 
 def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: float = None):
@@ -27,64 +84,50 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     # wheelbase is the distance between the front and rear axles
     wheelbase = wheelbase or (length / 3 * 2)
 
-    length_square = wheelbase / 4
+    length_square = (length / 3)/2
     width_square = width / 2
     radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
     # ceil up to 1 digit
-    radius_disc = ceil(radius * 10) / 10
+    # radius_disc = np.ceil(radius * 10) / 10
+    radius_disc = radius
 
     return radius_disc, wheelbase
 
 
-def compute_inflation_radius(mode_inflation: int, length: float, width: float):
+def compute_inflation_radius(mode_inflation: int, length: float, width: float, radius_disc: float):
     """Computes the radius to inflate the obstacles for collision check.
 
     Based on the specified mode, we obtain either under- or over-approximation of the shape of the ego vehicle.
     """
     assert length >= 0 and width >= 0, f"Invalid vehicle dimensions: length = {length}, width = {width}"
 
+    # Inscribed circle (under-approximation of the shape of the ego vehicle)
     if mode_inflation == 1:
         return length / 2 if length < width else width / 2
 
+    # 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
     elif mode_inflation == 2:
         return length / 2 if length > width else width / 2
+
+    # 3: Three disc approximation of vehicle occupancy
+    elif mode_inflation == 3:
+        return radius_disc
 
 
 def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,
                                          eps: float = 0.1) -> pycrccosy.CurvilinearCoordinateSystem:
+    # create new Curvilinear Coordinate System and set curvature values for reference path
     CLCS = pycrccosy.CurvilinearCoordinateSystem(reference_path, limit_projection_domain, eps)
+    CLCS.compute_and_set_curvature()
 
     return CLCS
-
-
-def compute_curvature_from_polyline(polyline: np.ndarray) -> np.ndarray:
-    """Computes the curvature of a given polyline
-
-    Args:
-        polyline (np.ndarray): polyline for the curvature computation
-
-    Returns:
-        np.ndarray: curvature of the polyline
-    """
-    assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2, \
-        "Polyline malformed for curvature computation p={}".format(polyline)
-
-    x_d = np.gradient(polyline[:, 0])
-    x_dd = np.gradient(x_d)
-    y_d = np.gradient(polyline[:, 1])
-    y_dd = np.gradient(y_d)
-
-    # compute curvature
-    curvature = (x_d * y_dd - x_dd * y_d) / ((x_d ** 2 + y_d ** 2) ** (3.0 / 2.0))
-
-    return curvature
 
 
 def compute_initial_state_cart(config):
     """Computes the initial Cartesian state of the ego vehicle given a planning problem."""
     planning_problem = config.planning_problem
-    wheelbase = config.vehicle.ego.wheelbase
+    wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = planning_problem.initial_state.position
     o = planning_problem.initial_state.orientation
@@ -94,8 +137,8 @@ def compute_initial_state_cart(config):
         pass
 
     elif config.planning.reference_point == "REAR":
-        x = x - wheelbase / 2 * np.cos(o)
-        y = y - wheelbase / 2 * np.sin(o)
+        x = x - wb_rear_axle * np.cos(o)
+        y = y - wb_rear_axle * np.sin(o)
 
     else:
         raise Exception(f"Unknown reference point: {config.planning.reference_point}")
@@ -114,7 +157,7 @@ def compute_initial_state_cvln(config):
     is the curvature of the reference path
     """
     planning_problem = config.planning_problem
-    wheelbase = config.vehicle.ego.wheelbase
+    wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = planning_problem.initial_state.position
     orientation = planning_problem.initial_state.orientation
@@ -125,13 +168,13 @@ def compute_initial_state_cvln(config):
 
     elif config.planning.reference_point == "REAR":
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(
-            x - wheelbase / 2 * np.cos(orientation), y - wheelbase / 2 * np.sin(orientation))
+            x - wb_rear_axle * np.cos(orientation), y - wb_rear_axle * np.sin(orientation))
     else:
         raise Exception(f"Unknown reference point: {config.planning.reference_point}")
 
     reference_path = config.planning.reference_path
     ref_orientation = compute_orientation_from_polyline(reference_path)
-    ref_path_length = compute_path_length_from_polyline(reference_path)
+    ref_path_length = compute_pathlength_from_polyline(reference_path)
     orientation_interpolated = np.interp(p_lon, ref_path_length, ref_orientation)
 
     v_lon = v * np.cos(orientation - orientation_interpolated)
@@ -140,36 +183,26 @@ def compute_initial_state_cvln(config):
     return (p_lon, p_lat), (v_lon, v_lat)
 
 
-def compute_orientation_from_polyline(polyline: np.ndarray) -> np.ndarray:
-    """Computes the orientation of a given polyline"""
-    assert isinstance(polyline, np.ndarray) and len(polyline) > 1 and polyline.ndim == 2 and len(polyline[0, :]) == 2, \
-        "not a valid polyline. polyline = {}".format(polyline)
+#TODO rename wheelbase parameter to circle distance
+def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, path_to_lut: str) -> dict:
+    """
+    Reads look-up table for longitudinal enlargement for collision checking in the reachability analysis.
+    :param reference_point
+    :param wheelbase
+    :param path_to_lut: path where look-up table is stored
+    :return: look-up table as dictionary
+    """
+    if reference_point == "REAR":
+        base_name = 'lut_ref_rear_wheelbase_'
+    elif reference_point == "CENTER":
+        base_name = 'lut_wheelbase_'
+    else:
+        raise ValueError("<read_lut_longitudinal_enlargement>: unknown reference point: {}".format(reference_point))
 
-    if len(polyline) < 2:
-        raise NameError("Cannot create orientation from polyline of length < 2")
+    table = np.loadtxt(path_to_lut + base_name + str(int(wheelbase * 10)) + '.txt', skiprows=1, delimiter=',')
 
-    orientation = []
-    for i in range(0, len(polyline) - 1):
-        pt1 = polyline[i]
-        pt2 = polyline[i + 1]
-        tmp = pt2 - pt1
-        orientation.append(np.arctan2(tmp[1], tmp[0]))
-
-    for i in range(len(polyline) - 1, len(polyline)):
-        pt1 = polyline[i - 1]
-        pt2 = polyline[i]
-        tmp = pt2 - pt1
-        orientation.append(np.arctan2(tmp[1], tmp[0]))
-
-    return np.array(orientation)
-
-
-def compute_path_length_from_polyline(polyline: np.ndarray) -> np.ndarray:
-    """Computes the path length of a given polyline"""
-    assert isinstance(polyline, np.ndarray) and polyline.ndim == 2 and len(polyline[:, 0]) > 2, \
-        "Polyline malformed for path length computation p={}".format(polyline)
-    distance = [0]
-    for i in range(1, len(polyline)):
-        distance.append(distance[i - 1] + np.linalg.norm(polyline[i] - polyline[i - 1]))
-
-    return np.array(distance)
+    lut_lon = defaultdict(dict)
+    # table entries: lateral position, min curvature, max curvature, enlargement
+    for row in table:
+        lut_lon[row[0]].update({tuple(row[1:3]): row[3]})
+    return lut_lon

@@ -175,10 +175,10 @@ def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: i
     # preprocess
     for reach_node in list_reach_set_nodes:
         # enlarge position rectangles
-        vertices_rectangle_scaled = (reach_node.p_lon_min * coefficient,
-                                     reach_node.p_lat_min * coefficient,
-                                     reach_node.p_lon_max * coefficient,
-                                     reach_node.p_lat_max * coefficient)
+        vertices_rectangle_scaled = (math.floor(reach_node.p_lon_min * coefficient),
+                                     math.floor(reach_node.p_lat_min * coefficient),
+                                     math.ceil(reach_node.p_lon_max * coefficient),
+                                     math.ceil(reach_node.p_lat_max * coefficient))
         list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
 
     # iterate over all rectangles in list
@@ -195,3 +195,23 @@ def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: i
                 overlap[idx1].append((idx1, idx2))
 
     return overlap
+
+
+def lon_interval_connected_set(connected_set):
+    """Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions"""
+    # get min and max values for each reachable set in the connected set
+    min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
+    # get minimum and maximum value for the connected set
+    min_connected_set = np.min(min_max_array[:, 0])
+    max_connected_set = np.max(min_max_array[:, 1])
+    return (min_connected_set, max_connected_set)
+
+
+def lat_interval_connected_set(connected_set):
+    """Projects a connected set onto lateral position domain and returns min/max lateral positions"""
+    # get min and max values for each reachable set in the connected set
+    min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
+    # get minimum and maximum value for the connected set
+    min_connected_set = np.min(min_max_array[:, 0])
+    max_connected_set = np.max(min_max_array[:, 1])
+    return (min_connected_set, max_connected_set)

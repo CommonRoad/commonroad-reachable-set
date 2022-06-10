@@ -17,8 +17,8 @@ class PyReachableSet(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
-        self.dict_time_to_drivable_area[self.step_start] = self._construct_initial_drivable_area()
-        self.dict_time_to_reachable_set[self.step_start] = self._construct_initial_reachable_set()
+        self.dict_step_to_drivable_area[self.step_start] = self._construct_initial_drivable_area()
+        self.dict_step_to_reachable_set[self.step_start] = self._construct_initial_reachable_set()
         self._initialize_zero_state_polygons()
         self.collision_checker = CollisionChecker(self.config)
 
@@ -53,7 +53,7 @@ class PyReachableSet(ReachableSet):
 
     def compute(self, step_start: int, step_end: int):
         for step in range(step_start, step_end + 1):
-            logger.debug(f"Computing reachable set for time step {step}")
+            logger.debug(f"Computing reachable set for step {step}")
             self._compute_drivable_area_at_step(step)
             self._compute_reachable_set_at_step(step)
             self._list_steps_computed.append(step)
@@ -71,7 +71,7 @@ class PyReachableSet(ReachableSet):
             4. Check for collisions with obstacles and road boundaries, and obtain collision-free rectangles.
             5. Merge and repartition the collision-free rectangles again to potentially reduce the number of rectangles.
         """
-        reachable_set_previous = self.dict_time_to_reachable_set[step - 1]
+        reachable_set_previous = self.dict_step_to_reachable_set[step - 1]
 
         if len(reachable_set_previous) < 1:
             return None
@@ -80,45 +80,45 @@ class PyReachableSet(ReachableSet):
 
         list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
 
+        size_grid = self.config.reachable_set.size_grid
+        size_grid_2nd = self.config.reachable_set.size_grid_2nd
+        radius_terminal_split = self.config.reachable_set.radius_terminal_split
         # repartition, then collision check
         if self.config.reachable_set.mode_repartition == 1:
             list_rectangles_repartitioned = \
-                reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
-                                                                self.config.reachable_set.size_grid)
+                reach_operation.create_repartitioned_rectangles(list_rectangles_projected, size_grid)
 
-            drivable_area = \
-                reach_operation.check_collision_and_split_rectangles(self.collision_checker, step,
-                                                                     list_rectangles_repartitioned,
-                                                                     self.config.reachable_set.radius_terminal_split)
+            drivable_area = reach_operation.check_collision_and_split_rectangles(self.collision_checker, step,
+                                                                                 list_rectangles_repartitioned,
+                                                                                 radius_terminal_split)
 
         # collision check, then repartition
         elif self.config.reachable_set.mode_repartition == 2:
             list_rectangles_collision_free = \
                 reach_operation.check_collision_and_split_rectangles(self.collision_checker, step,
                                                                      list_rectangles_projected,
-                                                                     self.config.reachable_set.radius_terminal_split)
+                                                                     radius_terminal_split)
             drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
-                                                                            self.config.reachable_set.size_grid_2nd)
+                                                                            size_grid)
 
         # repartition, collision check, then repartition again
         elif self.config.reachable_set.mode_repartition == 3:
-            list_rectangles_repartitioned = \
-                reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
-                                                                self.config.reachable_set.size_grid)
+            list_rectangles_repartitioned = reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
+                                                                                            size_grid)
 
             list_rectangles_collision_free = \
                 reach_operation.check_collision_and_split_rectangles(self.collision_checker, step,
                                                                      list_rectangles_repartitioned,
-                                                                     self.config.reachable_set.radius_terminal_split)
+                                                                     radius_terminal_split)
 
             drivable_area = reach_operation.create_repartitioned_rectangles(list_rectangles_collision_free,
-                                                                            self.config.reachable_set.size_grid_2nd)
+                                                                            size_grid_2nd)
 
         else:
             raise Exception("Invalid mode for repartition.")
 
-        self.dict_time_to_drivable_area[step] = drivable_area
-        self.dict_time_to_base_set_propagated[step] = list_base_sets_propagated
+        self.dict_step_to_drivable_area[step] = drivable_area
+        self.dict_step_to_base_set_propagated[step] = list_base_sets_propagated
 
     def _compute_reachable_set_at_step(self, step):
         """Computes the reachable set for the given time step.
@@ -127,8 +127,8 @@ class PyReachableSet(ReachableSet):
             1. construct reach nodes from drivable area and the propagated based sets.
             2. update parent-child relationship of the nodes.
         """
-        base_sets_propagated = self.dict_time_to_base_set_propagated[step]
-        drivable_area = self.dict_time_to_drivable_area[step]
+        base_sets_propagated = self.dict_step_to_base_set_propagated[step]
+        drivable_area = self.dict_step_to_drivable_area[step]
 
         if not drivable_area:
             return None
@@ -137,7 +137,7 @@ class PyReachableSet(ReachableSet):
 
         reachable_set = reach_operation.connect_children_to_parents(step, list_nodes)
 
-        self.dict_time_to_reachable_set[step] = reachable_set
+        self.dict_step_to_reachable_set[step] = reachable_set
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
         """Propagates the nodes of the reachable set."""
@@ -167,7 +167,7 @@ class PyReachableSet(ReachableSet):
         return list_base_sets_propagated
 
     def _prune_nodes_not_reaching_final_step(self):
-        logger.info("Pruning nodes not reaching final time step.")
+        logger.info("Pruning nodes not reaching final step.")
         cnt_nodes_before_pruning = cnt_nodes_after_pruning = len(self.reachable_set_at_step(self.step_end))
 
         for step in range(self.step_end - 1, self.step_start - 1, -1):
@@ -184,13 +184,13 @@ class PyReachableSet(ReachableSet):
                         node_parent.remove_child_node(node)
 
             # update drivable area and reachable set dictionaries
-            self.dict_time_to_drivable_area[step] = [node.position_rectangle
+            self.dict_step_to_drivable_area[step] = [node.position_rectangle
                                                      for idx_node, node in enumerate(list_nodes)
                                                      if idx_node not in list_idx_nodes_to_be_deleted]
-            self.dict_time_to_reachable_set[step] = [node for idx_node, node in enumerate(list_nodes)
+            self.dict_step_to_reachable_set[step] = [node for idx_node, node in enumerate(list_nodes)
                                                      if idx_node not in list_idx_nodes_to_be_deleted]
 
-            cnt_nodes_after_pruning += len(self.dict_time_to_reachable_set[step])
+            cnt_nodes_after_pruning += len(self.dict_step_to_reachable_set[step])
 
         self._pruned = True
 

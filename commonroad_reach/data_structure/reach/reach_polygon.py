@@ -5,7 +5,6 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
-import math
 from shapely.geometry import Polygon, MultiPolygon
 
 
@@ -229,12 +228,12 @@ class ReachPolygon(Polygon, ABC):
 
             sign = -1 if a > 0 else 1
             m_perpendicular = np.array([1, b / a]) * sign
-            theta = math.atan2(m_perpendicular[1], m_perpendicular[0])
+            theta = np.arctan2(m_perpendicular[1], m_perpendicular[0])
 
             for vertex in [vertex2, vertex1]:
                 # dist_diagonal * 100 is just an arbitrarily large distance
-                x_new = vertex[0] + dist_diagonal * 100 * math.cos(theta)
-                y_new = vertex[1] + dist_diagonal * 100 * math.sin(theta)
+                x_new = vertex[0] + dist_diagonal * 100 * np.cos(theta)
+                y_new = vertex[1] + dist_diagonal * 100 * np.sin(theta)
                 vertex_new = [x_new, y_new]
 
                 list_vertices.append(vertex_new)

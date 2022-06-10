@@ -92,18 +92,41 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
     if (config->reachable_set().mode_repartition == 1) {
         auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
                 vec_rectangles_projected, config->reachable_set().size_grid);
-
-        drivable_area_collision_free = check_collision_and_split_rectangles(
-                step, collision_checker,
-                vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
-                config->reachable_set().num_threads);
+        if (config->reachable_set().mode_inflation != 3) {
+            drivable_area_collision_free = check_collision_and_split_rectangles(
+                    step, collision_checker,
+                    vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
+                    config->reachable_set().num_threads);
+        }
+        else {
+            drivable_area_collision_free = check_collision_and_split_rectangles(
+                    step, collision_checker, vec_rectangles_repartitioned,
+                    config->reachable_set().radius_terminal_split,
+                    config->reachable_set().num_threads,
+                    config->vehicle().ego.circle_distance,
+                    *config->planning().CLCS,
+                    *config->reachable_set().lut_lon_enlargement,
+                    config->planning().reference_point);
+        }
         // collision check, then repartition
     } else if (config->reachable_set().mode_repartition == 2) {
-        auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
-                step, collision_checker,
-                vec_rectangles_projected, config->reachable_set().radius_terminal_split,
-                config->reachable_set().num_threads);
-
+        vector<ReachPolygonPtr> vec_rectangles_collision_free{};
+        if (config->reachable_set().mode_inflation != 3) {
+            vec_rectangles_collision_free = check_collision_and_split_rectangles(
+                    step, collision_checker,
+                    vec_rectangles_projected, config->reachable_set().radius_terminal_split,
+                    config->reachable_set().num_threads);
+        }
+        else {
+            vec_rectangles_collision_free = check_collision_and_split_rectangles(
+                    step, collision_checker, vec_rectangles_projected,
+                    config->reachable_set().radius_terminal_split,
+                    config->reachable_set().num_threads,
+                    config->vehicle().ego.circle_distance,
+                    *config->planning().CLCS,
+                    *config->reachable_set().lut_lon_enlargement,
+                    config->planning().reference_point);
+        }
         drivable_area_collision_free = create_repartitioned_rectangles(
                 vec_rectangles_collision_free, config->reachable_set().size_grid);
         // repartition, collision check, then repartition again
@@ -111,10 +134,23 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
         auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
                 vec_rectangles_projected, config->reachable_set().size_grid);
 
-        auto vec_rectangles_collision_free = check_collision_and_split_rectangles(
-                step, collision_checker,
-                vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
-                config->reachable_set().num_threads);
+        vector<ReachPolygonPtr> vec_rectangles_collision_free{};
+        if (config->reachable_set().mode_inflation != 3) {
+            vec_rectangles_collision_free = check_collision_and_split_rectangles(
+                    step, collision_checker,
+                    vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
+                    config->reachable_set().num_threads);
+        }
+        else {
+            vec_rectangles_collision_free = check_collision_and_split_rectangles(
+                    step, collision_checker, vec_rectangles_projected,
+                    config->reachable_set().radius_terminal_split,
+                    config->reachable_set().num_threads,
+                    config->vehicle().ego.circle_distance,
+                    *config->planning().CLCS,
+                    *config->reachable_set().lut_lon_enlargement,
+                    config->planning().reference_point);
+        }
 
         drivable_area_collision_free = create_repartitioned_rectangles(
                 vec_rectangles_collision_free, config->reachable_set().size_grid);

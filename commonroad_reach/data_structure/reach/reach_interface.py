@@ -16,10 +16,16 @@ class ReachableSetInterface:
         logger.info("Initializing reachable set interface...")
 
         self.config = config
-        self._reach = None
         self._reachable_set_computed = False
-        self._initialize_reachable_set()
         self._driving_corridor_extractor = None
+
+        if self.config.reachable_set.mode_computation in [1, 2, 3, 4]:
+            self._reach = ReachableSet.instantiate(self.config)
+
+        else:
+            message = "Specified mode ID is invalid."
+            logger.error(message)
+            raise Exception(message)
 
         logger.info("Reachable set interface initialized.")
 

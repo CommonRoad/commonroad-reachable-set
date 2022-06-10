@@ -18,7 +18,7 @@ class ConfigurationBuilder:
     path_config_default: str = None
 
     @classmethod
-    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = -1, path_root: str = None,
+    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = 0, path_root: str = None,
                             dir_config: str = "configurations", dir_config_default: str = "defaults") -> Configuration:
         """Builds configuration from default, scenario-specific, and commandline config files.
 
