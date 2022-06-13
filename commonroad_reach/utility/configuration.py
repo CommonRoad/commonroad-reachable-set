@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 from collections import defaultdict
 import commonroad_dc.pycrccosy as pycrccosy
@@ -199,7 +200,7 @@ def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, pa
     else:
         raise ValueError("<read_lut_longitudinal_enlargement>: unknown reference point: {}".format(reference_point))
 
-    table = np.loadtxt(path_to_lut + base_name + str(int(wheelbase * 10)) + '.txt', skiprows=1, delimiter=',')
+    table = np.loadtxt(os.path.join(path_to_lut, base_name + str(int(wheelbase * 10)) + '.txt'), skiprows=1, delimiter=',')
 
     lut_lon = defaultdict(dict)
     # table entries: lateral position, min curvature, max curvature, enlargement

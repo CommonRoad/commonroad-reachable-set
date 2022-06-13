@@ -10,6 +10,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.utility.visualization import plot_scenario_with_driving_corridor, draw_driving_corridor_2d
 
 # commonroad_qp_planner
+import commonroad_qp_planner
 from commonroad_qp_planner.qp_planner import QPPlanner, QPLongDesired, QPLongState, LongitudinalTrajectoryPlanningError, \
     LateralTrajectoryPlanningError
 from commonroad_qp_planner.initialization import create_optimization_configuration_vehicle
@@ -39,7 +40,8 @@ reach_interface.compute_reachable_sets()
 # QP Planner
 # ****************************************************
 # path to QP root folder
-path_qp = "/home/gerald/Documents/CommonRoad/cps/commonroad-qp-planner"
+# path_qp = "/home/gerald/Documents/CommonRoad/cps/commonroad-qp-planner"
+path_qp = os.path.join(os.path.dirname(commonroad_qp_planner.__file__), "..")
 
 # load qp YAML settings
 yaml_file = os.path.join(path_qp, "test/config_files/config_%s.yaml" % name_scenario)
