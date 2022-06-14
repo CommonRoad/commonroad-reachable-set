@@ -263,6 +263,6 @@ void ReachableSet::prune_nodes_not_reaching_final_step() {
     }
 
     _pruned = true;
-    cout << "\t#Nodes before pruning: \t" << cnt_nodes_before_pruning << endl;
-    cout << "\t#Nodes after pruning: \t" << cnt_nodes_after_pruning << endl;
+    // cout << "\t#Nodes before pruning: \t" << cnt_nodes_before_pruning << endl;
+    // cout << "\t#Nodes after pruning: \t" << cnt_nodes_after_pruning << endl;
 }

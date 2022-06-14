@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 class ReachableSetInterface:
     """Interface for reachable set computation."""
 
-    def __init__(self, config: Configuration):
+    def __init__(self, config: Configuration, logger_level=logging.DEBUG):
+        logger.setLevel(logger_level)
         logger.info("Initializing reachable set interface...")
 
         self.config = config
@@ -76,13 +77,11 @@ class ReachableSetInterface:
 
     def compute_reachable_sets(self, step_start: int = 1, step_end: int = 0):
         message = "* Computing reachable sets..."
-        logger.info(message)
-        print(message)
+        logger.debug(message)
 
         if not self._reach:
             message = "Reachable set is not initialized, aborting computation."
             logger.warning(message)
-            print(message)
             return None
 
         step_end = step_end if step_end else self.step_end
@@ -90,7 +89,6 @@ class ReachableSetInterface:
         if not (0 < step_start < step_end):
             message = "Time steps for computation are invalid, aborting computation."
             logger.warning(message)
-            print(message)
             return None
 
         time_start = time.time()
@@ -99,8 +97,7 @@ class ReachableSetInterface:
         time_computation = time.time() - time_start
 
         message = f"\tComputation took: \t{time_computation:.3f}s"
-        logger.info(message)
-        print(message)
+        logger.debug(message)
 
     def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False,
                                   terminal_set=None):

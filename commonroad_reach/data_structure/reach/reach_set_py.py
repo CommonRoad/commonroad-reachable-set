@@ -195,9 +195,7 @@ class PyReachableSet(ReachableSet):
         self._pruned = True
 
         message = f"\t#Nodes before pruning: \t{cnt_nodes_before_pruning}"
-        print(message)
-        logger.info(message)
+        logger.debug(message)
 
         message = f"\t#Nodes after pruning: \t{cnt_nodes_after_pruning}"
-        print(message)
-        logger.info(message)
+        logger.debug(message)

@@ -56,10 +56,10 @@ int main() {
     // ======== reachable set computation
     auto reachable_set = ReachableSet(config, collision_checker);
     auto start = high_resolution_clock::now();
-    cout << "Computing reachable sets..." << endl;
+    //cout << "Computing reachable sets..." << endl;
     reachable_set.compute();
     auto end = high_resolution_clock::now();
-    cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
+    //cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
 
     // //======== visualization of results
     //auto utils_visualization = py::module_::import("commonroad_reach.utility.visualization");
