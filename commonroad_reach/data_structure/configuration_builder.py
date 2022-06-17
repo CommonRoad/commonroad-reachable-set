@@ -1,15 +1,9 @@
-import glob
 import os
+import glob
 from typing import Union
 
 from omegaconf import OmegaConf, ListConfig, DictConfig
-
-import commonroad_reach.utility.general as util_general
 from commonroad_reach.data_structure.configuration import Configuration
-
-from commonroad.scenario.scenario import Scenario
-from commonroad.planning.planning_problem import PlanningProblem
-from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 
 
 class ConfigurationBuilder:
@@ -18,16 +12,16 @@ class ConfigurationBuilder:
     path_config_default: str = None
 
     @classmethod
-    def build_configuration(cls, name_scenario: str, idx_planning_problem: int = 0, path_root: str = None,
+    def build_configuration(cls, name_scenario: str, path_root: str = None,
                             dir_config: str = "configurations", dir_config_default: str = "defaults") -> Configuration:
         """Builds configuration from default, scenario-specific, and commandline config files.
 
         Args:
             name_scenario (str): considered scenario
-            idx_planning_problem (int, optional): index of the planning problem. Defaults to 0.
             path_root(str): root path of the package
             dir_config (str): directory storing configurations
             dir_config_default (str): directory storing default configurations
+
         """
         if path_root is None:
             path_root = os.path.normpath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -39,11 +33,8 @@ class ConfigurationBuilder:
         config_scenario = cls.construct_scenario_configuration(name_scenario)
         config_cli = OmegaConf.from_cli()
         # configurations coming after overrides the ones coming before
-        config_combined = OmegaConf.merge(config_default, config_scenario, config_cli)
-        config = Configuration(config_combined)
-
-        scenario, planning_problem = util_general.load_scenario_and_planning_problem(config, idx_planning_problem)
-        config.complete_configuration(scenario, planning_problem)
+        config_merged = OmegaConf.merge(config_default, config_scenario, config_cli)
+        config = Configuration(config_merged)
 
         return config
 
@@ -112,40 +103,40 @@ class ConfigurationBuilder:
 
         return config_scenario
 
-    @classmethod
-    def construct_configuration_for_given_scenario(
-            cls, scenario: Scenario, planning_problem: PlanningProblem, CLCS: CurvilinearCoordinateSystem,
-            path_root: str = os.path.normpath(os.path.join(os.path.dirname(__file__), "../..")),
-            dir_config: str = "configurations", dir_config_default: str = "defaults"):
-        """
-        Create a Configuration object without loading a new scenario and planning problem using a given CLCS
-        :param dir_config_default:
-        :param dir_config:
-        :param path_root:
-        :param scenario:
-        :param planning_problem:
-        :param CLCS:
-        :return:
-        """
-        # default configurations
-        if cls.path_root is None:
-            cls.set_paths(path_root=path_root, dir_config=dir_config, dir_config_default=dir_config_default)
-        config_default = cls.construct_default_configuration()
-
-        # read scenario-specific configurations
-        config_scenario = cls.construct_scenario_configuration(str(scenario.scenario_id))
-
-        # command line interface configurations
-        config_cli = OmegaConf.from_cli()
-
-        # configurations coming after overrides the ones coming before
-        config_combined = OmegaConf.merge(config_default, config_scenario, config_cli)
-        config = Configuration(config_combined)
-
-        # TODO: define a new method in Configuration for following
-        config.scenario = scenario
-        config.planning_problem = planning_problem
-        config.vehicle.id_vehicle = planning_problem.planning_problem_id
-        config.planning.complete_configuration_for_given_routes(config, CLCS=CLCS)
-
-        return config
+    # @classmethod
+    # def construct_configuration_for_given_scenario(
+    #         cls, scenario: Scenario, planning_problem: PlanningProblem, CLCS: CurvilinearCoordinateSystem,
+    #         path_root: str = os.path.normpath(os.path.join(os.path.dirname(__file__), "../..")),
+    #         dir_config: str = "configurations", dir_config_default: str = "defaults"):
+    #     """
+    #     Create a Configuration object without loading a new scenario and planning problem using a given CLCS
+    #     :param dir_config_default:
+    #     :param dir_config:
+    #     :param path_root:
+    #     :param scenario:
+    #     :param planning_problem:
+    #     :param CLCS:
+    #     :return:
+    #     """
+    #     # default configurations
+    #     if cls.path_root is None:
+    #         cls.set_paths(path_root=path_root, dir_config=dir_config, dir_config_default=dir_config_default)
+    #     config_default = cls.construct_default_configuration()
+    #
+    #     # read scenario-specific configurations
+    #     config_scenario = cls.construct_scenario_configuration(str(scenario.scenario_id))
+    #
+    #     # command line interface configurations
+    #     config_cli = OmegaConf.from_cli()
+    #
+    #     # configurations coming after overrides the ones coming before
+    #     config_combined = OmegaConf.merge(config_default, config_scenario, config_cli)
+    #     config = Configuration(config_combined)
+    #
+    #     # TODO: define a new method in Configuration for following
+    #     config.scenario = scenario
+    #     config.planning_problem = planning_problem
+    #     config.vehicle.id_vehicle = planning_problem.planning_problem_id
+    #     config.planning.complete_configuration_for_given_routes(config, CLCS=CLCS)
+    #
+    #     return config

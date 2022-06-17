@@ -1,7 +1,10 @@
 import os
 from typing import Tuple
 from collections import defaultdict
+
 import commonroad_dc.pycrccosy as pycrccosy
+from commonroad.scenario.trajectory import State
+from commonroad.planning.planning_problem import PlanningProblem
 from commonroad_dc.geometry.util import compute_orientation_from_polyline, compute_pathlength_from_polyline
 import numpy as np
 
@@ -32,7 +35,7 @@ def compute_disc_radius_and_distance(length: float, width: float, ref_point="CEN
     if ref_point == "CENTER":
         # second circle center point is exactly at the geometric center of vehicle model
         # the other circles are placed equidistant along the longitudinal axis
-        length_square = (length / 3)/2
+        length_square = (length / 3) / 2
         radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
         # ceil up to 1 digit
@@ -44,8 +47,8 @@ def compute_disc_radius_and_distance(length: float, width: float, ref_point="CEN
         # first circle center point has to be exactly on rear axis position of vehicle model
         assert rear_axle_dist >= 0, f"Please provide a valid value for the rear axle distance (rear_axle_distance = " \
                                     f"{rear_axle_dist})"
-        if rear_axle_dist < length/3:
-            length_square = length/2 - rear_axle_dist
+        if rear_axle_dist < length / 3:
+            length_square = length / 2 - rear_axle_dist
             radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
             # ceil up to 1 digit
@@ -53,7 +56,7 @@ def compute_disc_radius_and_distance(length: float, width: float, ref_point="CEN
             radius_disc = radius
             circle_distance = rear_axle_dist * 2
         else:
-            length_square = (length / 3)/2 + (rear_axle_dist - length/3)
+            length_square = (length / 3) / 2 + (rear_axle_dist - length / 3)
             radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
             radius_disc = radius
@@ -85,7 +88,7 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     # wheelbase is the distance between the front and rear axles
     wheelbase = wheelbase or (length / 3 * 2)
 
-    length_square = (length / 3)/2
+    length_square = (length / 3) / 2
     width_square = width / 2
     radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
@@ -128,11 +131,12 @@ def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_proje
 def compute_initial_state_cart(config):
     """Computes the initial Cartesian state of the ego vehicle given a planning problem."""
     planning_problem = config.planning_problem
+    state_initial = config.state_initial if config.state_initial else planning_problem.initial_state
     wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
-    x, y = planning_problem.initial_state.position
-    o = planning_problem.initial_state.orientation
-    v = planning_problem.initial_state.velocity
+    x, y = state_initial.position
+    o = state_initial.orientation
+    v = state_initial.velocity
 
     if config.planning.reference_point == "CENTER":
         pass
@@ -150,19 +154,20 @@ def compute_initial_state_cart(config):
     return (x, y), (v_x, v_y), o
 
 
-def compute_initial_state_cvln(config):
-    """Computes the initial curvilinear state of the ego vehicle given a planning problem.
+def compute_initial_state_cvln(config, state_initial: State = None):
+    """Computes the initial curvilinear state of the ego vehicle given a planning problem or an initial state.
 
     For the transformation of the ego vehicle's velocity to the curvilinear coordinate system, it is assumed
     that d*kappa_ref << 1 holds, where d is the distance of the ego vehicle to the reference path and kappa_ref
     is the curvature of the reference path
     """
     planning_problem = config.planning_problem
+    state_initial = state_initial if state_initial else planning_problem.initial_state
     wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
-    x, y = planning_problem.initial_state.position
-    orientation = planning_problem.initial_state.orientation
-    v = planning_problem.initial_state.velocity
+    x, y = state_initial.position
+    orientation = state_initial.orientation
+    v = state_initial.velocity
 
     if config.planning.reference_point == "CENTER":
         p_lon, p_lat = config.planning.CLCS.convert_to_curvilinear_coords(x, y)
@@ -184,7 +189,7 @@ def compute_initial_state_cvln(config):
     return (p_lon, p_lat), (v_lon, v_lat)
 
 
-#TODO rename wheelbase parameter to circle distance
+# TODO rename wheelbase parameter to circle distance
 def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, path_to_lut: str) -> dict:
     """
     Reads look-up table for longitudinal enlargement for collision checking in the reachability analysis.
@@ -200,7 +205,8 @@ def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, pa
     else:
         raise ValueError("<read_lut_longitudinal_enlargement>: unknown reference point: {}".format(reference_point))
 
-    table = np.loadtxt(os.path.join(path_to_lut, base_name + str(int(wheelbase * 10)) + '.txt'), skiprows=1, delimiter=',')
+    table = np.loadtxt(os.path.join(path_to_lut, base_name + str(int(wheelbase * 10)) + '.txt'), skiprows=1,
+                       delimiter=',')
 
     lut_lon = defaultdict(dict)
     # table entries: lateral position, min curvature, max curvature, enlargement

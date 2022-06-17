@@ -13,6 +13,8 @@ def main():
 
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
+    config.complete_configuration()
+
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
     # ==== compute reachable sets using reachability interface
