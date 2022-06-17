@@ -13,13 +13,18 @@ def main():
 
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
-    config.complete_configuration()
-
+    config.update_configuration()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
+
     # ==== compute reachable sets using reachability interface
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
+
+    # ==== for replanning
+    # config.update_configuration(scenario=,state_initial=,CLCS=)
+    # reach_interface.reset(config)
+    # reach_interface.compute_reachable_sets()
 
     # ==== plot computation results
     util_visual.plot_scenario_with_reachable_sets(reach_interface)

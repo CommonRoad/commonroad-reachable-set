@@ -58,7 +58,7 @@ def test_offline_reach():
     config.reachable_set.mode = 5
     config.planning.coordinate_system = "CART"
     [config.scenario.remove_obstacle(obs) for obs in config.scenario.obstacles]
-    config.complete_configuration(config.scenario, config.planning_problem)
+    config.update_configuration(config.scenario, config.planning_problem)
     config.reachable_set.size_grid = 0.5
     reach_offline = PyGraphReachableSetOffline(config)
 

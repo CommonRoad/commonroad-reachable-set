@@ -4,7 +4,6 @@ from collections import defaultdict
 
 import commonroad_dc.pycrccosy as pycrccosy
 from commonroad.scenario.trajectory import State
-from commonroad.planning.planning_problem import PlanningProblem
 from commonroad_dc.geometry.util import compute_orientation_from_polyline, compute_pathlength_from_polyline
 import numpy as np
 
@@ -14,7 +13,7 @@ np.seterr(divide='ignore', invalid='ignore')
 def compute_disc_radius_and_distance(length: float, width: float, ref_point="CENTER", rear_axle_dist=None) \
         -> Tuple[float, float]:
     """
-    Vehicle occupancy is approximated by three equally sized discs with equidistant centerpoints.
+    Vehicle occupancy is approximated by three equally sized discs with equidistant center points.
     (see Ziegler, J. and Stiller, C. (2010) "Fast collision checking for intelligent vehicle motion planning", IEEE IV
     Returns radius of discs and distance between the first and third disc.
     :param length: vehicle length

@@ -1,10 +1,10 @@
-import logging
 import time
+import logging
 
-from commonroad.geometry.shape import ShapeGroup, Rectangle, Polygon
-from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.driving_corridors import DrivingCorridorExtractor
+from commonroad_reach.data_structure.reach.reach_set import ReachableSet
+from commonroad.geometry.shape import ShapeGroup
 
 logger = logging.getLogger(__name__)
 
@@ -13,31 +13,18 @@ class ReachableSetInterface:
     """Interface for reachable set computation."""
 
     def __init__(self, config: Configuration, logger_level=logging.DEBUG):
+        # todo: should this go into config or set in the logger module? it doesn't seem appropriate here
         logger.setLevel(logger_level)
         logger.info("Initializing reachable set interface...")
 
-        self.config = config
+        self.config = None
+        self._reach = None
         self._reachable_set_computed = False
         self._driving_corridor_extractor = None
 
-        if self.config.reachable_set.mode_computation in [1, 2, 3, 4]:
-            self._reach = ReachableSet.instantiate(self.config)
-
-        else:
-            message = "Specified mode ID is invalid."
-            logger.error(message)
-            raise Exception(message)
+        self.reset(config)
 
         logger.info("Reachable set interface initialized.")
-
-    def _initialize_reachable_set(self):
-        if self.config.reachable_set.mode_computation in [1, 2, 3, 4]:
-            self._reach = ReachableSet.instantiate(self.config)
-
-        else:
-            message = "Specified mode ID is invalid."
-            logger.error(message)
-            raise Exception(message)
 
     @property
     def step_start(self):
@@ -54,6 +41,19 @@ class ReachableSetInterface:
     @property
     def reachable_set(self):
         return self._reach.reachable_set
+
+    def reset(self, config: Configuration):
+        self.config = config
+        self._reachable_set_computed = False
+        self._driving_corridor_extractor = None
+
+        if self.config.reachable_set.mode_computation in [1, 2, 3, 4]:
+            self._reach = ReachableSet.instantiate(self.config)
+
+        else:
+            message = "Specified mode ID is invalid."
+            logger.error(message)
+            raise Exception(message)
 
     def drivable_area_at_step(self, step: int):
         if not self._reachable_set_computed and step != 0:
@@ -97,6 +97,7 @@ class ReachableSetInterface:
         time_computation = time.time() - time_start
 
         message = f"\tComputation took: \t{time_computation:.3f}s"
+        print(message)
         logger.debug(message)
 
     def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False,
@@ -117,10 +118,10 @@ class ReachableSetInterface:
                     # extract all driving corridors reaching any of the shape in shape group
                     driving_corridors_list = []
                     for goal_region in self.config.planning_problem.goal.state_list[0].position.shapes:
-                        driving_corridors_list += self._driving_corridor_extractor.\
+                        driving_corridors_list += self._driving_corridor_extractor. \
                             extract_lon_driving_corridor(terminal_set=goal_region)
                 else:
-                    driving_corridors_list = self._driving_corridor_extractor.\
+                    driving_corridors_list = self._driving_corridor_extractor. \
                         extract_lon_driving_corridor(terminal_set=goal_position)
             elif terminal_set is not None:
                 driving_corridors_list = self._driving_corridor_extractor. \

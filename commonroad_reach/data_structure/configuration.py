@@ -37,11 +37,11 @@ class Configuration:
         self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config)
         self.debug: DebugConfiguration = DebugConfiguration(config)
 
-    def complete_configuration(self, scenario: Scenario = None,
-                               planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
-                               state_initial: State = None, goal_region: GoalRegion = None,
-                               CLCS: CurvilinearCoordinateSystem = None):
-        """Completes configuration based on the given attributes.
+    def update_configuration(self, scenario: Scenario = None,
+                             planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
+                             state_initial: State = None, goal_region: GoalRegion = None,
+                             CLCS: CurvilinearCoordinateSystem = None):
+        """Updates configuration based on the given attributes.
 
         Possible ways of completing the configuration:
             1. Empty attributes: loads scenario and planning problem from the xml files, computes route and CLCS
@@ -64,8 +64,8 @@ class Configuration:
         self.goal_region = goal_region
         self.CLCS = CLCS
 
-        self.planning.complete_configuration(self)
-        self.reachable_set.complete_configuration(self)
+        self.planning.update_configuration(self)
+        self.reachable_set.update_configuration(self)
 
     def print_configuration_summary(self):
         dict_clcs_to_string = {"CART": "cartesian", "CVLN": "curvilinear"}
@@ -151,7 +151,6 @@ class Configuration:
         config.planning.v_lat_initial = self.planning.v_lat_initial
         config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
         config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
-        # config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
 
         if self.planning.coordinate_system == "CART":
             config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
@@ -174,10 +173,10 @@ class Configuration:
         config.reachable_set.num_threads = self.reachable_set.num_threads
         config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
 
-        # convert lut dict to CPP configuration via PyBind function
+        # convert lut dict to Cpp configuration via PyBind function
         if self.reachable_set.mode_inflation == 3:
-            config.reachable_set.lut_lon_enlargement = reach.LUTLongitudinalEnlargement(
-                self.reachable_set.lut_longitudinal_enlargement)
+            config.reachable_set.lut_lon_enlargement = \
+                reach.LUTLongitudinalEnlargement(self.reachable_set.lut_longitudinal_enlargement)
 
         return config
 
@@ -305,8 +304,6 @@ class PlanningConfiguration:
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.planning
 
-        assert len(str(config_relevant.dt).split(".")[1]) == 1, \
-            f"value of dt should be a multiple of 0.1, got {config_relevant.dt}."
         self.dt = config_relevant.dt
         self.step_start = config_relevant.step_start
         self.steps_computation = config_relevant.steps_computation
@@ -331,7 +328,7 @@ class PlanningConfiguration:
         self.reference_point = config_relevant.reference_point
         self.CLCS = None
 
-    def complete_configuration(self, config: Configuration):
+    def update_configuration(self, config: Configuration):
         scenario = config.scenario
         planning_problem = config.planning_problem
         state_initial = config.state_initial
@@ -340,6 +337,9 @@ class PlanningConfiguration:
 
         self.lanelet_network = scenario.lanelet_network
         self.step_start = planning_problem.initial_state.time_step if not state_initial else state_initial.time_step
+
+        assert round(self.dt * 100) % round(scenario.dt * 100) == 0, \
+            f"Value of dt ({self.dt}) should be a multiple of scenario dt ({scenario.dt})."
 
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
@@ -472,7 +472,7 @@ class ReachableSetConfiguration:
         self.path_to_lut = config_relevant.path_to_lut
         self.lut_longitudinal_enlargement = None
 
-    def complete_configuration(self, config: Configuration):
+    def update_configuration(self, config: Configuration):
         if self.mode_inflation == 3:
             self.lut_longitudinal_enlargement = util_configuration.read_lut_longitudinal_enlargement(
                 config.planning.reference_point, config.vehicle.ego.circle_distance, self.path_to_lut)
