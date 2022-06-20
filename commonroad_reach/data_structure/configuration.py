@@ -1,21 +1,24 @@
 import logging
-
-logger = logging.getLogger(__name__)
-
-import numpy as np
 from typing import Optional, Union, List, Tuple
 
+from commonroad.planning.goal import GoalRegion
+from omegaconf import ListConfig, DictConfig
+
+import numpy as np
+
 import commonroad_reach.pycrreach as reach
-from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
+from commonroad.scenario.trajectory import State
+from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.common.solution import VehicleType
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_route_planner.route_planner import RoutePlanner
-from omegaconf import ListConfig, DictConfig
-
+from commonroad_reach.utility import general as util_general
 from commonroad_reach.utility import configuration as util_configuration
-
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+
+logger = logging.getLogger(__name__)
+
 
 class Configuration:
     """Class holding all relevant configurations"""
@@ -24,6 +27,9 @@ class Configuration:
         self.name_scenario = config.general.name_scenario
         self.scenario: Optional[Scenario] = None
         self.planning_problem: Optional[PlanningProblem] = None
+        self.state_initial: Optional[State] = None
+        self.goal_region: Optional[GoalRegion] = None
+        self.CLCS: Optional[CurvilinearCoordinateSystem] = None
 
         self.general: GeneralConfiguration = GeneralConfiguration(config)
         self.vehicle: VehicleConfiguration = VehicleConfiguration(config)
@@ -31,49 +37,49 @@ class Configuration:
         self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config)
         self.debug: DebugConfiguration = DebugConfiguration(config)
 
-    def complete_configuration(self, scenario: Scenario, planning_problem: PlanningProblem):
+    def update_configuration(self, scenario: Scenario = None,
+                             planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
+                             state_initial: State = None, goal_region: GoalRegion = None,
+                             CLCS: CurvilinearCoordinateSystem = None):
+        """Updates configuration based on the given attributes.
+
+        Possible ways of completing the configuration:
+            1. Empty attributes: loads scenario and planning problem from the xml files, computes route and CLCS
+            2. Scenario + planning problem (+ initial state): computes route and CLCS
+            2. Scenario + initial state + goal region: computes route and CLCS
+            3. Scenario + initial state + CLCS: retrieve reference path from CLCS
+        """
+        # patterns that do not require loading scenario and planning problem from xml files.
+        if scenario and (planning_problem or
+                         (state_initial and goal_region) or
+                         (state_initial and CLCS)):
+            pass
+
+        else:
+            scenario, planning_problem = util_general.load_scenario_and_planning_problem(self, idx_planning_problem)
+
         self.scenario = scenario
         self.planning_problem = planning_problem
+        self.state_initial = state_initial
+        self.goal_region = goal_region
+        self.CLCS = CLCS
 
-        self.planning.complete_configuration(self)
-        self.reachable_set.complete_configuration(self)
+        self.planning.update_configuration(self)
+        self.reachable_set.update_configuration(self)
 
     def print_configuration_summary(self):
-        if self.planning.coordinate_system == "CART":
-            CLCS = "cartesian"
-        elif self.planning.coordinate_system == "CVLN":
-            CLCS = "curvilinear"
-        else:
-            CLCS = "undefined"
+        dict_clcs_to_string = {"CART": "cartesian", "CVLN": "curvilinear"}
+        dict_mode_computation_to_string = {1: "polytopic, python backend", 2: "polytopic, c++ backend",
+                                           3: "graph-based (online)", 4: "graph-based (offline)"}
+        dict_mode_repartition_to_string = {1: "repartition, collision check", 2: "collision check, repartition",
+                                           3: "repartition, collision check, then repartition"}
+        dict_mode_inflation_to_string = {1: "inscribed circle", 2: "circumscribed circle",
+                                         3: "three circle approximation"}
 
-        if self.reachable_set.mode_computation == 1:
-            mode_computation = "polytopic, python backend"
-        elif self.reachable_set.mode_computation == 2:
-            mode_computation = "polytopic, c++ backend"
-        elif self.reachable_set.mode_computation == 3:
-            mode_computation = "graph-based (online)"
-        elif self.reachable_set.mode_computation == 4:
-            mode_computation = "graph-based (offline)"
-        else:
-            mode_computation = "undefined"
-
-        if self.reachable_set.mode_repartition == 1:
-            mode_repartition = "repartition, collision check"
-        elif self.reachable_set.mode_repartition == 2:
-            mode_repartition = "collision check, repartition"
-        elif self.reachable_set.mode_repartition == 3:
-            mode_repartition = "repartition, collision check, then repartition"
-        else:
-            mode_repartition = "undefined"
-
-        if self.reachable_set.mode_inflation == 1:
-            mode_inflation = "inscribed circle"
-        elif self.reachable_set.mode_inflation == 2:
-            mode_inflation = "circumscribed circle"
-        elif self.reachable_set.mode_inflation == 3:
-            mode_inflation = "three circle approximation of vehicle occupancy"
-        else:
-            mode_inflation = "undefined"
+        CLCS = dict_clcs_to_string[self.planning.coordinate_system]
+        mode_computation = dict_mode_computation_to_string[self.reachable_set.mode_computation]
+        mode_repartition = dict_mode_repartition_to_string[self.reachable_set.mode_repartition]
+        mode_inflation = dict_mode_inflation_to_string[self.reachable_set.mode_inflation]
 
         string = "# ===== Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
@@ -145,8 +151,6 @@ class Configuration:
         config.planning.v_lat_initial = self.planning.v_lat_initial
         config.planning.uncertainty_v_lon = self.planning.uncertainty_v_lon
         config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
-        # config.planning.step_start = self.planning.step_initial
-        config.planning.id_lanelet_initial = self.planning.id_lanelet_initial
 
         if self.planning.coordinate_system == "CART":
             config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
@@ -169,10 +173,10 @@ class Configuration:
         config.reachable_set.num_threads = self.reachable_set.num_threads
         config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
 
-        # convert lut dict to CPP configuration via PyBind function
+        # convert lut dict to Cpp configuration via PyBind function
         if self.reachable_set.mode_inflation == 3:
-            config.reachable_set.lut_lon_enlargement = reach.LUTLongitudinalEnlargement(
-                self.reachable_set.lut_longitudinal_enlargement)
+            config.reachable_set.lut_lon_enlargement = \
+                reach.LUTLongitudinalEnlargement(self.reachable_set.lut_longitudinal_enlargement)
 
         return config
 
@@ -238,7 +242,8 @@ class VehicleConfiguration:
                                                                     rear_axle_dist=rear_axle_distance)
 
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
-                                                                                self.length, self.width, self.radius_disc)
+                                                                                self.length, self.width,
+                                                                                self.radius_disc)
 
     class Other:
         def __init__(self, config: Union[ListConfig, DictConfig]):
@@ -287,7 +292,8 @@ class VehicleConfiguration:
                                                                     rear_axle_dist=rear_axle_distance)
 
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
-                                                                                self.length, self.width, self.radius_disc)
+                                                                                self.length, self.width,
+                                                                                self.radius_disc)
 
     def __init__(self, config: Union[ListConfig, DictConfig]):
         self.ego = VehicleConfiguration.Ego(config)
@@ -298,8 +304,6 @@ class PlanningConfiguration:
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.planning
 
-        assert len(str(config_relevant.dt).split(".")[1]) == 1, \
-            f"value of dt should be a multiple of 0.1, got {config_relevant.dt}."
         self.dt = config_relevant.dt
         self.step_start = config_relevant.step_start
         self.steps_computation = config_relevant.steps_computation
@@ -317,9 +321,6 @@ class PlanningConfiguration:
         self.o_initial = 0
 
         # related to specific planning problem
-        # self.step_initial = None # TODO: what's the difference between step_start and step_initial
-        self.id_lanelet_initial = 0
-        self.route = None
         self.reference_path = None
         self.lanelet_network = None
 
@@ -327,79 +328,92 @@ class PlanningConfiguration:
         self.reference_point = config_relevant.reference_point
         self.CLCS = None
 
-    def complete_configuration(self, config: Configuration):
+    def update_configuration(self, config: Configuration):
         scenario = config.scenario
         planning_problem = config.planning_problem
+        state_initial = config.state_initial
+        goal_region = config.goal_region
+        CLCS = config.CLCS
 
         self.lanelet_network = scenario.lanelet_network
-        self.step_start = planning_problem.initial_state.time_step
+        self.step_start = planning_problem.initial_state.time_step if not state_initial else state_initial.time_step
+
+        assert round(self.dt * 100) % round(scenario.dt * 100) == 0, \
+            f"Value of dt ({self.dt}) should be a multiple of scenario dt ({scenario.dt})."
 
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
+
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
             self.o_initial = o_initial
 
         elif self.coordinate_system == "CVLN":
-            # plans a route from the initial lanelet to the goal lanelet
-            route_planner = RoutePlanner(scenario, planning_problem)
-            candidate_holder = route_planner.plan_routes()
-            route = candidate_holder.retrieve_first_route()
+            if CLCS:
+                # CLCS is given, retrieve reference path
+                self.CLCS = CLCS
+                self.reference_path = np.array(self.CLCS.reference_path())
 
-            self.route = route
-            self.set_reference_path(config, route.reference_path, route.list_ids_lanelets[0])
+            else:
+                # plans a route from the initial lanelet to the goal lanelet, set curvilinear coordinate system
+                route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
+                                             planning_problem=planning_problem,
+                                             state_initial=state_initial,
+                                             goal_region=goal_region)
+                candidate_holder = route_planner.plan_routes()
+                route = candidate_holder.retrieve_first_route()
 
-    def set_reference_path(self, config: Configuration, ref_path: np.ndarray, id_lanelets: List[int] = None):
+                self.reference_path = route.reference_path
+                self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+                # self.set_reference_path(config, route.reference_path, route.list_ids_lanelets[0])
+
+            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, state_initial)
+
+            self.p_lon_initial, self.p_lat_initial = p_initial
+            self.v_lon_initial, self.v_lat_initial = v_initial
+
+    # todo: where is this needed?
+    def set_reference_path(self, config: Configuration, reference_path: np.ndarray):
+        """Sets reference path.
+
+        The following parameters are set:
+            - reference_path
+            - CLCS (curvilinear coordinate system)
+            - p_lon/lat_initial
+            - v_lon/lat_initial
         """
-        Args: config, reference path and list of lanelet IDs from route planner (optional)
-        Function sets/updates the following parameters:
-        - reference_path
-        - id_lanelet_initial
-        - CLCS (curvilinear coordinate system)
-        - p_lon/lat_initial
-        - v_lon/lat_initial
-        """
-        # set reference path
-        self.reference_path = ref_path
-        # set route lanelet IDs
-        if id_lanelets is not None:
-            self.id_lanelet_initial = id_lanelets
-        # set curvilinear coordinate system
+        self.reference_path = reference_path
         self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
         p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
         self.p_lon_initial, self.p_lat_initial = p_initial
         self.v_lon_initial, self.v_lat_initial = v_initial
 
-    def complete_configuration_for_given_routes(self, config: Configuration, CLCS: CurvilinearCoordinateSystem):
-        assert self.coordinate_system == "CVLN"
-        # self.step_start = config.planning_problem.initial_state.time_step
-
-        # plans a route from the initial lanelet to the goal lanelet
-        # route_planner = RoutePlanner(scenario, planning_problem)
-        # candidate_holder = route_planner.plan_routes()
-        # route = candidate_holder.retrieve_first_route()
-        #
-        # self.route = route # TODO: is self.route used somewhere???
-        if CLCS is not None:
-            self.CLCS = CLCS
-            self.reference_path = np.array(self.CLCS.reference_path())
-            # self.id_lanelet_initial = route.list_ids_lanelets[0]
-        else:
-            route_planner = RoutePlanner(config.scenario, config.planning_problem)
-            candidate_holder = route_planner.plan_routes()
-            route = candidate_holder.retrieve_first_route()
-
-            self.route = route # TODO: is self.route used somewhere???
-            self.reference_path = route.reference_path
-            self.id_lanelet_initial = route.list_ids_lanelets[0]
-
-            self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-
-        p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
-
-        self.p_lon_initial, self.p_lat_initial = p_initial
-        self.v_lon_initial, self.v_lat_initial = v_initial
+    # def complete_configuration_for_given_routes(self, config: Configuration, CLCS: CurvilinearCoordinateSystem):
+    #     assert self.coordinate_system == "CVLN"
+    #     # self.step_start = config.planning_problem.initial_state.time_step
+    #
+    #     # plans a route from the initial lanelet to the goal lanelet
+    #     # route_planner = RoutePlanner(scenario, planning_problem)
+    #     # candidate_holder = route_planner.plan_routes()
+    #     # route = candidate_holder.retrieve_first_route()
+    #     #
+    #     if CLCS is not None:
+    #         self.CLCS = CLCS
+    #         self.reference_path = np.array(self.CLCS.reference_path())
+    #     else:
+    #         route_planner = RoutePlanner(config.scenario, config.planning_problem)
+    #         candidate_holder = route_planner.plan_routes()
+    #         route = candidate_holder.retrieve_first_route()
+    #
+    #         self.reference_path = route.reference_path
+    #
+    #         self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+    #
+    #     p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
+    #
+    #     self.p_lon_initial, self.p_lat_initial = p_initial
+    #     self.v_lon_initial, self.v_lat_initial = v_initial
 
     @property
     def p_lon_lat_initial(self):
@@ -458,7 +472,7 @@ class ReachableSetConfiguration:
         self.path_to_lut = config_relevant.path_to_lut
         self.lut_longitudinal_enlargement = None
 
-    def complete_configuration(self, config: Configuration):
+    def update_configuration(self, config: Configuration):
         if self.mode_inflation == 3:
             self.lut_longitudinal_enlargement = util_configuration.read_lut_longitudinal_enlargement(
                 config.planning.reference_point, config.vehicle.ego.circle_distance, self.path_to_lut)

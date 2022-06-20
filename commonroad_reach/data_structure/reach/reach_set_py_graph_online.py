@@ -246,7 +246,7 @@ class PyGraphReachableSetOnline(ReachableSet):
             self.config.scenario = scenario
 
         if planning_problem is not None:
-            self.config.complete_configuration(scenario, planning_problem)
+            self.config.update_configuration(scenario, planning_problem)
             self.reachset_translation.cache_clear()
 
         if update_cc:

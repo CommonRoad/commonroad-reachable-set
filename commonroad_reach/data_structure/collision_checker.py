@@ -164,7 +164,7 @@ class CollisionChecker:
 
         for step in range(step_start, step_end):
             list_vertices_polygons_dynamic = []
-            time_step = step * round(self.config.planning.dt * 10)
+            time_step = step * round(self.config.planning.dt / self.config.scenario.dt)
             for obstacle in list_obstacles_dynamic:
                 occupancy = obstacle.occupancy_at_time(time_step)
                 if not occupancy:
