@@ -1,10 +1,12 @@
 import time
 import logging
+from typing import Dict, List
 
+from commonroad.geometry.shape import Shape
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.driving_corridors import DrivingCorridorExtractor
+from commonroad_reach.data_structure.driving_corridor import DrivingCorridor
+from commonroad_reach.data_structure.driving_corridor_extractor import DrivingCorridorExtractor
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
-from commonroad.geometry.shape import ShapeGroup
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,7 @@ class ReachableSetInterface:
         return self._reach.reachable_set
 
     def reset(self, config: Configuration):
+        """Resets configuration."""
         self.config = config
         self._reachable_set_computed = False
         self._driving_corridor_extractor = None
@@ -100,37 +103,29 @@ class ReachableSetInterface:
         print(message)
         logger.debug(message)
 
-    def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False,
-                                  terminal_set=None):
-        if self._driving_corridor_extractor is None:
-            if self.reachable_set is not None:
-                self._driving_corridor_extractor = DrivingCorridorExtractor(self.reachable_set, self.config)
-            else:
-                message = "Reachable sets are empty; please compute reachable sets before extracting driving corridors."
-                logger.warning(message)
-                print(message)
-                return None
+    def extract_driving_corridors(
+            self, to_goal_region: bool = False, shape_terminal: Shape = None, is_cartesian_shape: bool = True,
+            corridor_lon: DrivingCorridor = None, list_p_lon: List[float] = None) -> List[DrivingCorridor]:
+        """Extracts driving corridors within the reachable sets."""
+        if not self.reachable_set:
+            message = "Reachable sets are empty! Compute reachable sets before extracting driving corridors."
+            print(message)
+            logger.warning(message)
 
-        if longitudinal_dc is None or longitudinal_positions is None:
-            if to_goal_region:
-                goal_position = self.config.planning_problem.goal.state_list[0].position
-                if type(goal_position) == ShapeGroup:
-                    # extract all driving corridors reaching any of the shape in shape group
-                    driving_corridors_list = []
-                    for goal_region in self.config.planning_problem.goal.state_list[0].position.shapes:
-                        driving_corridors_list += self._driving_corridor_extractor. \
-                            extract_lon_driving_corridor(terminal_set=goal_region)
-                else:
-                    driving_corridors_list = self._driving_corridor_extractor. \
-                        extract_lon_driving_corridor(terminal_set=goal_position)
-            elif terminal_set is not None:
-                driving_corridors_list = self._driving_corridor_extractor. \
-                    extract_lon_driving_corridor(terminal_set=terminal_set, cartesian_terminal_set=False)
-            else:
-                driving_corridors_list = self._driving_corridor_extractor.extract_lon_driving_corridor(
-                    terminal_set=None)
-        else:
-            driving_corridors_list = self._driving_corridor_extractor.extract_lat_driving_corridor(
-                longitudinal_positions, longitudinal_dc)
+            return []
 
-        return driving_corridors_list
+        if not self._driving_corridor_extractor:
+            self._driving_corridor_extractor = DrivingCorridorExtractor(self.reachable_set, self.config)
+
+        print(f"* Extracting driving corridors...")
+        time_start = time.time()
+        list_corridors = \
+            self._driving_corridor_extractor.extract(to_goal_region, shape_terminal, is_cartesian_shape,
+                                                     corridor_lon, list_p_lon)
+        time_computation = time.time() - time_start
+
+        message = f"\tDC extraction took: \t{time_computation:.3f}s"
+        print(message)
+        logger.debug(message)
+
+        return list_corridors

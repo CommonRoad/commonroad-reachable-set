@@ -156,7 +156,7 @@ class PyReachableSet(ReachableSet):
                                                                            self.config.planning.dt,
                                                                            self.config.vehicle.ego.v_lat_min,
                                                                            self.config.vehicle.ego.v_lat_max)
-            except (ValueError, RuntimeError):
+            except (ValueError, RuntimeError, AttributeError):
                 pass
 
             else:

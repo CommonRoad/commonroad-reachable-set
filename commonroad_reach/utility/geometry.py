@@ -1,9 +1,8 @@
-import math
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 
-import commonroad_dc.pycrcc as pycrcc
 import numpy as np
+import commonroad_dc.pycrcc as pycrcc
 
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
@@ -158,43 +157,40 @@ def area_of_reachable_set(list_reach_set_nodes: List[ReachNode]) -> float:
     return area
 
 
-def connected_reachset_py(list_reach_set_nodes: List[ReachNode], no_of_digits: int):
-    """
-    Function determines connected sets in the position domain within a given list of reachable set nodes
+def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
+    """Determines connected sets in the position domain.
+
     This function is the equivalent python function to pycrreach.connected_reachset_boost().
     Returns a dictionary with key=node idx in list and value=list of tuples
-    :param list_reach_set_nodes: list of reachable set node
-    :param no_of_digits
+    :param list_nodes_reach: list of reachable set node
+    :param num_digits
     """
-    coefficient = math.pow(10.0, no_of_digits)
-    overlap = defaultdict(list)
+    coefficient = np.power(10.0, num_digits)
+    dict_adjacency = defaultdict(list)
 
     # list of drivable areas (i.e., position rectangles)
     list_position_rectangles = list()
 
     # preprocess
-    for reach_node in list_reach_set_nodes:
+    for node_reach in list_nodes_reach:
         # enlarge position rectangles
-        vertices_rectangle_scaled = (math.floor(reach_node.p_lon_min * coefficient),
-                                     math.floor(reach_node.p_lat_min * coefficient),
-                                     math.ceil(reach_node.p_lon_max * coefficient),
-                                     math.ceil(reach_node.p_lat_max * coefficient))
+        vertices_rectangle_scaled = (np.floor(node_reach.p_lon_min * coefficient),
+                                     np.floor(node_reach.p_lat_min * coefficient),
+                                     np.ceil(node_reach.p_lon_max * coefficient),
+                                     np.ceil(node_reach.p_lat_max * coefficient))
         list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
 
     # iterate over all rectangles in list
     for idx1, position_rect_1 in enumerate(list_position_rectangles):
-        # remove index of position_rect_1 to avoid checking self-intersection
-        check_idx_list = list(range(len(list_position_rectangles)))
-        check_idx_list.pop(idx1)
-        # iterate over all other rectangles
-        for idx2 in check_idx_list:
-            # retrieve second rectangle
-            position_rect_2 = list_position_rectangles[idx2]
-            # check for overlap via shapely intersects() function. If True, add tuple of idx to dict
-            if position_rect_1.intersects(position_rect_2):
-                overlap[idx1].append((idx1, idx2))
+        for idx2, position_rect_2 in enumerate(list_position_rectangles):
+            if idx1 == idx2:
+                continue
 
-    return overlap
+            # check for dict_adjacency via shapely intersects() function. If True, add tuple of idx to dict
+            if position_rect_1.intersects(position_rect_2):
+                dict_adjacency[idx1].append((idx1, idx2))
+
+    return dict_adjacency
 
 
 def lon_interval_connected_set(connected_set):

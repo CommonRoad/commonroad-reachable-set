@@ -101,8 +101,8 @@ traj_lon_positions = traj_lon.get_positions()[:, 0]
 
 # Extract lateral driving corridor from lon driving corridor
 if status == 'optimal':
-    lateral_driving_corridors = reach_interface.extract_driving_corridors(longitudinal_dc=lon_dc,
-                                                                          longitudinal_positions=traj_lon_positions)
+    lateral_driving_corridors = reach_interface.extract_driving_corridors(corridor_lon=lon_dc,
+                                                                          list_p_lon=traj_lon_positions)
 else:
     raise LongitudinalTrajectoryPlanningError(f'<QPPlanner/_longitudinal_trajectory_planning> '
                                               f'failed, status: {status}')

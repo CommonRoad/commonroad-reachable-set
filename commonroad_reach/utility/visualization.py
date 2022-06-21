@@ -25,7 +25,7 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, figsize: Tuple = None,
                                       step_start: int = 0, step_end: int = 0, steps: List[int] = None,
-                                      plot_limits: Union[List] = None, path_output: str = None,
+                                      plot_limits: List = None, path_output: str = None,
                                       save_gif: bool = True, duration: float = None, terminal_set=None):
     config = reach_interface.config
     scenario = config.scenario
@@ -56,7 +56,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
     for step in steps:
-        time_step = step * int(config.planning.dt * 10)
+        time_step = step * round(config.planning.dt / config.scenario.dt)
         if config.debug.save_plots:
             # clear previous plot
             plt.cla()
@@ -77,16 +77,14 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         list_nodes = reach_interface.reachable_set_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
-        if terminal_set is not None:
+        if terminal_set:
             terminal_set.draw(renderer,
-                draw_params={"polygon":
-                    {
-                        "opacity": 1.0,
-                        "linewidth": 0.5,
-                        "facecolor": "#f1b514",
-                        "edgecolor": "#302404",
-                        "zorder": 15
-                    }})
+                              draw_params={"polygon": {
+                                  "opacity": 1.0,
+                                  "linewidth": 0.5,
+                                  "facecolor": "#f1b514",
+                                  "edgecolor": "#302404",
+                                  "zorder": 15}})
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -148,7 +146,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
     for step in steps:
-        time_step = step * int(config.planning.dt * 10)
+        time_step = step * round(config.planning.dt / config.scenario.dt)
         if config.debug.save_plots:
             # clear previous plot
             plt.cla()
@@ -269,7 +267,8 @@ def save_fig(save_gif: bool, path_output: str, time_step: int):
     if save_gif:
         # save as png
         print("\tSaving", os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'))
-        plt.savefig(os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'), format="png", bbox_inches="tight",
+        plt.savefig(os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'), format="png",
+                    bbox_inches="tight",
                     transparent=False)
 
     else:
@@ -453,7 +452,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
 
 
 def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
-                             trajectory: np.ndarray=None, as_svg=False):
+                             trajectory: np.ndarray = None, as_svg=False):
     """Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor"""
     message = "* Plotting full 2D driving corridor ..."
     print(message)
