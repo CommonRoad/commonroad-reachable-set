@@ -19,19 +19,22 @@ def ret_obstacles_by_id(config, id_list):
 
 
 def main():
-    # ==== build configuration
+    # ==== specify scenario
     name_scenario = "DEU_Test-1_1_T-1"
     # name_scenario = "ARG_Carcarana-1_1_T-1"
-    # name_scenario = "ZAM_Tjunction-1_313_T-1"
     # name_scenario = "USA_US101-6_1_T-1"
+    # name_scenario = "ZAM_Intersection-1_1_T-1"
 
+    # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
+    config.update_configuration()
     config.print_configuration_summary()
 
-    # ==== construct reachability interface and compute reachable sets
+    # ==== compute reachable sets using reachability interface
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
 
+    # ==== extract driving corridors
     longitudinal_driving_corridors = reach_interface.extract_driving_corridors(to_goal_region=True)
 
     print("Number of longitudinal driving corridors %s:" % len(longitudinal_driving_corridors))

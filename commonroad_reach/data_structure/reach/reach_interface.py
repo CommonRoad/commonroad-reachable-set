@@ -43,6 +43,7 @@ class ReachableSetInterface:
         return self._reach.reachable_set
 
     def reset(self, config: Configuration):
+        """Resets configuration."""
         self.config = config
         self._reachable_set_computed = False
         self._driving_corridor_extractor = None
@@ -100,37 +101,53 @@ class ReachableSetInterface:
         print(message)
         logger.debug(message)
 
-    def extract_driving_corridors(self, longitudinal_dc=None, longitudinal_positions=None, to_goal_region=False,
-                                  terminal_set=None):
-        if self._driving_corridor_extractor is None:
-            if self.reachable_set is not None:
-                self._driving_corridor_extractor = DrivingCorridorExtractor(self.reachable_set, self.config)
-            else:
-                message = "Reachable sets are empty; please compute reachable sets before extracting driving corridors."
-                logger.warning(message)
-                print(message)
-                return None
+    def extract_driving_corridors(self, corridor_lon=None, list_p_lon=None,
+                                  to_goal_region=False, shape_terminal=None, is_cartesian_shape: bool = True):
+        """Extracts driving corridors from the computed reachable sets.
 
-        if longitudinal_dc is None or longitudinal_positions is None:
+        If a longitudinal DC and a list of longitudinal positions are given, extracts the lateral DCs. Otherwise,
+        proceed to longitudinal DC extraction. Optionally, one can specify whether the longitudinal DC should reach
+        the goal region of the planning problem or a user-given terminal state represented by a shape.
+        """
+        if not self.reachable_set:
+            message = "Reachable sets are empty! Compute reachable sets before extracting driving corridors."
+            print(message)
+            logger.warning(message)
+
+            return None
+
+        if not self._driving_corridor_extractor:
+            self._driving_corridor_extractor = DrivingCorridorExtractor(self.reachable_set, self.config)
+
+        print(f"*** Extracting driving corridors...")
+        time_start = time.time()
+        list_corridors = list()
+        if not (corridor_lon and list_p_lon):
+            # extract longitudinal driving corridors
             if to_goal_region:
-                goal_position = self.config.planning_problem.goal.state_list[0].position
-                if type(goal_position) == ShapeGroup:
-                    # extract all driving corridors reaching any of the shape in shape group
-                    driving_corridors_list = []
-                    for goal_region in self.config.planning_problem.goal.state_list[0].position.shapes:
-                        driving_corridors_list += self._driving_corridor_extractor. \
-                            extract_lon_driving_corridor(terminal_set=goal_region)
-                else:
-                    driving_corridors_list = self._driving_corridor_extractor. \
-                        extract_lon_driving_corridor(terminal_set=goal_position)
-            elif terminal_set is not None:
-                driving_corridors_list = self._driving_corridor_extractor. \
-                    extract_lon_driving_corridor(terminal_set=terminal_set, cartesian_terminal_set=False)
-            else:
-                driving_corridors_list = self._driving_corridor_extractor.extract_lon_driving_corridor(
-                    terminal_set=None)
-        else:
-            driving_corridors_list = self._driving_corridor_extractor.extract_lat_driving_corridor(
-                longitudinal_positions, longitudinal_dc)
+                # extract all driving corridors reaching the goal region represented by a shape(group)
+                shape_goal = self.config.planning_problem.goal.state_list[0].position
+                if isinstance(shape_goal, ShapeGroup):
+                    list_shapes_goal = [shape for shape in shape_goal.shapes]
 
-        return driving_corridors_list
+                else:
+                    list_shapes_goal = [shape_goal]
+
+                for shape_goal in list_shapes_goal:
+                    list_corridors += \
+                        self._driving_corridor_extractor.extract_driving_corridors(shape_terminal=shape_goal,
+                                                                                   is_cartesian_shape=is_cartesian_shape)
+            else:
+                list_corridors = \
+                    self._driving_corridor_extractor.extract_driving_corridors(shape_terminal=shape_terminal,
+                                                                               is_cartesian_shape=is_cartesian_shape)
+
+        else:
+            # extract lateral driving corridors
+            list_corridors = \
+                self._driving_corridor_extractor.extract_driving_corridors(corridor_lon=corridor_lon,
+                                                                           list_p_lon=list_p_lon)
+
+        print(f"\tDC extraction took: \t{time.time() - time_start:.3f}s")
+
+        return list_corridors
