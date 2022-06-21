@@ -183,12 +183,11 @@ def compute_initial_state_cvln(config):
     return (p_lon, p_lat), (v_lon, v_lat)
 
 
-#TODO rename wheelbase parameter to circle distance
-def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, path_to_lut: str) -> dict:
+def read_lut_longitudinal_enlargement(reference_point: str, circle_distance: float, path_to_lut: str) -> dict:
     """
     Reads look-up table for longitudinal enlargement for collision checking in the reachability analysis.
     :param reference_point
-    :param wheelbase
+    :param circle_distance Distance between front and rear circle (see fun compute_disc_radius_and_distance() )
     :param path_to_lut: path where look-up table is stored
     :return: look-up table as dictionary
     """
@@ -199,7 +198,7 @@ def read_lut_longitudinal_enlargement(reference_point: str, wheelbase: float, pa
     else:
         raise ValueError("<read_lut_longitudinal_enlargement>: unknown reference point: {}".format(reference_point))
 
-    table = np.loadtxt(path_to_lut + base_name + str(int(wheelbase * 10)) + '.txt', skiprows=1, delimiter=',')
+    table = np.loadtxt(path_to_lut + base_name + str(int(circle_distance * 10)) + '.txt', skiprows=1, delimiter=',')
 
     lut_lon = defaultdict(dict)
     # table entries: lateral position, min curvature, max curvature, enlargement
