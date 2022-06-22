@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional, Union, List, Tuple
 
 from commonroad.planning.goal import GoalRegion
@@ -467,7 +468,7 @@ class ReachableSetConfiguration:
 
         self.num_threads = config_relevant.num_threads
 
-        self.path_to_lut = config_relevant.path_to_lut
+        self.path_to_lut = os.path.abspath(os.path.join(config.general.path_scenarios, "..", config_relevant.path_to_lut))
         self.lut_longitudinal_enlargement = None
 
     def update_configuration(self, config: Configuration):

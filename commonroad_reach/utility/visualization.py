@@ -298,7 +298,7 @@ def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
 def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,
                                         step_start: Union[int, None] = None, step_end: Union[int, None] = None,
                                         steps: Union[List[int], None] = None, save_gif: bool = False,
-                                        duration: float = None, as_svg=False):
+                                        duration: float = None, as_svg=False, terminal_set=None):
     """2D visualization of a given driving corridor and scenario.
 
     :param driving_corridor: Driving corridor to visualize
@@ -390,7 +390,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     if config.debug.save_plots and save_gif:
         make_gif(path_output_lon_dc, "driving_corridor_", steps, ("driving_corridor_%s" % dc_id), duration)
 
-        for time_step in range(time_step_end + 1):
+        for time_step in range(step_end + 1):
             # plot driving corridor and scenario at the specified time step
             plt.cla()
             scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True}, "time_begin": time_step})
@@ -422,7 +422,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
                     'draw_arrow': False, "radius": 0.5}}}})
             # reach set nodes in driving corridor at specified time step
             list_nodes = driving_corridor[time_step]
-            draw_reachable_sets(list_nodes, config, renderer, draw_params, backend)
+            draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
             # plot
             plt.rc("axes", axisbelow=True)
@@ -444,8 +444,8 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
                     f'{path_output_lon_dc}{"lon_driving_corridor"}_{time_step:05d}.{save_format}',
                     format=save_format, bbox_inches="tight", transparent=False)
 
-        if config.debug.save_plots and animation:
-            make_gif(path_output_lon_dc, "lon_driving_corridor_", time_step_end, ("lon_driving_corridor_%s" % dc_id))
+        if config.debug.save_plots and save_gif:
+            make_gif(path_output_lon_dc, "lon_driving_corridor_", steps, ("lon_driving_corridor_%s" % dc_id))
 
     message = ("\tDriving corridor %s plotted." % dc_id)
     print(message)

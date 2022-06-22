@@ -6,7 +6,7 @@ planning:
 reachable_set:
   mode_computation: 2
   mode_repartition: 2
-  mode_inflation: 1
+  mode_inflation: 3
   size_grid: 0.25
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
