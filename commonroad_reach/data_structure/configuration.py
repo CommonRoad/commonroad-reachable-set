@@ -235,11 +235,10 @@ class VehicleConfiguration:
                 if value is not None:
                     setattr(self, key, value)
 
-            rear_axle_distance = vehicle_parameters.b
             self.radius_disc, self.circle_distance = \
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
                                                                     ref_point=config.planning.reference_point,
-                                                                    rear_axle_dist=rear_axle_distance)
+                                                                    rear_axle_dist=self.wb_rear_axle)
 
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,
@@ -285,11 +284,10 @@ class VehicleConfiguration:
                 if value is not None:
                     setattr(self, key, value)
 
-            rear_axle_distance = vehicle_parameters.b
             self.radius_disc, self.circle_distance = \
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
                                                                     ref_point=config.planning.reference_point,
-                                                                    rear_axle_dist=rear_axle_distance)
+                                                                    rear_axle_dist=self.wb_rear_axle)
 
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,
