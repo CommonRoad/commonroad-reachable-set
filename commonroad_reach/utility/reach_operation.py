@@ -16,15 +16,14 @@ from commonroad_reach.utility.sweep_line import SweepLine
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
     """Returns the zero-state polygon of the system.
 
-    Steps:
-        1. prepare a bounding polygon to be intersected with halfspaces.
-        2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three
-        halfspaces to approximate the upper bound of the polygon, this applies to the lower bound as well.
-        A halfspace can be specified given a switching time (gamma).
-    Args:
-        dt (float): time duration (one step)
-        a_min (float): minimum acceleration (maximum deceleration)
-        a_max (float): maximum acceleration
+            Steps:
+                1. prepare a bounding polygon to be intersected with halfspaces.
+                2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace can be specified given a switching time (gamma).
+            
+            Args:
+                dt (float): time duration (one step)
+                a_min (float): minimum acceleration (maximum deceleration)
+                a_max (float): maximum acceleration
     """
     polygon_bounding = create_bounding_polygon(dt, a_min, a_max)
 
@@ -57,40 +56,11 @@ def create_bounding_polygon(dt: float, a_min: float, a_max: float) -> ReachPolyg
 def compute_halfspace_coefficients(dt: float, a_min: float, a_max: float, gamma: float) -> Tuple:
     """Computes the coefficients of halfspaces to be intersected.
 
-    Each halfspace has the form of ax + bv <= c. In the x-v plane, the x and v values are both dependent
-    on gamma (switching time, see Söntges T-ITS 2018, Sec. III.A). Given a gamma, the maximum and minimum
-    reachable x and v can be computed, respectively. The halfspace crossing the point x_ and v_ can be
-    obtained through:
-        v - v_ = (dv_/dx_) * (x - x_) = (dv_/dgamma * dgamma/dx_) * (x - x_)
-        ==>
-        (dv_/dgamma) * x + (-dx_/dgamma) * v <= (dv_/dgamma * x_ - -dx_/dgamma * v_)
-
-    Essentially, the expanded form is performing the following computation:
-    # 1. full braking (or acceleration) before the switching time
-    x_0 = 0
-    v_0 = 0
-    a = a_min (a_max)
-    t = gamma * dt - 0
-
-    x_t = 0.5 * a * t**2 + v_0 * t + x_0
-    v_t = a * t + v_0
-
-    # 2. full acceleration (or braking) after the switching time
-    x_0 = x_t
-    v_0 = v_t
-    a = a_max (a_min)
-    t = dt - gamma * dt
-
-    x_f = 0.5 * a * t**2 + v_0 * t + x_0
-    v_f = a * t + v_0
-
-    dx_XX & dv_XX are derivatives with regard to gamma.
-
-    Args:
-        dt (float): time duration
-        a_min (float): a_min
-        a_max (float): a_max
-        gamma (float): switching time between full braking and acceleration
+        Args:
+            dt (float): time duration
+            a_min (float): a_min
+            a_max (float): a_max
+            gamma (float): switching time between full braking and acceleration
     """
     x_upper = a_max * dt ** 2 * (0.5 - gamma + 0.5 * gamma ** 2) + a_min * dt ** 2 * (gamma - 0.5 * gamma ** 2)
     v_upper = a_min * gamma * dt + a_max * dt * (1 - gamma)
@@ -137,11 +107,11 @@ def propagate_polygon(polygon: ReachPolygon, polygon_zero_state: ReachPolygon, d
                       v_min: float, v_max: float) -> ReachPolygon:
     """Propagates the polygon of a reachset node.
 
-    Steps:
-        1. clone and convexify the polygon
-        2. compute the linear mapping (zero-input response) of the polygon
-        3. compute the minkowski sum of the zero-input and zero-state polygons
-        4. intersect with halfspaces to incorporate velocity limits
+            Steps:
+                1. clone and convexify the polygon
+                2. compute the linear mapping (zero-input response) of the polygon
+                3. compute the minkowski sum of the zero-input and zero-state polygons
+                4. intersect with halfspaces to incorporate velocity limits
     """
     polygon_processed = polygon.clone(convexify=True)
     polygon_processed = util_geometry.linear_mapping(polygon_processed, (1, dt, 0, 1))

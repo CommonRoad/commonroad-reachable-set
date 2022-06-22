@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.utility package &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="setup module" href="setup.html" />
+    <link rel="prev" title="commonroad_reach.tests package" href="commonroad_reach.tests.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">commonroad-reachable-set</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="commonroad_reach.html">commonroad_reach package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="commonroad_reach.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.html">commonroad_reach.data_structure package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.tests.html">commonroad_reach.tests package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">commonroad_reach.utility package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="commonroad_reach.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="commonroad_reach.html#module-commonroad_reach.compute_driving_corridors">commonroad_reach.compute_driving_corridors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="commonroad_reach.html#module-commonroad_reach.compute_reachable_set">commonroad_reach.compute_reachable_set module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="commonroad_reach.html#module-commonroad_reach.compute_reachable_set_benchmark">commonroad_reach.compute_reachable_set_benchmark module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="commonroad_reach.html#module-commonroad_reach">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">commonroad-reachable-set</a> &raquo;</li>
+          <li><a href="commonroad_reach.html">commonroad_reach package</a> &raquo;</li>
+      <li>commonroad_reach.utility package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/commonroad_reach.utility.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="commonroad-reach-utility-package">
+<h1>commonroad_reach.utility package<a class="headerlink" href="#commonroad-reach-utility-package" title="Permalink to this heading"></a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</div>
+<div class="section" id="module-commonroad_reach.utility.configuration">
+<span id="commonroad-reach-utility-configuration-module"></span><h2>commonroad_reach.utility.configuration module<a class="headerlink" href="#module-commonroad_reach.utility.configuration" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_curvature_from_polyline">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_curvature_from_polyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polyline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_curvature_from_polyline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_curvature_from_polyline" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the curvature of a given polyline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>polyline</strong> (<em>np.ndarray</em>) – polyline for the curvature computation</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>curvature of the polyline</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_disc_radius_and_wheelbase">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_disc_radius_and_wheelbase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wheelbase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_disc_radius_and_wheelbase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_disc_radius_and_wheelbase" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the radius of the discs to approximate the shape of vehicle.</p>
+<p>If wheelbase is not given, it is assumed that the front and rear axles are positioned at length/6
+and length * 5/6 of the shape, thus yielding a wheelbase of 4*length/6.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – </p></li>
+<li><p><strong>length</strong> – </p></li>
+<li><p><strong>wheelbase</strong> (<em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – wheelbase of the vehicle. If the</p></li>
+<li><p><strong>given</strong> (<em>wheelbase is</em>) – </p></li>
+<li><p><strong>discs.</strong> (<em>it is used to compute the radius of</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_inflation_radius">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_inflation_radius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode_inflation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_inflation_radius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_inflation_radius" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the radius to inflate the obstacles for collision check.</p>
+<p>Based on the specified mode, we obtain either under- or over-approximation of the shape of the ego vehicle.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_initial_state_cart">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_initial_state_cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_initial_state_cart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_initial_state_cart" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the initial Cartesian state of the ego vehicle given a planning problem.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_initial_state_cvln">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_initial_state_cvln</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_initial_state_cvln"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_initial_state_cvln" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the initial curvilinear state of the ego vehicle given a planning problem.</p>
+<p>For the transformation of the ego vehicle’s velocity to the curvilinear coordinate system, it is assumed
+that d*kappa_ref &lt;&lt; 1 holds, where d is the distance of the ego vehicle to the reference path and kappa_ref
+is the curvature of the reference path</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_orientation_from_polyline">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_orientation_from_polyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polyline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_orientation_from_polyline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_orientation_from_polyline" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the orientation of a given polyline</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.compute_path_length_from_polyline">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">compute_path_length_from_polyline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polyline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#compute_path_length_from_polyline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.compute_path_length_from_polyline" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the path length of a given polyline</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.configuration.create_curvilinear_coordinate_system">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.configuration.</span></span><span class="sig-name descname"><span class="pre">create_curvilinear_coordinate_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_projection_domain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">CurvilinearCoordinateSystem</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/configuration.html#create_curvilinear_coordinate_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.configuration.create_curvilinear_coordinate_system" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.coordinate_system">
+<span id="commonroad-reach-utility-coordinate-system-module"></span><h2>commonroad_reach.utility.coordinate_system module<a class="headerlink" href="#module-commonroad_reach.utility.coordinate_system" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.coordinate_system.convert_to_cartesian_polygon">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.coordinate_system.</span></span><span class="sig-name descname"><span class="pre">convert_to_cartesian_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tuple_vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CLCS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CurvilinearCoordinateSystem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_wrt_angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/coordinate_system.html#convert_to_cartesian_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.coordinate_system.convert_to_cartesian_polygon" title="Permalink to this definition"></a></dt>
+<dd><p>Converts a curvilinear polygon into list of cartesian polygons.</p>
+<p>If split_wrt_angle is set to True, the converted rectangle will be recursively split if its upper and lower edges
+have a difference in angle greater than the threshold.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.coordinate_system.convert_to_cartesian_polygons">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.coordinate_system.</span></span><span class="sig-name descname"><span class="pre">convert_to_cartesian_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rectangle_cvln</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CLCS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CurvilinearCoordinateSystem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_wrt_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/coordinate_system.html#convert_to_cartesian_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.coordinate_system.convert_to_cartesian_polygons" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of rectangles converted to Cartesian coordinate system.</p>
+<p>If split_wrt_angle set to True, the converted rectangles will be further split into smaller ones if their
+upper and lower edges has a difference in angle greater than a threshold. This is to smoothen the plotting.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.coordinate_system.convert_to_curvilinear_vertices">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.coordinate_system.</span></span><span class="sig-name descname"><span class="pre">convert_to_curvilinear_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices_cart</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CLCS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CurvilinearCoordinateSystem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/coordinate_system.html#convert_to_curvilinear_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.coordinate_system.convert_to_curvilinear_vertices" title="Permalink to this definition"></a></dt>
+<dd><p>Converts a list of Cartesian vertices to Curvilinear vertices.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.coordinate_system.create_curvilinear_aabb_from_obstacle">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.coordinate_system.</span></span><span class="sig-name descname"><span class="pre">create_curvilinear_aabb_from_obstacle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obstacle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CLCS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CurvilinearCoordinateSystem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_disc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RectAABB</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/coordinate_system.html#create_curvilinear_aabb_from_obstacle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.coordinate_system.create_curvilinear_aabb_from_obstacle" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of axis-aligned bounding boxes from an obstacle in Curvilinear coordinate system.</p>
+<p>The shapes are dilated with the disc radius of the ego vehicle to consider its shape.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.coordinate_system.create_curvilinear_and_rasterized_aabb_from_shape">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.coordinate_system.</span></span><span class="sig-name descname"><span class="pre">create_curvilinear_and_rasterized_aabb_from_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CLCS</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CurvilinearCoordinateSystem</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">RectAABB</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/coordinate_system.html#create_curvilinear_and_rasterized_aabb_from_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.coordinate_system.create_curvilinear_and_rasterized_aabb_from_shape" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of axis-aligned and rasterized boxes from a CommonRoad shape in Curvilinear coordinate system.</p>
+<p>Since we use axis-aligned rectangles (bounding boxes) for collision checks in Curvilinear coordinate system,
+simply using the rectangle with min/max lon/lat vertices converted from the Cartesian coordinates incurs a large
+over-approximation of the shape of the obstacle. We therefore rasterize (partition) the converted rectangle in
+the longitudinal direction and adjust their lateral coordinates to reduce the over-approximation.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.general">
+<span id="commonroad-reach-utility-general-module"></span><h2>commonroad_reach.utility.general module<a class="headerlink" href="#module-commonroad_reach.utility.general" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.general.create_lanelet_network_from_ids">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.general.</span></span><span class="sig-name descname"><span class="pre">create_lanelet_network_from_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lanelet_network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LaneletNetwork</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lanelets_leading_to_goal</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LaneletNetwork</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/general.html#create_lanelet_network_from_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.general.create_lanelet_network_from_ids" title="Permalink to this definition"></a></dt>
+<dd><p>creates a new lanelet network from a list of lanelet IDs in the original lanelet network</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.general.load_scenario_and_planning_problem">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.general.</span></span><span class="sig-name descname"><span class="pre">load_scenario_and_planning_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_planning_problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/general.html#load_scenario_and_planning_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.general.load_scenario_and_planning_problem" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.general.power_set">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.general.</span></span><span class="sig-name descname"><span class="pre">power_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/general.html#power_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.general.power_set" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the power set of a given iterable</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.geometry">
+<span id="commonroad-reach-utility-geometry-module"></span><h2>commonroad_reach.utility.geometry module<a class="headerlink" href="#module-commonroad_reach.utility.geometry" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.area_of_reachable_set">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">area_of_reachable_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_reach_set_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#area_of_reachable_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.area_of_reachable_set" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the area of a given list of reachable set nodes.
+:param list_reach_set_nodes:
+:return area: area of projection of the reachable sets on position domain</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.clamp">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">clamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#clamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.clamp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.connected_reachset_py">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">connected_reachset_py</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_reach_set_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_of_digits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#connected_reachset_py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.connected_reachset_py" title="Permalink to this definition"></a></dt>
+<dd><p>Function determines connected sets in the position domain within a given list of reachable set nodes
+This function is the equivalent python function to pycrreach.connected_reachset_boost().
+Returns a dictionary with key=node idx in list and value=list of tuples
+:param list_reach_set_nodes: list of reachable set node
+:param no_of_digits</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.create_aabb_from_coordinates">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">create_aabb_from_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_lon_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_lon_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_lat_max</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#create_aabb_from_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.create_aabb_from_coordinates" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a pycrcc.RectAABB object from the given coordinates.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.create_adjacency_dictionary">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">create_adjacency_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_rectangles_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#create_adjacency_dictionary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.create_adjacency_dictionary" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an adjacency dictionary.</p>
+<p>E.g.: {0 : [1, 2], 1 : [3, 4]} = rectangle_0 from 1st list overlaps with rectangles_1 and _2 from the 2nd list;
+rectangle_1 (1st) overlaps with rectangles_3 and _4 (2nd).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.linear_mapping">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">linear_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple_coefficients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#linear_mapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.linear_mapping" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the linear mapping of polygon.</p>
+<p>Computing the zero-input response of the system, see Söntges T-ITS 2018, Sec. IV.A.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.minkowski_sum">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">minkowski_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">polygon2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#minkowski_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.minkowski_sum" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the Minkowski sum of two polygons.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.obtain_extremum_coordinates_of_vertices">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">obtain_extremum_coordinates_of_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_vertices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#obtain_extremum_coordinates_of_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.obtain_extremum_coordinates_of_vertices" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the extremum coordinates of the given vertices.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.rectangle_intersects_with_circle">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">rectangle_intersects_with_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rectangle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#rectangle_intersects_with_circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.rectangle_intersects_with_circle" title="Permalink to this definition"></a></dt>
+<dd><p>Returns true if the given rectangles intersects with the attributes of a circle.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.geometry.sort_vertices_counterclockwise">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.geometry.</span></span><span class="sig-name descname"><span class="pre">sort_vertices_counterclockwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/geometry.html#sort_vertices_counterclockwise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.geometry.sort_vertices_counterclockwise" title="Permalink to this definition"></a></dt>
+<dd><p>Sorts a list of vertices in the counterclockwise direction.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>compute the center of mass</p></li>
+<li><p>compute the angles from the center of mass to each point</p></li>
+<li><p>sort with the computed angles</p></li>
+</ol>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>list_vertices</strong> (<em>List</em><em>[</em><em>Tuple</em><em>]</em>) – the list of vertices to be sorted</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.logger">
+<span id="commonroad-reach-utility-logger-module"></span><h2>commonroad_reach.utility.logger module<a class="headerlink" href="#module-commonroad_reach.utility.logger" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.logger.initialize_logger">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.logger.</span></span><span class="sig-name descname"><span class="pre">initialize_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration" title="commonroad_reach.data_structure.configuration.Configuration"><span class="pre">Configuration</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/logger.html#initialize_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.logger.initialize_logger" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.obstacle_grid">
+<span id="commonroad-reach-utility-obstacle-grid-module"></span><h2>commonroad_reach.utility.obstacle_grid module<a class="headerlink" href="#module-commonroad_reach.utility.obstacle_grid" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="commonroad_reach.utility.obstacle_grid.ObstacleRegularGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.obstacle_grid.</span></span><span class="sig-name descname"><span class="pre">ObstacleRegularGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ll</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ur</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collision_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CollisionChecker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planning_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.PlanningConfiguration" title="commonroad_reach.data_structure.configuration.PlanningConfiguration"><span class="pre">PlanningConfiguration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_shapes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/obstacle_grid.html#ObstacleRegularGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.obstacle_grid.ObstacleRegularGrid" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.obstacle_grid.ObstacleRegularGrid.occupancy_grid_at_time">
+<span class="sig-name descname"><span class="pre">occupancy_grid_at_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate_reachset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/obstacle_grid.html#ObstacleRegularGrid.occupancy_grid_at_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.obstacle_grid.ObstacleRegularGrid.occupancy_grid_at_time" title="Permalink to this definition"></a></dt>
+<dd><p>Get occupancy matrix defined over regular grid with 0 = occupied, 1 = free space.
+:param step: step of evaluation
+:param translate_reachset: translation of reachable set
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.reach_operation">
+<span id="commonroad-reach-utility-reach-operation-module"></span><h2>commonroad_reach.utility.reach_operation module<a class="headerlink" href="#module-commonroad_reach.utility.reach_operation" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.adapt_rectangles_to_grid">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">adapt_rectangles_to_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#adapt_rectangles_to_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.adapt_rectangles_to_grid" title="Permalink to this definition"></a></dt>
+<dd><p>Adapts the given list of position rectangles to a Cartesian grid.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.check_collision_and_split_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">check_collision_and_split_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collision_checker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_terminal_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#check_collision_and_split_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.check_collision_and_split_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Check collision status of the rectangles and split them if they are colliding.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.compute_extremum_positions_of_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">compute_extremum_positions_of_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#compute_extremum_positions_of_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.compute_extremum_positions_of_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns extremum lon/lat positions of the given list of rectangles.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.compute_halfspace_coefficients">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">compute_halfspace_coefficients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#compute_halfspace_coefficients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.compute_halfspace_coefficients" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the coefficients of halfspaces to be intersected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dt</strong> (<em>float</em>) – time duration</p></li>
+<li><p><strong>a_min</strong> (<em>float</em>) – a_min</p></li>
+<li><p><strong>a_max</strong> (<em>float</em>) – a_max</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – switching time between full braking and acceleration</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.compute_minimum_positions_of_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">compute_minimum_positions_of_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#compute_minimum_positions_of_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.compute_minimum_positions_of_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns minimum lon/lat positions of the given list of rectangles.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.connect_children_to_parents">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">connect_children_to_parents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#connect_children_to_parents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.connect_children_to_parents" title="Permalink to this definition"></a></dt>
+<dd><p>Connects the child reach nodes to their parent nodes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.construct_reach_node">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">construct_reach_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rectangle_drivable_area</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_base_sets_propagated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_idx_base_sets_adjacent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_generation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#construct_reach_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.construct_reach_node" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a reach node constructed from the propagated base sets.</p>
+<p>Iterate through base sets that are adjacent to the drivable area, and cut the base sets down with position
+constraints from the drivable area. A non-empty intersected polygon imply that it is a valid base set and is
+considered as a parent of the rectangle (reachable from the node from which the base set is propagated).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.construct_reach_nodes">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">construct_reach_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drivable_area</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_base_sets_propagated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_multi_generation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#construct_reach_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.construct_reach_nodes" title="Permalink to this definition"></a></dt>
+<dd><p>Constructs nodes of the reachability graph.</p>
+<p>The nodes are constructed by cutting down the propagated base sets to the drivable area to determine the reachable
+positions and velocities.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>examine the adjacency of drivable area and the propagated base sets. They are considered adjacent if they
+overlap in the position domain.</p></li>
+<li><p>create a node from each drivable area and its adjacent propagated base sets.</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.create_bounding_polygon">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">create_bounding_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#create_bounding_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.create_bounding_polygon" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a polygon that has the absolute min/max reachable position and velocity as its bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dt</strong> (<em>float</em>) – time duration (one step)</p></li>
+<li><p><strong>a_min</strong> (<em>float</em>) – minimum acceleration (maximum deceleration)</p></li>
+<li><p><strong>a_max</strong> (<em>float</em>) – maximum acceleration</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.create_collision_free_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">create_collision_free_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collision_checker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rectangle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_terminal_squared</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#create_collision_free_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.create_collision_free_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Recursively creates a list of collision-free rectangles.</p>
+<p>If a collision happens between a rectangle and other object, and that the diagonal of the rectangle is greater
+than the terminal radius, it is split into two new rectangles in whichever edge (lon/lat) that is longer.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.create_repartitioned_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">create_repartitioned_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#create_repartitioned_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.create_repartitioned_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of repartitioned rectangles.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>obtain the minimum lon/lat positions of the list of rectangles.</p></li>
+<li><p>discretize rectangles</p></li>
+<li><p>repartition the rectangles into a new list of rectangles.</p></li>
+<li><p>restore the rectangles back to undiscretized ones.</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.create_zero_state_polygon">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">create_zero_state_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#create_zero_state_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.create_zero_state_polygon" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the zero-state polygon of the system.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>prepare a bounding polygon to be intersected with halfspaces.</p></li>
+<li><p>compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace can be specified given a switching time (gamma).</p></li>
+</ol>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dt</strong> (<em>float</em>) – time duration (one step)</p></li>
+<li><p><strong>a_min</strong> (<em>float</em>) – minimum acceleration (maximum deceleration)</p></li>
+<li><p><strong>a_max</strong> (<em>float</em>) – maximum acceleration</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.discretize_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">discretize_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple_p_min_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#discretize_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.discretize_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Discretizes the given list of rectangles.</p>
+<p>p_discretized = (p_undiscretized - p_min) / size_grid
+get floor for min values, and get ceil for max values for over-approximation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.generate_tuple_vertices_position_rectangle_initial">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">generate_tuple_vertices_position_rectangle_initial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration" title="commonroad_reach.data_structure.configuration.Configuration"><span class="pre">Configuration</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#generate_tuple_vertices_position_rectangle_initial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.generate_tuple_vertices_position_rectangle_initial" title="Permalink to this definition"></a></dt>
+<dd><p>Returns tuple of vertices for the position rectangle construction.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.generate_tuples_vertices_polygons_initial">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">generate_tuples_vertices_polygons_initial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration" title="commonroad_reach.data_structure.configuration.Configuration"><span class="pre">Configuration</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#generate_tuples_vertices_polygons_initial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.generate_tuples_vertices_polygons_initial" title="Permalink to this definition"></a></dt>
+<dd><p>Returns tuples of vertices for the initial polygons in two directions.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.project_base_sets_to_position_domain">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">project_base_sets_to_position_domain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_base_sets_propagated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_node.ReachNode" title="commonroad_reach.data_structure.reach.reach_node.ReachNode"><span class="pre">ReachNode</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#project_base_sets_to_position_domain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.project_base_sets_to_position_domain" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of rectangles projected onto the position domain.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.propagate_polygon">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">propagate_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">polygon_zero_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#propagate_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.propagate_polygon" title="Permalink to this definition"></a></dt>
+<dd><p>Propagates the polygon of a reachset node.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>clone and convexify the polygon</p></li>
+<li><p>compute the linear mapping (zero-input response) of the polygon</p></li>
+<li><p>compute the minkowski sum of the zero-input and zero-state polygons</p></li>
+<li><p>intersect with halfspaces to incorporate velocity limits</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.remove_rectangles_out_of_kamms_circle">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">remove_rectangles_out_of_kamms_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_rectangles_adapted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#remove_rectangles_out_of_kamms_circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.remove_rectangles_out_of_kamms_circle" title="Permalink to this definition"></a></dt>
+<dd><p>Discard position rectangles that do not intersect with Kamm’s friction circle.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.repartition_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">repartition_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#repartition_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.repartition_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of repartitioned rectangles.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>Obtain a list of vertical segments representing the contour of the union of the rectangles.</p></li>
+<li><p>Create repartitioned rectangles from the list of vertical segments using sweep line algorithm.</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.split_rectangle_into_two">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">split_rectangle_into_two</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rectangle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#split_rectangle_into_two"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.split_rectangle_into_two" title="Permalink to this definition"></a></dt>
+<dd><p>Returns two rectangles each of which is a half of the initial rectangle.</p>
+<p>Split in the longer axis of the two (longitudinal / lateral or x / y).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.reach_operation.undiscretized_rectangles">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.reach_operation.</span></span><span class="sig-name descname"><span class="pre">undiscretized_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles_discretized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple_p_min_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/reach_operation.html#undiscretized_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.reach_operation.undiscretized_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Restores previously discretized rectangles back to undiscretized.</p>
+<p>p_undiscretized = p_discretized * size_grid + p_min</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.sweep_line">
+<span id="commonroad-reach-utility-sweep-line-module"></span><h2>commonroad_reach.utility.sweep_line module<a class="headerlink" href="#module-commonroad_reach.utility.sweep_line" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.sweep_line.</span></span><span class="sig-name descname"><span class="pre">SweepLine</span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.Event">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_vent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_lat_low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_lat_high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.Event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Event in the sweep line algorithm.</p>
+<p>p_lon = x (CART) = s (CLCS)
+p_lat = y (CART) = d (CLCS)</p>
+<p>It is assumed that the line is swept from left to right. The left edge of a rectangle
+is typed ‘ENTER’, and the right edge ‘EXIT’.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.EventType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EventType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.EventType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.EventType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Possible types of events in the sweep line algorithm.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.EventType.ENTER">
+<span class="sig-name descname"><span class="pre">ENTER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.EventType.ENTER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.EventType.EXIT">
+<span class="sig-name descname"><span class="pre">EXIT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.EventType.EXIT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.compare_events">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compare_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">event2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.compare_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.compare_events" title="Permalink to this definition"></a></dt>
+<dd><p>Custom comparison function for events.</p>
+<dl class="simple">
+<dt>Events are ordered in the following order:</dt><dd><ol class="arabic simple">
+<li><p>longitudinal position of rectangles</p></li>
+<li><p>type of the event</p></li>
+<li><p>lower lateral position</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.compute_extremum_lateral_positions_of_rectangles">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_extremum_lateral_positions_of_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.compute_extremum_lateral_positions_of_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.compute_extremum_lateral_positions_of_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the minimum and maximum lateral positions of the given list of rectangles.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.create_event_list">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_event_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.create_event_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.create_event_list" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a list of sorted events with the given list of rectangles.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.create_p_lon_to_rectangles_dictionary">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_p_lon_to_rectangles_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_segments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_line.ReachLine" title="commonroad_reach.data_structure.reach.reach_line.ReachLine"><span class="pre">ReachLine</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.create_p_lon_to_rectangles_dictionary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.create_p_lon_to_rectangles_dictionary" title="Permalink to this definition"></a></dt>
+<dd><p>Create a dictionary that maps p_lon to a list of rectangles whose
+left edge is aligned with p_lon.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>Create a dictionary that maps p_lon to list of tuples of p_lat
+from segments</p></li>
+<li><p>Iterate through p_lon, retrieve relevant tuples of p_lat and
+toggle the status of segments between these p_lat in the
+segment tree. Get intervals of active segments and create
+rectangles.</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.create_rectangles_from_vertical_segments">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_rectangles_from_vertical_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_segments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_line.ReachLine" title="commonroad_reach.data_structure.reach.reach_line.ReachLine"><span class="pre">ReachLine</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.create_rectangles_from_vertical_segments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.create_rectangles_from_vertical_segments" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of rectangles from the given vertical segments.
+This is done with a sweep line algorithm.</p>
+<dl class="simple">
+<dt>Step:</dt><dd><ol class="arabic simple">
+<li><p>Create a segment tree with the list of segments.</p></li>
+<li><p>Create a dictionary that maps p_lon to a list of rectangles whose left edge is aligned with p_lon.</p></li>
+<li><p>Merge rectangles that share the same coordinates of p_lat.</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.create_tree_from_segments">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_tree_from_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_segments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_line.ReachLine" title="commonroad_reach.data_structure.reach.reach_line.ReachLine"><span class="pre">ReachLine</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree" title="commonroad_reach.data_structure.segment_tree.ToggleSegmentTree"><span class="pre">ToggleSegmentTree</span></a></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.create_tree_from_segments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.create_tree_from_segments" title="Permalink to this definition"></a></dt>
+<dd><p>Creates an OnOFFSegmentTree from the list of given segments.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.create_vertical_segments_from_event">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_vertical_segments_from_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_line.ReachLine" title="commonroad_reach.data_structure.reach.reach_line.ReachLine"><span class="pre">ReachLine</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.create_vertical_segments_from_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.create_vertical_segments_from_event" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of vertical segments with the tree and event.</p>
+<p>For each event, query the tree to get the nonactive intervals, which is the desired vertical segment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.create_vertical_segments_from_events">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_vertical_segments_from_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_events</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_line.ReachLine" title="commonroad_reach.data_structure.reach.reach_line.ReachLine"><span class="pre">ReachLine</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.create_vertical_segments_from_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.create_vertical_segments_from_events" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a list of vertical segments from the list of events.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.merge_rectangles_with_same_lateral_coordinates">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">merge_rectangles_with_same_lateral_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_p_lon_to_list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.merge_rectangles_with_same_lateral_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.merge_rectangles_with_same_lateral_coordinates" title="Permalink to this definition"></a></dt>
+<dd><p>Return a list of rectangles with possible merging.</p>
+<p>Iterate through pairs of lists of rectangles, if there is a right
+rectangle with the same lateral coordinates, then do not add to list.
+Instead, the right rectangle is popped and replaced by the merged one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.obtain_vertical_segments_from_rectangles">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">obtain_vertical_segments_from_rectangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_line.ReachLine" title="commonroad_reach.data_structure.reach.reach_line.ReachLine"><span class="pre">ReachLine</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.obtain_vertical_segments_from_rectangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.obtain_vertical_segments_from_rectangles" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of vertical segments for the input rectangles.</p>
+<dl class="simple">
+<dt>Steps:</dt><dd><ol class="arabic simple">
+<li><p>create a segment tree with min/max lateral position of rectangles</p></li>
+<li><p>create events of line sweeping from rectangles: left edge = ENTER, right edge = EXIT</p></li>
+<li><p>create vertical segments with the events</p></li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.rectangles_have_same_p_lat">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rectangles_have_same_p_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rectangle1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rectangle2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon" title="commonroad_reach.data_structure.reach.reach_polygon.ReachPolygon"><span class="pre">ReachPolygon</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.rectangles_have_same_p_lat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.rectangles_have_same_p_lat" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.sort_events">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_events</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#commonroad_reach.utility.sweep_line.SweepLine.Event" title="commonroad_reach.utility.sweep_line.SweepLine.Event"><span class="pre">Event</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/commonroad_reach/utility/sweep_line.html#SweepLine.sort_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.sort_events" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="commonroad_reach.utility.sweep_line.SweepLine.tree">
+<span class="sig-name descname"><span class="pre">tree</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree" title="commonroad_reach.data_structure.segment_tree.CounterSegmentTree"><span class="pre">CounterSegmentTree</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree" title="commonroad_reach.data_structure.segment_tree.ToggleSegmentTree"><span class="pre">ToggleSegmentTree</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#commonroad_reach.utility.sweep_line.SweepLine.tree" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.util_py_grid_online_reach">
+<span id="commonroad-reach-utility-util-py-grid-online-reach-module"></span><h2>commonroad_reach.utility.util_py_grid_online_reach module<a class="headerlink" href="#module-commonroad_reach.utility.util_py_grid_online_reach" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.util_py_grid_online_reach.convert_cart2pixel_coordinates_c">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.util_py_grid_online_reach.</span></span><span class="sig-name descname"><span class="pre">convert_cart2pixel_coordinates_c</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#commonroad_reach.utility.util_py_grid_online_reach.convert_cart2pixel_coordinates_c" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.util_py_grid_online_reach.get_vertices_from_rect">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.util_py_grid_online_reach.</span></span><span class="sig-name descname"><span class="pre">get_vertices_from_rect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#commonroad_reach.utility.util_py_grid_online_reach.get_vertices_from_rect" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility.visualization">
+<span id="commonroad-reach-utility-visualization-module"></span><h2>commonroad_reach.utility.visualization module<a class="headerlink" href="#module-commonroad_reach.utility.visualization" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.compute_plot_limits_from_reachable_sets">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">compute_plot_limits_from_reachable_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_interface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface" title="commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface"><span class="pre">ReachableSetInterface</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#compute_plot_limits_from_reachable_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.compute_plot_limits_from_reachable_sets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.draw_drivable_area">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">draw_drivable_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_rectangles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#draw_drivable_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.draw_drivable_area" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.draw_driving_corridor_3d">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">draw_driving_corridor_3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">driving_corridor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_interface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface" title="commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface"><span class="pre">ReachableSetInterface</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">lanelet_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_obstacles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_svg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#draw_driving_corridor_3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.draw_driving_corridor_3d" title="Permalink to this definition"></a></dt>
+<dd><p>Draws a driving corridor with 3D projection.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.draw_reachable_sets">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">draw_reachable_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#draw_reachable_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.draw_reachable_sets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.make_gif">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">make_gif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">range</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'animation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#make_gif"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.make_gif" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.plot_scenario_with_drivable_area">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_scenario_with_drivable_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_interface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface" title="commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface"><span class="pre">ReachableSetInterface</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_gif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#plot_scenario_with_drivable_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.plot_scenario_with_drivable_area" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.plot_scenario_with_driving_corridor">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_scenario_with_driving_corridor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">driving_corridor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_interface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface" title="commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface"><span class="pre">ReachableSetInterface</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_gif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_svg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#plot_scenario_with_driving_corridor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.plot_scenario_with_driving_corridor" title="Permalink to this definition"></a></dt>
+<dd><p>2D visualization of a given driving corridor and scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>driving_corridor</strong> – Driving corridor to visualize</p></li>
+<li><p><strong>dc_id</strong> – id of driving corridor (idx in DC list)</p></li>
+<li><p><strong>reach_interface</strong> – ReachableSetInterface object</p></li>
+<li><p><strong>step_start</strong> – start time step for plotting</p></li>
+<li><p><strong>step_end</strong> – end time step</p></li>
+<li><p><strong>steps</strong> – list of steps to plot</p></li>
+<li><p><strong>save_gif</strong> – make gif (works only if step_end is given)</p></li>
+<li><p><strong>as_svg</strong> – save figures as svg for nice paper plots</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.plot_scenario_with_reachable_sets">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">plot_scenario_with_reachable_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_interface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface" title="commonroad_reach.data_structure.reach.reach_interface.ReachableSetInterface"><span class="pre">ReachableSetInterface</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_gif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#plot_scenario_with_reachable_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.plot_scenario_with_reachable_sets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.utility.visualization.save_fig">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.utility.visualization.</span></span><span class="sig-name descname"><span class="pre">save_fig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_gif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/utility/visualization.html#save_fig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.utility.visualization.save_fig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.utility">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-commonroad_reach.utility" title="Permalink to this heading"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="commonroad_reach.tests.html" class="btn btn-neutral float-left" title="commonroad_reach.tests package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="setup.html" class="btn btn-neutral float-right" title="setup module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

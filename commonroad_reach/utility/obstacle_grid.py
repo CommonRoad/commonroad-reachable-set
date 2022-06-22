@@ -1,3 +1,6 @@
+import pyximport
+pyximport.install()
+
 from typing import Tuple, Dict
 
 import commonroad_dc.pycrcc as pycrcc

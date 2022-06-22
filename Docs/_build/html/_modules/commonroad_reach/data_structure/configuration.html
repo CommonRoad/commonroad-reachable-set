@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.data_structure.configuration &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.data_structure.configuration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.data_structure.configuration</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">commonroad_reach.pycrreach</span> <span class="k">as</span> <span class="nn">reach</span>
+<span class="kn">from</span> <span class="nn">commonroad.planning.planning_problem</span> <span class="kn">import</span> <span class="n">PlanningProblem</span>
+<span class="kn">from</span> <span class="nn">commonroad.scenario.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="kn">from</span> <span class="nn">commonroad_route_planner.route_planner</span> <span class="kn">import</span> <span class="n">RoutePlanner</span>
+<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.utility</span> <span class="kn">import</span> <span class="n">configuration</span> <span class="k">as</span> <span class="n">util_configuration</span>
+
+
+<div class="viewcode-block" id="Configuration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration">[docs]</a><span class="k">class</span> <span class="nc">Configuration</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class holding all relevant configurations&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name_scenario</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">name_scenario</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Scenario</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planning_problem</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PlanningProblem</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">general</span><span class="p">:</span> <span class="n">GeneralConfiguration</span> <span class="o">=</span> <span class="n">GeneralConfiguration</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="p">:</span> <span class="n">VehicleConfiguration</span> <span class="o">=</span> <span class="n">VehicleConfiguration</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="p">:</span> <span class="n">PlanningConfiguration</span> <span class="o">=</span> <span class="n">PlanningConfiguration</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="p">:</span> <span class="n">ReachableSetConfiguration</span> <span class="o">=</span> <span class="n">ReachableSetConfiguration</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="n">DebugConfiguration</span> <span class="o">=</span> <span class="n">DebugConfiguration</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Configuration.complete_configuration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration.complete_configuration">[docs]</a>    <span class="k">def</span> <span class="nf">complete_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">planning_problem</span><span class="p">:</span> <span class="n">PlanningProblem</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">scenario</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planning_problem</span> <span class="o">=</span> <span class="n">planning_problem</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">id_type_vehicle</span> <span class="o">=</span> <span class="n">planning_problem</span><span class="o">.</span><span class="n">planning_problem_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">complete_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Configuration.print_configuration_summary"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration.print_configuration_summary">[docs]</a>    <span class="k">def</span> <span class="nf">print_configuration_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+            <span class="n">CLCS</span> <span class="o">=</span> <span class="s2">&quot;cartesian&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CVLN&quot;</span><span class="p">:</span>
+            <span class="n">CLCS</span> <span class="o">=</span> <span class="s2">&quot;curvilinear&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">CLCS</span> <span class="o">=</span> <span class="s2">&quot;undefined&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_computation</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mode_computation</span> <span class="o">=</span> <span class="s2">&quot;polytopic, python backend&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_computation</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">mode_computation</span> <span class="o">=</span> <span class="s2">&quot;polytopic, c++ backend&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_computation</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">mode_computation</span> <span class="o">=</span> <span class="s2">&quot;graph-based (online)&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_computation</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">mode_computation</span> <span class="o">=</span> <span class="s2">&quot;graph-based (offline)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode_computation</span> <span class="o">=</span> <span class="s2">&quot;undefined&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_repartition</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mode_repartition</span> <span class="o">=</span> <span class="s2">&quot;repartition, collision check&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_repartition</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">mode_repartition</span> <span class="o">=</span> <span class="s2">&quot;collision check, repartition&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_repartition</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">mode_repartition</span> <span class="o">=</span> <span class="s2">&quot;repartition, collision check, then repartition&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode_repartition</span> <span class="o">=</span> <span class="s2">&quot;undefined&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_inflation</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mode_inflation</span> <span class="o">=</span> <span class="s2">&quot;inscribed circle&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_inflation</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">mode_inflation</span> <span class="o">=</span> <span class="s2">&quot;circumscribed circle&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode_inflation</span> <span class="o">=</span> <span class="s2">&quot;undefined&quot;</span>
+
+        <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;# ===== Configuration Summary ===== #</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">scenario_id</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot;# Planning:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">dt: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">dt</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">time steps: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">steps_computation</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">coordinate system: </span><span class="si">{</span><span class="n">CLCS</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot;# Reachable set:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">computation mode: </span><span class="si">{</span><span class="n">mode_computation</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">repartition mode: </span><span class="si">{</span><span class="n">mode_repartition</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">inflation mode: </span><span class="si">{</span><span class="n">mode_inflation</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">grid size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">split radius: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">radius_terminal_split</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="se">\t</span><span class="s2">prune: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">prune_nodes_not_reaching_final_step</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="s2">&quot;# ================================= #&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Configuration.convert_to_cpp_configuration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.Configuration.convert_to_cpp_configuration">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_cpp_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">reach</span><span class="o">.</span><span class="n">Configuration</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Converts to configuration that is readable by the C++ binding code.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">Configuration</span><span class="p">()</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">name_scenario</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_scenario</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">path_scenarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">path_scenarios</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">id_type_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">id_type_vehicle</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">length</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">width</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">radius_disc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">radius_disc</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">wheelbase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">wheelbase</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">id_type_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">id_type_vehicle</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">length</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">width</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lon_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lon_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lon_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lat_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lat_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">v_lat_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lon_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lon_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lon_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lat_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lat_min</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_lat_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">a_max</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">radius_disc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">radius_disc</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">wheelbase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span><span class="o">.</span><span class="n">wheelbase</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">dt</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">step_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">step_start</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">steps_computation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">steps_computation</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">p_lon_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">p_lon_initial</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">p_lat_initial</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_p_lon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_p_lon</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_p_lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_p_lat</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">v_lon_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">v_lon_initial</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">v_lat_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">v_lat_initial</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_v_lon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_v_lon</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_v_lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">uncertainty_v_lat</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">step_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">step_initial</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">id_lanelet_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">id_lanelet_initial</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">CoordinateSystem</span><span class="o">.</span><span class="n">CARTESIAN</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">CoordinateSystem</span><span class="o">.</span><span class="n">CURVILINEAR</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">reference_point</span> <span class="o">==</span> <span class="s2">&quot;REAR&quot;</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">reference_point</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">ReferencePoint</span><span class="o">.</span><span class="n">REAR</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">reference_point</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">ReferencePoint</span><span class="o">.</span><span class="n">CENTER</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_repartition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_repartition</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid_2nd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid_2nd</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">radius_terminal_split</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">radius_terminal_split</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">num_threads</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">prune_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">prune_nodes_not_reaching_final_step</span>
+
+        <span class="k">return</span> <span class="n">config</span></div></div>
+
+
+<div class="viewcode-block" id="GeneralConfiguration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.GeneralConfiguration">[docs]</a><span class="k">class</span> <span class="nc">GeneralConfiguration</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+        <span class="n">config_relevant</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">general</span>
+        <span class="n">name_scenario</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">name_scenario</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_scenarios</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">path_scenarios</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_scenario</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">path_scenarios</span> <span class="o">+</span> <span class="n">name_scenario</span> <span class="o">+</span> <span class="s2">&quot;.xml&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_output</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">path_output</span> <span class="o">+</span> <span class="n">name_scenario</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_logs</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">path_logs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_offline_data</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">path_offline_data</span></div>
+
+
+<div class="viewcode-block" id="VehicleConfiguration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.VehicleConfiguration">[docs]</a><span class="k">class</span> <span class="nc">VehicleConfiguration</span><span class="p">:</span>
+<div class="viewcode-block" id="VehicleConfiguration.Ego"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.VehicleConfiguration.Ego">[docs]</a>    <span class="k">class</span> <span class="nc">Ego</span><span class="p">:</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+            <span class="n">config_relevant</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">id_type_vehicle</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">id_type_vehicle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id_vehicle</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">length</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">width</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lon_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lon_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lat_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lat_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_max</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lon_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lon_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lon_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lon_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lat_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lat_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lat_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lat_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_max</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius_disc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelbase</span> <span class="o">=</span> \
+                <span class="n">util_configuration</span><span class="o">.</span><span class="n">compute_disc_radius_and_wheelbase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius_inflation</span> <span class="o">=</span> <span class="n">util_configuration</span><span class="o">.</span><span class="n">compute_inflation_radius</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_inflation</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VehicleConfiguration.Other"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.VehicleConfiguration.Other">[docs]</a>    <span class="k">class</span> <span class="nc">Other</span><span class="p">:</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+            <span class="n">config_relevant</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">other</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">id_type_vehicle</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">id_type_vehicle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id_vehicle</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">length</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">width</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lon_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lon_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lat_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">v_lat_max</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lon_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lon_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lon_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lon_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lat_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lat_max</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_lat_min</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_lat_min</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a_max</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">a_max</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius_disc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wheelbase</span> <span class="o">=</span> \
+                <span class="n">util_configuration</span><span class="o">.</span><span class="n">compute_disc_radius_and_wheelbase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ego</span> <span class="o">=</span> <span class="n">VehicleConfiguration</span><span class="o">.</span><span class="n">Ego</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">other</span> <span class="o">=</span> <span class="n">VehicleConfiguration</span><span class="o">.</span><span class="n">Other</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlanningConfiguration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.PlanningConfiguration">[docs]</a><span class="k">class</span> <span class="nc">PlanningConfiguration</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+        <span class="n">config_relevant</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">planning</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">config_relevant</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;value of dt should be a multiple of 0.1, got </span><span class="si">{</span><span class="n">config_relevant</span><span class="o">.</span><span class="n">dt</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_start</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">step_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps_computation</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">steps_computation</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_lon_initial</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty_p_lon</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">uncertainty_p_lon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty_p_lat</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">uncertainty_p_lat</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_initial</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_initial</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty_v_lon</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">uncertainty_v_lon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty_v_lat</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">uncertainty_v_lat</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">o_initial</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># related to specific planning problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_initial</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id_lanelet_initial</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">route</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lanelet_network</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">coordinate_system</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_point</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">reference_point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CLCS</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="PlanningConfiguration.complete_configuration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.PlanningConfiguration.complete_configuration">[docs]</a>    <span class="k">def</span> <span class="nf">complete_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">):</span>
+        <span class="n">scenario</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">scenario</span>
+        <span class="n">planning_problem</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">planning_problem</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lanelet_network</span> <span class="o">=</span> <span class="n">scenario</span><span class="o">.</span><span class="n">lanelet_network</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_initial</span> <span class="o">=</span> <span class="n">planning_problem</span><span class="o">.</span><span class="n">initial_state</span><span class="o">.</span><span class="n">time_step</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+            <span class="n">p_initial</span><span class="p">,</span> <span class="n">v_initial</span><span class="p">,</span> <span class="n">o_initial</span> <span class="o">=</span> <span class="n">util_configuration</span><span class="o">.</span><span class="n">compute_initial_state_cart</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">p_lon_initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">=</span> <span class="n">p_initial</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_initial</span> <span class="o">=</span> <span class="n">v_initial</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">o_initial</span> <span class="o">=</span> <span class="n">o_initial</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CVLN&quot;</span><span class="p">:</span>
+            <span class="c1"># plans a route from the initial lanelet to the goal lanelet</span>
+            <span class="n">route_planner</span> <span class="o">=</span> <span class="n">RoutePlanner</span><span class="p">(</span><span class="n">scenario</span><span class="p">,</span> <span class="n">planning_problem</span><span class="p">)</span>
+            <span class="n">candidate_holder</span> <span class="o">=</span> <span class="n">route_planner</span><span class="o">.</span><span class="n">plan_routes</span><span class="p">()</span>
+            <span class="n">route</span> <span class="o">=</span> <span class="n">candidate_holder</span><span class="o">.</span><span class="n">retrieve_first_route</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">route</span> <span class="o">=</span> <span class="n">route</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_path</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">reference_path</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id_lanelet_initial</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">list_ids_lanelets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">CLCS</span> <span class="o">=</span> <span class="n">util_configuration</span><span class="o">.</span><span class="n">create_curvilinear_coordinate_system</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_path</span><span class="p">)</span>
+            <span class="n">p_initial</span><span class="p">,</span> <span class="n">v_initial</span> <span class="o">=</span> <span class="n">util_configuration</span><span class="o">.</span><span class="n">compute_initial_state_cvln</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">p_lon_initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">=</span> <span class="n">p_initial</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v_lon_initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_initial</span> <span class="o">=</span> <span class="n">v_initial</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">p_lon_lat_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">p_lon_initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_lat_initial</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">v_lon_lat_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">v_lon_initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v_lat_initial</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="ReachableSetConfiguration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.ReachableSetConfiguration">[docs]</a><span class="k">class</span> <span class="nc">ReachableSetConfiguration</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+        <span class="n">config_relevant</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode_computation</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">mode_computation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode_repartition</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">mode_repartition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode_inflation</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">mode_inflation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consider_traffic</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">consider_traffic</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_grid</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">size_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_grid_2nd</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">size_grid_2nd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius_terminal_split</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">radius_terminal_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prune_nodes_not_reaching_final_step</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">prune_nodes_not_reaching_final_step</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name_pickle_offline</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">name_pickle_offline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_multi_steps</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">n_multi_steps</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">num_threads</span></div>
+
+
+<div class="viewcode-block" id="DebugConfiguration"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.configuration.DebugConfiguration">[docs]</a><span class="k">class</span> <span class="nc">DebugConfiguration</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ListConfig</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">]):</span>
+        <span class="n">config_relevant</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">debug</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_plots</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">save_plots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_config</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">save_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_ref_path</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">draw_ref_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_planning_problem</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">draw_planning_problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_icons</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">draw_icons</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_limits</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">plot_limits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_azimuth</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">plot_azimuth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_elevation</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">plot_elevation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_distance</span> <span class="o">=</span> <span class="n">config_relevant</span><span class="o">.</span><span class="n">ax_distance</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

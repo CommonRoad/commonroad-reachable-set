@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.data_structure.segment_tree &mdash; commonroad-reachable-set 1.0 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.data_structure.segment_tree</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.data_structure.segment_tree</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+
+<div class="viewcode-block" id="TreeNodeStatus"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.TreeNodeStatus">[docs]</a><span class="k">class</span> <span class="nc">TreeNodeStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Possible states of nodes (segments).</span>
+
+<span class="sd">    ACTIVE: segment fully activated (from low to high)</span>
+<span class="sd">    PARTIAL: segment partially activated (subset of [low, high])</span>
+<span class="sd">    NONACTIVE: segment not activated (none within [low, high])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ACTIVE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">PARTIAL</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">NONACTIVE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CounterTreeNode"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode">[docs]</a><span class="k">class</span> <span class="nc">CounterTreeNode</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Each node represents a segment on the axis.</span>
+
+<span class="sd">    Each segment is defined with an interval [low, high]. The counter represents the number of times it has</span>
+<span class="sd">    been activated. Its potential left and right children have intervals [low, mid] and [mid, high], respectively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&gt;</span> <span class="n">high</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&lt;CounterTreeNode&gt; Low is greater than high.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="n">low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="n">high</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">low</span> <span class="o">+</span> <span class="n">high</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CounterTreeNode</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CounterTreeNode</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;TreeNode(low=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="si">}</span><span class="s2">, high=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="si">}</span><span class="s2">, status=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">low</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">high</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="CounterTreeNode.create_left_child"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.create_left_child">[docs]</a>    <span class="k">def</span> <span class="nf">create_left_child</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CounterTreeNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.create_right_child"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.create_right_child">[docs]</a>    <span class="k">def</span> <span class="nf">create_right_child</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CounterTreeNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.activate"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.activate">[docs]</a>    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.deactivate"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.deactivate">[docs]</a>    <span class="k">def</span> <span class="nf">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&lt;CounterTreeNode&gt; Node has negative count.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.update_status"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.update_status">[docs]</a>    <span class="k">def</span> <span class="nf">update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the status of the node.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_children_are_active</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_children_are_non_active</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">PARTIAL</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.all_children_are_active"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.all_children_are_active">[docs]</a>    <span class="k">def</span> <span class="nf">all_children_are_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if both the left and right children are active.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">child_left</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.all_children_are_non_active"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.all_children_are_non_active">[docs]</a>    <span class="k">def</span> <span class="nf">all_children_are_non_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if both the left and right children are non-active.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CounterTreeNode.enclosed_by_interval"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterTreeNode.enclosed_by_interval">[docs]</a>    <span class="k">def</span> <span class="nf">enclosed_by_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether the node is fully enclosed by the interval [low, high].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">low</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">&lt;=</span> <span class="n">high</span></div></div>
+
+
+<div class="viewcode-block" id="CounterSegmentTree"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree">[docs]</a><span class="k">class</span> <span class="nc">CounterSegmentTree</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Segment tree to hold nodes (segments) of intervals.</span>
+
+<span class="sd">    Each leaf in this tree has a counter of how many times it has been activated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Each tree has a root node.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&gt;</span> <span class="n">high</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&lt;CounterSegmentTree&gt; Low is greater than high.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_root</span> <span class="o">=</span> <span class="n">CounterTreeNode</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CounterSegmentTree.activate"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.activate">[docs]</a>    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Activates the root node.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&gt;</span> <span class="n">high</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&lt;CounterSegmentTree&gt; Low is greater than high.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_activate_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_activate_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Activates a node (segment).</span>
+
+<span class="sd">        When activating a node with an interval [low, high], if it fully covers the node, the node&#39;s counter</span>
+<span class="sd">        gets incremented by 1; if it does not fully covers the node, the child nodes are created (if needed),</span>
+<span class="sd">        whose counter will be incremented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">enclosed_by_interval</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_and_activate_children</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">update_status</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_create_and_activate_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates (if necessary) and activates the child nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">child_left</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">create_left_child</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_activate_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span> <span class="o">&lt;</span> <span class="n">high</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">child_right</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">create_right_child</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_activate_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CounterSegmentTree.deactivate"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.deactivate">[docs]</a>    <span class="k">def</span> <span class="nf">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deactivates the root node.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_deactivate_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_deactivate_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deactivation is the opposite operation of activation.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">enclosed_by_interval</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">deactivate</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deactivate_children</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">update_status</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_deactivate_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deactivates the child nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deactivate_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span> <span class="o">&lt;</span> <span class="n">high</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deactivate_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CounterSegmentTree.get_active_nodes"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.get_active_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the list of nodes whose status is ACTIVE.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of active nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">list_nodes_active_left</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">list_nodes_active_right</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                <span class="n">list_nodes_active_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_active_nodes</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                <span class="n">list_nodes_active_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_active_nodes</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">list_nodes_active_left</span> <span class="o">+</span> <span class="n">list_nodes_active_right</span>
+
+<div class="viewcode-block" id="CounterSegmentTree.get_stack_of_active_intervals"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.get_stack_of_active_intervals">[docs]</a>    <span class="k">def</span> <span class="nf">get_stack_of_active_intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the stack of currently active intervals.</span>
+
+<span class="sd">        Stack is in the form of [low1, high1, low2, high2, ..]. When pushing into the stack, intervals are</span>
+<span class="sd">        merged where application (e.g. low2 == high1).</span>
+<span class="sd">        [5, 10] =&gt; push TreeNode(low = 10, high = 15) =&gt; [5 ,15]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stack_intervals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_nodes_active</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_active_nodes</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">list_nodes_active</span><span class="p">:</span>
+            <span class="c1"># the node to be pushed has a low value as the last value in stack</span>
+            <span class="k">if</span> <span class="n">stack_intervals</span> <span class="ow">and</span> <span class="n">stack_intervals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">:</span>
+                <span class="n">stack_intervals</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stack_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">)</span>
+
+            <span class="n">stack_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">high</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stack_intervals</span></div>
+
+<div class="viewcode-block" id="CounterSegmentTree.print_active_nodes"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.print_active_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">print_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints active nodes.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">visit_node</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Active Node: [</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">high</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                    <span class="n">visit_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                    <span class="n">visit_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+        <span class="n">visit_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CounterSegmentTree.get_non_active_intervals"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.get_non_active_intervals">[docs]</a>    <span class="k">def</span> <span class="nf">get_non_active_intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the non-active intervals starting from the root node.&quot;&quot;&quot;</span>
+        <span class="n">stack_intervals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_non_active_intervals</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">,</span> <span class="n">stack_intervals</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stack_intervals</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_non_active_intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">,</span> <span class="n">stack</span><span class="p">:</span> <span class="n">List</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the complement interval in the specified range.</span>
+
+<span class="sd">        A query returns intervals within [low, high] that have no active</span>
+<span class="sd">        (incremented) segment.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            tree = SegmentTree(0, 20) // tree ranges from 0 to 20</span>
+
+<span class="sd">            tree.get_non_active_intervals(0, 10) =&gt; stack = [0, 10]</span>
+
+<span class="sd">            tree.increment(0, 10) // segments within [0, 10] gets incremented</span>
+<span class="sd">            tree.get_non_active_intervals(0, 20) =&gt; stack = [10, 20]</span>
+
+<span class="sd">            tree.increment(5, 15) // segments within [5, 15] gets incremented</span>
+<span class="sd">            tree.get_non_active_intervals(0, 18) =&gt; stack = [15, 18]</span>
+
+<span class="sd">            tree.decrement(0, 10) // segments within [0, 10] gets decremented</span>
+<span class="sd">            tree.get_non_active_intervals(0, 18) =&gt; stack = [0, 5, 15, 18]</span>
+
+<span class="sd">        This is done by searching the non-active &amp; fully enclosed nodes, and the</span>
+<span class="sd">        not-yet existing child nodes. Combined with sweep line algorithm, this</span>
+<span class="sd">        function is used to obtain the vertical segments of merged rectangles:</span>
+<span class="sd">        This function returns the non-active segment upon an event, which is</span>
+<span class="sd">        essentially the desired vertical segment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">enclosed_by_interval</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_node_interval_to_stack</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_non_active_intervals_in_children</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_non_active_intervals_in_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">CounterTreeNode</span><span class="p">,</span> <span class="n">stack</span><span class="p">:</span> <span class="n">List</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stacks the complement interval from the child nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_non_active_intervals</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># child not defined, so is definitely empty</span>
+                <span class="n">low_interval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">)</span>
+                <span class="n">high_interval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">mid</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_node_interval_to_stack</span><span class="p">(</span><span class="n">low_interval</span><span class="p">,</span> <span class="n">high_interval</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span> <span class="o">&lt;</span> <span class="n">high</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_non_active_intervals</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># child not defined, so is definitely empty</span>
+                <span class="n">low_interval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">mid</span><span class="p">)</span>
+                <span class="n">high_interval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_node_interval_to_stack</span><span class="p">(</span><span class="n">low_interval</span><span class="p">,</span> <span class="n">high_interval</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CounterSegmentTree.add_node_interval_to_stack"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.CounterSegmentTree.add_node_interval_to_stack">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">add_node_interval_to_stack</span><span class="p">(</span><span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stack</span><span class="p">:</span> <span class="n">List</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the stack containing the complement intervals.</span>
+
+<span class="sd">        The intervals are merged, example:</span>
+<span class="sd">            stack = []</span>
+<span class="sd">            called with (5, 10) -&gt; stack = [5, 10]</span>
+<span class="sd">            called with (10, 15) -&gt; stack = [5, 15]</span>
+<span class="sd">            called with (18, 20) -&gt; stack = [5, 15, 18, 20]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">stack</span> <span class="ow">and</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">low</span><span class="p">:</span>
+            <span class="c1"># if new low equals last high, pop last high and don&#39;t push new low</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">low</span><span class="p">)</span>
+
+        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">high</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ToggleTreeNode"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode">[docs]</a><span class="k">class</span> <span class="nc">ToggleTreeNode</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Each node represents a segment on the axis.</span>
+
+<span class="sd">    Each segment is defined with an interval [low, high]. The node only has a state, which is not based on</span>
+<span class="sd">    counter. Its potential left and right children have intervals [low, mid] and [mid, high], respectively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="n">low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="n">high</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">low</span> <span class="o">+</span> <span class="n">high</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ToggleTreeNode</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ToggleTreeNode</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;TreeNode(low=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="si">}</span><span class="s2">, high=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="si">}</span><span class="s2">, status=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ToggleTreeNode</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">low</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">high</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ToggleTreeNode.create_left_child"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.create_left_child">[docs]</a>    <span class="k">def</span> <span class="nf">create_left_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ToggleTreeNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mid</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToggleTreeNode.create_right_child"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.create_right_child">[docs]</a>    <span class="k">def</span> <span class="nf">create_right_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ToggleTreeNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToggleTreeNode.toggle"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.toggle">[docs]</a>    <span class="k">def</span> <span class="nf">toggle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Toggles the node.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="o">.</span><span class="n">toggle</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="o">.</span><span class="n">toggle</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ToggleTreeNode.update_status"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.update_status">[docs]</a>    <span class="k">def</span> <span class="nf">update_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the status of the node.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_children_are_active</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_children_are_non_active</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">PARTIAL</span></div>
+
+<div class="viewcode-block" id="ToggleTreeNode.all_children_are_non_active"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.all_children_are_non_active">[docs]</a>    <span class="k">def</span> <span class="nf">all_children_are_non_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if both the left and right children are non-active.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToggleTreeNode.all_children_are_active"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.all_children_are_active">[docs]</a>    <span class="k">def</span> <span class="nf">all_children_are_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns true if both the left and right children are active.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">child_left</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_left</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_right</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToggleTreeNode.enclosed_by_interval"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleTreeNode.enclosed_by_interval">[docs]</a>    <span class="k">def</span> <span class="nf">enclosed_by_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether the node is fully enclosed by the interval [low, high].&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">low</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">&lt;=</span> <span class="n">high</span></div></div>
+
+
+<div class="viewcode-block" id="ToggleSegmentTree"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree">[docs]</a><span class="k">class</span> <span class="nc">ToggleSegmentTree</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Segment tree to hold nodes (segments) of intervals.</span>
+
+<span class="sd">    The states of leaves in this tree can be toggled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Each tree has a root node.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_root</span> <span class="o">=</span> <span class="n">ToggleTreeNode</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ToggleSegmentTree.toggle"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree.toggle">[docs]</a>    <span class="k">def</span> <span class="nf">toggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;toggles the root node.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_toggle_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_toggle_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ToggleTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Toggles the status of a node (segment).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">enclosed_by_interval</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">toggle</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_and_toggle_children</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">update_status</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_create_and_toggle_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ToggleTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates (if necessary) and toggles the child nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&gt;=</span> <span class="n">node</span><span class="o">.</span><span class="n">high</span> <span class="ow">or</span> <span class="n">high</span> <span class="o">&lt;=</span> <span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">child_left</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">create_left_child</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_toggle_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">child_right</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">create_right_child</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_toggle_node</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span>
+
+<div class="viewcode-block" id="ToggleSegmentTree.get_active_nodes"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree.get_active_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the list of nodes whose status is ACTIVE.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ToggleTreeNode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of active nodes.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">NONACTIVE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">list_nodes_active_left</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">list_nodes_full_right</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                <span class="n">list_nodes_active_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_active_nodes</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                <span class="n">list_nodes_full_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_active_nodes</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">list_nodes_active_left</span> <span class="o">+</span> <span class="n">list_nodes_full_right</span>
+
+<div class="viewcode-block" id="ToggleSegmentTree.get_stack_of_active_intervals"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree.get_stack_of_active_intervals">[docs]</a>    <span class="k">def</span> <span class="nf">get_stack_of_active_intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the stack of currently active intervals.</span>
+
+<span class="sd">        Stack is in the form of [low1, high1, low2, high2, ..]. When pushing into</span>
+<span class="sd">        the stack, intervals are merged where application (e.g. low2 == high1).</span>
+<span class="sd">        [5, 10] =&gt; push TreeNode2(low = 10, high = 15) =&gt; [5 ,15]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stack_intervals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_nodes_active</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_active_nodes</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">list_nodes_active</span><span class="p">:</span>
+            <span class="c1"># the node to be pushed has a low value as the last value in stack</span>
+            <span class="k">if</span> <span class="n">stack_intervals</span> <span class="ow">and</span> <span class="n">stack_intervals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">:</span>
+                <span class="n">stack_intervals</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stack_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="p">)</span>
+
+            <span class="n">stack_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">high</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stack_intervals</span></div>
+
+<div class="viewcode-block" id="ToggleSegmentTree.print_active_nodes"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.segment_tree.ToggleSegmentTree.print_active_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">print_active_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints active nodes.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">visit_node</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">ToggleTreeNode</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">TreeNodeStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Active Node: [</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">low</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">high</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">:</span>
+                    <span class="n">visit_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_left</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">:</span>
+                    <span class="n">visit_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">child_right</span><span class="p">)</span>
+
+        <span class="n">visit_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_root</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

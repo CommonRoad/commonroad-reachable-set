@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach package &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="commonroad_reach.data_structure package" href="commonroad_reach.data_structure.html" />
+    <link rel="prev" title="commonroad-reachable-set" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">commonroad-reachable-set</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">commonroad_reach package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.html">commonroad_reach.data_structure package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.tests.html">commonroad_reach.tests package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.utility.html">commonroad_reach.utility package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-commonroad_reach.compute_driving_corridors">commonroad_reach.compute_driving_corridors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-commonroad_reach.compute_reachable_set">commonroad_reach.compute_reachable_set module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-commonroad_reach.compute_reachable_set_benchmark">commonroad_reach.compute_reachable_set_benchmark module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-commonroad_reach">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">commonroad-reachable-set</a> &raquo;</li>
+      <li>commonroad_reach package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/commonroad_reach.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="commonroad-reach-package">
+<h1>commonroad_reach package<a class="headerlink" href="#commonroad-reach-package" title="Permalink to this heading"></a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="commonroad_reach.data_structure.html">commonroad_reach.data_structure package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="commonroad_reach.data_structure.reach.html">commonroad_reach.data_structure.reach package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_interface">commonroad_reach.data_structure.reach.reach_interface module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_line">commonroad_reach.data_structure.reach.reach_line module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_node">commonroad_reach.data_structure.reach.reach_node module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_polygon">commonroad_reach.data_structure.reach.reach_polygon module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_set">commonroad_reach.data_structure.reach.reach_set module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_set_cpp">commonroad_reach.data_structure.reach.reach_set_cpp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_set_py">commonroad_reach.data_structure.reach.reach_set_py module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_set_py_graph_offline">commonroad_reach.data_structure.reach.reach_set_py_graph_offline module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_set_py_graph_online">commonroad_reach.data_structure.reach.reach_set_py_graph_online module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach.reach_vertex">commonroad_reach.data_structure.reach.reach_vertex module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="commonroad_reach.data_structure.reach.html#module-commonroad_reach.data_structure.reach">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure.collision_checker">commonroad_reach.data_structure.collision_checker module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure.configuration">commonroad_reach.data_structure.configuration module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure.configuration_builder">commonroad_reach.data_structure.configuration_builder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure.driving_corridors">commonroad_reach.data_structure.driving_corridors module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure.grid">commonroad_reach.data_structure.grid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure.segment_tree">commonroad_reach.data_structure.segment_tree module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.data_structure.html#module-commonroad_reach.data_structure">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commonroad_reach.tests.html">commonroad_reach.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.tests.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.tests.html#module-commonroad_reach.tests.conftest">commonroad_reach.tests.conftest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.tests.html#module-commonroad_reach.tests">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commonroad_reach.utility.html">commonroad_reach.utility package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.configuration">commonroad_reach.utility.configuration module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.coordinate_system">commonroad_reach.utility.coordinate_system module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.general">commonroad_reach.utility.general module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.geometry">commonroad_reach.utility.geometry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.logger">commonroad_reach.utility.logger module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.obstacle_grid">commonroad_reach.utility.obstacle_grid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.reach_operation">commonroad_reach.utility.reach_operation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.sweep_line">commonroad_reach.utility.sweep_line module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.util_py_grid_online_reach">commonroad_reach.utility.util_py_grid_online_reach module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility.visualization">commonroad_reach.utility.visualization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commonroad_reach.utility.html#module-commonroad_reach.utility">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</div>
+<div class="section" id="module-commonroad_reach.compute_driving_corridors">
+<span id="commonroad-reach-compute-driving-corridors-module"></span><h2>commonroad_reach.compute_driving_corridors module<a class="headerlink" href="#module-commonroad_reach.compute_driving_corridors" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.compute_driving_corridors.main">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.compute_driving_corridors.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/compute_driving_corridors.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.compute_driving_corridors.main" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.compute_driving_corridors.ret_lanelet_ids_list">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.compute_driving_corridors.</span></span><span class="sig-name descname"><span class="pre">ret_lanelet_ids_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/compute_driving_corridors.html#ret_lanelet_ids_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.compute_driving_corridors.ret_lanelet_ids_list" title="Permalink to this definition"></a></dt>
+<dd><p>For 3d plot in paper</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.compute_driving_corridors.ret_obstacles_by_id">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.compute_driving_corridors.</span></span><span class="sig-name descname"><span class="pre">ret_obstacles_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/compute_driving_corridors.html#ret_obstacles_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.compute_driving_corridors.ret_obstacles_by_id" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.compute_reachable_set">
+<span id="commonroad-reach-compute-reachable-set-module"></span><h2>commonroad_reach.compute_reachable_set module<a class="headerlink" href="#module-commonroad_reach.compute_reachable_set" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.compute_reachable_set.main">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.compute_reachable_set.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/compute_reachable_set.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.compute_reachable_set.main" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach.compute_reachable_set_benchmark">
+<span id="commonroad-reach-compute-reachable-set-benchmark-module"></span><h2>commonroad_reach.compute_reachable_set_benchmark module<a class="headerlink" href="#module-commonroad_reach.compute_reachable_set_benchmark" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="commonroad_reach.compute_reachable_set_benchmark.main">
+<span class="sig-prename descclassname"><span class="pre">commonroad_reach.compute_reachable_set_benchmark.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/commonroad_reach/compute_reachable_set_benchmark.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#commonroad_reach.compute_reachable_set_benchmark.main" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-commonroad_reach">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-commonroad_reach" title="Permalink to this heading"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="commonroad-reachable-set" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="commonroad_reach.data_structure.html" class="btn btn-neutral float-right" title="commonroad_reach.data_structure package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

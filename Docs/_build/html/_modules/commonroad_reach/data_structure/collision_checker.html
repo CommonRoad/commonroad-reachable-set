@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.data_structure.collision_checker &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.data_structure.collision_checker</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.data_structure.collision_checker</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">commonroad_dc.pycrcc</span> <span class="k">as</span> <span class="nn">pycrcc</span>
+<span class="kn">import</span> <span class="nn">commonroad_reach.pycrreach</span> <span class="k">as</span> <span class="nn">reach</span>
+<span class="kn">from</span> <span class="nn">commonroad.geometry.shape</span> <span class="kn">import</span> <span class="n">Rectangle</span><span class="p">,</span> <span class="n">ShapeGroup</span>
+<span class="kn">from</span> <span class="nn">commonroad.scenario.obstacle</span> <span class="kn">import</span> <span class="n">StaticObstacle</span>
+<span class="kn">from</span> <span class="nn">commonroad.scenario.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="kn">from</span> <span class="nn">commonroad_dc.boundary</span> <span class="kn">import</span> <span class="n">boundary</span>
+<span class="kn">from</span> <span class="nn">commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch</span> <span class="kn">import</span> <span class="n">create_collision_object</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_polygon</span> <span class="kn">import</span> <span class="n">ReachPolygon</span>
+
+
+<div class="viewcode-block" id="CollisionChecker"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker">[docs]</a><span class="k">class</span> <span class="nc">CollisionChecker</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Collision checker using C++ backend.</span>
+
+<span class="sd">    It handles collision checks in both Cartesian and curvilinear coordinate systems.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CollisionChecker initialized.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes the collision checker based on the specified coordinate system.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cpp_collision_checker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_cartesian_collision_checker</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CVLN&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cpp_collision_checker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_curvilinear_collision_checker</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Undefined coordinate system.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_cartesian_collision_checker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">CollisionChecker</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a Cartesian collision checker.</span>
+
+<span class="sd">        The collision checker is created by feeding in the scenario with road boundaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scenario_cc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_scenario_with_road_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="c1"># parameter dictionary for inflation to consider the shape of the ego vehicle</span>
+        <span class="n">dict_param</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;minkowski_sum_circle&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                      <span class="s2">&quot;minkowski_sum_circle_radius&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">radius_inflation</span><span class="p">,</span>
+                      <span class="s2">&quot;resolution&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_cartesian_collision_checker_from_scenario</span><span class="p">(</span><span class="n">scenario_cc</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">dict_param</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CollisionChecker.create_scenario_with_road_boundaries"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.create_scenario_with_road_boundaries">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_scenario_with_road_boundaries</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Scenario</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns a scenario with obstacles in the Cartesian coordinate system.</span>
+
+<span class="sd">        Elements included: lanelet network, obstacles, road boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">scenario</span>
+        <span class="n">scenario_cc</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">scenario</span><span class="o">.</span><span class="n">scenario_id</span><span class="p">)</span>
+
+        <span class="c1"># add lanelet network</span>
+        <span class="n">scenario_cc</span><span class="o">.</span><span class="n">add_objects</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">lanelet_network</span><span class="p">)</span>
+
+        <span class="c1"># add obstacles</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">consider_traffic</span><span class="p">:</span>
+            <span class="n">scenario_cc</span><span class="o">.</span><span class="n">add_objects</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">obstacles</span><span class="p">)</span>
+
+        <span class="c1"># add road boundary static object</span>
+        <span class="n">object_road_boundary</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">boundary</span><span class="o">.</span><span class="n">create_road_boundary_obstacle</span><span class="p">(</span><span class="n">scenario_cc</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;triangulation&quot;</span><span class="p">)</span>
+        <span class="n">scenario_cc</span><span class="o">.</span><span class="n">add_objects</span><span class="p">(</span><span class="n">object_road_boundary</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">scenario_cc</span></div>
+
+<div class="viewcode-block" id="CollisionChecker.create_cartesian_collision_checker_from_scenario"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.create_cartesian_collision_checker_from_scenario">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_cartesian_collision_checker_from_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">collision_checker</span> <span class="o">=</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">CollisionChecker</span><span class="p">()</span>
+
+        <span class="c1"># dynamic obstacles</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">scenario</span><span class="o">.</span><span class="n">dynamic_obstacles</span><span class="p">:</span>
+            <span class="n">collision_checker</span><span class="o">.</span><span class="n">add_collision_object</span><span class="p">(</span><span class="n">create_collision_object</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
+
+        <span class="c1"># static obstacles</span>
+        <span class="n">shape_group</span> <span class="o">=</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">ShapeGroup</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">scenario</span><span class="o">.</span><span class="n">static_obstacles</span><span class="p">:</span>
+            <span class="n">collision_object</span> <span class="o">=</span> <span class="n">create_collision_object</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">collision_object</span><span class="p">,</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">ShapeGroup</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">collision_object</span><span class="o">.</span><span class="n">unpack</span><span class="p">():</span>
+                    <span class="n">shape_group</span><span class="o">.</span><span class="n">add_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shape_group</span><span class="o">.</span><span class="n">add_shape</span><span class="p">(</span><span class="n">collision_object</span><span class="p">)</span>
+
+        <span class="n">collision_checker</span><span class="o">.</span><span class="n">add_collision_object</span><span class="p">(</span><span class="n">shape_group</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">collision_checker</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_curvilinear_collision_checker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">CollisionChecker</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a curvilinear collision checker.</span>
+
+<span class="sd">        The collision checker is created by adding a shape group containing occupancies of all static obstacles, and a</span>
+<span class="sd">        time variant object containing shape groups of occupancies of all dynamic obstacles at different time steps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scenario</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scenario</span>
+
+        <span class="c1"># static obstacles</span>
+        <span class="n">list_obstacles_static</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieve_static_obstacles</span><span class="p">(</span><span class="n">scenario</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">consider_traffic</span><span class="p">)</span>
+        <span class="n">list_vertices_polygons_static</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obtain_vertices_of_polygons_from_static_obstacles</span><span class="p">(</span><span class="n">list_obstacles_static</span><span class="p">)</span>
+
+        <span class="c1"># dynamic obstacles</span>
+        <span class="n">list_obstacles_dynamic</span> <span class="o">=</span> <span class="n">scenario</span><span class="o">.</span><span class="n">dynamic_obstacles</span>
+        <span class="n">dict_time_to_list_vertices_polygons_dynamic</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">obtain_vertices_of_polygons_for_dynamic_obstacles</span><span class="p">(</span><span class="n">list_obstacles_dynamic</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reach</span><span class="o">.</span><span class="n">create_curvilinear_collision_checker</span><span class="p">(</span><span class="n">list_vertices_polygons_static</span><span class="p">,</span>
+                                                          <span class="n">dict_time_to_list_vertices_polygons_dynamic</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">CLCS</span><span class="p">,</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">radius_inflation</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CollisionChecker.retrieve_static_obstacles"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.retrieve_static_obstacles">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">retrieve_static_obstacles</span><span class="p">(</span><span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">consider_traffic</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">StaticObstacle</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the list of static obstacles.</span>
+
+<span class="sd">        The static obstacles include static road traffic and road boundaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">list_obstacles_static</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">consider_traffic</span><span class="p">:</span>
+            <span class="n">list_obstacles_static</span> <span class="o">+=</span> <span class="n">scenario</span><span class="o">.</span><span class="n">static_obstacles</span>
+
+        <span class="c1"># add road boundary</span>
+        <span class="n">object_road_boundary</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">boundary</span><span class="o">.</span><span class="n">create_road_boundary_obstacle</span><span class="p">(</span><span class="n">scenario</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;triangulation&quot;</span><span class="p">)</span>
+        <span class="n">list_obstacles_static</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">object_road_boundary</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">list_obstacles_static</span></div>
+
+<div class="viewcode-block" id="CollisionChecker.obtain_vertices_of_polygons_from_static_obstacles"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.obtain_vertices_of_polygons_from_static_obstacles">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">obtain_vertices_of_polygons_from_static_obstacles</span><span class="p">(</span><span class="n">list_obstacles_static</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the vertices of polygons from a given list of static obstacles.&quot;&quot;&quot;</span>
+        <span class="n">list_vertices_polygons_static</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">obstacle</span> <span class="ow">in</span> <span class="n">list_obstacles_static</span><span class="p">:</span>
+            <span class="n">occupancy</span> <span class="o">=</span> <span class="n">obstacle</span><span class="o">.</span><span class="n">occupancy_at_time</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">occupancy</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">Rectangle</span><span class="p">):</span>
+                <span class="n">list_vertices_polygons_static</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">ShapeGroup</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shape</span><span class="o">.</span><span class="n">shapes</span><span class="p">:</span>
+                    <span class="n">list_vertices_polygons_static</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">list_vertices_polygons_static</span></div>
+
+<div class="viewcode-block" id="CollisionChecker.obtain_vertices_of_polygons_for_dynamic_obstacles"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.obtain_vertices_of_polygons_for_dynamic_obstacles">[docs]</a>    <span class="k">def</span> <span class="nf">obtain_vertices_of_polygons_for_dynamic_obstacles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_obstacles_dynamic</span><span class="p">):</span>
+        <span class="n">step_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">step_start</span>
+        <span class="n">step_end</span> <span class="o">=</span> <span class="n">step_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">steps_computation</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">dict_time_to_list_vertices_polygons_dynamic</span> <span class="o">=</span> <span class="p">{</span><span class="n">step</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">step_start</span><span class="p">,</span> <span class="n">step_end</span><span class="p">)}</span>
+
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">step_start</span><span class="p">,</span> <span class="n">step_end</span><span class="p">):</span>
+            <span class="n">list_vertices_polygons_dynamic</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">time_step</span> <span class="o">=</span> <span class="n">step</span> <span class="o">*</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">obstacle</span> <span class="ow">in</span> <span class="n">list_obstacles_dynamic</span><span class="p">:</span>
+                <span class="n">occupancy</span> <span class="o">=</span> <span class="n">obstacle</span><span class="o">.</span><span class="n">occupancy_at_time</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">occupancy</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">occupancy</span><span class="o">.</span><span class="n">shape</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">Rectangle</span><span class="p">):</span>
+                    <span class="n">list_vertices_polygons_dynamic</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">ShapeGroup</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shape</span><span class="o">.</span><span class="n">shapes</span><span class="p">:</span>
+                        <span class="n">list_vertices_polygons_dynamic</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+
+            <span class="n">dict_time_to_list_vertices_polygons_dynamic</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">+=</span> <span class="n">list_vertices_polygons_dynamic</span>
+
+        <span class="k">return</span> <span class="n">dict_time_to_list_vertices_polygons_dynamic</span></div>
+
+<div class="viewcode-block" id="CollisionChecker.collides_at_step"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.collides_at_step">[docs]</a>    <span class="k">def</span> <span class="nf">collides_at_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">input_rectangle</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Checks for collision with obstacles in the scenario at time step.</span>
+
+<span class="sd">        Note: creating a query windows significantly decreases computation time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># convert to collision object</span>
+        <span class="n">rect_collision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_reach_polygon_to_collision_object</span><span class="p">(</span><span class="n">input_rectangle</span><span class="p">)</span>
+
+        <span class="c1"># create a query window, decreases computation time</span>
+        <span class="n">collision_checker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpp_collision_checker</span><span class="o">.</span><span class="n">window_query</span><span class="p">(</span><span class="n">rect_collision</span><span class="p">)</span>
+
+        <span class="c1"># slice collision checker with time</span>
+        <span class="n">collision_checker_time_slice</span> <span class="o">=</span> <span class="n">collision_checker</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="c1"># return collision result</span>
+        <span class="k">return</span> <span class="n">collision_checker_time_slice</span><span class="o">.</span><span class="n">collide</span><span class="p">(</span><span class="n">rect_collision</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollisionChecker.convert_reach_polygon_to_collision_object"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.collision_checker.CollisionChecker.convert_reach_polygon_to_collision_object">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_reach_polygon_to_collision_object</span><span class="p">(</span><span class="n">input_rectangle</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">RectAABB</span><span class="p">:</span>
+        <span class="n">p_lon_min</span><span class="p">,</span> <span class="n">p_lat_min</span><span class="p">,</span> <span class="n">p_lon_max</span><span class="p">,</span> <span class="n">p_lat_max</span> <span class="o">=</span> <span class="n">input_rectangle</span><span class="o">.</span><span class="n">bounds</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="n">p_lon_max</span> <span class="o">-</span> <span class="n">p_lon_min</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">p_lat_max</span> <span class="o">-</span> <span class="n">p_lat_min</span>
+        <span class="n">p_lon_center</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_lon_max</span> <span class="o">+</span> <span class="n">p_lon_min</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">p_lat_center</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_lat_max</span> <span class="o">+</span> <span class="n">p_lat_min</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="k">return</span> <span class="n">pycrcc</span><span class="o">.</span><span class="n">RectAABB</span><span class="p">(</span><span class="n">length</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">p_lon_center</span><span class="p">,</span> <span class="n">p_lat_center</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

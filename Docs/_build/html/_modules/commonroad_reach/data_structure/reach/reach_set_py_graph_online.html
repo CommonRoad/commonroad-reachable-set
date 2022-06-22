@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.data_structure.reach.reach_set_py_graph_online &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.data_structure.reach.reach_set_py_graph_online</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.data_structure.reach.reach_set_py_graph_online</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pyximport</span>
+
+<span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">commonroad.scenario.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.__version__</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.collision_checker</span> <span class="kn">import</span> <span class="n">CollisionChecker</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span><span class="p">,</span> <span class="n">VehicleConfiguration</span><span class="p">,</span> <span class="n">ReachableSetConfiguration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_node</span> <span class="kn">import</span> <span class="n">ReachNodeMultiGeneration</span><span class="p">,</span> <span class="n">ReachNode</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_polygon</span> <span class="kn">import</span> <span class="n">ReachPolygon</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_set</span> <span class="kn">import</span> <span class="n">ReachableSet</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.utility.obstacle_grid</span> <span class="kn">import</span> <span class="n">ObstacleRegularGrid</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline">[docs]</a><span class="k">class</span> <span class="nc">PyGraphReachableSetOnline</span><span class="p">(</span><span class="n">ReachableSet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Online step in the graph-based reachable set computation with Python backend.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collision_checker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CollisionChecker</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obstacle_grid</span><span class="p">:</span> <span class="n">ObstacleRegularGrid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_list_tuples_reach_node_attributes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_parent</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_grandparent</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ll</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ur</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># contains all pre-computed nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dict_time_to_reachable_set_all</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dict_time_to_drivable_area_all</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_reachability_graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_collision_checker</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_new_scenario</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scenario</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning_problem</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PyGraphReachableSetOnline initialized.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dict_time_to_reachable_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">]]:</span>
+        <span class="n">dict_time_to_reachable_set</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="p">:</span>
+            <span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set_at_step</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dict_time_to_reachable_set</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.reachable_set_at_step"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.reachable_set_at_step">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">reachable_set_at_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Given time step for drivable area retrieval is out of range.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reachset_list_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_time_to_reachable_set_all</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+            <span class="n">reachset</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">index_reachset</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">step</span><span class="p">]):</span>
+                <span class="n">reachset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reachset_list_all</span><span class="p">[</span><span class="n">index_reachset</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span>
+                                <span class="n">translate</span><span class="p">(</span><span class="n">p_lon_off</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reachset_translation</span><span class="p">(</span><span class="n">step</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                                          <span class="n">p_lat_off</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reachset_translation</span><span class="p">(</span><span class="n">step</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                                          <span class="n">v_lon_off</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">v_lon_initial</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_restore_parent_node_relationships</span><span class="p">(</span><span class="n">reachset</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">reachset</span></div>
+
+    <span class="k">def</span> <span class="nf">_restore_parent_node_relationships</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reachset</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNode</span><span class="p">],</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Restore parent-child relationships.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">time_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">ind_2_list_index_prev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ind_2_list_index_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index_reachset</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span><span class="p">]):</span>
+            <span class="n">reachable_parents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_parent</span><span class="p">[</span>
+                                                              <span class="n">time_step</span><span class="p">]</span><span class="o">.</span><span class="n">todense</span><span class="p">()[</span>
+                                                          <span class="n">index_reachset</span><span class="p">,</span> <span class="p">:]))</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">reachset</span><span class="p">[</span><span class="n">ind_2_list_index_current</span><span class="p">[</span><span class="n">index_reachset</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">index_parent</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">reachable_parents</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set_at_step</span><span class="p">(</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)[</span><span class="n">ind_2_list_index_prev</span><span class="p">[</span><span class="n">index_parent</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">parent</span><span class="o">.</span><span class="n">add_child_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">add_parent_node</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+    <span class="k">def</span> <span class="nf">_dict_time_to_drivable_area</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]]:</span>
+        <span class="n">dict_time_to_drivable_area</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="p">:</span>
+            <span class="n">dict_time_to_drivable_area</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drivable_area_at_step</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dict_time_to_drivable_area</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.drivable_area_at_step"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.drivable_area_at_step">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">drivable_area_at_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Given time step for drivable area retrieval is out of range.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rectangle_list_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_time_to_drivable_area_all</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+            <span class="n">drivable_area</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">index_reachset</span><span class="p">,</span> <span class="n">reachable</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="n">reachable</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">vertices</span> <span class="o">=</span> <span class="n">rectangle_list_all</span><span class="p">[</span><span class="n">index_reachset</span><span class="p">]</span><span class="o">.</span><span class="n">vertices</span>
+                        <span class="n">vertices</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachset_translation</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+                        <span class="n">drivable_area</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ReachPolygon</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">fix_vertices</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">continue</span>
+            <span class="k">return</span> <span class="n">drivable_area</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_evaluated_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.time_step"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.time_step">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert relative time index (initial time_index = 0) to time_step (initial step = step_start)</span>
+<span class="sd">        :param time_index:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">time_index</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_start</span></div>
+
+    <span class="k">def</span> <span class="nf">_restore_reachability_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Restores reachability graph from the offline computation result.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_list_tuples_reach_node_attributes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_parent</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_grandparent</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ll</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ur</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_offline_computation_result</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_list_tuples_reach_node_attributes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grid_shapes</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ur</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span><span class="p">),</span>
+                                 <span class="nb">round</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ur</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ll</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span><span class="p">))</span>
+                             <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">ll</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ll</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_reachable_sets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_list_tuples_reach_node_attributes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_offline_computation_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Loads pickle file generated in the offline computation step.&quot;&quot;&quot;</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;* Loading offline computation result...&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="n">path_file_pickle</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">path_offline_data</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">name_pickle_offline</span><span class="p">)</span>
+        <span class="n">dict_data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">path_file_pickle</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;__version__&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">__version__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Offline data was created with an older version of commonroad-reach &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;__version__&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">. &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Please recreate the file with the current version </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2"> !&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;pickle file was created for coordinate_system=</span><span class="si">{</span><span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;coordinate_system&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">,&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2">!&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_configurations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="p">,</span>
+                                      <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;config.reachable_set&quot;</span><span class="p">],</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;config.vehicle&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;node_attributes&quot;</span><span class="p">],</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;adjacency_matrices_parent&quot;</span><span class="p">],</span> \
+               <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;adjacency_matrices_grandparent&quot;</span><span class="p">],</span> \
+               <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;reachset_bb_ll&quot;</span><span class="p">],</span> <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;reachset_bb_ur&quot;</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_configurations</span><span class="p">(</span><span class="n">reachset_config_online</span><span class="p">:</span> <span class="n">ReachableSetConfiguration</span><span class="p">,</span>
+                                 <span class="n">vehicle_config_online</span><span class="p">:</span> <span class="n">VehicleConfiguration</span><span class="p">,</span>
+                                 <span class="n">reachset_config_offline</span><span class="p">:</span> <span class="n">ReachableSetConfiguration</span><span class="p">,</span>
+                                 <span class="n">vehicle_config_offline</span><span class="p">:</span> <span class="n">VehicleConfiguration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensures that original configuration from the offline data is used for relevant parameters.</span>
+<span class="sd">        :param reachset_config_online: configuration used for online reachability analysis</span>
+<span class="sd">        :param vehicle_config_online: configuration used for online reachability analysis</span>
+<span class="sd">        :param reachset_config_offline: configuration used for offline reachability analysis</span>
+<span class="sd">        :param vehicle_config_offline: configuration used for offline reachability analysis</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">validate_and_update_config</span><span class="p">(</span><span class="n">config_online</span><span class="p">,</span> <span class="n">config_offline</span><span class="p">,</span> <span class="n">relevant_attributes</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">config_online</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">relevant_attributes</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">config_offline</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config_online</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config_offline</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+                        <span class="n">online_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config_online</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+                        <span class="n">offline_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config_offline</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+                        <span class="n">warn_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">config_online</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">=&quot;</span> \
+                                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">online_value</span><span class="si">}</span><span class="s2">!=</span><span class="si">{</span><span class="n">offline_value</span><span class="si">}</span><span class="s2">, which was &quot;</span> \
+                                    <span class="sa">f</span><span class="s2">&quot;used to create </span><span class="si">{</span><span class="n">reachset_config_online</span><span class="o">.</span><span class="n">name_pickle_offline</span><span class="si">}</span><span class="s2">. Overwriting value...&quot;</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">warn_text</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warn_text</span><span class="p">)</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">config_online</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">offline_value</span><span class="p">)</span>
+
+        <span class="n">relevant_attributes_reachset</span> <span class="o">=</span> \
+            <span class="p">[</span><span class="s2">&quot;size_grid&quot;</span><span class="p">]</span>
+        <span class="n">relevant_attributes_ego_vehicle</span> <span class="o">=</span> \
+            <span class="p">[</span><span class="s2">&quot;a_lon_max&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;a_lon_min&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;a_lat_max&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;a_lat_min&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;a_max&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;v_lon_max&quot;</span><span class="p">]</span>
+
+        <span class="n">validate_and_update_config</span><span class="p">(</span><span class="n">reachset_config_online</span><span class="p">,</span> <span class="n">reachset_config_offline</span><span class="p">,</span> <span class="n">relevant_attributes_reachset</span><span class="p">)</span>
+        <span class="n">validate_and_update_config</span><span class="p">(</span><span class="n">vehicle_config_online</span><span class="o">.</span><span class="n">ego</span><span class="p">,</span> <span class="n">vehicle_config_offline</span><span class="o">.</span><span class="n">ego</span><span class="p">,</span>
+                                   <span class="n">relevant_attributes_ego_vehicle</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">reachset_config_online</span><span class="o">.</span><span class="n">n_multi_steps</span> <span class="o">&lt;=</span> <span class="n">reachset_config_offline</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;pre-computed only </span><span class="si">{</span><span class="n">reachset_config_offline</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="si">}</span><span class="s2"> multi-steps &quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;but requested </span><span class="si">{</span><span class="n">reachset_config_online</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_restore_reachable_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_time_to_list_tuples_reach_node_attributes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Restores reachable sets from the offline computation result.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">list_tuples_attribute</span> <span class="ow">in</span> <span class="n">dict_time_to_list_tuples_reach_node_attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># reconstruct nodes in the reachability graph</span>
+            <span class="k">for</span> <span class="n">tuple_attribute</span> <span class="ow">in</span> <span class="n">list_tuples_attribute</span><span class="p">:</span>
+                <span class="n">p_x_min</span><span class="p">,</span> <span class="n">p_y_min</span><span class="p">,</span> <span class="n">p_x_max</span><span class="p">,</span> <span class="n">p_y_max</span><span class="p">,</span> <span class="n">v_x_min</span><span class="p">,</span> <span class="n">v_y_min</span><span class="p">,</span> <span class="n">v_x_max</span><span class="p">,</span> <span class="n">v_y_max</span> <span class="o">=</span> <span class="n">tuple_attribute</span>
+                <span class="n">polygon_x</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">p_x_min</span><span class="p">,</span> <span class="n">v_x_min</span><span class="p">,</span> <span class="n">p_x_max</span><span class="p">,</span> <span class="n">v_x_max</span><span class="p">)</span>
+                <span class="n">polygon_y</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">p_y_min</span><span class="p">,</span> <span class="n">v_y_min</span><span class="p">,</span> <span class="n">p_y_max</span><span class="p">,</span> <span class="n">v_y_max</span><span class="p">)</span>
+
+                <span class="n">node</span> <span class="o">=</span> <span class="n">ReachNodeMultiGeneration</span><span class="p">(</span><span class="n">polygon_x</span><span class="p">,</span> <span class="n">polygon_y</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dict_time_to_reachable_set_all</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="n">position_rectangle</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">p_x_min</span><span class="p">,</span> <span class="n">p_y_min</span><span class="p">,</span> <span class="n">p_x_max</span><span class="p">,</span> <span class="n">p_y_max</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dict_time_to_drivable_area_all</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">position_rectangle</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.initialize_new_scenario"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.initialize_new_scenario">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_new_scenario</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scenario</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Scenario</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">planning_problem</span><span class="p">:</span> <span class="p">[</span><span class="n">Optional</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset online computation for evaluation of new scenario and/or planning problem;</span>
+<span class="sd">        thus, avoid time for parsing pickle file again.</span>
+<span class="sd">        :param scenario: new scenario (keep old scenario if None)</span>
+<span class="sd">        :param planning_problem: new planning_problem (keep old planning_problem if None)</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_planning_problem</span> <span class="o">=</span> <span class="n">planning_problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">update_cc</span> <span class="o">=</span> <span class="n">update_planning_problem</span> <span class="ow">or</span> <span class="p">(</span><span class="n">scenario</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scenario</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">scenario</span>
+
+        <span class="k">if</span> <span class="n">planning_problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">complete_configuration</span><span class="p">(</span><span class="n">scenario</span><span class="p">,</span> <span class="n">planning_problem</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reachset_translation</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">update_cc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_collision_checker</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">obstacle_grid</span> <span class="o">=</span> <span class="n">ObstacleRegularGrid</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ll</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachset_bb_ur</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collision_checker</span><span class="o">.</span><span class="n">cpp_collision_checker</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="p">,</span>
+                 <span class="n">a_x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span><span class="p">,</span> <span class="n">a_y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span><span class="p">,</span>
+                 <span class="n">t_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span><span class="p">,</span>
+                 <span class="n">grid_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_grid_shapes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set_at_step</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drivable_area_at_step</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_occ_grid_at_time</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_start</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_initialize_collision_checker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.collision_checker</span> <span class="kn">import</span> <span class="n">CollisionChecker</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Importing C++ collision checker failed.&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collision_checker</span> <span class="o">=</span> <span class="n">CollisionChecker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.compute"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">step_end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step_end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">step_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_end</span>
+
+        <span class="k">for</span> <span class="n">time_step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">step_start</span><span class="p">,</span> <span class="n">step_end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">time_step</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Time step </span><span class="si">{</span><span class="n">time_step</span><span class="si">}</span><span class="s2"> is out of range, max allowed: &quot;</span> \
+                          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_forward_propagation</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">prune_nodes_not_reaching_final_step</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prune_nodes_not_reaching_final_step</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_prune_nodes_not_reaching_final_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Prunes nodes that don&#39;t reach the final time step.</span>
+
+<span class="sd">        Iterates through reachability graph backward in time, discards nodes that don&#39;t have a child node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i_t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_evaluated_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward_step</span><span class="p">(</span><span class="n">i_t</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pruned</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reachable_set_at_step</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drivable_area_at_step</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.reachset_translation"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.reachset_translation">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="mi">124</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">reachset_translation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Translation of initial state at time_step&quot;&quot;&quot;</span>
+        <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning_problem</span><span class="o">.</span><span class="n">initial_state</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">p_lon_lat_initial</span> \
+               <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">v_lon_lat_initial</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="n">time_step</span></div>
+
+    <span class="k">def</span> <span class="nf">_forward_propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_multi_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Propagates current reachability grid and excludes forbidden states</span>
+<span class="sd">        :param step: initial time step of the reachable set</span>
+<span class="sd">        :param n_multi_steps: number of previous time steps considered for the propagation</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Reached max number of offline computed time steps &#39;</span>
+                             <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_time_steps_offline_computation</span><span class="si">}</span><span class="s1">)!&#39;</span><span class="p">)</span>
+
+        <span class="n">reachability_grid_prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_parent</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">reachability_grid_prop</span><span class="p">):</span>
+            <span class="n">reachability_grid_prop</span> <span class="o">=</span> <span class="n">reachability_grid_prop</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+        <span class="c1"># propagate grandparents:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">delta_time_step</span><span class="p">,</span> <span class="n">adj_matrix_gp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_grandparent</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># get time index of grandparent to propagate</span>
+                <span class="n">step_gp</span> <span class="o">=</span> <span class="n">step</span> <span class="o">-</span> <span class="n">delta_time_step</span>
+                <span class="k">if</span> <span class="n">delta_time_step</span> <span class="o">&lt;=</span> <span class="n">n_multi_steps</span> <span class="ow">and</span> <span class="n">step_gp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">:</span>
+                    <span class="n">reachability_grid_prop_grandparent</span> <span class="o">=</span> \
+                        <span class="n">adj_matrix_gp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">step_gp</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+                    <span class="k">if</span> <span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">reachability_grid_prop_grandparent</span><span class="p">):</span>
+                        <span class="n">prop_grandparent_tmp</span> <span class="o">=</span> <span class="n">reachability_grid_prop_grandparent</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">prop_grandparent_tmp</span> <span class="o">=</span> <span class="n">reachability_grid_prop_grandparent</span>
+
+                    <span class="c1"># intersect with propagated cells of other time steps</span>
+                    <span class="n">reachability_grid_prop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">reachability_grid_prop</span><span class="p">,</span> <span class="n">prop_grandparent_tmp</span><span class="p">)</span>
+
+            <span class="c1"># intersect propagated cells with occupied cells</span>
+            <span class="n">reachability_grid_prop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">reachability_grid_prop</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">_occ_grid_at_time</span><span class="p">(</span><span class="n">step</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">reachability_grid_prop</span>
+
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_occ_grid_at_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">occupied_grid_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obstacle_grid</span><span class="o">.</span><span class="n">occupancy_grid_at_time</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachset_translation</span><span class="p">(</span><span class="n">time_step</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">occupied_grid_obs</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOnline.backward_step"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_online.PyGraphReachableSetOnline.backward_step">[docs]</a>    <span class="k">def</span> <span class="nf">backward_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Reached max number of backward timesteps&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">reachability_grid_prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_adjacency_matrices_parent</span><span class="p">[</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span> <span class="o">*</span> \
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">reachability_grid_prop</span><span class="p">):</span>
+            <span class="n">reachability_grid_prop</span> <span class="o">=</span> <span class="n">reachability_grid_prop</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+        <span class="c1"># intersect propagated cells with occupied cells</span>
+        <span class="n">reachability_grid_prop_pruned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">reachability_grid_prop</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">_occ_grid_at_time</span><span class="p">(</span><span class="n">time_step</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reachability_grid</span><span class="p">[</span><span class="n">time_step</span><span class="p">],</span> <span class="n">reachability_grid_prop_pruned</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
