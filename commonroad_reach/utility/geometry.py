@@ -139,19 +139,22 @@ def clamp(value, min_value, max_value):
         return value
 
 
-def compute_area_of_reach_nodes(list_reach_set_nodes: List[ReachNode]) -> float:
+def compute_area_of_reach_nodes(list_nodes_reach: List[ReachNode]) -> float:
     """
     Computes the area of a given list of reachable set nodes.
-    :param list_reach_set_nodes:
+    :param list_nodes_reach:
     :return area: area of projection of the reachable sets on position domain
     """
     area = 0.0
-    if isinstance(list_reach_set_nodes[0], ReachNode):
-        for node in list_reach_set_nodes:
+    if not list_nodes_reach:
+        return area
+
+    if isinstance(list_nodes_reach[0], ReachNode):
+        for node in list_nodes_reach:
             area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
 
     else:
-        for node in list_reach_set_nodes:
+        for node in list_nodes_reach:
             area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
 
     return area
@@ -174,10 +177,10 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
     # preprocess
     for node_reach in list_nodes_reach:
         # enlarge position rectangles
-        vertices_rectangle_scaled = (np.floor(node_reach.p_lon_min() * coefficient),
-                                     np.floor(node_reach.p_lat_min() * coefficient),
-                                     np.ceil(node_reach.p_lon_max() * coefficient),
-                                     np.ceil(node_reach.p_lat_max() * coefficient))
+        vertices_rectangle_scaled = (np.floor(node_reach.p_lon_min * coefficient),
+                                     np.floor(node_reach.p_lat_min * coefficient),
+                                     np.ceil(node_reach.p_lon_max * coefficient),
+                                     np.ceil(node_reach.p_lat_max * coefficient))
         list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
 
     # iterate over all rectangles in list

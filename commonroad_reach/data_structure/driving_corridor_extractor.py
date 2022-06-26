@@ -11,6 +11,7 @@ from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.driving_corridor import DrivingCorridor, ConnectedComponent
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
+import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 # scaling factor (avoid numerical errors)
@@ -25,7 +26,7 @@ class DrivingCorridorExtractor:
         self.config = config
         self.backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
 
-        logger.debug("Driving corridor extractor initialized.")
+        util_logger.print_and_log_debug(logger, "Driving corridor extractor initialized.")
 
     @property
     def steps(self):
@@ -44,8 +45,7 @@ class DrivingCorridorExtractor:
         list_corridors = list()
         for shape in list_shapes_terminal:
             list_nodes_terminal = self._determine_terminal_nodes(shape, is_cartesian_shape, corridor_lon, list_p_lon)
-            list_corridors += \
-                self._extract_driving_corridors(list_nodes_terminal, corridor_lon, list_p_lon)
+            list_corridors += self._extract_driving_corridors(list_nodes_terminal, corridor_lon, list_p_lon)
 
         return list_corridors
 
@@ -70,25 +70,77 @@ class DrivingCorridorExtractor:
 
         return list_shapes_terminal
 
-    def _extract_driving_corridors(self, list_nodes_terminal,
-                                   corridor_lon: DrivingCorridor = None, dict_step_to_p_lon: Dict[int, float] = None) \
-            -> List[DrivingCorridor]:
+    def _determine_terminal_nodes(self, shape_terminal: Shape = None, is_cartesian_shape: bool = True,
+                                  corridor_lon: DrivingCorridor = None, list_p_lon: List[float] = None) \
+            -> List[Union[pycrreach.ReachNode, ReachNode]]:
+        if not corridor_lon and not list_p_lon:
+            # extract longitudinal driving corridors
+            util_logger.print_and_log_info(logger, "\tLongitudinal DC.")
+
+            list_nodes_final = list(self.reachable_sets[self.steps[-1]])
+            if shape_terminal:
+                list_nodes_terminal = self._determine_overlapping_nodes_longitudinal(list_nodes_final,
+                                                                                     shape_terminal, is_cartesian_shape)
+                if not list_nodes_terminal:
+                    print("\tFinal reach nodes do not intersect with the input terminal shape.")
+                    return []
+
+            else:
+                # use all base sets in last time step
+                list_nodes_terminal = list_nodes_final
+
+        elif corridor_lon and list_p_lon:
+            # extract lateral driving corridors
+            util_logger.print_and_log_info(logger, "\tLateral DC.")
+
+            step_final = self.steps[-1]
+            if len(list_p_lon) < step_final:
+                message = "#Elements in provided list of longitudinal positions is less than reachable set steps."
+                util_logger.print_and_log_error(logger, message)
+                raise ValueError(message)
+            # zip steps and longitudinal positions
+            list_p_lon = list_p_lon[0:step_final]
+            dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))
+
+            list_nodes_terminal = self._determine_overlapping_nodes_lateral(corridor_lon.reach_nodes_at_step(step_final),
+                                                                            dict_step_to_p_lon[step_final])
+
+        else:
+            message = "Please provide both longitudinal positions and a longitudinal driving corridor if you wish to " \
+                      "compute a lateral driving corridor"
+            util_logger.print_and_log_error(logger, message)
+            raise ValueError(message)
+
+        return list_nodes_terminal
+
+    def _extract_driving_corridors(self, list_nodes_terminal, corridor_lon: DrivingCorridor = None,
+                                   list_p_lon: List[float] = None) -> List[DrivingCorridor]:
         """Extracts longitudinal or lateral driving corridors.
 
         If no parameter is passed, longitudinal driving corridors are extracted from the reachable sets.
         If a longitudinal driving corridor and a given list of longitudinal positions are given, lateral driving
         corridors are extracted.
         """
-        list_cc_terminal = self._determine_connected_components(list_nodes_terminal)
         list_corridors = list()
+
+        # zip steps and longitudinal positions
+        if list_p_lon:
+            list_p_lon = list_p_lon[0:self.steps[-1]]
+            dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))
+        else:
+            dict_step_to_p_lon = dict()
+
+        list_cc_terminal = self._determine_connected_components(list_nodes_terminal)
         for cc_terminal in list_cc_terminal:
             list_lists_ids_cc = list()
+
+            # create a graph of connected components backward in time
             graph_cc = nx.DiGraph()
             graph_cc.add_node(cc_terminal.id, connected_component=cc_terminal)
+            self._create_connected_component_graph(list_lists_ids_cc, graph_cc, cc_terminal,
+                                                   corridor_lon, dict_step_to_p_lon, cc_terminal.id)
 
-            self._create_connected_component_graph(list_lists_ids_cc, graph_cc, cc_terminal, corridor_lon,
-                                                   dict_step_to_p_lon, cc_terminal.id)
-
+            # convert each sequence of connected components to a driving corridor
             for lists_ids_cc in list_lists_ids_cc:
                 corridor = DrivingCorridor()
                 for id_cc in lists_ids_cc:
@@ -98,54 +150,14 @@ class DrivingCorridorExtractor:
                 list_corridors.append(corridor)
 
         if not list_corridors:
-            warnings.warn('\t\t\t No driving corridor found!')
+            util_logger.print_and_log_warning(logger, "\tNo driving corridor extracted!")
 
-        else:
-            list_corridors.sort(key=lambda dc: dc.area, reverse=True)
+        list_corridors.sort(key=lambda dc: dc.area, reverse=True)
 
         return list_corridors
 
-    def _determine_terminal_nodes(self, shape_terminal: Shape = None, is_cartesian_shape: bool = True,
-                                  corridor_lon: DrivingCorridor = None, list_p_lon: List[float] = None) \
-            -> List[Union[pycrreach.ReachNode, ReachNode]]:
-        if not corridor_lon and not list_p_lon:
-            # extract longitudinal driving corridors
-            print("\tExtracting longitudinal driving corridors...")
-            list_nodes_final = list(self.reachable_sets[self.steps[-1]])
-
-            if shape_terminal:
-                # set reach nodes at the final step that overlap with the given terminal shape as terminal nodes
-                list_nodes_terminal = self._determine_terminal_nodes_longitudinal(list_nodes_final,
-                                                                                  shape_terminal, is_cartesian_shape)
-                if not list_nodes_terminal:
-                    print("\tFinal reach nodes do not intersect with the input terminal shape.")
-                    return []
-
-            else:
-                # use all base sets in last time step
-                list_nodes_terminal = list_nodes_final
-
-        elif list_p_lon and corridor_lon:
-            # extract lateral driving corridors
-            print("\tExtracting lateral driving corridors...")
-            assert (len(list_p_lon) == len(self.steps)), f"Position list ({len(list_p_lon)}) should have the same" \
-                                                         f"length as the reachable sets ({len(self.steps)})!"
-
-            step_final = self.steps[-1]
-            # determine reachable sets which contain the longitudinal position in last time step
-            dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))
-            list_nodes_terminal = self._determine_terminal_nodes_lateral(corridor_lon.reach_nodes_at_step(step_final),
-                                                                         dict_step_to_p_lon[step_final])
-
-        else:
-            err_msg = "Please provide both longitudinal positions and a longitudinal driving corridor if you wish to " \
-                      "compute a lateral driving corridor"
-            raise ValueError(err_msg)
-
-        return list_nodes_terminal
-
-    def _determine_terminal_nodes_longitudinal(self, list_nodes_reach,
-                                               shape_terminal: Shape, is_cartesian_shape: bool = True) \
+    def _determine_overlapping_nodes_longitudinal(self, list_nodes_reach, shape_terminal: Shape,
+                                                  is_cartesian_shape: bool = True) \
             -> List[Union[pycrreach.ReachNode, ReachNode]]:
         """Determines the terminal reach nodes that overlap with the given terminal shape.
 
@@ -184,39 +196,37 @@ class DrivingCorridorExtractor:
         return list_nodes_terminal
 
     @staticmethod
-    def _determine_terminal_nodes_lateral(list_nodes_reach: List[Union[pycrreach.ReachNode, ReachNode]],
-                                          lon_pos: float):
+    def _determine_overlapping_nodes_lateral(list_nodes_reach: List[Union[pycrreach.ReachNode, ReachNode]],
+                                             p_lon: float):
         """
         Checks which drivable areas of the given reachable sets contain a given longitudinal position and returns the
         corresponding reachable sets
         :param list_nodes_reach: List of reachable set nodes
-        :param lon_pos: given longitudinal positions
-        :return reach_set_nodes_overlap: Set containing the reachable set nodes which overlap with longitudinal position
+        :param p_lon: given longitudinal positions
+        :return set_nodes_terminal: Set containing the reachable set nodes which overlap with longitudinal position
         """
-        reach_set_nodes_overlap = set()
-        for reach_node in list_nodes_reach:
-            if np.greater_equal(round(lon_pos * 10.0 ** DIGITS),
-                                np.floor(reach_node.p_lon_min() * 10.0 ** DIGITS)) and \
-                    np.greater_equal(np.ceil(reach_node.p_lon_max() * 10.0 ** DIGITS),
-                                     round(lon_pos * 10.0 ** DIGITS)):
-                reach_set_nodes_overlap.add(reach_node)
-        return reach_set_nodes_overlap
+        set_nodes_terminal = set()
+        for node_reach in list_nodes_reach:
+            if np.greater_equal(round(p_lon * 10.0 ** DIGITS), np.floor(node_reach.p_lon_min() * 10.0 ** DIGITS)) and \
+                    np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** DIGITS), round(p_lon * 10.0 ** DIGITS)):
+                set_nodes_terminal.add(node_reach)
 
-    def _determine_connected_components(self, list_nodes_reach, exclude_small_area: bool = False) \
-            -> List[ConnectedComponent]:
+        return list(set_nodes_terminal)
 
-        """Determines and returns the connected reachable sets in positions domain.
+    def _determine_connected_components(self, list_nodes_reach,
+                                        exclude_small_area: bool = False) -> List[ConnectedComponent]:
+        """Determines and returns the connected reachable sets in the position domain.
 
         Connected components are sorted according to a heuristic (area of connected reachable sets)
         :param list_nodes_reach: list of reach nodes
         :param exclude_small_area: excludes connected components with an area smaller than the threshold
         :return: list of connected reachable sets
         """
-        # if self.backend == "CPP":
-        #     overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
-        #
-        # else:
-        overlap = util_geometry.connected_reachset_py(list_nodes_reach, DIGITS)
+        if self.backend == "CPP":
+            overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
+
+        else:
+            overlap = util_geometry.connected_reachset_py(list_nodes_reach, DIGITS)
         # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
         adjacency = []
         for v in overlap.values():
@@ -244,31 +254,31 @@ class DrivingCorridorExtractor:
         return list_connected_component
 
     def _create_connected_component_graph(self, list_lists_ids_cc: List[int], graph_cc: nx.Graph,
-                                          cc_current: ConnectedComponent,
-                                          corridor_lon: DrivingCorridor = None,
-                                          list_p_lon: Dict[int, float] = None,
-                                          id_cc_terminal: int = 0):
+                                          cc_current: ConnectedComponent, corridor_lon: DrivingCorridor = None,
+                                          dict_step_to_p_lon: Dict[int, float] = None, id_cc_terminal: int = 0):
         """Traverses graph of connected reachable sets backwards in time and extracts paths starting from a terminal set.
 
         A path within the graph corresponds to a possible driving corridor
         :param list_lists_ids_cc: list of found driving corridors in the reachable set
         :param graph_cc: graph of possible driving corridors
-        :param list_p_lon: longitudinal positions of longitudinal trajectory (only necessary for lateral driving corridors)
-        :param corridor_lon: longitudinal driving corridor (only necessary for lateral driving corridors)
+        :param cc_current: currently examined connected component
+        :param corridor_lon: longitudinal driving corridor (only necessary for lateral DCs)
+        :param dict_step_to_p_lon: dictionary mapping step to longitudinal positions (only necessary for lateral DCs)
+        :param id_cc_terminal: id of the terminal connected component
         """
+        # todo: make as a config parameter?
         # terminate if enough driving corridors are found
-        # todo: make as config
-        if len(list_lists_ids_cc) > 1:
+        if len(list_lists_ids_cc) > 10:
             return
 
-        # computation reached the initial time step, extract simple paths from terminal cc to initial cc
+        # computation reached the initial step, extract simple paths from terminal cc to initial cc
         if cc_current.step == self.steps[0]:
-            # nx simple paths: graph, source node id, target node id
+            # source: id of initial cc, target: id of terminal cc
             list_lists_ids_cc.extend(nx.all_simple_paths(graph_cc, cc_current.id, id_cc_terminal))
             return
 
+        # determine parent reach nodes for each reach node within the current connected component
         set_nodes_reach_parent = set()
-        # determine parent reach sets for each reach set within connected components
         if self.backend == "CPP":
             [set_nodes_reach_parent.update(reach_node.vec_nodes_parent())
              for reach_node in cc_current.list_nodes_reach]
@@ -276,27 +286,29 @@ class DrivingCorridorExtractor:
         else:
             [set_nodes_reach_parent.update(reach_node.list_nodes_parent) for reach_node in cc_current.list_nodes_reach]
 
-        if not corridor_lon and not list_p_lon:
+        list_nodes_parent_filtered = list()
+        if not corridor_lon and not dict_step_to_p_lon:
             # extract longitudinal DC
             list_nodes_parent_filtered = list(set_nodes_reach_parent)
 
-        elif corridor_lon and list_p_lon:
+        elif corridor_lon and dict_step_to_p_lon:
             # extract lateral DC
-            # for lateral driving corridor: further consider only sets that overlap with given longitudinal position
-            list_nodes_parent_filtered = self._determine_terminal_nodes_lateral(list(set_nodes_reach_parent),
-                                                                                list_p_lon[cc_current.step - 1])
+            # consider only reach nodes that overlap with given longitudinal position
+            step_parent = cc_current.step - 1
+            list_nodes_parent_filtered = self._determine_overlapping_nodes_lateral(list(set_nodes_reach_parent),
+                                                                                   dict_step_to_p_lon[step_parent])
+            # todo: update this message?
             if not list_nodes_parent_filtered:
-                warnings.warn(f'No reachboxes found at x position. '
-                              f'#parent reach nodes: {len(set_nodes_reach_parent)}. current step {cc_current.step}')
+                util_logger.print_and_log_warning(logger,
+                                                  f'No reachboxes found at x position. #parent reach nodes: '
+                                                  f'{len(set_nodes_reach_parent)}. current step {cc_current.step}')
 
-            # filter out reach set nodes that are not part of the longitudinal driving corridor
-            list_nodes_parent_filtered.intersection_update(corridor_lon.reach_nodes_at_step(cc_current.step - 1))
+            # filter out reach nodes that are not part of the longitudinal driving corridor
+            set_nodes_reach_parent = set(list_nodes_parent_filtered)
+            set_nodes_reach_parent.intersection_update(corridor_lon.reach_nodes_at_step(step_parent))
+            list_nodes_parent_filtered = list(set_nodes_reach_parent)
 
-        else:
-            err_msg = "You need to provide both longitudinal positions and a longitudinal driving corridor to " \
-                      "compute a lateral driving corridor"
-            raise ValueError(err_msg)
-
+        # todo: make as a config parameter?
         # determine connected components in parent reach nodes
         exclude_small_area = cc_current.step > 5
         cc_parent = self._determine_connected_components(list_nodes_parent_filtered, exclude_small_area)
@@ -306,7 +318,7 @@ class DrivingCorridorExtractor:
             graph_cc.add_node(cc_next.id, connected_component=cc_next)
             graph_cc.add_edge(cc_next.id, cc_current.id)
             self._create_connected_component_graph(list_lists_ids_cc, graph_cc, cc_next,
-                                                   corridor_lon, list_p_lon, id_cc_terminal)
+                                                   corridor_lon, dict_step_to_p_lon, id_cc_terminal)
 
     @staticmethod
     def _determine_area_of_driving_corridor(driving_corridor: Dict[int, List[Union[pycrreach.ReachNode, ReachNode]]]):

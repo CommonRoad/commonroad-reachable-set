@@ -14,7 +14,6 @@ def main():
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
     config.update_configuration()
-    config.vehicle.ego.radius_inflation = 1.4
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
 
@@ -32,7 +31,7 @@ def main():
     print(f"\t#DCs (lon): {len(corridors_lon)}")
 
     # ==== plot computation results
-    # util_visual.plot_scenario_with_reachable_sets(reach_interface)
+    util_visual.plot_scenario_with_reachable_sets(reach_interface)
 
 
 if __name__ == "__main__":

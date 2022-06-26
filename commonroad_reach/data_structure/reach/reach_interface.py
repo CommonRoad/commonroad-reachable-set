@@ -107,9 +107,8 @@ class ReachableSetInterface:
 
         util_logger.print_and_log_info(logger, f"* Extracting driving corridors...")
         time_start = time.time()
-        list_corridors = \
-            self._driving_corridor_extractor.extract(to_goal_region, shape_terminal, is_cartesian_shape,
-                                                     corridor_lon, list_p_lon)
+        list_corridors = self._driving_corridor_extractor.extract(to_goal_region, shape_terminal, is_cartesian_shape,
+                                                                  corridor_lon, list_p_lon)
         time_computation = time.time() - time_start
         util_logger.print_and_log_info(logger, f"\tTook: \t{time_computation:.3f}s")
 
