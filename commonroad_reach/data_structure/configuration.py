@@ -1,21 +1,21 @@
 import logging
-from typing import Optional, Union, List, Tuple
-
-from commonroad.planning.goal import GoalRegion
-from omegaconf import ListConfig, DictConfig
-
-import numpy as np
+from typing import Optional, Union, Tuple
 
 import commonroad_reach.pycrreach as reach
+import numpy as np
+from commonroad.common.solution import VehicleType
+from commonroad.planning.goal import GoalRegion
+from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.trajectory import State
-from commonroad.planning.planning_problem import PlanningProblem
-from commonroad.common.solution import VehicleType
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
-from commonroad_route_planner.route_planner import RoutePlanner
-from commonroad_reach.utility import general as util_general
-from commonroad_reach.utility import configuration as util_configuration
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_route_planner.route_planner import RoutePlanner
+from omegaconf import ListConfig, DictConfig
+
+from commonroad_reach.utility import configuration as util_configuration
+from commonroad_reach.utility import general as util_general
+import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +97,8 @@ class Configuration:
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_step}\n"
         string += "# ================================= #"
 
-        print(string)
         for line in string.split("\n"):
-            logger.info(line)
+            util_logger.print_and_log_info(logger, line)
 
     def convert_to_cpp_configuration(self) -> reach.Configuration:
         """Converts to configuration that is readable by the C++ binding code."""
@@ -372,49 +371,6 @@ class PlanningConfiguration:
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
 
-    # todo: where is this needed?
-    def set_reference_path(self, config: Configuration, reference_path: np.ndarray):
-        """Sets reference path.
-
-        The following parameters are set:
-            - reference_path
-            - CLCS (curvilinear coordinate system)
-            - p_lon/lat_initial
-            - v_lon/lat_initial
-        """
-        self.reference_path = reference_path
-        self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-        p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
-
-        self.p_lon_initial, self.p_lat_initial = p_initial
-        self.v_lon_initial, self.v_lat_initial = v_initial
-
-    # def complete_configuration_for_given_routes(self, config: Configuration, CLCS: CurvilinearCoordinateSystem):
-    #     assert self.coordinate_system == "CVLN"
-    #     # self.step_start = config.planning_problem.initial_state.time_step
-    #
-    #     # plans a route from the initial lanelet to the goal lanelet
-    #     # route_planner = RoutePlanner(scenario, planning_problem)
-    #     # candidate_holder = route_planner.plan_routes()
-    #     # route = candidate_holder.retrieve_first_route()
-    #     #
-    #     if CLCS is not None:
-    #         self.CLCS = CLCS
-    #         self.reference_path = np.array(self.CLCS.reference_path())
-    #     else:
-    #         route_planner = RoutePlanner(config.scenario, config.planning_problem)
-    #         candidate_holder = route_planner.plan_routes()
-    #         route = candidate_holder.retrieve_first_route()
-    #
-    #         self.reference_path = route.reference_path
-    #
-    #         self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-    #
-    #     p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
-    #
-    #     self.p_lon_initial, self.p_lat_initial = p_initial
-    #     self.v_lon_initial, self.v_lat_initial = v_initial
-
     @property
     def p_lon_lat_initial(self):
         return np.array([self.p_lon_initial, self.p_lat_initial])
@@ -484,6 +440,8 @@ class DebugConfiguration:
 
         self.save_plots = config_relevant.save_plots
         self.save_config = config_relevant.save_config
+        self.verbose_debug = config_relevant.verbose_debug
+        self.verbose_info = config_relevant.verbose_info
         self.draw_ref_path = config_relevant.draw_ref_path
         self.draw_planning_problem = config_relevant.draw_planning_problem
         self.draw_icons = config_relevant.draw_icons

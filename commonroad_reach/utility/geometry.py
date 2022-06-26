@@ -139,7 +139,7 @@ def clamp(value, min_value, max_value):
         return value
 
 
-def area_of_reachable_set(list_reach_set_nodes: List[ReachNode]) -> float:
+def compute_area_of_reach_nodes(list_reach_set_nodes: List[ReachNode]) -> float:
     """
     Computes the area of a given list of reachable set nodes.
     :param list_reach_set_nodes:
@@ -174,10 +174,10 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
     # preprocess
     for node_reach in list_nodes_reach:
         # enlarge position rectangles
-        vertices_rectangle_scaled = (np.floor(node_reach.p_lon_min * coefficient),
-                                     np.floor(node_reach.p_lat_min * coefficient),
-                                     np.ceil(node_reach.p_lon_max * coefficient),
-                                     np.ceil(node_reach.p_lat_max * coefficient))
+        vertices_rectangle_scaled = (np.floor(node_reach.p_lon_min() * coefficient),
+                                     np.floor(node_reach.p_lat_min() * coefficient),
+                                     np.ceil(node_reach.p_lon_max() * coefficient),
+                                     np.ceil(node_reach.p_lat_max() * coefficient))
         list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
 
     # iterate over all rectangles in list
@@ -200,7 +200,7 @@ def lon_interval_connected_set(connected_set):
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
     max_connected_set = np.max(min_max_array[:, 1])
-    return (min_connected_set, max_connected_set)
+    return min_connected_set, max_connected_set
 
 
 def lat_interval_connected_set(connected_set):
@@ -210,4 +210,4 @@ def lat_interval_connected_set(connected_set):
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
     max_connected_set = np.max(min_max_array[:, 1])
-    return (min_connected_set, max_connected_set)
+    return min_connected_set, max_connected_set

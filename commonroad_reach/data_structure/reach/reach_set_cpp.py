@@ -18,7 +18,7 @@ class CppReachableSet(ReachableSet):
         self._reach = reach.ReachableSet(self.config.convert_to_cpp_configuration(),
                                          CollisionChecker(self.config).cpp_collision_checker)
 
-        logger.info("CppReachableSet initialized.")
+        logger.debug("CppReachableSet initialized.")
 
     def compute(self, step_start: int, step_end: int):
         """Computes reachable sets for the specified time steps."""

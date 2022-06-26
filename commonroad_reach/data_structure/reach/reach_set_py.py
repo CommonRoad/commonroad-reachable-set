@@ -1,15 +1,15 @@
 import logging
 from typing import List
 
+from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.utility import reach_operation
+import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
-
-from commonroad_reach.data_structure.configuration import Configuration
 
 
 class PyReachableSet(ReachableSet):
@@ -22,7 +22,7 @@ class PyReachableSet(ReachableSet):
         self._initialize_zero_state_polygons()
         self.collision_checker = CollisionChecker(self.config)
 
-        logger.info("PyReachableSet initialized.")
+        logger.debug("PyReachableSet initialized.")
 
     def _construct_initial_drivable_area(self) -> List[ReachPolygon]:
         tuple_vertices = reach_operation.generate_tuple_vertices_position_rectangle_initial(self.config)
@@ -167,7 +167,7 @@ class PyReachableSet(ReachableSet):
         return list_base_sets_propagated
 
     def _prune_nodes_not_reaching_final_step(self):
-        logger.info("Pruning nodes not reaching final step.")
+        util_logger.print_and_log_info(logger, f"\tPruning nodes not reaching final step...")
         cnt_nodes_before_pruning = cnt_nodes_after_pruning = len(self.reachable_set_at_step(self.step_end))
 
         for step in range(self.step_end - 1, self.step_start - 1, -1):
@@ -194,8 +194,5 @@ class PyReachableSet(ReachableSet):
 
         self._pruned = True
 
-        message = f"\t#Nodes before pruning: \t{cnt_nodes_before_pruning}"
-        logger.debug(message)
-
-        message = f"\t#Nodes after pruning: \t{cnt_nodes_after_pruning}"
-        logger.debug(message)
+        util_logger.print_and_log_info(logger, f"\t#Nodes before pruning: \t{cnt_nodes_before_pruning}")
+        util_logger.print_and_log_info(logger, f"\t#Nodes after pruning: \t{cnt_nodes_after_pruning}")

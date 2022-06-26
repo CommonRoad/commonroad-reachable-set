@@ -1,3 +1,4 @@
+import logging
 import warnings
 from typing import Union, List, Dict
 
@@ -11,6 +12,7 @@ from commonroad_reach.data_structure.driving_corridor import DrivingCorridor, Co
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 
+logger = logging.getLogger(__name__)
 # scaling factor (avoid numerical errors)
 DIGITS = 2
 
@@ -22,6 +24,8 @@ class DrivingCorridorExtractor:
         self.reachable_sets = reachable_sets
         self.config = config
         self.backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
+
+        logger.debug("Driving corridor extractor initialized.")
 
     @property
     def steps(self):
@@ -208,11 +212,11 @@ class DrivingCorridorExtractor:
         :param exclude_small_area: excludes connected components with an area smaller than the threshold
         :return: list of connected reachable sets
         """
-        if self.backend == "CPP":
-            overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
-
-        else:
-            overlap = util_geometry.connected_reachset_py(list_nodes_reach, DIGITS)
+        # if self.backend == "CPP":
+        #     overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
+        #
+        # else:
+        overlap = util_geometry.connected_reachset_py(list_nodes_reach, DIGITS)
         # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
         adjacency = []
         for v in overlap.values():
@@ -313,6 +317,6 @@ class DrivingCorridorExtractor:
         """
         area = 0.0
         for time_idx, reach_set_nodes in driving_corridor.items():
-            area += util_geometry.area_of_reachable_set(reach_set_nodes)
+            area += util_geometry.compute_area_of_reach_nodes(reach_set_nodes)
 
         return area

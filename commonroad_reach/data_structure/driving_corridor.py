@@ -13,8 +13,8 @@ class ConnectedComponent:
 
     def __init__(self, list_nodes_reach: List[Union[pycrreach.ReachNode, ReachNode]] = None):
         self.list_nodes_reach = list_nodes_reach
-        self.area = util_geometry.area_of_reachable_set(list_nodes_reach)
-        self.step = list_nodes_reach[0].step
+        self.step = list_nodes_reach[0].step if list_nodes_reach else None
+        self.area = util_geometry.compute_area_of_reach_nodes(list_nodes_reach)
 
         self.id = ConnectedComponent.cnt_id
         ConnectedComponent.cnt_id += 1

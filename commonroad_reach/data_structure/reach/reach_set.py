@@ -1,10 +1,11 @@
 import logging
-
-logger = logging.getLogger(__name__)
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
 from commonroad_reach.data_structure.configuration import Configuration
+import commonroad_reach.utility.logger as util_logger
+
+logger = logging.getLogger(__name__)
 
 
 class ReachableSet(ABC):
@@ -39,9 +40,8 @@ class ReachableSet(ABC):
 
     def drivable_area_at_step(self, step: int):
         if step not in self._list_steps_computed:
-            message = f"Given time step {step} for drivable area retrieval is out of range."
-            print(message)
-            logger.warning(message)
+            util_logger.print_and_log_warning(logger,
+                                              f"Given time step {step} for drivable area retrieval is out of range.")
             return []
 
         else:
@@ -49,9 +49,8 @@ class ReachableSet(ABC):
 
     def reachable_set_at_step(self, step: int):
         if step not in self._list_steps_computed:
-            message = f"Given time step {step} for reachable set retrieval is out of range."
-            print(message)
-            logger.warning(message)
+            util_logger.print_and_log_warning(logger,
+                                              f"Given time step {step} for reachable set retrieval is out of range.")
             return []
 
         else:
