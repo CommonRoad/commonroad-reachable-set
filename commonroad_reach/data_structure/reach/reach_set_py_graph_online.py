@@ -21,6 +21,7 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGener
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.utility.obstacle_grid import ObstacleRegularGrid
+import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +62,7 @@ class PyGraphReachableSetOnline(ReachableSet):
     @lru_cache(128)
     def reachable_set_at_step(self, step: int) -> List[ReachNodeMultiGeneration]:
         if step not in self._list_steps_computed:
-            message = "Given time step for drivable area retrieval is out of range."
-            logger.warning(message)
+            util_logger.print_and_log_warning(logger, "Given time step for drivable area retrieval is out of range.")
             return []
 
         else:
@@ -109,8 +109,7 @@ class PyGraphReachableSetOnline(ReachableSet):
     @lru_cache(128)
     def drivable_area_at_step(self, step: int) -> List[ReachPolygon]:
         if step not in self._list_steps_computed:
-            message = "Given time step for drivable area retrieval is out of range."
-            logger.warning(message)
+            util_logger.print_and_log_warning(logger, "Given time step for drivable area retrieval is out of range.")
             return []
 
         else:
@@ -153,8 +152,7 @@ class PyGraphReachableSetOnline(ReachableSet):
 
     def _load_offline_computation_result(self) -> tuple:
         """Loads pickle file generated in the offline computation step."""
-        message = "* Loading offline computation result..."
-        logger.info(message)
+        util_logger.print_and_log_info(logger, "* Loading offline computation result...")
 
         path_file_pickle = os.path.join(self.config.general.path_offline_data,
                                         self.config.reachable_set.name_pickle_offline)
@@ -268,13 +266,7 @@ class PyGraphReachableSetOnline(ReachableSet):
         self._reachability_grid[self.step_start] = np.ones((1, 1), dtype=bool)
 
     def _initialize_collision_checker(self) -> None:
-        try:
-            from commonroad_reach.data_structure.collision_checker import CollisionChecker
-        except ImportError:
-            message = "Importing C++ collision checker failed."
-            logger.exception(message)
-        else:
-            self._collision_checker = CollisionChecker(self.config)
+        self._collision_checker = CollisionChecker(self.config)
 
     def compute(self, step_start: int = 1,
                 step_end: Optional[int] = None) -> None:
@@ -283,9 +275,8 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         for time_step in range(step_start, step_end + 1):
             if time_step > self._num_time_steps_offline_computation:
-                message = f"Time step {time_step} is out of range, max allowed: " \
-                          f"{self._num_time_steps_offline_computation}"
-                logger.warning(message)
+                util_logger.print_and_log_warning(logger, f"Time step {time_step} is out of range, max allowed: "
+                                                          f"{self._num_time_steps_offline_computation}")
                 return
 
             self._list_steps_computed.append(time_step)
@@ -361,7 +352,7 @@ class PyGraphReachableSetOnline(ReachableSet):
     def backward_step(self, time_step: int) -> None:
 
         if time_step < 0:
-            logger.warning('Reached max number of backward timesteps')
+            logger.warning('Reached max number of backward time steps')
             return
 
         reachability_grid_prop = self.dict_time_to_adjacency_matrices_parent[time_step + 1].transpose() * \

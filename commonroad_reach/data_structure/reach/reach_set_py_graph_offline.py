@@ -1,25 +1,24 @@
-import logging
-import math
 import os
-import pickle
 import time
+import pickle
+import logging
+from collections import defaultdict
 from typing import List, Dict, Tuple
 
+import math
 import numpy as np
-from commonroad_dc.pycrcc import CollisionChecker, RectAABB
 from scipy import sparse
+from commonroad_dc.pycrcc import CollisionChecker, RectAABB
 
 from commonroad_reach.__version__ import __version__
 from commonroad_reach.data_structure.reach.reach_node import ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
-
-logger = logging.getLogger(__name__)
-
-from collections import defaultdict
-
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.utility import reach_operation
+import commonroad_reach.utility.logger as util_logger
+
+logger = logging.getLogger(__name__)
 
 
 class PyGraphReachableSetOffline(ReachableSet):
@@ -94,16 +93,13 @@ class PyGraphReachableSetOffline(ReachableSet):
     def compute(self, step_start: int, step_end: int):
         """Computes reachable sets for the specified time steps."""
         for step in range(step_start + 1, step_end + 1):
-            message = f"\tTime step: {step}"
-            logger.debug(message)
 
             time_start = time.time()
             self._compute_at_step(step)
             self._list_steps_computed.append(step)
 
-            message = f"\t#Nodes: {len(self.reachable_set_at_step(step))}, " \
-                      f"computation took: {time.time() - time_start:.3f}s"
-            logger.debug(message)
+            util_logger.print_and_log_debug(logger, f"\t#Nodes: {len(self.reachable_set_at_step(step))}, " \
+                                                    f"Took: {time.time() - time_start:.3f}s")
 
             if self.config.reachable_set.n_multi_steps >= 2:
                 self._determine_grandparent_relationship(step)
@@ -283,8 +279,7 @@ class PyGraphReachableSetOffline(ReachableSet):
         with open(self.path_offline_file, 'wb') as f:
             pickle.dump(dict_data, f)
 
-        message = f"Computation result saved to pickle file: {self.path_offline_file}"
-        logger.info(message)
+        util_logger.print_and_log_info(logger, f"Computation result saved to pickle file: {self.path_offline_file}")
 
     def create_projection_matrices(self):
         size_grid = self.config.reachable_set.size_grid

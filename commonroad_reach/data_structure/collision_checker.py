@@ -1,6 +1,5 @@
 import logging
 
-logger = logging.getLogger(__name__)
 from typing import List
 
 import commonroad_dc.pycrcc as pycrcc
@@ -13,6 +12,9 @@ from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch impor
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+import commonroad_reach.utility.logger as util_logger
+
+logger = logging.getLogger(__name__)
 
 
 class CollisionChecker:
@@ -25,7 +27,7 @@ class CollisionChecker:
         self.config = config
         self._initialize()
 
-        logger.info("CollisionChecker initialized.")
+        logger.debug("CollisionChecker initialized.")
 
     def _initialize(self):
         """Initializes the collision checker based on the specified coordinate system."""
@@ -37,7 +39,7 @@ class CollisionChecker:
 
         else:
             message = "Undefined coordinate system."
-            logger.error(message)
+            util_logger.print_and_log_error(logger, message)
             raise Exception(message)
 
     def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:

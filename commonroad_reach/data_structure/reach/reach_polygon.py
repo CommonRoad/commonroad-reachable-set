@@ -1,11 +1,11 @@
 import logging
-logger = logging.getLogger(__name__)
-
 from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon
+import commonroad_reach.utility.logger as util_logger
+logger = logging.getLogger(__name__)
 
 
 class ReachPolygon(Polygon, ABC):
@@ -20,7 +20,7 @@ class ReachPolygon(Polygon, ABC):
         if isinstance(list_vertices, list):
             if len(list_vertices) < 3:
                 message = "A polygon needs at least 3 vertices."
-                logger.error(message)
+                util_logger.print_and_log_error(logger, message)
                 raise Exception(message)
 
             # Shapely polygon requires identical initial and final vertices
@@ -141,8 +141,8 @@ class ReachPolygon(Polygon, ABC):
                 list_y.extend(polygon.exterior.coords.xy[1])
 
         else:
-            message = "Type error."
-            logger.error(message)
+            message = "Polygon type error."
+            util_logger.print_and_log_error(logger, message)
             raise Exception(message)
 
         list_vertices = [vertex for vertex in zip(list_x, list_y)]
@@ -163,8 +163,8 @@ class ReachPolygon(Polygon, ABC):
                 list_y.extend(plg.exterior.coords.xy[1])
 
         else:
-            message = "Type error."
-            logger.error(message)
+            message = "Polygon type error."
+            util_logger.print_and_log_error(logger, message)
             raise Exception(message)
 
         list_vertices = [vertex for vertex in zip(list_x, list_y)]
@@ -183,28 +183,28 @@ class ReachPolygon(Polygon, ABC):
         if b == 0:
             # vertical
             if a > 0:  # x <= c/a
-                list_vertices.append([c/a, y_min - margin])
-                list_vertices.append([c/a, y_max + margin])
+                list_vertices.append([c / a, y_min - margin])
+                list_vertices.append([c / a, y_max + margin])
                 list_vertices.append([x_min - margin, y_max + margin])
                 list_vertices.append([x_min - margin, y_min - margin])
 
             else:  # x >= c/a
-                list_vertices.append([c/a, y_min - margin])
-                list_vertices.append([c/a, y_max + margin])
+                list_vertices.append([c / a, y_min - margin])
+                list_vertices.append([c / a, y_max + margin])
                 list_vertices.append([x_max + margin, y_max + margin])
                 list_vertices.append([x_max + margin, y_min - margin])
 
         elif a == 0:
             # horizontal
             if b > 0:  # by <= c
-                list_vertices.append([x_min - margin, c/b])
-                list_vertices.append([x_max + margin, c/b])
+                list_vertices.append([x_min - margin, c / b])
+                list_vertices.append([x_max + margin, c / b])
                 list_vertices.append([x_max + margin, y_min - margin])
                 list_vertices.append([x_min - margin, y_min - margin])
 
             else:  # by <= c
-                list_vertices.append([x_min - margin, c/b])
-                list_vertices.append([x_max + margin, c/b])
+                list_vertices.append([x_min - margin, c / b])
+                list_vertices.append([x_max + margin, c / b])
                 list_vertices.append([x_max + margin, y_max + margin])
                 list_vertices.append([x_min - margin, y_max + margin])
 

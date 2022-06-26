@@ -22,14 +22,15 @@ def main():
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
 
-    # ==== for replanning
+    # ==== for recomputing reachable sets
     # config.update_configuration(scenario=,state_initial=,CLCS=)
     # reach_interface.reset(config)
     # reach_interface.compute_reachable_sets()
 
     # ==== extract driving corridors
     corridors_lon = reach_interface.extract_driving_corridors(to_goal_region=False)
-    print(f"#Driving corridors (lon): {len(corridors_lon)}")
+    print(f"\t#DCs (lon): {len(corridors_lon)}")
+
     # ==== plot computation results
     # util_visual.plot_scenario_with_reachable_sets(reach_interface)
 

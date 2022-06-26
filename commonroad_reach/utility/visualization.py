@@ -1,17 +1,13 @@
-import logging
 import os
+import logging
 from copy import deepcopy
 from typing import Tuple, Union, List, Dict
 
-logger = logging.getLogger(__name__)
-logging.getLogger('PIL').setLevel(logging.WARNING)
-logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
-
-from pathlib import Path
 import imageio
-import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from pathlib import Path
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
 from commonroad.geometry.shape import Polygon, Rectangle
@@ -21,6 +17,11 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+import commonroad_reach.utility.logger as util_logger
+
+logger = logging.getLogger(__name__)
+logging.getLogger('PIL').setLevel(logging.WARNING)
+logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
 
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, figsize: Tuple = None,
@@ -50,9 +51,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         steps = range(step_start, step_end + 1)
     duration = duration if duration else config.planning.dt
 
-    message = "* Plotting reachable sets..."
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, "* Plotting reachable sets...")
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
     for step in steps:
@@ -108,9 +107,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
     if config.debug.save_plots and save_gif:
         make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration)
 
-    message = "\tReachable sets plotted."
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
 
 
 def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
@@ -140,9 +137,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
         steps = range(step_start, step_end + 1)
     duration = duration if duration else config.planning.dt
 
-    message = "* Plotting drivable area..."
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, "* Plotting drivable area...")
 
     renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
     for step in steps:
@@ -188,9 +183,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
     if config.debug.save_plots and save_gif:
         make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration=duration)
 
-    message = "\tDrivable area plotted."
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, "\tDrivable area plotted.")
 
 
 def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterface, margin: int = 20):
@@ -283,7 +276,7 @@ def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
     images = []
     filenames = []
 
-    print("\tCreating GIF...")
+    util_logger.print_and_log_info(logger, "\tCreating GIF...")
     for step in steps:
         im_path = os.path.join(path, prefix + "{:05d}.png".format(step))
         filenames.append(im_path)
@@ -337,9 +330,7 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         steps = range(step_start, step_end + 1)
     duration = duration if duration else config.planning.dt
 
-    message = ("* Plotting driving corridor no. %s ..." % dc_id)
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, f"* Plotting driving corridor no. {dc_id} ...")
 
     # create output directory
     path_output = config.general.path_output
@@ -446,18 +437,13 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         if config.debug.save_plots and animation:
             make_gif(path_output_lon_dc, "lon_driving_corridor_", time_step_end, ("lon_driving_corridor_%s" % dc_id))
 
-    message = ("\tDriving corridor %s plotted." % dc_id)
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, f"\tDriving corridor {dc_id} plotted.")
 
 
 def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
                              trajectory: np.ndarray = None, as_svg=False):
     """Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor"""
-    message = "* Plotting full 2D driving corridor ..."
-    print(message)
-    logger.info(message)
-
+    util_logger.print_and_log_info(logger, "* Plotting full 2D driving corridor ...")
     # set ups
     config = reach_interface.config
     scenario = config.scenario
@@ -514,9 +500,7 @@ def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: Rea
 def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
                              lanelet_ids: List[int] = None, list_obstacles: List = None, as_svg=False):
     """Draws full driving corridor with 3D projection."""
-    message = "* Plotting full 3D driving corridor ..."
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, "* Plotting full 3D driving corridor ...")
 
     # get settings from config
     config = reach_interface.config
@@ -577,9 +561,7 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
                     bbox_inches='tight', transparent=False)
     plt.show()
 
-    message = "\t3D driving corridor plotted."
-    print(message)
-    logger.info(message)
+    util_logger.print_and_log_info(logger, "\t3D driving corridor plotted.")
 
 
 def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
