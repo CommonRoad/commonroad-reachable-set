@@ -99,11 +99,12 @@ class DrivingCorridorExtractor:
                 util_logger.print_and_log_error(logger, message)
                 raise ValueError(message)
             # zip steps and longitudinal positions
-            list_p_lon = list_p_lon[0:step_final]
+            list_p_lon = list_p_lon[0:step_final + 1]
             dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))
 
-            list_nodes_terminal = self._determine_overlapping_nodes_lateral(corridor_lon.reach_nodes_at_step(step_final),
-                                                                            dict_step_to_p_lon[step_final])
+            list_nodes_terminal = \
+                self._determine_overlapping_nodes_lateral(corridor_lon.reach_nodes_at_step(step_final),
+                                                          dict_step_to_p_lon[step_final])
 
         else:
             message = "Please provide both longitudinal positions and a longitudinal driving corridor if you wish to " \
@@ -125,7 +126,8 @@ class DrivingCorridorExtractor:
 
         # zip steps and longitudinal positions
         if list_p_lon:
-            list_p_lon = list_p_lon[0:self.steps[-1]]
+            step_final = self.steps[-1]
+            list_p_lon = list_p_lon[0:step_final + 1]
             dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))
         else:
             dict_step_to_p_lon = dict()
