@@ -1,4 +1,4 @@
-from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
+from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder as ReachConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.utility import visualization as util_visual
 import numpy as np
@@ -121,19 +121,11 @@ def main():
     time_step_start = 0
     time_steps_computation = 40
 
-    # rnd = MPRenderer(figsize=(20, 10))
-    # config.scenario.draw(rnd, draw_params={'time_begin': 0})
-    # config.planning_problem.draw(rnd)
-    # rnd.render()
-    # proj_domain_border = np.asarray(config.planning.CLCS.projection_domain())
-    # rnd.ax.plot(proj_domain_border[:, 0], proj_domain_border[:, 1], zorder=100, color='orange')
-    # plt.show()
-
     # TODO: extract terminal set from ISS (s, d) box
     # compute ISS
     from commonroad_iss.iss_highD.iss_highD import ISSHighD
-    # from commonroad_iss.data_structure.commonroad_iss_configurations import CommonRoadISSConfigurations
     from commonroad_iss.utility.configuration_builder import ConfigurationBuilder as ISSConfigurationBuilder
+
     # TODO: check difference between default configs in iss and safe wrapper repo
     default_iss_root_path = "/home/xiao/projects/safe-rl-iss/external/commonroad-invariably-safe-set"
 
@@ -149,35 +141,17 @@ def main():
     )
     iss_rectangle, bb_box = get_bounding_box_from_iss(iss_results_list)
 
-    # TODO: create config from scratch
     ego_lanelet_id = iss_results_list[-1].ego_lanelet_id
     ego_CLCS = iss_results_list[-1].iss_lanelet_result_dict[ego_lanelet_id].cvln_lanelet.CLCS
-    config = ConfigurationBuilder.construct_configuration_for_given_scenario(
-        scenario=scenario, planning_problem=planning_problem, CLCS=ego_CLCS
-    )
+
+    config = ReachConfigurationBuilder.build_configuration(str(scenario.scenario_id))
+    config.update_configuration(scenario=scenario, planning_problem=planning_problem, CLCS=ego_CLCS)
 
     config.planning.time_step_start = time_step_start
     config.planning.time_steps_computation = time_steps_computation
 
-    # # set config.planning.CLCS
-    # original_ref_path = np.array(config.planning.CLCS.reference_path())
-    # config.planning.CLCS = ego_CLCS
-    # new_ref_path = np.array(config.planning.CLCS.reference_path())
-    #
-    # from commonroad_reach.utility import configuration as util_configuration
-    # p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
-    #
-    # config.planning.p_lon_initial, config.planning.p_lat_initial = p_initial
-    # config.planning.v_lon_initial, config.planning.v_lat_initial = v_initial
-    # config.planning.reference_path = new_ref_path
-
-    # import matplotlib.pyplot as plt
-    # # plt.plot(original_ref_path[:, 0], original_ref_path[:, 1], marker="+", color="black")
-    # plt.plot(new_ref_path[:, 0], new_ref_path[:, 1], marker="*", color="blue")
-    # plt.show()
-
     # ==== construct reachability interface and compute reachable sets
-    # TODO: move calling of spot in ReachableSetInterface and add flag in config
+    # TODO: move calling of spot in ReachableSetInterface and add flag in config?
     spot_prediction(config)
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
@@ -255,43 +229,5 @@ def main():
     # util_visual.plot_all_driving_corridors(longitudinal_driving_corridors, reach_interface)
 
 
-def debug():
-    import pickle
-    with open("debug.pickle", "rb") as f:
-        data = pickle.load(f)
-        config = data["config"]
-
-    config.planning_problem.initial_state.position = np.array([145.685, -27.])
-    #
-    # # # create a new config
-    # # new_config = ConfigurationBuilder.construct_configuration_for_given_scenario(
-    # #     scenario=config.scenario, planning_problem=config.planning_problem, CLCS=None
-    # # )
-    config.reachable_set.prune_nodes_not_reaching_final_time_step = False
-    config.vehicle.ego.v_lon_max = 65.
-    # config.vehicle.ego.v_max = 65.
-    reach_interface = ReachableSetInterface(config)
-    reach_interface.compute_reachable_sets()
-
-    util_visual.plot_scenario_with_reachable_sets(reach_interface, plot_limits=[50, 250, -40, -20])
-    # ref_path = np.array(config.planning.CLCS.reference_path())
-    # #
-    # import matplotlib.pyplot as plt
-    # from commonroad.visualization.mp_renderer import MPRenderer
-    #
-    # renderer = MPRenderer(figsize=(30, 10))
-    # config.scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True, "show_label": True}, "time_begin": 0})
-    # config.planning_problem.draw(renderer)
-    # # plot
-    # plt.rc("axes", axisbelow=True)
-    # ax = plt.gca()
-    # ax.plot(ref_path[:, 0], ref_path[:, 1], marker="+", color="blue", zorder=100)
-    # ax.set_aspect("equal")
-    # plt.margins(0, 0)
-    # renderer.render(show=True)
-    # print(ref_path)
-
-
 if __name__ == "__main__":
     main()
-    debug()

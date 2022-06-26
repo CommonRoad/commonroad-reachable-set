@@ -1,5 +1,6 @@
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
+import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.utility import visualization as util_visual
 
 
@@ -28,6 +29,7 @@ def main():
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
     config.update_configuration()
+    util_logger.initialize_logger(config)
     config.print_configuration_summary()
 
     # ==== compute reachable sets using reachability interface

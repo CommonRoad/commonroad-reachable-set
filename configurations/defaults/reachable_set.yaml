@@ -16,7 +16,7 @@ mode_repartition: 2
      # (see Ziegler J., Stiller C. (2010): Fast collision checking for intelligent vehicle motion planning)
 mode_inflation: 1
 # path to LUT for enlargement (only used if mode_inflation=3)
-path_to_lut: /home/gerald/Documents/CommonRoad/cps/commonroad-reachable-set/external/matlab/
+path_to_lut: external/matlab/
 # grid size for discretizing drivable area
 size_grid: 0.2
 # grid size for discretizing drivable area (second time)
