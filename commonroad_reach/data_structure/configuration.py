@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, Tuple
 
 import commonroad_reach.pycrreach as reach
 import numpy as np
@@ -14,9 +14,9 @@ from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 from commonroad_route_planner.route_planner import RoutePlanner
 from omegaconf import ListConfig, DictConfig
 
+import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.utility import configuration as util_configuration
 from commonroad_reach.utility import general as util_general
-import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,7 @@ class Configuration:
             2. Scenario + planning problem (+ initial state): computes route and CLCS
             2. Scenario + initial state + goal region: computes route and CLCS
             3. Scenario + initial state + CLCS: retrieve reference path from CLCS
+            
         """
         # patterns that do not require loading scenario and planning problem from xml files.
         if scenario and (planning_problem or
