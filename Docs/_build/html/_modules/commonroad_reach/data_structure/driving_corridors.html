@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.data_structure.driving_corridors &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.data_structure.driving_corridors</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.data_structure.driving_corridors</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach</span> <span class="kn">import</span> <span class="n">pycrreach</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_node</span> <span class="kn">import</span> <span class="n">ReachNode</span><span class="p">,</span> <span class="n">ReachPolygon</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.utility</span> <span class="kn">import</span> <span class="n">geometry</span> <span class="k">as</span> <span class="n">util_geometry</span>
+<span class="kn">from</span> <span class="nn">commonroad.geometry.shape</span> <span class="kn">import</span> <span class="n">Rectangle</span><span class="p">,</span> <span class="n">Polygon</span>
+
+
+<span class="c1"># scaling factor (avoid numerical errors)</span>
+<span class="n">DIGITS</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="DrivingCorridorExtractor"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.driving_corridors.DrivingCorridorExtractor">[docs]</a><span class="k">class</span> <span class="nc">DrivingCorridorExtractor</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to compute driving corridors based on previous computation of reachable sets and drivable area</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reachable_sets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">,</span> <span class="n">ReachNode</span><span class="p">]]],</span>
+                 <span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reach_set</span> <span class="o">=</span> <span class="n">reachable_sets</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reach_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reach_set</span>
+
+    <span class="nd">@reach_set</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">reach_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reachable_sets</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reach_set</span> <span class="o">=</span> <span class="n">reachable_sets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">reachable_sets</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
+
+    <span class="nd">@config</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">configuration</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">mode_computation</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;CPP&quot;</span>        <span class="c1"># using C++ backend</span>
+            <span class="k">if</span> <span class="s1">&#39;commonroad_reach.pycrreach&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;C++ backend library (pycrreach) has not been found&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;PYTHON&quot;</span>     <span class="c1"># using Python backend</span>
+
+<div class="viewcode-block" id="DrivingCorridorExtractor.extract_lon_driving_corridor"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.driving_corridors.DrivingCorridorExtractor.extract_lon_driving_corridor">[docs]</a>    <span class="k">def</span> <span class="nf">extract_lon_driving_corridor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">terminal_set</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract a longitudinal driving corridor. Optionally, a terminal set can be passed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_driving_corridors</span><span class="p">(</span><span class="n">terminal_set</span><span class="o">=</span><span class="n">terminal_set</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DrivingCorridorExtractor.extract_lat_driving_corridor"><a class="viewcode-back" href="../../../commonroad_reach.data_structure.html#commonroad_reach.data_structure.driving_corridors.DrivingCorridorExtractor.extract_lat_driving_corridor">[docs]</a>    <span class="k">def</span> <span class="nf">extract_lat_driving_corridor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">longitudinal_positions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                     <span class="n">longitudinal_driving_corridor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract a lateral driving corridor from a given longitudinal driving corridor and a given longitudinal trajectory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_driving_corridors</span><span class="p">(</span><span class="n">lon_positions</span><span class="o">=</span><span class="n">longitudinal_positions</span><span class="p">,</span>
+                                               <span class="n">lon_driving_corridor</span><span class="o">=</span><span class="n">longitudinal_driving_corridor</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_extract_driving_corridors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="n">terminal_set</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Rectangle</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">lon_positions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">lon_driving_corridor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>\
+            <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function identifies driving corridors within the reachable sets.</span>
+<span class="sd">        If no parameters are passed, then a longitudinal driving corridor is computed. To constrain the driving corridor</span>
+<span class="sd">        to end in a specified set (e.g., goal region), a terminal_set can optionally be passed.</span>
+<span class="sd">        If the optional parameters are passed, a lateral driving corridor is computed for a given longitudinal</span>
+<span class="sd">        driving corridor and a given longitudinal trajectory.</span>
+<span class="sd">        :param terminal_set: set of terminal states</span>
+<span class="sd">        :param lon_positions: (optional) longitudinal position</span>
+<span class="sd">        :param lon_driving_corridor: (optional) longitudinal driving corridor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">lon_positions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lon_driving_corridor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># compute longitudinal driving corridor</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;* Computing longitudinal driving corridor...&quot;</span><span class="p">)</span>
+            <span class="n">lon_positions_dict</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">terminal_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># use base sets which overlap with given terminal set in last time step</span>
+                <span class="n">overlapping_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_terminal_set_overlap</span><span class="p">(</span><span class="n">terminal_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reach_set</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">connected_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_connected_components</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">overlapping_nodes</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># use all base sets in last time step</span>
+                <span class="n">connected_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_connected_components</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reach_set</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]))</span>
+        <span class="k">elif</span> <span class="n">lon_positions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lon_driving_corridor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># compute lateral driving corridor for given longitudinal driving corridor</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing lateral driving corridor...&quot;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lon_positions</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">))</span>
+            <span class="n">lon_positions_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="n">lon_positions</span><span class="p">))</span>
+            <span class="c1"># determine reachable sets which contain the longitudinal position in last time step</span>
+            <span class="n">overlapping_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_reachset_overlap_with_longitudinal_position</span><span class="p">(</span>
+                <span class="n">lon_driving_corridor</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">lon_positions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="c1"># then determine connected components within the overlapping reachable sets</span>
+            <span class="n">connected_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_connected_components</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">overlapping_nodes</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide both longitudinal positions and a longitudinal driving corridor if you wish to &quot;</span> \
+                      <span class="s2">&quot;compute a lateral driving corridor&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="c1"># initialize list for driving corridors</span>
+        <span class="n">driving_corridor_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="c1"># initialize list for heuristic</span>
+        <span class="n">heuristic</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="c1"># create longitudinal driving corridor for each connected set</span>
+        <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="n">connected_components</span><span class="p">:</span>
+            <span class="n">driving_corridor_node_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">time_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">reach_set</span><span class="o">=</span><span class="n">cc</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_reachset_connected_components_graph_backwards</span><span class="p">(</span>
+                <span class="n">driving_corridor_node_ids</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">cc</span><span class="p">,</span>
+                <span class="n">lon_positions_dict</span><span class="p">,</span> <span class="n">lon_driving_corridor</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">dc</span> <span class="ow">in</span> <span class="n">driving_corridor_node_ids</span><span class="p">:</span>
+                <span class="n">dc_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+                <span class="p">[</span><span class="n">dc_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s1">&#39;time_idx&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s1">&#39;reach_set&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">dc</span><span class="p">]</span>
+                <span class="n">driving_corridor_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dc_dict</span><span class="p">)</span>
+                <span class="n">heuristic</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_determine_area_of_driving_corridor</span><span class="p">(</span><span class="n">dc_dict</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">driving_corridor_list</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t\t\t</span><span class="s1"> No driving corridor found!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">driving_corridor_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">elem</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">heuristic</span><span class="p">,</span> <span class="n">driving_corridor_list</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span>
+                <span class="n">pair</span><span class="p">:</span> <span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Computation took: </span><span class="se">\t</span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">driving_corridor_list</span>
+
+    <span class="k">def</span> <span class="nf">_determine_terminal_set_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">terminal_set</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Rectangle</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">],</span> <span class="n">reach_set_nodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param terminal_set set of terminal positions (e.g., goal region), represented as CR Shape object in Cartesian frame</span>
+<span class="sd">        :param reach_set_nodes List of reach set nodes at the final time step</span>
+<span class="sd">        :return: list of reach set node overlapping with terminal set</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CVLN&quot;</span><span class="p">:</span>
+            <span class="c1"># computation in CVLN coordinates</span>
+            <span class="n">ccosy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">CLCS</span>
+            <span class="n">vert</span> <span class="o">=</span> <span class="n">terminal_set</span><span class="o">.</span><span class="n">shapely_object</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span>
+            <span class="n">transformed_set</span><span class="p">,</span> <span class="n">transformed_set_rasterized</span> <span class="o">=</span> <span class="n">ccosy</span><span class="o">.</span>\
+                <span class="n">convert_list_of_polygons_to_curvilinear_coords_and_rasterize</span><span class="p">([</span><span class="n">vert</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">terminal_set_vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">arr</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">transformed_set</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># computation in CART coordinates</span>
+            <span class="n">ts_x</span><span class="p">,</span> <span class="n">ts_y</span> <span class="o">=</span> <span class="n">terminal_set</span><span class="o">.</span><span class="n">shapely_object</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">xy</span>
+            <span class="n">terminal_set_vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">vertex</span> <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ts_x</span><span class="p">,</span> <span class="n">ts_y</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s1">&#39;PYTHON&#39;</span><span class="p">:</span>
+            <span class="n">list_terminal_set_polygons</span> <span class="o">=</span> <span class="p">[</span><span class="n">ReachPolygon</span><span class="p">(</span><span class="n">terminal_set_vertices</span><span class="p">)]</span>
+            <span class="n">list_position_rectangles</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">position_rectangle</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">reach_set_nodes</span><span class="p">]</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">create_adjacency_dictionary</span><span class="p">(</span><span class="n">list_terminal_set_polygons</span><span class="p">,</span> <span class="n">list_position_rectangles</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s1">&#39;CPP&#39;</span><span class="p">:</span>
+            <span class="n">list_terminal_set_polygons</span> <span class="o">=</span> <span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachPolygon</span><span class="p">(</span><span class="n">terminal_set_vertices</span><span class="p">)]</span>
+            <span class="n">list_position_rectangles</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">position_rectangle</span><span class="p">()</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">reach_set_nodes</span><span class="p">]</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">pycrreach</span><span class="o">.</span><span class="n">create_adjacency_dictionary_boost</span><span class="p">(</span><span class="n">list_terminal_set_polygons</span><span class="p">,</span> <span class="n">list_position_rectangles</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid backend (CPP or PYTHON)&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="c1"># return reach set nodes which overlap</span>
+        <span class="n">overlapping_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">reach_set_nodes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="c1"># TODO: add warning if overlapping nodes are empty (i.e., reachable sets in last time step don&#39;t intersect with goal region)</span>
+        <span class="k">return</span> <span class="n">overlapping_nodes</span>
+
+    <span class="k">def</span> <span class="nf">_create_reachset_connected_components_graph_backwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">driving_corridors_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
+                                                              <span class="n">node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">time_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                                              <span class="n">reach_set_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">,</span> <span class="n">ReachNode</span><span class="p">]],</span>
+                                                              <span class="n">lon_pos</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                                              <span class="n">lon_driving_corridor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Traverses graph of connected reachable sets backwards in time and extracts paths starting from a terminal set.</span>
+<span class="sd">        A path within the graph corresponds to a possible driving corridor</span>
+<span class="sd">        :param driving_corridors_list: list of found driving corridors in the reachable set</span>
+<span class="sd">        :param graph: graph of possible driving corridors</span>
+<span class="sd">        :param node_id: ID of connected component of the previous time step</span>
+<span class="sd">        :param time_idx: current time step</span>
+<span class="sd">        :param reach_set_nodes: reachable set</span>
+<span class="sd">        :param lon_pos: longitudinal positions of longitudinal trajectory (only necessary for lateral driving corridors)</span>
+<span class="sd">        :param lon_driving_corridor: longitudinal driving corridor (only necessary for lateral driving corridors)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># determine whether longitudinal or lateral corridor is searched</span>
+        <span class="n">longitudinal</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">lateral</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">lon_pos</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lon_driving_corridor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">longitudinal</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># use algorithm for longitudinal corridor</span>
+        <span class="k">elif</span> <span class="n">lon_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lon_driving_corridor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lateral</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># use algorithm for lateral corridor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;You need to provide both longitudinal positions and a longitudinal driving corridor to &quot;</span> \
+                      <span class="s2">&quot;compute a lateral driving corridor&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="c1"># Terminate if more than 10 driving corridors found</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">driving_corridors_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># if initial time step reached: add initial reachable set node (id=1)</span>
+        <span class="k">if</span> <span class="n">time_idx</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># nx simple paths: graph, source node id, target node id</span>
+            <span class="n">driving_corridors_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">all_simple_paths</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">lateral</span><span class="p">:</span>  <span class="c1"># search lateral driving corridors</span>
+            <span class="n">parent_reach_set_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="c1"># determine parent reach sets for each reach set within connected components</span>
+            <span class="p">[</span><span class="n">parent_reach_set_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">reach_node</span><span class="o">.</span><span class="n">vec_nodes_parent</span><span class="p">())</span> <span class="k">for</span> <span class="n">reach_node</span> <span class="ow">in</span> <span class="n">reach_set_nodes</span><span class="p">]</span>
+            <span class="c1"># for lateral driving corridor: further consider only sets that overlap with given longitudinal position</span>
+            <span class="n">filtered_parent_reach_set_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_reachset_overlap_with_longitudinal_position</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">parent_reach_set_nodes</span><span class="p">),</span> <span class="n">lon_pos</span><span class="p">[</span><span class="n">time_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered_parent_reach_set_nodes</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No reachboxes found at x position. # of parent reach nodes: </span><span class="si">{}</span><span class="s1">. current time step </span><span class="si">{}</span><span class="s1">, &#39;</span>
+                              <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parent_reach_set_nodes</span><span class="p">),</span> <span class="n">time_idx</span><span class="p">))</span>
+
+            <span class="c1"># filter out reach set nodes that are not part of the longitudinal driving corridor</span>
+            <span class="n">filtered_parent_reach_set_nodes</span><span class="o">.</span><span class="n">intersection_update</span><span class="p">(</span><span class="n">lon_driving_corridor</span><span class="p">[</span><span class="n">time_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">longitudinal</span><span class="p">:</span>  <span class="c1"># search longitudinal driving corridors</span>
+            <span class="n">parent_reach_set_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="c1"># determine parent reach sets for each reach set within connected components</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;CPP&quot;</span><span class="p">:</span>
+                <span class="p">[</span><span class="n">parent_reach_set_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">reach_node</span><span class="o">.</span><span class="n">vec_nodes_parent</span><span class="p">())</span> <span class="k">for</span> <span class="n">reach_node</span> <span class="ow">in</span> <span class="n">reach_set_nodes</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="p">[</span><span class="n">parent_reach_set_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">reach_node</span><span class="o">.</span><span class="n">list_nodes_parent</span><span class="p">)</span> <span class="k">for</span> <span class="n">reach_node</span> <span class="ow">in</span> <span class="n">reach_set_nodes</span><span class="p">]</span>
+            <span class="n">filtered_parent_reach_set_nodes</span> <span class="o">=</span> <span class="n">parent_reach_set_nodes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filtered_parent_reach_set_nodes</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="c1"># determine connected components in parent reach sets</span>
+        <span class="k">if</span> <span class="n">time_idx</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">remove_small</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">remove_small</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">connected_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_connected_components</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">filtered_parent_reach_set_nodes</span><span class="p">),</span> <span class="n">remove_small</span><span class="p">)</span>
+
+        <span class="c1"># recursion backwards in time</span>
+        <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="n">connected_components</span><span class="p">:</span>
+            <span class="n">child_id</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">child_id</span><span class="p">,</span> <span class="n">time_idx</span><span class="o">=</span><span class="n">time_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">reach_set</span><span class="o">=</span><span class="n">cc</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">child_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_reachset_connected_components_graph_backwards</span><span class="p">(</span>
+                <span class="n">driving_corridors_list</span><span class="p">,</span>
+                <span class="n">graph</span><span class="p">,</span>
+                <span class="n">child_id</span><span class="p">,</span>
+                <span class="n">time_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">cc</span><span class="p">,</span>
+                <span class="n">lon_pos</span><span class="p">,</span>
+                <span class="n">lon_driving_corridor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_determine_connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reach_set_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">,</span> <span class="n">ReachNode</span><span class="p">]],</span>
+                                        <span class="n">remove_small</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines and returns the connected reachable sets in positions domain within the list of given base sets (i.e.,</span>
+<span class="sd">        reachable set nodes)</span>
+<span class="sd">        :param reach_set_nodes: list of reachable set nodes</span>
+<span class="sd">        :return: list of connected reachable sets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># determine overlapping reachable set nodes (i.e., connected sets)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;CPP&quot;</span><span class="p">:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">pycrreach</span><span class="o">.</span><span class="n">connected_reachset_boost</span><span class="p">(</span><span class="n">reach_set_nodes</span><span class="p">,</span> <span class="n">DIGITS</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;PYTHON&quot;</span><span class="p">:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">connected_reachset_py</span><span class="p">(</span><span class="n">reach_set_nodes</span><span class="p">,</span> <span class="n">DIGITS</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid backend (CPP or PYTHON)&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+        <span class="c1"># adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected</span>
+        <span class="n">adjacency</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="p">[</span><span class="n">adjacency</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">overlap</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+        <span class="c1"># create graph with nodes = reach set nodes and edges = adjacency</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">reach_set_nodes</span><span class="p">))))</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">adjacency</span><span class="p">)</span>
+        <span class="c1"># retrieve connected components and sort according to heuristic (here area of connected reachable sets)</span>
+        <span class="n">connected_reach_sets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">heuristic</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">connected_reach_set_nodes_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">graph</span><span class="p">)):</span>
+            <span class="n">connected_reach_sets</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">reach_set_nodes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">connected_reach_set_nodes_idx</span><span class="p">])</span>
+            <span class="n">heuristic</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">util_geometry</span><span class="o">.</span><span class="n">area_of_reachable_set</span><span class="p">(</span><span class="n">connected_reach_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="n">remove_small</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">connected_reach_set_nodes_idx</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">heuristic</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">connected_reach_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">heuristic</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">connected_reach_sets_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">elem</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">heuristic</span><span class="p">,</span> <span class="n">connected_reach_sets</span><span class="p">),</span>
+                                                                <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pair</span><span class="p">:</span> <span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">connected_reach_sets_list</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_determine_reachset_overlap_with_longitudinal_position</span><span class="p">(</span><span class="n">reach_set_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">,</span>
+                                                                                           <span class="n">ReachNode</span><span class="p">]],</span>
+                                                               <span class="n">lon_pos</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks which drivable areas of the given reachable sets contain a given longitudinal position and returns the</span>
+<span class="sd">        corresponding reachable sets</span>
+<span class="sd">        :param reach_set_nodes: List of reachable set nodes</span>
+<span class="sd">        :param lon_pos: given longitudinal positions</span>
+<span class="sd">        :return reach_set_nodes_overlap: Set containing the reachable set nodes which overlap with longitudinal position</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reach_set_nodes_overlap</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">reach_node</span> <span class="ow">in</span> <span class="n">reach_set_nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">greater_equal</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">lon_pos</span> <span class="o">*</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">DIGITS</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">reach_node</span><span class="o">.</span><span class="n">x_min</span><span class="p">()</span> <span class="o">*</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">DIGITS</span><span class="p">))</span> <span class="ow">and</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">greater_equal</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">reach_node</span><span class="o">.</span><span class="n">x_max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">DIGITS</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">lon_pos</span> <span class="o">*</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">DIGITS</span><span class="p">)):</span>
+                <span class="n">reach_set_nodes_overlap</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reach_node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reach_set_nodes_overlap</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_determine_area_of_driving_corridor</span><span class="p">(</span><span class="n">driving_corridor</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pycrreach</span><span class="o">.</span><span class="n">ReachNode</span><span class="p">,</span> <span class="n">ReachNode</span><span class="p">]]]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to compute the cumulative area of a driving corridor, i.e.,</span>
+<span class="sd">        :param driving_corridor:</span>
+<span class="sd">        :return: area</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">time_idx</span><span class="p">,</span> <span class="n">reach_set_nodes</span> <span class="ow">in</span> <span class="n">driving_corridor</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">area</span> <span class="o">+=</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">area_of_reachable_set</span><span class="p">(</span><span class="n">reach_set_nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">area</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

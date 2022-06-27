@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.data_structure.reach.reach_set_py_graph_offline &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.data_structure.reach.reach_set_py_graph_offline</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.data_structure.reach.reach_set_py_graph_offline</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">commonroad_dc.pycrcc</span> <span class="kn">import</span> <span class="n">CollisionChecker</span><span class="p">,</span> <span class="n">RectAABB</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.__version__</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_node</span> <span class="kn">import</span> <span class="n">ReachNodeMultiGeneration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_polygon</span> <span class="kn">import</span> <span class="n">ReachPolygon</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_set</span> <span class="kn">import</span> <span class="n">ReachableSet</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.utility</span> <span class="kn">import</span> <span class="n">reach_operation</span>
+
+
+<div class="viewcode-block" id="PyGraphReachableSetOffline"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_offline.PyGraphReachableSetOffline">[docs]</a><span class="k">class</span> <span class="nc">PyGraphReachableSetOffline</span><span class="p">(</span><span class="n">ReachableSet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Offline step in the graph-based reachable set computation with Python backend.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_drivable_area</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">]]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">polygon_zero_state_lon</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ReachPolygon</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polygon_zero_state_lat</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ReachPolygon</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_zero_state_polygons</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_drivable_area</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_start</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_drivable_area</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_start</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_reachable_set</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PyGraphReachableSetOffline initialized.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path_offline_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">name_pickle_offline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">path_offline_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">name_pickle_offline</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_zero_state_polygons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes the zero-state polygons of the system.</span>
+
+<span class="sd">        Computation of the reachable set of an LTI system requires the zero-state response and the zero-input response</span>
+<span class="sd">        of the system.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">steps</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="p">):</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="n">steps</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+                <span class="n">a_lon_min</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span>
+                <span class="n">a_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span>
+                <span class="n">a_lat_min</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span>
+                <span class="n">a_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">a_lon_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_min</span>
+                <span class="n">a_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_max</span>
+                <span class="n">a_lat_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_min</span>
+                <span class="n">a_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_max</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">polygon_zero_state_lon</span><span class="p">[</span><span class="n">steps</span><span class="p">]</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">create_zero_state_polygon</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">a_lon_min</span><span class="p">,</span> <span class="n">a_lon_max</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">polygon_zero_state_lat</span><span class="p">[</span><span class="n">steps</span><span class="p">]</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">create_zero_state_polygon</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">a_lat_min</span><span class="p">,</span> <span class="n">a_lat_max</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">initial_drivable_area</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Drivable area at the initial time step.</span>
+
+<span class="sd">        Constructed directly from the config file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tuple_vertices</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">generate_tuple_vertices_position_rectangle_initial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="o">*</span><span class="n">tuple_vertices</span><span class="p">)]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">initial_reachable_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Reachable set at the initial time step.</span>
+
+<span class="sd">        Vertices of the polygons are constructed directly from the config file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tuple_vertices_polygon_lon</span><span class="p">,</span> <span class="n">tuple_vertices_polygon_lat</span> <span class="o">=</span> \
+            <span class="n">reach_operation</span><span class="o">.</span><span class="n">generate_tuples_vertices_polygons_initial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="n">polygon_lon</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="o">*</span><span class="n">tuple_vertices_polygon_lon</span><span class="p">)</span>
+        <span class="n">polygon_lat</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="o">*</span><span class="n">tuple_vertices_polygon_lat</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">(</span><span class="n">polygon_lon</span><span class="p">,</span> <span class="n">polygon_lat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">step_start</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOffline.compute"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_offline.PyGraphReachableSetOffline.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">step_end</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes reachable sets for the specified time steps.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">step_start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step_end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Time step: </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+            <span class="n">time_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_at_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_list_steps_computed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">#Nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reachable_set_at_step</span><span class="p">(</span><span class="n">step</span><span class="p">))</span><span class="si">}</span><span class="s2">, &quot;</span> \
+                      <span class="sa">f</span><span class="s2">&quot;computation took: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">n_multi_steps</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_determine_grandparent_relationship</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+            <span class="c1"># save computation result to pickle file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_to_pickle</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_compute_at_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes drivable area and reachable set of the time step.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_drivable_area_at_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_reachable_set_at_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_drivable_area_at_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the drivable area for the given time step.</span>
+
+<span class="sd">        Steps:</span>
+<span class="sd">            1. Propagate each node of the reachable set from the previous time step, resulting in propagated base sets.</span>
+<span class="sd">            2. Project the base sets onto the position domain to obtain the position rectangles.</span>
+<span class="sd">            3. Merge and repartition these rectangles to potentially reduce the number of rectangles.</span>
+<span class="sd">            4. Adapt position rectangles to Cartesian grid.</span>
+<span class="sd">            5. Remove rectangles out of Kamm&#39;s friction circle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reachable_set_previous</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reachable_set_previous</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="n">size_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span>
+
+        <span class="n">list_base_sets_propagated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_reachable_set</span><span class="p">(</span><span class="n">reachable_set_previous</span><span class="p">)</span>
+
+        <span class="n">list_rectangles_projected</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">project_base_sets_to_position_domain</span><span class="p">(</span><span class="n">list_base_sets_propagated</span><span class="p">)</span>
+
+        <span class="n">list_rectangles_repartitioned</span> <span class="o">=</span> \
+            <span class="n">reach_operation</span><span class="o">.</span><span class="n">create_repartitioned_rectangles</span><span class="p">(</span><span class="n">list_rectangles_projected</span><span class="p">,</span> <span class="n">size_grid</span><span class="p">)</span>
+
+        <span class="n">list_rectangles_adapted</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">adapt_rectangles_to_grid</span><span class="p">(</span><span class="n">list_rectangles_repartitioned</span><span class="p">,</span> <span class="n">size_grid</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_drivable_area</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">list_rectangles_adapted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_base_set_propagated</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">list_base_sets_propagated</span>
+
+    <span class="k">def</span> <span class="nf">_propagate_reachable_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">],</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span>
+        <span class="n">ReachNodeMultiGeneration</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Propagates the nodes of the reachable set from the previous time step.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">steps</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="n">list_base_sets_propagated</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="n">steps</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+            <span class="n">v_lon_min</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_max</span>
+            <span class="n">v_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_max</span>
+            <span class="n">v_lat_min</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_max</span>
+            <span class="n">v_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_max</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">v_lon_min</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_max</span>
+            <span class="n">v_lon_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_max</span>
+            <span class="n">v_lat_min</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_max</span>
+            <span class="n">v_lat_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_max</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">polygon_lon_propagated</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">propagate_polygon</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">polygon_lon</span><span class="p">,</span>
+                                                                           <span class="bp">self</span><span class="o">.</span><span class="n">polygon_zero_state_lon</span><span class="p">[</span><span class="n">steps</span><span class="p">],</span>
+                                                                           <span class="n">dt</span><span class="p">,</span>
+                                                                           <span class="n">v_lon_min</span><span class="p">,</span>
+                                                                           <span class="n">v_lon_max</span><span class="p">)</span>
+
+                <span class="n">polygon_lat_propagated</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">propagate_polygon</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">polygon_lat</span><span class="p">,</span>
+                                                                           <span class="bp">self</span><span class="o">.</span><span class="n">polygon_zero_state_lat</span><span class="p">[</span><span class="n">steps</span><span class="p">],</span>
+                                                                           <span class="n">dt</span><span class="p">,</span>
+                                                                           <span class="n">v_lat_min</span><span class="p">,</span>
+                                                                           <span class="n">v_lat_max</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error occurred while propagating polygons.&quot;</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">base_set_propagated</span> <span class="o">=</span> <span class="n">ReachNodeMultiGeneration</span><span class="p">(</span><span class="n">polygon_lon_propagated</span><span class="p">,</span> <span class="n">polygon_lat_propagated</span><span class="p">,</span>
+                                                               <span class="n">node</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+                <span class="n">base_set_propagated</span><span class="o">.</span><span class="n">source_propagation</span> <span class="o">=</span> <span class="n">node</span>
+                <span class="n">list_base_sets_propagated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_set_propagated</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">list_base_sets_propagated</span>
+
+    <span class="k">def</span> <span class="nf">_compute_reachable_set_at_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the reachable set for the given time step.</span>
+
+<span class="sd">        Steps:</span>
+<span class="sd">            1. create a list of base sets adapted to the drivable area.</span>
+<span class="sd">            2. create a list of reach nodes from the list of adapted base sets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_sets_propagated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_base_set_propagated</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+        <span class="n">drivable_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_drivable_area</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">drivable_area</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">list_base_sets_adapted</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">construct_reach_nodes</span><span class="p">(</span><span class="n">drivable_area</span><span class="p">,</span>
+                                                                       <span class="n">base_sets_propagated</span><span class="p">,</span>
+                                                                       <span class="n">has_multi_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">reachable_set_step_current</span> <span class="o">=</span> <span class="n">reach_operation</span><span class="o">.</span><span class="n">connect_children_to_parents</span><span class="p">(</span><span class="n">step</span><span class="p">,</span>
+                                                                                 <span class="n">list_base_sets_adapted</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">reachable_set_step_current</span>
+
+    <span class="k">def</span> <span class="nf">_determine_grandparent_relationship</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determines grandparent-child relationship between nodes.</span>
+
+<span class="sd">        The grandparent-child relationship is established if the grandparent can reach the grandchild by propagating</span>
+<span class="sd">        two time steps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Determining grandparent-grandchild relationship...&quot;</span><span class="p">)</span>
+        <span class="n">cc_at_time</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">CollisionChecker</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">RectAABB</span><span class="p">,</span> <span class="n">ReachNodeMultiGeneration</span><span class="p">]]]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">create_cc</span><span class="p">(</span><span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">],</span>
+                      <span class="n">list_nodes_keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNodeMultiGeneration</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">CollisionChecker</span><span class="p">,</span>
+                                                                                <span class="n">Dict</span><span class="p">[</span>
+                                                                                    <span class="n">RectAABB</span><span class="p">,</span> <span class="n">ReachNodeMultiGeneration</span><span class="p">]]:</span>
+            <span class="sd">&quot;&quot;&quot;Create collision checker from reachable sets.&quot;&quot;&quot;</span>
+            <span class="n">cc</span> <span class="o">=</span> <span class="n">CollisionChecker</span><span class="p">()</span>
+            <span class="n">cc_obj_2_node</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">key_node</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">list_nodes_keys</span><span class="p">):</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">bounds</span>
+                <span class="n">cc_obj</span> <span class="o">=</span> <span class="n">RectAABB</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                  <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                  <span class="n">node</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lon_center</span><span class="p">,</span>
+                                  <span class="n">node</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lat_center</span><span class="p">)</span>
+                <span class="n">cc_obj_2_node</span><span class="p">[</span><span class="n">cc_obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">key_node</span>
+                <span class="n">cc</span><span class="o">.</span><span class="n">add_collision_object</span><span class="p">(</span><span class="n">cc_obj</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">cc</span><span class="p">,</span> <span class="n">cc_obj_2_node</span>
+
+        <span class="k">def</span> <span class="nf">get_cc_at_time</span><span class="p">(</span><span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">CollisionChecker</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">RectAABB</span><span class="p">,</span> <span class="n">ReachNodeMultiGeneration</span><span class="p">]]:</span>
+            <span class="sd">&quot;&quot;&quot;Returns collision checker from reachable sets at time_step.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">time_step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cc_at_time</span><span class="p">:</span>
+                <span class="n">cc_at_time</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">create_cc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">time_step</span><span class="p">],</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">cc_at_time</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">delta_steps</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="n">delta_steps</span><span class="p">:</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">list_nodes_grand_parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">step</span> <span class="o">-</span> <span class="n">delta_steps</span><span class="p">]</span>
+                <span class="n">list_nodes_grand_parent_propagated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_reachable_set</span><span class="p">(</span><span class="n">list_nodes_grand_parent</span><span class="p">,</span>
+                                                                                   <span class="n">steps</span><span class="o">=</span><span class="n">delta_steps</span><span class="p">)</span>
+                <span class="n">cc_nodes</span><span class="p">,</span> <span class="n">cc_obj_2_node</span> <span class="o">=</span> <span class="n">get_cc_at_time</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+                <span class="n">cc_grandparents_prop</span><span class="p">,</span> <span class="n">cc_obj_2_grandparent_node_prop</span> <span class="o">=</span> <span class="n">create_cc</span><span class="p">(</span><span class="n">list_nodes_grand_parent_propagated</span><span class="p">,</span>
+                                                                                 <span class="n">list_nodes_grand_parent</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">rect_gp_prop</span><span class="p">,</span> <span class="n">node_grand_parent</span> <span class="ow">in</span> <span class="n">cc_obj_2_grandparent_node_prop</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">colliding_rects</span> <span class="o">=</span> <span class="n">cc_nodes</span><span class="o">.</span><span class="n">find_all_colliding_objects</span><span class="p">(</span><span class="n">rect_gp_prop</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">rect</span> <span class="ow">in</span> <span class="n">colliding_rects</span><span class="p">:</span>
+                        <span class="n">node</span> <span class="o">=</span> <span class="n">cc_obj_2_node</span><span class="p">[</span><span class="n">rect</span><span class="p">]</span>
+                        <span class="n">node</span><span class="o">.</span><span class="n">add_grandparent_node</span><span class="p">(</span><span class="n">node_grand_parent</span><span class="p">)</span>
+                        <span class="n">node_grand_parent</span><span class="o">.</span><span class="n">add_grandchild_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_to_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves computation result as a pickle file.&quot;&quot;&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">path_offline_data</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">dict_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_information</span><span class="p">()</span>
+
+        <span class="n">size_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;CART&quot;</span><span class="p">:</span>
+            <span class="n">a_v_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;amax</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_max</span><span class="si">}</span><span class="s2">_&quot;</span> \
+                      <span class="sa">f</span><span class="s2">&quot;vmax</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_max</span><span class="si">}</span><span class="s2">_&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a_v_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;alonmax</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lon_max</span><span class="si">}</span><span class="s2">_&quot;</span> \
+                      <span class="sa">f</span><span class="s2">&quot;alatmax</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">a_lat_max</span><span class="si">}</span><span class="s2">_&quot;</span> \
+                      <span class="sa">f</span><span class="s2">&quot;vlonmax</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lon_max</span><span class="si">}</span><span class="s2">_&quot;</span> \
+                      <span class="sa">f</span><span class="s2">&quot;vlatmax</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span><span class="o">.</span><span class="n">ego</span><span class="o">.</span><span class="n">v_lat_max</span><span class="si">}</span><span class="s2">_&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">name_pickle_offline</span> <span class="o">=</span> \
+            <span class="sa">f</span><span class="s2">&quot;offline_nt</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_evaluated_step</span><span class="si">}</span><span class="s2">_&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span><span class="si">}</span><span class="s2">_&quot;</span> \
+            <span class="o">+</span> <span class="n">a_v_str</span> <span class="o">+</span> \
+            <span class="sa">f</span><span class="s2">&quot;ms</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="si">}</span><span class="s2">_&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;dx</span><span class="si">{</span><span class="n">size_grid</span><span class="si">}</span><span class="s2">_&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;ver</span><span class="si">{</span><span class="n">dict_data</span><span class="p">[</span><span class="s1">&#39;__version__&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> \
+            <span class="sa">f</span><span class="s2">&quot;.pickle&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_offline_file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dict_data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Computation result saved to pickle file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path_offline_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PyGraphReachableSetOffline.create_projection_matrices"><a class="viewcode-back" href="../../../../commonroad_reach.data_structure.reach.html#commonroad_reach.data_structure.reach.reach_set_py_graph_offline.PyGraphReachableSetOffline.create_projection_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">create_projection_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">size_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span>
+        <span class="n">size_grid_div</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">size_grid</span>
+        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">base_set_list</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_drivable_area</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_drivable_area</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">))</span>
+            <span class="n">lon_min</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">p_lon_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base_set_list</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lon_max</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">p_lon_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base_set_list</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lat_min</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">p_lat_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base_set_list</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lat_max</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">p_lat_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base_set_list</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">n_lon</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">lon_max</span> <span class="o">-</span> <span class="n">lon_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">n_lat</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">lat_max</span> <span class="o">-</span> <span class="n">lat_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">n_lon</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_lon</span><span class="p">)</span>
+            <span class="n">n_lat</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_lat</span><span class="p">)</span>
+            <span class="n">lon_orig_index</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="o">-</span><span class="n">lon_min</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lat_orig_index</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="o">-</span><span class="n">lat_min</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">position_to_grid_index2d</span><span class="p">(</span><span class="n">pos_lon</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">pos_lat</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">lon_orig_index</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">pos_lon</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">),</span>
+                        <span class="n">lat_orig_index</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">pos_lat</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">))</span>
+
+            <span class="k">def</span> <span class="nf">position_to_grid_index1d</span><span class="p">(</span><span class="n">pos_lon</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">pos_lat</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">position_to_grid_index2d</span><span class="p">(</span><span class="n">pos_lon</span><span class="p">,</span> <span class="n">pos_lat</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">lon</span> <span class="o">*</span> <span class="n">n_lat</span> <span class="o">+</span> <span class="n">lat</span>
+
+            <span class="c1"># organize into grid</span>
+            <span class="n">grid_index_to_reachset</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">index_reachset</span><span class="p">,</span> <span class="n">reach_set</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">t</span><span class="p">]):</span>
+                <span class="n">grid_index_to_reachset</span><span class="p">[</span><span class="n">position_to_grid_index1d</span><span class="p">(</span><span class="n">reach_set</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lon_center</span><span class="p">,</span>
+                                                                <span class="n">reach_set</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lat_center</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">index_reachset</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">reach_lists</span> <span class="ow">in</span> <span class="n">grid_index_to_reachset</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">reach_lists</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;more than 1 reachset assigned to a cell!&quot;</span>
+
+            <span class="n">coordinates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grid_index_to_reachset</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">coordinates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="n">projection_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span> <span class="n">n_lon</span> <span class="o">*</span> <span class="n">n_lat</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">coordinate</span> <span class="ow">in</span> <span class="n">coordinates</span><span class="p">:</span>
+                <span class="n">projection_matrix</span><span class="p">[</span><span class="n">grid_index_to_reachset</span><span class="p">[</span><span class="n">coordinate</span><span class="p">],</span> <span class="n">coordinate</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">raise</span></div>
+
+    <span class="k">def</span> <span class="nf">_extract_information</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extracts essential information from the computation result.&quot;&quot;&quot;</span>
+        <span class="n">dict_time_to_list_tuples_reach_node_attributes</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">dict_time_to_adjacency_matrices_parent</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">dict_time_to_adjacency_matrices_grandparent</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="n">reachset_bb_ll</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">reachset_bb_ur</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">size_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">size_grid</span>
+        <span class="n">size_grid_div</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">size_grid</span>
+        <span class="k">for</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">list_nodes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">lon_min</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lon_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lon_max</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lon_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lat_min</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lat_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">lat_max</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lat_center</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lon_min</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">lon_min</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span>
+                    <span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lon_min</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+                <span class="n">lon_max</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                    <span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lon_max</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lat_min</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">lat_min</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span>
+                    <span class="nb">min</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lat_min</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+                <span class="n">lat_max</span> <span class="o">=</span> <span class="n">size_grid</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                    <span class="nb">max</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">position_rectangle</span><span class="o">.</span><span class="n">p_lat_max</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">])</span> <span class="o">*</span> <span class="n">size_grid_div</span><span class="p">)</span>
+            <span class="n">reachset_bb_ll</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lon_min</span><span class="p">,</span> <span class="n">lat_min</span><span class="p">])</span>
+            <span class="n">reachset_bb_ur</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lon_max</span><span class="p">,</span> <span class="n">lat_max</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">:</span>
+                <span class="n">tuple_attribute</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">p_lon_max</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">p_lat_max</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">v_lon_min</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">v_lat_min</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">v_lon_max</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="nb">round</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">v_lat_max</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+                <span class="n">dict_time_to_list_tuples_reach_node_attributes</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tuple_attribute</span><span class="p">)</span>
+
+            <span class="c1"># parent-child relationship</span>
+            <span class="k">if</span> <span class="n">time_step</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">list_nodes_parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+                <span class="n">matrix_adjacency_tmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">:</span>
+                    <span class="n">list_adjacency</span> <span class="o">=</span> <span class="p">[(</span><span class="n">node_parent</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">list_nodes_parent</span><span class="p">)</span> <span class="k">for</span> <span class="n">node_parent</span> <span class="ow">in</span> <span class="n">list_nodes_parent</span><span class="p">]</span>
+                    <span class="n">matrix_adjacency_tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_adjacency</span><span class="p">)</span>
+
+                <span class="n">matrix_adjacency_dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix_adjacency_tmp</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+                <span class="n">matrix_adjacency_sparse</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">matrix_adjacency_dense</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+                <span class="n">dict_time_to_adjacency_matrices_parent</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">matrix_adjacency_sparse</span>
+
+            <span class="c1"># grandparent-grandchild relationship</span>
+            <span class="k">for</span> <span class="n">delta_steps</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span><span class="o">.</span><span class="n">n_multi_steps</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">time_step</span> <span class="o">-</span> <span class="n">delta_steps</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">list_nodes_grandparent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_time_to_reachable_set</span><span class="p">[</span><span class="n">time_step</span> <span class="o">-</span> <span class="n">delta_steps</span><span class="p">]</span>
+                <span class="n">matrix_adjacency_tmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">:</span>
+                    <span class="n">list_adjacency</span> <span class="o">=</span> <span class="p">[(</span><span class="n">node_grandparent</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">dict_time_to_set_nodes_grandparent</span><span class="p">[</span><span class="n">delta_steps</span><span class="p">])</span>
+                                      <span class="k">for</span> <span class="n">node_grandparent</span> <span class="ow">in</span> <span class="n">list_nodes_grandparent</span><span class="p">]</span>
+                    <span class="n">matrix_adjacency_tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_adjacency</span><span class="p">)</span>
+
+                <span class="n">matrix_adjacency_sparse</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix_adjacency_tmp</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+                <span class="n">dict_time_to_adjacency_matrices_grandparent</span><span class="p">[</span><span class="n">time_step</span><span class="p">][</span><span class="n">delta_steps</span><span class="p">]</span> <span class="o">=</span> <span class="n">matrix_adjacency_sparse</span>
+
+        <span class="n">dict_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;node_attributes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_time_to_list_tuples_reach_node_attributes</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;adjacency_matrices_parent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_time_to_adjacency_matrices_parent</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;adjacency_matrices_grandparent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dict_time_to_adjacency_matrices_grandparent</span><span class="p">)</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;reachset_bb_ll&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reachset_bb_ll</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;reachset_bb_ur&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reachset_bb_ur</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;config.vehicle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vehicle</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;config.reachable_set&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reachable_set</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;coordinate_system&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">planning</span><span class="o">.</span><span class="n">coordinate_system</span>
+        <span class="n">dict_data</span><span class="p">[</span><span class="s2">&quot;__version__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">__version__</span>
+        <span class="k">return</span> <span class="n">dict_data</span>
+
+    <span class="k">def</span> <span class="nf">_prune_nodes_not_reaching_final_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

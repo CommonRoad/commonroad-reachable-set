@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>commonroad_reach.utility.reach_operation &mdash; commonroad-reachable-set 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> commonroad-reachable-set
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">commonroad-reachable-set</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">commonroad-reachable-set</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>commonroad_reach.utility.reach_operation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for commonroad_reach.utility.reach_operation</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.grid</span> <span class="kn">import</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">Cell</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_node</span> <span class="kn">import</span> <span class="n">ReachNode</span><span class="p">,</span> <span class="n">ReachNodeMultiGeneration</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.data_structure.reach.reach_polygon</span> <span class="kn">import</span> <span class="n">ReachPolygon</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.utility</span> <span class="kn">import</span> <span class="n">geometry</span> <span class="k">as</span> <span class="n">util_geometry</span>
+<span class="kn">from</span> <span class="nn">commonroad_reach.utility.sweep_line</span> <span class="kn">import</span> <span class="n">SweepLine</span>
+
+
+<div class="viewcode-block" id="create_zero_state_polygon"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.create_zero_state_polygon">[docs]</a><span class="k">def</span> <span class="nf">create_zero_state_polygon</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReachPolygon</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns the zero-state polygon of the system.</span>
+
+<span class="sd">            Steps:</span>
+<span class="sd">                1. prepare a bounding polygon to be intersected with halfspaces.</span>
+<span class="sd">                2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace can be specified given a switching time (gamma).</span>
+<span class="sd">            </span>
+<span class="sd">            Args:</span>
+<span class="sd">                dt (float): time duration (one step)</span>
+<span class="sd">                a_min (float): minimum acceleration (maximum deceleration)</span>
+<span class="sd">                a_max (float): maximum acceleration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">polygon_bounding</span> <span class="o">=</span> <span class="n">create_bounding_polygon</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">)</span>
+
+    <span class="n">polygon_intersected</span> <span class="o">=</span> <span class="n">polygon_bounding</span>
+    <span class="k">for</span> <span class="n">gamma</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+        <span class="n">tuple_coefficients_upper</span><span class="p">,</span> <span class="n">tuple_coefficients_lower</span> <span class="o">=</span> <span class="n">compute_halfspace_coefficients</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">tuple_coefficients_upper</span>
+        <span class="n">polygon_intersected</span> <span class="o">=</span> <span class="n">polygon_intersected</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">tuple_coefficients_lower</span>
+        <span class="n">polygon_intersected</span> <span class="o">=</span> <span class="n">polygon_intersected</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_polygon</span><span class="p">(</span><span class="n">polygon_intersected</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_bounding_polygon"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.create_bounding_polygon">[docs]</a><span class="k">def</span> <span class="nf">create_bounding_polygon</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReachPolygon</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns a polygon that has the absolute min/max reachable position and velocity as its bounds.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dt (float): time duration (one step)</span>
+<span class="sd">        a_min (float): minimum acceleration (maximum deceleration)</span>
+<span class="sd">        a_max (float): maximum acceleration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tuple_vertices</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">a_min</span> <span class="o">*</span> <span class="p">(</span><span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">a_max</span> <span class="o">*</span> <span class="p">(</span><span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="o">*</span><span class="n">tuple_vertices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_halfspace_coefficients"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.compute_halfspace_coefficients">[docs]</a><span class="k">def</span> <span class="nf">compute_halfspace_coefficients</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Computes the coefficients of halfspaces to be intersected.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dt (float): time duration</span>
+<span class="sd">            a_min (float): a_min</span>
+<span class="sd">            a_max (float): a_max</span>
+<span class="sd">            gamma (float): switching time between full braking and acceleration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x_upper</span> <span class="o">=</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">v_upper</span> <span class="o">=</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">+</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma</span><span class="p">)</span>
+    <span class="n">dx_upper</span> <span class="o">=</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">gamma</span><span class="p">)</span> <span class="o">+</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma</span><span class="p">)</span>
+    <span class="n">dv_upper</span> <span class="o">=</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">-</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span>
+
+    <span class="n">x_lower</span> <span class="o">=</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">v_lower</span> <span class="o">=</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">+</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma</span><span class="p">)</span>
+    <span class="n">dx_lower</span> <span class="o">=</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">gamma</span><span class="p">)</span> <span class="o">+</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">gamma</span><span class="p">)</span>
+    <span class="n">dv_lower</span> <span class="o">=</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">-</span> <span class="n">a_min</span> <span class="o">*</span> <span class="n">dt</span>
+
+    <span class="n">tuple_coefficients_upper</span> <span class="o">=</span> <span class="p">(</span><span class="n">dv_upper</span><span class="p">,</span> <span class="o">-</span><span class="n">dx_upper</span><span class="p">,</span> <span class="n">dv_upper</span> <span class="o">*</span> <span class="n">x_upper</span> <span class="o">-</span> <span class="n">dx_upper</span> <span class="o">*</span> <span class="n">v_upper</span><span class="p">)</span>
+    <span class="n">tuple_coefficients_lower</span> <span class="o">=</span> <span class="p">(</span><span class="n">dv_lower</span><span class="p">,</span> <span class="o">-</span><span class="n">dx_lower</span><span class="p">,</span> <span class="n">dv_lower</span> <span class="o">*</span> <span class="n">x_lower</span> <span class="o">-</span> <span class="n">dx_lower</span> <span class="o">*</span> <span class="n">v_lower</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tuple_coefficients_upper</span><span class="p">,</span> <span class="n">tuple_coefficients_lower</span></div>
+
+
+<div class="viewcode-block" id="generate_tuple_vertices_position_rectangle_initial"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.generate_tuple_vertices_position_rectangle_initial">[docs]</a><span class="k">def</span> <span class="nf">generate_tuple_vertices_position_rectangle_initial</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns tuple of vertices for the position rectangle construction.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">planning</span>
+
+    <span class="n">tuple_vertices</span> <span class="o">=</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">p_lon_initial</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lon</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lat</span><span class="p">,</span>
+                      <span class="n">config</span><span class="o">.</span><span class="n">p_lon_initial</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lon</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lat</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tuple_vertices</span></div>
+
+
+<div class="viewcode-block" id="generate_tuples_vertices_polygons_initial"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.generate_tuples_vertices_polygons_initial">[docs]</a><span class="k">def</span> <span class="nf">generate_tuples_vertices_polygons_initial</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Configuration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns tuples of vertices for the initial polygons in two directions.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">planning</span>
+
+    <span class="n">tuple_vertices_polygon_lon</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">p_lon_initial</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lon</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">v_lon_initial</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_v_lon</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">p_lon_initial</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lon</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">v_lon_initial</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_v_lon</span><span class="p">)</span>
+
+    <span class="n">tuple_vertices_polygon_lat</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lat</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">v_lat_initial</span> <span class="o">-</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_v_lat</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">p_lat_initial</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_p_lat</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">v_lat_initial</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">uncertainty_v_lat</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tuple_vertices_polygon_lon</span><span class="p">,</span> <span class="n">tuple_vertices_polygon_lat</span></div>
+
+
+<div class="viewcode-block" id="propagate_polygon"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.propagate_polygon">[docs]</a><span class="k">def</span> <span class="nf">propagate_polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">,</span> <span class="n">polygon_zero_state</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                      <span class="n">v_min</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">v_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReachPolygon</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Propagates the polygon of a reachset node.</span>
+
+<span class="sd">            Steps:</span>
+<span class="sd">                1. clone and convexify the polygon</span>
+<span class="sd">                2. compute the linear mapping (zero-input response) of the polygon</span>
+<span class="sd">                3. compute the minkowski sum of the zero-input and zero-state polygons</span>
+<span class="sd">                4. intersect with halfspaces to incorporate velocity limits</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">polygon_processed</span> <span class="o">=</span> <span class="n">polygon</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">convexify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">polygon_processed</span> <span class="o">=</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">linear_mapping</span><span class="p">(</span><span class="n">polygon_processed</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">polygon_processed</span> <span class="o">=</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">minkowski_sum</span><span class="p">(</span><span class="n">polygon_processed</span><span class="p">,</span> <span class="n">polygon_zero_state</span><span class="p">)</span>
+    <span class="n">polygon_processed</span> <span class="o">=</span> <span class="n">polygon_processed</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v_max</span><span class="p">)</span>
+    <span class="n">polygon_processed</span> <span class="o">=</span> <span class="n">polygon_processed</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">v_min</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">polygon_processed</span></div>
+
+
+<div class="viewcode-block" id="project_base_sets_to_position_domain"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.project_base_sets_to_position_domain">[docs]</a><span class="k">def</span> <span class="nf">project_base_sets_to_position_domain</span><span class="p">(</span><span class="n">list_base_sets_propagated</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of rectangles projected onto the position domain.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">base_set</span><span class="o">.</span><span class="n">position_rectangle</span> <span class="k">for</span> <span class="n">base_set</span> <span class="ow">in</span> <span class="n">list_base_sets_propagated</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="create_repartitioned_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.create_repartitioned_rectangles">[docs]</a><span class="k">def</span> <span class="nf">create_repartitioned_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">],</span> <span class="n">size_grid</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of repartitioned rectangles.</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">        1. obtain the minimum lon/lat positions of the list of rectangles.</span>
+<span class="sd">        2. discretize rectangles</span>
+<span class="sd">        3. repartition the rectangles into a new list of rectangles.</span>
+<span class="sd">        4. restore the rectangles back to undiscretized ones.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">list_rectangles</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">tuple_p_min_rectangles</span> <span class="o">=</span> <span class="n">compute_minimum_positions_of_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">)</span>
+
+    <span class="n">list_rectangles_discretized</span> <span class="o">=</span> <span class="n">discretize_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">,</span> <span class="n">tuple_p_min_rectangles</span><span class="p">,</span> <span class="n">size_grid</span><span class="p">)</span>
+
+    <span class="n">list_rectangles_repartitioned</span> <span class="o">=</span> <span class="n">repartition_rectangles</span><span class="p">(</span><span class="n">list_rectangles_discretized</span><span class="p">)</span>
+
+    <span class="n">list_rectangles_undiscretized</span> <span class="o">=</span> <span class="n">undiscretized_rectangles</span><span class="p">(</span><span class="n">list_rectangles_repartitioned</span><span class="p">,</span>
+                                                             <span class="n">tuple_p_min_rectangles</span><span class="p">,</span> <span class="n">size_grid</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">list_rectangles_undiscretized</span></div>
+
+
+<div class="viewcode-block" id="compute_minimum_positions_of_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.compute_minimum_positions_of_rectangles">[docs]</a><span class="k">def</span> <span class="nf">compute_minimum_positions_of_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns minimum lon/lat positions of the given list of rectangles.&quot;&quot;&quot;</span>
+    <span class="n">p_lon_min_rectangles</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span> <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">])</span>
+    <span class="n">p_lat_min_rectangles</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span> <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">p_lon_min_rectangles</span><span class="p">,</span> <span class="n">p_lat_min_rectangles</span></div>
+
+
+<div class="viewcode-block" id="compute_extremum_positions_of_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.compute_extremum_positions_of_rectangles">[docs]</a><span class="k">def</span> <span class="nf">compute_extremum_positions_of_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns extremum lon/lat positions of the given list of rectangles.&quot;&quot;&quot;</span>
+    <span class="n">p_lon_min_rectangles</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span> <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">])</span>
+    <span class="n">p_lon_max_rectangles</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span> <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">])</span>
+    <span class="n">p_lat_min_rectangles</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span> <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">])</span>
+    <span class="n">p_lat_max_rectangles</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span> <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">p_lon_min_rectangles</span><span class="p">,</span> <span class="n">p_lon_max_rectangles</span><span class="p">,</span> <span class="n">p_lat_min_rectangles</span><span class="p">,</span> <span class="n">p_lat_max_rectangles</span></div>
+
+
+<div class="viewcode-block" id="discretize_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.discretize_rectangles">[docs]</a><span class="k">def</span> <span class="nf">discretize_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">],</span> <span class="n">tuple_p_min_rectangles</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+                          <span class="n">size_grid</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Discretizes the given list of rectangles.</span>
+
+<span class="sd">    p_discretized = (p_undiscretized - p_min) / size_grid</span>
+<span class="sd">    get floor for min values, and get ceil for max values for over-approximation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">list_rectangles_discretized</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p_lon_min_rectangles</span><span class="p">,</span> <span class="n">p_lat_min_rectangles</span> <span class="o">=</span> <span class="n">tuple_p_min_rectangles</span>
+    <span class="n">p_lon_min_rectangles</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">p_lon_min_rectangles</span><span class="p">)</span>
+    <span class="n">p_lat_min_rectangles</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">p_lat_min_rectangles</span><span class="p">)</span>
+    <span class="n">size_grid</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">size_grid</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">:</span>
+        <span class="n">p_lon_min</span> <span class="o">=</span> <span class="n">floor</span><span class="p">((</span><span class="n">Decimal</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">)</span> <span class="o">-</span> <span class="n">p_lon_min_rectangles</span><span class="p">)</span> <span class="o">/</span> <span class="n">size_grid</span><span class="p">)</span>
+        <span class="n">p_lat_min</span> <span class="o">=</span> <span class="n">floor</span><span class="p">((</span><span class="n">Decimal</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">)</span> <span class="o">-</span> <span class="n">p_lat_min_rectangles</span><span class="p">)</span> <span class="o">/</span> <span class="n">size_grid</span><span class="p">)</span>
+        <span class="n">p_lon_max</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">((</span><span class="n">Decimal</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span><span class="p">)</span> <span class="o">-</span> <span class="n">p_lon_min_rectangles</span><span class="p">)</span> <span class="o">/</span> <span class="n">size_grid</span><span class="p">)</span>
+        <span class="n">p_lat_max</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">((</span><span class="n">Decimal</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span><span class="p">)</span> <span class="o">-</span> <span class="n">p_lat_min_rectangles</span><span class="p">)</span> <span class="o">/</span> <span class="n">size_grid</span><span class="p">)</span>
+
+        <span class="n">list_rectangles_discretized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">p_lon_min</span><span class="p">,</span> <span class="n">p_lat_min</span><span class="p">,</span> <span class="n">p_lon_max</span><span class="p">,</span> <span class="n">p_lat_max</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">list_rectangles_discretized</span></div>
+
+
+<div class="viewcode-block" id="repartition_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.repartition_rectangles">[docs]</a><span class="k">def</span> <span class="nf">repartition_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of repartitioned rectangles.</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">        1. Obtain a list of vertical segments representing the contour of the union of the rectangles.</span>
+<span class="sd">        2. Create repartitioned rectangles from the list of vertical segments using sweep line algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">list_segments_vertical</span> <span class="o">=</span> <span class="n">SweepLine</span><span class="o">.</span><span class="n">obtain_vertical_segments_from_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">)</span>
+
+    <span class="n">list_rectangles_repartitioned</span> <span class="o">=</span> <span class="n">SweepLine</span><span class="o">.</span><span class="n">create_rectangles_from_vertical_segments</span><span class="p">(</span><span class="n">list_segments_vertical</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">list_rectangles_repartitioned</span></div>
+
+
+<div class="viewcode-block" id="undiscretized_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.undiscretized_rectangles">[docs]</a><span class="k">def</span> <span class="nf">undiscretized_rectangles</span><span class="p">(</span><span class="n">list_rectangles_discretized</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">],</span>
+                             <span class="n">tuple_p_min_rectangles</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">size_grid</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Restores previously discretized rectangles back to undiscretized.</span>
+
+<span class="sd">    p_undiscretized = p_discretized * size_grid + p_min</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">list_rectangles_undiscretized</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p_lon_min_rectangles</span><span class="p">,</span> <span class="n">p_lat_min_rectangles</span> <span class="o">=</span> <span class="n">tuple_p_min_rectangles</span>
+
+    <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles_discretized</span><span class="p">:</span>
+        <span class="n">p_lon_min</span> <span class="o">=</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span> <span class="o">*</span> <span class="n">size_grid</span> <span class="o">+</span> <span class="n">p_lon_min_rectangles</span>
+        <span class="n">p_lat_min</span> <span class="o">=</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span> <span class="o">*</span> <span class="n">size_grid</span> <span class="o">+</span> <span class="n">p_lat_min_rectangles</span>
+        <span class="n">p_lon_max</span> <span class="o">=</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span> <span class="o">*</span> <span class="n">size_grid</span> <span class="o">+</span> <span class="n">p_lon_min_rectangles</span>
+        <span class="n">p_lat_max</span> <span class="o">=</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span> <span class="o">*</span> <span class="n">size_grid</span> <span class="o">+</span> <span class="n">p_lat_min_rectangles</span>
+
+        <span class="n">list_rectangles_undiscretized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">p_lon_min</span><span class="p">,</span> <span class="n">p_lat_min</span><span class="p">,</span> <span class="n">p_lon_max</span><span class="p">,</span> <span class="n">p_lat_max</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">list_rectangles_undiscretized</span></div>
+
+
+<div class="viewcode-block" id="check_collision_and_split_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.check_collision_and_split_rectangles">[docs]</a><span class="k">def</span> <span class="nf">check_collision_and_split_rectangles</span><span class="p">(</span><span class="n">collision_checker</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">],</span>
+                                         <span class="n">radius_terminal_split</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Check collision status of the rectangles and split them if they are colliding.&quot;&quot;&quot;</span>
+    <span class="n">list_rectangles_collision_free</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">list_rectangles</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">collision_checker</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">list_rectangles</span>
+
+    <span class="c1"># check collision for each input rectangle</span>
+    <span class="n">radius_terminal_squared</span> <span class="o">=</span> <span class="n">radius_terminal_split</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">:</span>
+        <span class="n">list_rectangles_collision_free</span> <span class="o">+=</span> <span class="n">create_collision_free_rectangles</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">collision_checker</span><span class="p">,</span> <span class="n">rectangle</span><span class="p">,</span>
+                                                                           <span class="n">radius_terminal_squared</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">list_rectangles_collision_free</span></div>
+
+
+<div class="viewcode-block" id="create_collision_free_rectangles"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.create_collision_free_rectangles">[docs]</a><span class="k">def</span> <span class="nf">create_collision_free_rectangles</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">collision_checker</span><span class="p">,</span> <span class="n">rectangle</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">,</span>
+                                     <span class="n">radius_terminal_squared</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Recursively creates a list of collision-free rectangles.</span>
+
+<span class="sd">    If a collision happens between a rectangle and other object, and that the diagonal of the rectangle is greater</span>
+<span class="sd">    than the terminal radius, it is split into two new rectangles in whichever edge (lon/lat) that is longer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># case 1: rectangle does not collide, return itself</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">collision_checker</span><span class="o">.</span><span class="n">collides_at_step</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">rectangle</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">rectangle</span><span class="p">]</span>
+
+    <span class="c1"># case 2: the diagonal is smaller than the terminal radius, return nothing</span>
+    <span class="k">elif</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">diagonal_squared</span> <span class="o">&lt;</span> <span class="n">radius_terminal_squared</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># case 3: colliding but diagonal is long enough. split into two halves.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rectangle_split_1</span><span class="p">,</span> <span class="n">rectangle_split_2</span> <span class="o">=</span> <span class="n">split_rectangle_into_two</span><span class="p">(</span><span class="n">rectangle</span><span class="p">)</span>
+        <span class="n">list_rectangles_split_1</span> <span class="o">=</span> <span class="n">create_collision_free_rectangles</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">collision_checker</span><span class="p">,</span> <span class="n">rectangle_split_1</span><span class="p">,</span>
+                                                                   <span class="n">radius_terminal_squared</span><span class="p">)</span>
+        <span class="n">list_rectangles_split_2</span> <span class="o">=</span> <span class="n">create_collision_free_rectangles</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">collision_checker</span><span class="p">,</span> <span class="n">rectangle_split_2</span><span class="p">,</span>
+                                                                   <span class="n">radius_terminal_squared</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">list_rectangles_split_1</span> <span class="o">+</span> <span class="n">list_rectangles_split_2</span></div>
+
+
+<div class="viewcode-block" id="split_rectangle_into_two"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.split_rectangle_into_two">[docs]</a><span class="k">def</span> <span class="nf">split_rectangle_into_two</span><span class="p">(</span><span class="n">rectangle</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">,</span> <span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Returns two rectangles each of which is a half of the initial rectangle.</span>
+
+<span class="sd">    Split in the longer axis of the two (longitudinal / lateral or x / y).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span> <span class="o">-</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span> <span class="o">-</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">):</span>
+        <span class="n">rectangle_split_1</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">,</span>
+                                                                 <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_center</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span><span class="p">)</span>
+        <span class="n">rectangle_split_2</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_center</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">,</span>
+                                                                 <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rectangle_split_1</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">,</span>
+                                                                 <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_center</span><span class="p">)</span>
+        <span class="n">rectangle_split_2</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_rectangle_vertices</span><span class="p">(</span><span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_center</span><span class="p">,</span>
+                                                                 <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lon_max</span><span class="p">,</span> <span class="n">rectangle</span><span class="o">.</span><span class="n">p_lat_max</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rectangle_split_1</span><span class="p">,</span> <span class="n">rectangle_split_2</span></div>
+
+
+<div class="viewcode-block" id="construct_reach_nodes"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.construct_reach_nodes">[docs]</a><span class="k">def</span> <span class="nf">construct_reach_nodes</span><span class="p">(</span><span class="n">drivable_area</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">],</span>
+                          <span class="n">list_base_sets_propagated</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNode</span><span class="p">],</span>
+                          <span class="n">has_multi_generation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNode</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Constructs nodes of the reachability graph.</span>
+
+<span class="sd">    The nodes are constructed by cutting down the propagated base sets to the drivable area to determine the reachable</span>
+<span class="sd">    positions and velocities.</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">        1. examine the adjacency of drivable area and the propagated base sets. They are considered adjacent if they</span>
+<span class="sd">           overlap in the position domain.</span>
+<span class="sd">        2. create a node from each drivable area and its adjacent propagated base sets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reachable_set</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">list_rectangles_base_sets</span> <span class="o">=</span> <span class="p">[</span><span class="n">base_set</span><span class="o">.</span><span class="n">position_rectangle</span> <span class="k">for</span> <span class="n">base_set</span> <span class="ow">in</span> <span class="n">list_base_sets_propagated</span><span class="p">]</span>
+    <span class="n">list_rectangles_drivable_area</span> <span class="o">=</span> <span class="n">drivable_area</span>
+    <span class="n">dict_rectangle_adjacency</span> <span class="o">=</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">create_adjacency_dictionary</span><span class="p">(</span><span class="n">list_rectangles_drivable_area</span><span class="p">,</span>
+                                                                         <span class="n">list_rectangles_base_sets</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idx_drivable_area</span><span class="p">,</span> <span class="n">list_idx_base_sets_adjacent</span> <span class="ow">in</span> <span class="n">dict_rectangle_adjacency</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># examine each drivable area rectangle</span>
+        <span class="n">rectangle_drivable_area</span> <span class="o">=</span> <span class="n">list_rectangles_drivable_area</span><span class="p">[</span><span class="n">idx_drivable_area</span><span class="p">]</span>
+
+        <span class="n">reach_node</span> <span class="o">=</span> <span class="n">construct_reach_node</span><span class="p">(</span><span class="n">rectangle_drivable_area</span><span class="p">,</span> <span class="n">list_base_sets_propagated</span><span class="p">,</span>
+                                                <span class="n">list_idx_base_sets_adjacent</span><span class="p">,</span> <span class="n">has_multi_generation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reach_node</span><span class="p">:</span>
+            <span class="n">reachable_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reach_node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">reachable_set</span></div>
+
+
+<div class="viewcode-block" id="construct_reach_node"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.construct_reach_node">[docs]</a><span class="k">def</span> <span class="nf">construct_reach_node</span><span class="p">(</span><span class="n">rectangle_drivable_area</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">,</span>
+                         <span class="n">list_base_sets_propagated</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNode</span><span class="p">],</span>
+                         <span class="n">list_idx_base_sets_adjacent</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+                         <span class="n">multi_generation</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a reach node constructed from the propagated base sets.</span>
+
+<span class="sd">    Iterate through base sets that are adjacent to the drivable area, and cut the base sets down with position</span>
+<span class="sd">    constraints from the drivable area. A non-empty intersected polygon imply that it is a valid base set and is</span>
+<span class="sd">    considered as a parent of the rectangle (reachable from the node from which the base set is propagated).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">multi_generation</span><span class="p">:</span>
+        <span class="n">Node</span> <span class="o">=</span> <span class="n">ReachNode</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Node</span> <span class="o">=</span> <span class="n">ReachNodeMultiGeneration</span>
+
+    <span class="n">list_base_sets_parent</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">list_vertices_polygon_lon_new</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">list_vertices_polygon_lat_new</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># retrieve each of the adjacent base sets</span>
+    <span class="k">for</span> <span class="n">idx_base_set_adjacent</span> <span class="ow">in</span> <span class="n">list_idx_base_sets_adjacent</span><span class="p">:</span>
+        <span class="n">base_set_adjacent</span> <span class="o">=</span> <span class="n">list_base_sets_propagated</span><span class="p">[</span><span class="n">idx_base_set_adjacent</span><span class="p">]</span>
+        <span class="n">polygon_lon</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_polygon</span><span class="p">(</span><span class="n">base_set_adjacent</span><span class="o">.</span><span class="n">polygon_lon</span><span class="p">)</span>
+        <span class="n">polygon_lat</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_polygon</span><span class="p">(</span><span class="n">base_set_adjacent</span><span class="o">.</span><span class="n">polygon_lat</span><span class="p">)</span>
+        <span class="c1"># cut down to position range of the drivable area rectangle</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">polygon_lon</span> <span class="o">=</span> <span class="n">polygon_lon</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rectangle_drivable_area</span><span class="o">.</span><span class="n">p_lon_max</span><span class="p">)</span>
+            <span class="n">polygon_lon</span> <span class="o">=</span> <span class="n">polygon_lon</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">rectangle_drivable_area</span><span class="o">.</span><span class="n">p_lon_min</span><span class="p">)</span>
+            <span class="n">polygon_lat</span> <span class="o">=</span> <span class="n">polygon_lat</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rectangle_drivable_area</span><span class="o">.</span><span class="n">p_lat_max</span><span class="p">)</span>
+            <span class="n">polygon_lat</span> <span class="o">=</span> <span class="n">polygon_lat</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">rectangle_drivable_area</span><span class="o">.</span><span class="n">p_lat_min</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># add to list if the intersected polygons are non-empty</span>
+            <span class="k">if</span> <span class="n">polygon_lon</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">polygon_lon</span><span class="o">.</span><span class="n">is_empty</span> <span class="ow">and</span> <span class="n">polygon_lat</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">polygon_lat</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+                <span class="n">list_vertices_polygon_lon_new</span> <span class="o">+=</span> <span class="n">polygon_lon</span><span class="o">.</span><span class="n">vertices</span>
+                <span class="n">list_vertices_polygon_lat_new</span> <span class="o">+=</span> <span class="n">polygon_lat</span><span class="o">.</span><span class="n">vertices</span>
+                <span class="n">list_base_sets_parent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_set_adjacent</span><span class="o">.</span><span class="n">source_propagation</span><span class="p">)</span>
+
+    <span class="c1"># if there is at least one valid base set, create the adapted base set</span>
+    <span class="k">if</span> <span class="n">list_vertices_polygon_lon_new</span> <span class="ow">and</span> <span class="n">list_vertices_polygon_lat_new</span><span class="p">:</span>
+        <span class="n">polygon_lon_new</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_polygon</span><span class="p">(</span><span class="n">ReachPolygon</span><span class="p">(</span><span class="n">list_vertices_polygon_lon_new</span><span class="p">)</span><span class="o">.</span><span class="n">convex_hull</span><span class="p">)</span>
+        <span class="n">polygon_lat_new</span> <span class="o">=</span> <span class="n">ReachPolygon</span><span class="o">.</span><span class="n">from_polygon</span><span class="p">(</span><span class="n">ReachPolygon</span><span class="p">(</span><span class="n">list_vertices_polygon_lat_new</span><span class="p">)</span><span class="o">.</span><span class="n">convex_hull</span><span class="p">)</span>
+        <span class="n">reach_node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">polygon_lon_new</span><span class="p">,</span> <span class="n">polygon_lat_new</span><span class="p">)</span>
+        <span class="n">reach_node</span><span class="o">.</span><span class="n">source_propagation</span> <span class="o">=</span> <span class="n">list_base_sets_parent</span>
+
+        <span class="k">return</span> <span class="n">reach_node</span></div>
+
+
+<div class="viewcode-block" id="connect_children_to_parents"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.connect_children_to_parents">[docs]</a><span class="k">def</span> <span class="nf">connect_children_to_parents</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">list_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachNode</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Connects the child reach nodes to their parent nodes.&quot;&quot;&quot;</span>
+    <span class="n">list_nodes_reachable_set_new</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">node_child</span> <span class="ow">in</span> <span class="n">list_nodes</span><span class="p">:</span>
+        <span class="n">node_child</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="n">step</span>
+        <span class="c1"># update parent-child relationship</span>
+        <span class="k">for</span> <span class="n">node_parent</span> <span class="ow">in</span> <span class="n">node_child</span><span class="o">.</span><span class="n">source_propagation</span><span class="p">:</span>
+            <span class="n">node_child</span><span class="o">.</span><span class="n">add_parent_node</span><span class="p">(</span><span class="n">node_parent</span><span class="p">)</span>
+            <span class="n">node_parent</span><span class="o">.</span><span class="n">add_child_node</span><span class="p">(</span><span class="n">node_child</span><span class="p">)</span>
+
+        <span class="n">list_nodes_reachable_set_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_child</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">list_nodes_reachable_set_new</span></div>
+
+
+<div class="viewcode-block" id="adapt_rectangles_to_grid"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.adapt_rectangles_to_grid">[docs]</a><span class="k">def</span> <span class="nf">adapt_rectangles_to_grid</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">],</span> <span class="n">size_grid</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Adapts the given list of position rectangles to a Cartesian grid.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">is_disjoint</span><span class="p">(</span><span class="n">_rectangle</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">,</span> <span class="n">_cell</span><span class="p">:</span> <span class="n">Cell</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if the given rectangle and cell are disjoint.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">_rectangle</span><span class="o">.</span><span class="n">p_lon_max</span> <span class="o">&lt;</span> <span class="n">_cell</span><span class="o">.</span><span class="n">x_min</span> <span class="ow">or</span> <span class="n">_rectangle</span><span class="o">.</span><span class="n">p_lon_min</span> <span class="o">&gt;</span> <span class="n">_cell</span><span class="o">.</span><span class="n">x_max</span> <span class="ow">or</span> \
+                <span class="n">_rectangle</span><span class="o">.</span><span class="n">p_lat_max</span> <span class="o">&lt;</span> <span class="n">_cell</span><span class="o">.</span><span class="n">y_min</span> <span class="ow">or</span> <span class="n">_rectangle</span><span class="o">.</span><span class="n">p_lat_min</span> <span class="o">&gt;</span> <span class="n">_cell</span><span class="o">.</span><span class="n">y_max</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">adapt_rectangle_to_cell</span><span class="p">(</span><span class="n">_rectangle</span><span class="p">:</span> <span class="n">ReachPolygon</span><span class="p">,</span> <span class="n">_cell</span><span class="p">:</span> <span class="n">Cell</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReachPolygon</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Adapts the given rectangle to the given cell.&quot;&quot;&quot;</span>
+        <span class="n">rectangle_intersected</span> <span class="o">=</span> <span class="n">_rectangle</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">convexify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">rectangle_intersected</span> <span class="o">=</span> <span class="n">rectangle_intersected</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_cell</span><span class="o">.</span><span class="n">x_max</span><span class="p">)</span>
+        <span class="n">rectangle_intersected</span> <span class="o">=</span> <span class="n">rectangle_intersected</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">_cell</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span>
+        <span class="n">rectangle_intersected</span> <span class="o">=</span> <span class="n">rectangle_intersected</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">_cell</span><span class="o">.</span><span class="n">y_max</span><span class="p">)</span>
+        <span class="n">rectangle_intersected</span> <span class="o">=</span> <span class="n">rectangle_intersected</span><span class="o">.</span><span class="n">intersect_halfspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">_cell</span><span class="o">.</span><span class="n">y_min</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rectangle_intersected</span>
+
+    <span class="n">list_rectangles_adapted</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tuple_extremum</span> <span class="o">=</span> <span class="n">compute_extremum_positions_of_rectangles</span><span class="p">(</span><span class="n">list_rectangles</span><span class="p">)</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="o">*</span><span class="n">tuple_extremum</span><span class="p">,</span> <span class="n">size_grid</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="n">list_rectangles</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">list_cells</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_disjoint</span><span class="p">(</span><span class="n">rectangle</span><span class="p">,</span> <span class="n">cell</span><span class="p">):</span>
+                <span class="n">list_rectangles_adapted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">adapt_rectangle_to_cell</span><span class="p">(</span><span class="n">rectangle</span><span class="p">,</span> <span class="n">cell</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">list_rectangles_adapted</span></div>
+
+
+<div class="viewcode-block" id="remove_rectangles_out_of_kamms_circle"><a class="viewcode-back" href="../../../commonroad_reach.utility.html#commonroad_reach.utility.reach_operation.remove_rectangles_out_of_kamms_circle">[docs]</a><span class="k">def</span> <span class="nf">remove_rectangles_out_of_kamms_circle</span><span class="p">(</span><span class="n">time_duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_max</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                                          <span class="n">list_rectangles_adapted</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReachPolygon</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Discard position rectangles that do not intersect with Kamm&#39;s friction circle.&quot;&quot;&quot;</span>
+    <span class="n">center_circle</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">radius_circle</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">a_max</span> <span class="o">*</span> <span class="n">time_duration</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="n">list_idx_rectangles_to_be_deleted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_rectangles_adapted</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">util_geometry</span><span class="o">.</span><span class="n">rectangle_intersects_with_circle</span><span class="p">(</span><span class="n">rectangle</span><span class="p">,</span> <span class="n">center_circle</span><span class="p">,</span> <span class="n">radius_circle</span><span class="p">):</span>
+            <span class="n">list_idx_rectangles_to_be_deleted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">rectangle</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">rectangle</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_rectangles_adapted</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">list_idx_rectangles_to_be_deleted</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, &#34;&#34;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
