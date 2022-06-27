@@ -32,6 +32,8 @@ void export_reach_polygon(py::module& m) {
             })
             .def("convexify", &ReachPolygon::convexify)
             .def("minkowski_sum", &ReachPolygon::minkowski_sum)
+            .def("intersects", &ReachPolygon::intersects)
+            .def("intersect_halfspace", &ReachPolygon::intersect_halfspace, py::arg("a"), py::arg("b"), py::arg("c"))
             .def("__repr__", [](ReachPolygon const& polygon) {
                 return "(" + std::to_string(polygon.p_lon_min()) + ", " + std::to_string(polygon.p_lat_min())
                        + ", " + std::to_string(polygon.p_lon_max()) + ", " + std::to_string(polygon.p_lat_max()) + ")";
