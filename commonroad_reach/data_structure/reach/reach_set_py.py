@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class PyReachableSet(ReachableSet):
-    """Reachable set computation with Python backend."""
+    """
+    Reachable set computation with Python backend.
+    """
 
     def __init__(self, config: Configuration):
         super().__init__(config)
@@ -39,7 +41,8 @@ class PyReachableSet(ReachableSet):
         return [ReachNode(polygon_lon, polygon_lat, self.config.planning.step_start)]
 
     def _initialize_zero_state_polygons(self):
-        """Initializes the zero-state polygons of the system.
+        """
+        Initializes the zero-state polygons of the system.
 
         Computation of the reachable set of an LTI system requires the zero-state response of the system.
         """
@@ -62,14 +65,13 @@ class PyReachableSet(ReachableSet):
             self._prune_nodes_not_reaching_final_step()
 
     def _compute_drivable_area_at_step(self, step: int):
-        """Computes the drivable area for the given time step.
+        """
+        Computes drivable area for the given step.
 
         Steps:
-            1. Propagate each node of the reachable set from the previous time step, resulting in propagated base sets.
-            2. Project the base sets onto the position domain to obtain position rectangles.
-            3. Merge and repartition these rectangles to potentially reduce the number of rectangles.
-            4. Check for collisions with obstacles and road boundaries, and obtain collision-free rectangles.
-            5. Merge and repartition the collision-free rectangles again to potentially reduce the number of rectangles.
+            1. Propagate each node of the reachable set from the previous step, resulting in propagated base sets.
+            2. Project base sets onto the position domain to obtain position rectangles.
+            3. Merge, repartition and check collisions for these rectangles. The order depends on the configuration.
         """
         reachable_set_previous = self.dict_step_to_reachable_set[step - 1]
 
@@ -80,11 +82,13 @@ class PyReachableSet(ReachableSet):
 
         list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
 
+        mode_repartition = self.config.reachable_set.mode_repartition
         size_grid = self.config.reachable_set.size_grid
         size_grid_2nd = self.config.reachable_set.size_grid_2nd
         radius_terminal_split = self.config.reachable_set.radius_terminal_split
+
         # repartition, then collision check
-        if self.config.reachable_set.mode_repartition == 1:
+        if mode_repartition == 1:
             list_rectangles_repartitioned = \
                 reach_operation.create_repartitioned_rectangles(list_rectangles_projected, size_grid)
 
@@ -93,7 +97,7 @@ class PyReachableSet(ReachableSet):
                                                                                  radius_terminal_split)
 
         # collision check, then repartition
-        elif self.config.reachable_set.mode_repartition == 2:
+        elif mode_repartition == 2:
             list_rectangles_collision_free = \
                 reach_operation.check_collision_and_split_rectangles(self.collision_checker, step,
                                                                      list_rectangles_projected,
@@ -102,7 +106,7 @@ class PyReachableSet(ReachableSet):
                                                                             size_grid)
 
         # repartition, collision check, then repartition again
-        elif self.config.reachable_set.mode_repartition == 3:
+        elif mode_repartition == 3:
             list_rectangles_repartitioned = reach_operation.create_repartitioned_rectangles(list_rectangles_projected,
                                                                                             size_grid)
 
@@ -120,8 +124,39 @@ class PyReachableSet(ReachableSet):
         self.dict_step_to_drivable_area[step] = drivable_area
         self.dict_step_to_base_set_propagated[step] = list_base_sets_propagated
 
+    def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
+        """
+        Propagates nodes of the reachable set.
+        """
+        list_base_sets_propagated = []
+
+        for node in list_nodes:
+            try:
+                # propagate in both directions
+                polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
+                                                                           self.polygon_zero_state_lon,
+                                                                           self.config.planning.dt,
+                                                                           self.config.vehicle.ego.v_lon_min,
+                                                                           self.config.vehicle.ego.v_lon_max)
+
+                polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
+                                                                           self.polygon_zero_state_lat,
+                                                                           self.config.planning.dt,
+                                                                           self.config.vehicle.ego.v_lat_min,
+                                                                           self.config.vehicle.ego.v_lat_max)
+            except (ValueError, RuntimeError, AttributeError):
+                util_logger.print_and_log_debug(logger, "Error occurred while propagating polygons.")
+
+            else:
+                base_set_propagated = ReachNode(polygon_lon_propagated, polygon_lat_propagated, node.step)
+                base_set_propagated.source_propagation = node
+                list_base_sets_propagated.append(base_set_propagated)
+
+        return list_base_sets_propagated
+
     def _compute_reachable_set_at_step(self, step):
-        """Computes the reachable set for the given time step.
+        """
+        Computes reachable set for the given step.
 
         Steps:
             1. construct reach nodes from drivable area and the propagated based sets.
@@ -138,33 +173,6 @@ class PyReachableSet(ReachableSet):
         reachable_set = reach_operation.connect_children_to_parents(step, list_nodes)
 
         self.dict_step_to_reachable_set[step] = reachable_set
-
-    def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
-        """Propagates the nodes of the reachable set."""
-        list_base_sets_propagated = []
-
-        for node in list_nodes:
-            try:
-                polygon_lon_propagated = reach_operation.propagate_polygon(node.polygon_lon,
-                                                                           self.polygon_zero_state_lon,
-                                                                           self.config.planning.dt,
-                                                                           self.config.vehicle.ego.v_lon_min,
-                                                                           self.config.vehicle.ego.v_lon_max)
-
-                polygon_lat_propagated = reach_operation.propagate_polygon(node.polygon_lat,
-                                                                           self.polygon_zero_state_lat,
-                                                                           self.config.planning.dt,
-                                                                           self.config.vehicle.ego.v_lat_min,
-                                                                           self.config.vehicle.ego.v_lat_max)
-            except (ValueError, RuntimeError, AttributeError):
-                pass
-
-            else:
-                base_set_propagated = ReachNode(polygon_lon_propagated, polygon_lat_propagated, node.step)
-                base_set_propagated.source_propagation = node
-                list_base_sets_propagated.append(base_set_propagated)
-
-        return list_base_sets_propagated
 
     def _prune_nodes_not_reaching_final_step(self):
         util_logger.print_and_log_info(logger, f"\tPruning nodes not reaching final step...")

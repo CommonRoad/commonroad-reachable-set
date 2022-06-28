@@ -11,7 +11,9 @@ from commonroad_reach.data_structure.configuration import Configuration
 
 
 class CppReachableSet(ReachableSet):
-    """Reachable set computation with C++ backend."""
+    """
+    Reachable set computation with C++ backend.
+    """
 
     def __init__(self, config: Configuration):
         super().__init__(config)
@@ -21,9 +23,8 @@ class CppReachableSet(ReachableSet):
         logger.debug("CppReachableSet initialized.")
 
     def compute(self, step_start: int, step_end: int):
-        """Computes reachable sets for the specified time steps."""
         for step in range(step_start, step_end + 1):
-            logger.debug(f"Computing reachable set for time step {step}")
+            logger.debug(f"Computing reachable set for step {step}")
             self._reach.compute(step, step)
             self._list_steps_computed.append(step)
 

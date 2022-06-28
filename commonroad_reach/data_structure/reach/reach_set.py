@@ -9,7 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 class ReachableSet(ABC):
-    """Abstract superclass for reachable sets."""
+    """
+    Abstract superclass for reachable sets.
+    """
 
     def __init__(self, config: Configuration):
         self.config: Configuration = config
@@ -34,14 +36,10 @@ class ReachableSet(ABC):
     def reachable_set(self):
         return self.dict_step_to_reachable_set
 
-    @property
-    def max_evaluated_step(self):
-        return max(self.dict_step_to_reachable_set)
-
     def drivable_area_at_step(self, step: int):
         if step not in self._list_steps_computed:
             util_logger.print_and_log_warning(logger,
-                                              f"Given time step {step} for drivable area retrieval is out of range.")
+                                              f"Given step {step} for drivable area retrieval is out of range.")
             return []
 
         else:
@@ -50,7 +48,7 @@ class ReachableSet(ABC):
     def reachable_set_at_step(self, step: int):
         if step not in self._list_steps_computed:
             util_logger.print_and_log_warning(logger,
-                                              f"Given time step {step} for reachable set retrieval is out of range.")
+                                              f"Given step {step} for reachable set retrieval is out of range.")
             return []
 
         else:
@@ -58,20 +56,25 @@ class ReachableSet(ABC):
 
     @abstractmethod
     def compute(self, step_start: int, step_end: int):
-        """Calls reachable set computation for the specified time steps."""
+        """
+        Computes reachable set between the specified start and end steps.
+        """
         pass
 
     @abstractmethod
     def _prune_nodes_not_reaching_final_step(self):
-        """Prunes nodes that don't reach the final time step.
+        """
+        Prunes nodes that do not reach the final step.
 
-        Iterates through reachability graph backward in time, discards nodes that don't have a child node.
+        Iterates through reachability graph backward in time, discards nodes that do not have a child node.
         """
         pass
 
     @classmethod
     def instantiate(cls, config: Configuration):
-        """Instantiates a reachable set class based on the given configuration."""
+        """
+        Instantiates a reachable set class based on the given configuration.
+        """
         mode = config.reachable_set.mode_computation
 
         if mode == 1:

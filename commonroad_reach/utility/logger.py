@@ -2,10 +2,8 @@ import logging
 import os
 from datetime import datetime
 
-from commonroad_reach.data_structure.configuration import Configuration
 
-
-def initialize_logger(config: Configuration) -> logging.Logger:
+def initialize_logger(config) -> logging.Logger:
     # create log directory
     os.makedirs(config.general.path_logs, exist_ok=True)
 

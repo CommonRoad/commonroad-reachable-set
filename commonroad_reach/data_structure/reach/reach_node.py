@@ -8,12 +8,14 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 
 class ReachNode:
-    """Node within the reachability graph, also used in the reachable set computation.
+    """
+    Node within a reachability graph, also used in reachable set computations.
 
-    Each node is a Cartesian product of polygon_lon and polygon_lat. In curvilinear coordinate system, polygon_lon
-    is a polygon in the longitudinal p-v domain, and polygon_lat is a polygon in the lateral p-v domain; In Cartesian
-    coordinate system, they represent polygons in the x-v and y-v domains, respectively. ReachNode inherits ReachBaseSet.
-    In addition, it has a time step, an ID, and lists of parent nodes and child nodes.
+    .. note::
+        - Each node is a Cartesian product of longitudinal and lateral polygons.
+        - Curvilinear coordinate system: polygon_lon is a polygon in the longitudinal p-v domain,
+          and polygon_lat is a polygon in the lateral p-v domain.
+        - Cartesian coordinate system: polygons are in the x-v and y-v domains, respectively.
     """
     cnt_id = 0
 
@@ -54,6 +56,9 @@ class ReachNode:
 
     @property
     def polygon_lon(self) -> ReachPolygon:
+        """
+        Polygon in the longitudinal direction. See note of :class:`ReachNode`.
+        """
         return self._polygon_lon
 
     @polygon_lon.setter
@@ -63,6 +68,9 @@ class ReachNode:
 
     @property
     def polygon_lat(self) -> ReachPolygon:
+        """
+        Polygon in the lateral direction. See note of :class:`ReachNode`.
+        """
         return self._polygon_lat
 
     @polygon_lat.setter
@@ -72,77 +80,120 @@ class ReachNode:
 
     @property
     def p_lon_min(self):
-        """Minimum longitudinal position."""
+        """
+        Minimum position in the longitudinal direction.
+        """
         return self._bounds_lon[0]
 
     @property
     def p_lon_max(self):
-        """Maximum longitudinal position."""
+        """
+        Maximum position in the longitudinal direction.
+        """
         return self._bounds_lon[2]
 
     @property
     def v_lon_min(self):
-        """Minimum longitudinal velocity."""
+        """
+        Minimum velocity in the longitudinal direction.
+        """
         return self._bounds_lon[1]
 
     @property
     def v_lon_max(self):
-        """Maximum longitudinal velocity."""
+        """
+        Maximum velocity in the longitudinal direction.
+        """
         return self._bounds_lon[3]
 
     @property
     def p_lat_min(self):
-        """Minimum lateral position."""
+        """
+        Minimum position in the lateral direction.
+        """
         return self._bounds_lat[0]
 
     @property
     def p_lat_max(self):
-        """Maximum lateral position."""
+        """
+        Maximum position in the lateral direction.
+        """
         return self._bounds_lat[2]
 
     @property
     def v_lat_min(self):
-        """Minimum lateral velocity."""
+        """
+        Minimum velocity in the lateral direction.
+        """
         return self._bounds_lat[1]
 
     @property
     def v_lat_max(self):
-        """Maximum lateral velocity."""
+        """
+        Maximum velocity in the lateral direction.
+        """
         return self._bounds_lat[3]
 
     @property
     def p_x_min(self):
+        """
+        Minimum x-position in the Cartesian coordinate system.
+        """
         return self.p_lon_min
 
     @property
     def p_x_max(self):
+        """
+        Maximum x-position in the Cartesian coordinate system.
+        """
         return self.p_lon_max
 
     @property
     def v_x_min(self):
+        """
+        Minimum x-velocity in the Cartesian coordinate system.
+        """
         return self.v_lon_min
 
     @property
     def v_x_max(self):
+        """
+        Maximum x-velocity in the Cartesian coordinate system.
+        """
         return self.v_lon_max
 
     @property
     def p_y_min(self):
+        """
+        Minimum y-position in the Cartesian coordinate system.
+        """
         return self.p_lat_min
 
     @property
     def p_y_max(self):
+        """
+        Maximum y-position in the Cartesian coordinate system.
+        """
         return self.p_lat_max
 
     @property
     def v_y_min(self):
+        """
+        Minimum y-velocity in the Cartesian coordinate system.
+        """
         return self.v_lat_min
 
     @property
     def v_y_max(self):
+        """
+        Maximum y-velocity in the Cartesian coordinate system.
+        """
         return self.v_lat_max
 
     def clone(self) -> "ReachNode":
+        """
+        Returns a clone of the reach node.
+        """
         node_clone = ReachNode(self.polygon_lon.clone(convexify=False),
                                self.polygon_lat.clone(convexify=False),
                                self.step)
@@ -153,29 +204,28 @@ class ReachNode:
         return node_clone
 
     def update_position_rectangle(self):
+        """
+        Updates the position rectangle based on the latest position attributes.
+        """
         tuple_vertices_rectangle = (self.p_lon_min, self.p_lat_min, self.p_lon_max, self.p_lat_max)
 
         self.position_rectangle = ReachPolygon.from_rectangle_vertices(*tuple_vertices_rectangle)
 
     def translate(self, p_lon_off: float = 0.0, v_lon_off: float = 0.0,
-                  p_lat_off: float = 0.0, v_lat_off: float = 0.0) -> "ReachNode":
-        """Creates a copy translated by offsets."""
+                  p_lat_off: float = 0.0, v_lat_off: float = 0.0):
+        """
+        Returns a copy translated by input offsets.
+        """
         return ReachNode(
             ReachPolygon.from_polygon(affinity.translate(self.polygon_lon, xoff=p_lon_off, yoff=v_lon_off)),
             ReachPolygon.from_polygon(affinity.translate(self.polygon_lat, xoff=p_lat_off, yoff=v_lat_off)),
             step=self.step)
 
-    @classmethod
-    def reset_class_id_counter(cls):
-        cls.cnt_id = 0
-
     def add_parent_node(self, node_parent: "ReachNode"):
-        """Adds a parent node into the list."""
         if node_parent not in self.list_nodes_parent:
             self.list_nodes_parent.append(node_parent)
 
     def remove_parent_node(self, node_parent: "ReachNode") -> bool:
-        """Removes a parent node from the list."""
         if node_parent in self.list_nodes_parent:
             self.list_nodes_parent.remove(node_parent)
             return True
@@ -183,20 +233,20 @@ class ReachNode:
         return False
 
     def add_child_node(self, node_child: "ReachNode"):
-        """Adds a child node into the list."""
         if node_child not in self.list_nodes_child:
             self.list_nodes_child.append(node_child)
 
     def remove_child_node(self, node_child: "ReachNode") -> bool:
-        """Removes a child node from the list."""
         if node_child in self.list_nodes_child:
             self.list_nodes_child.remove(node_child)
             return True
 
         return False
 
-    def intersect_in_position_domain(self, p_lon_min, p_lat_min, p_lon_max, p_lat_max):
-        """Intersects with the given rectangle in position domain"""
+    def intersect_in_position_domain(self, p_lon_min: float, p_lat_min: float, p_lon_max: float, p_lat_max: float):
+        """
+        Perform intersection in the position domain.
+        """
         self._polygon_lon = self.polygon_lon.intersect_halfspace(1, 0, p_lon_max)
         self._polygon_lon = self.polygon_lon.intersect_halfspace(-1, 0, -p_lon_min)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(1, 0, p_lat_max)
@@ -206,18 +256,25 @@ class ReachNode:
         self._bounds_lat = self._polygon_lat.bounds
         self.update_position_rectangle()
 
-    def intersect_in_velocity_domain(self, v_lon_min, v_lat_min, v_lon_max, v_lat_max):
-        """Intersects with the given velocity values in velocity domain """
+    def intersect_in_velocity_domain(self, v_lon_min: float, v_lat_min: float, v_lon_max: float, v_lat_max: float):
+        """
+        Perform intersection in the velocity domain.
+        """
         self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)
         self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
         self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
 
+    @classmethod
+    def reset_class_id_counter(cls):
+        cls.cnt_id = 0
+
 
 class ReachNodeMultiGeneration(ReachNode):
-    """Node within the reachability graph, also used in the reachable set computation.
+    """
+    Node within a reachability graph, also used in reachable set computations.
 
-    In addition to the ReachNode class, this class holds additional lists for grandparent and grandchild nodes.
+    In addition to :class:`ReachNode`, this class holds lists reach nodes across generations.
     """
 
     def __init__(self, polygon_lon, polygon_lat, step: int = -1):
@@ -226,7 +283,6 @@ class ReachNodeMultiGeneration(ReachNode):
         self.dict_time_to_set_nodes_grandchild: Dict[int, Set[ReachNodeMultiGeneration]] = defaultdict(set)
 
     def add_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
-        """Adds a grandparent node into the list."""
         delta_steps = self.step - node_grandparent.step
         assert delta_steps > 1, f"not a grand_parent: node_grandparent.step={node_grandparent.step}, " \
                                 f"self.step={self.step}"
@@ -237,7 +293,6 @@ class ReachNodeMultiGeneration(ReachNode):
         return False
 
     def remove_grandparent_node(self, node_grandparent: "ReachNodeMultiGeneration") -> bool:
-        """Removes a grandparent node from the list."""
         delta_steps = self.step - node_grandparent.step
         if node_grandparent in self.dict_time_to_set_nodes_grandparent[delta_steps]:
             self.dict_time_to_set_nodes_grandparent[delta_steps].remove(node_grandparent)
@@ -246,7 +301,6 @@ class ReachNodeMultiGeneration(ReachNode):
         return False
 
     def add_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
-        """Adds a grandchild node into the list."""
         delta_steps = node_grandchild.step - self.step
         assert delta_steps > 1, f"not a grandchild: node_grandchild.step={node_grandchild.step}, " \
                                 f"self.step={self.step}"
@@ -257,7 +311,6 @@ class ReachNodeMultiGeneration(ReachNode):
         return False
 
     def remove_grandchild_node(self, node_grandchild: "ReachNodeMultiGeneration") -> bool:
-        """Removes a grandchild node from the list."""
         delta_steps = node_grandchild.step - self.step
         if node_grandchild in self.dict_time_to_set_nodes_grandchild[delta_steps]:
             self.dict_time_to_set_nodes_grandchild[delta_steps].remove(node_grandchild)

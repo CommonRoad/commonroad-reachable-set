@@ -5,15 +5,18 @@ from typing import List, Tuple, Union
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon
 import commonroad_reach.utility.logger as util_logger
+
 logger = logging.getLogger(__name__)
 
 
 class ReachPolygon(Polygon, ABC):
-    """Polygon class that constitutes reachset nodes and position rectangles.
+    """
+    Polygon class that constitutes reach nodes and position rectangles.
 
-    When used to represent a reachset node, it is defined in the position-velocity domain, and can be used to
-    represent a polygon in either the longitudinal or the lateral direction; When used to represent a position,
-    it is defined in the longitudinal/lateral position domain.
+    .. note::
+        - When used to represent a reach node, it is defined in the position-velocity domain, and can be used to
+          represent a polygon in either the longitudinal or the lateral direction.
+        - When used to represent a position rectangle, it is defined in the longitudinal/lateral position domain.
     """
 
     def __init__(self, list_vertices: list, fix_vertices=True):
@@ -37,95 +40,80 @@ class ReachPolygon(Polygon, ABC):
 
     @property
     def p_min(self):
-        """Minimum position in the position-velocity domain."""
+        """
+        Minimum position in the position-velocity domain.
+        """
         return self.bounds[0]
 
     @property
     def p_max(self):
-        """Maximum position in the position-velocity domain."""
+        """
+        Maximum position in the position-velocity domain.
+        """
         return self.bounds[2]
 
     @property
     def v_min(self):
-        """Minimum velocity in the position-velocity domain."""
+        """
+        Minimum velocity in the position-velocity domain.
+        """
         return self.bounds[1]
 
     @property
     def v_max(self):
-        """Maximum velocity in the position-velocity domain."""
+        """
+        Maximum velocity in the position-velocity domain.
+        """
         return self.bounds[3]
 
     @property
     def p_lon_min(self):
-        """Minimum longitudinal position in the position domain."""
+        """
+        Minimum longitudinal position in the position domain.
+        """
         return self.bounds[0]
 
     @property
     def p_lon_max(self):
-        """Maximum longitudinal position in the position domain."""
+        """
+        Maximum longitudinal position in the position domain.
+        """
         return self.bounds[2]
 
     @property
     def p_lon_center(self):
-        """Center longitudinal position in the position domain."""
+        """
+        Center longitudinal position in the position domain.
+        """
         return (self.p_lon_min + self.p_lon_max) / 2
 
     @property
     def p_lat_min(self):
-        """Minimum lateral position in the position domain."""
+        """
+        Minimum lateral position in the position domain.
+        """
         return self.bounds[1]
 
     @property
     def p_lat_max(self):
-        """Maximum lateral position in the position domain."""
+        """
+        Maximum lateral position in the position domain.
+        """
         return self.bounds[3]
 
     @property
     def p_lat_center(self):
-        """Center lateral position in the position domain."""
+        """
+        Center lateral position in the position domain.
+        """
         return (self.p_lat_min + self.p_lat_max) / 2
 
     @property
     def diagonal_squared(self):
-        """Square length of the diagonal of the position domain."""
+        """
+        Square length of the diagonal of the position domain.
+        """
         return (self.p_lon_max - self.p_lon_min) ** 2 + (self.p_lat_max - self.p_lat_min) ** 2
-
-    @classmethod
-    def from_polygon(cls, polygon: Polygon):
-        """Returns a polygon given another polygon."""
-        if polygon.is_empty:
-            return None
-
-        else:
-            return ReachPolygon(cls.get_vertices(polygon))
-
-    @staticmethod
-    def from_rectangle_vertices(p_lon_min, p_lat_min, p_lon_max, p_lat_max) -> "ReachPolygon":
-        """Returns a polygon given the vertices of a rectangle."""
-        list_vertices = [(p_lon_min, p_lat_min), (p_lon_max, p_lat_min),
-                         (p_lon_max, p_lat_max), (p_lon_min, p_lat_max)]
-        return ReachPolygon(list_vertices)
-
-    def clone(self, convexify) -> "ReachPolygon":
-        """Returns a cloned polygon."""
-        if convexify:
-            return ReachPolygon.from_polygon(self.convex_hull)
-
-        else:
-            return ReachPolygon(self.vertices)
-
-    def intersect_halfspace(self, a, b, c) -> Union["ReachPolygon", None]:
-        """Returns the intersection of the polygon and the halfspace specified in the form of ax + by <= c."""
-        assert not (a == 0 and b == 0), "Halfspace parameters are not valid."
-
-        polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self.bounds)
-        polygon_intersected = self.intersection(polygon_halfspace)
-
-        if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
-            return ReachPolygon.from_polygon(polygon_intersected)
-
-        else:
-            return None
 
     @property
     def vertices(self) -> List[Tuple[np.ndarray, np.ndarray]]:
@@ -149,8 +137,54 @@ class ReachPolygon(Polygon, ABC):
 
         return list_vertices[:-1]
 
+    def clone(self, convexify: bool) -> "ReachPolygon":
+        """
+        Returns a cloned (and convexified) polygon.
+        """
+        if convexify:
+            return ReachPolygon.from_polygon(self.convex_hull)
+
+        else:
+            return ReachPolygon(self.vertices)
+
+    def intersect_halfspace(self, a: float, b: float, c: float) -> Union["ReachPolygon", None]:
+        """
+        Returns the intersection of the polygon and the halfspace specified in the form of ax + by <= c.
+        """
+        assert not (a == 0 and b == 0), "Halfspace parameters are not valid."
+
+        polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self.bounds)
+        polygon_intersected = self.intersection(polygon_halfspace)
+
+        if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
+            return ReachPolygon.from_polygon(polygon_intersected)
+
+        else:
+            return None
+
+    @classmethod
+    def from_polygon(cls, polygon: Polygon) -> Union["ReachPolygon", None]:
+        """
+        Returns a polygon constructed from the vertices of the given polygon.
+        """
+        if polygon.is_empty:
+            return None
+
+        else:
+            return ReachPolygon(cls.get_vertices(polygon))
+
     @staticmethod
-    def get_vertices(polygon) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def from_rectangle_vertices(p_lon_min: float, p_lat_min: float,
+                                p_lon_max: float, p_lat_max: float) -> "ReachPolygon":
+        """
+        Returns a polygon given the vertices of a rectangle.
+        """
+        list_vertices = [(p_lon_min, p_lat_min), (p_lon_max, p_lat_min),
+                         (p_lon_max, p_lat_max), (p_lon_min, p_lat_max)]
+        return ReachPolygon(list_vertices)
+
+    @staticmethod
+    def get_vertices(polygon: Union[Polygon, "ReachPolygon"]) -> List[Tuple[np.ndarray, np.ndarray]]:
         """Returns the list of vertices of the polygon."""
         if isinstance(polygon, Polygon) or isinstance(polygon, ReachPolygon):
             list_x, list_y = polygon.exterior.coords.xy
@@ -172,8 +206,16 @@ class ReachPolygon(Polygon, ABC):
         return list_vertices
 
     @staticmethod
-    def construct_halfspace_polygon(a, b, c, bounds_polygon) -> Polygon:
-        """Returns a polygon representing the halfspace."""
+    def construct_halfspace_polygon(a: float, b: float, c: float,
+                                    bounds_polygon: Tuple[float, float, float, float]) -> Polygon:
+        """
+        Returns a polygon representing the halfspace.
+
+        .. note::
+            **General case:** First compute two arbitrary vertices that are far away from the x boundary,
+            then compute the slope of the vector that is perpendicular to the vector connecting these two points to
+            look for remaining two vertices required for the polygon construction.
+        """
         x_min, y_min, x_max, y_max = bounds_polygon
         dist_diagonal = ((x_max - x_min) ** 2 + (y_max - y_min) ** 2) ** 0.5
         margin = 10
@@ -210,12 +252,6 @@ class ReachPolygon(Polygon, ABC):
 
         else:
             # general case
-            """
-            First compute two arbitrary vertices that are far away from the x boundary,
-            then compute the slope of the vector that is perpendicular to the vector
-            connecting these two points to look for remaining two vertices required
-            for the polygon construction.
-            """
             margin = 100
 
             for x in [x_min - margin, x_max + margin]:

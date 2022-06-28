@@ -1,14 +1,14 @@
-import logging
 import os
+import logging
 from typing import Optional, Union, Tuple
 
-import commonroad_reach.pycrreach as reach
 import numpy as np
-from commonroad.common.solution import VehicleType
-from commonroad.planning.goal import GoalRegion
-from commonroad.planning.planning_problem import PlanningProblem
+import commonroad_reach.pycrreach as reach
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.trajectory import State
+from commonroad.planning.goal import GoalRegion
+from commonroad.planning.planning_problem import PlanningProblem
+from commonroad.common.solution import VehicleType
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 from commonroad_route_planner.route_planner import RoutePlanner
@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 class Configuration:
-    """Class holding all relevant configurations"""
+    """
+    Class holding all relevant configurations.
+    """
 
     def __init__(self, config: Union[ListConfig, DictConfig]):
         self.name_scenario = config.general.name_scenario
@@ -42,13 +44,15 @@ class Configuration:
                              planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
                              state_initial: State = None, goal_region: GoalRegion = None,
                              CLCS: CurvilinearCoordinateSystem = None):
-        """Updates configuration based on the given attributes.
+        """
+        Updates configuration based on the given attributes.
 
         Possible ways of completing the configuration:
+
             1. Empty attributes: loads scenario and planning problem from the xml files, computes route and CLCS
             2. Scenario + planning problem (+ initial state): computes route and CLCS
-            2. Scenario + initial state + goal region: computes route and CLCS
-            3. Scenario + initial state + CLCS: retrieve reference path from CLCS
+            3. Scenario + initial state + goal region: computes route and CLCS
+            4. Scenario + initial state + CLCS: retrieve reference path from CLCS
             
         """
         # patterns that do not require loading scenario and planning problem from xml files.
@@ -70,6 +74,9 @@ class Configuration:
         self.reachable_set.update_configuration(self)
 
     def print_configuration_summary(self):
+        """
+        Prints a summary of the configuration.
+        """
         dict_clcs_to_string = {"CART": "cartesian", "CVLN": "curvilinear"}
         dict_mode_computation_to_string = {1: "polytopic, python backend", 2: "polytopic, c++ backend",
                                            3: "graph-based (online)", 4: "graph-based (offline)"}
@@ -103,7 +110,9 @@ class Configuration:
             util_logger.print_and_log_info(logger, line)
 
     def convert_to_cpp_configuration(self) -> reach.Configuration:
-        """Converts to configuration that is readable by the C++ binding code."""
+        """
+        Converts to a configuration that is readable by the C++ binding code.
+        """
         config = reach.Configuration()
 
         config.general.name_scenario = self.name_scenario
@@ -239,7 +248,7 @@ class VehicleConfiguration:
             self.radius_disc, self.circle_distance = \
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
                                                                     ref_point=config.planning.reference_point,
-                                                                    rear_axle_dist=self.wb_rear_axle)
+                                                                    dist_axle_rear=self.wb_rear_axle)
 
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,
@@ -288,7 +297,7 @@ class VehicleConfiguration:
             self.radius_disc, self.circle_distance = \
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
                                                                     ref_point=config.planning.reference_point,
-                                                                    rear_axle_dist=self.wb_rear_axle)
+                                                                    dist_axle_rear=self.wb_rear_axle)
 
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,

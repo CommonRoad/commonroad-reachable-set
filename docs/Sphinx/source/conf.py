@@ -12,10 +12,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath("../../../"))
-sys.path.insert(0, os.path.abspath('../../../commonroad_reach/data_structure/'))
-sys.path.insert(0, os.path.abspath('../../../commonroad_reach/data_structure/reach/'))
-sys.path.insert(0, os.path.abspath('../../../commonroad_reach/utility/'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../../commonroad_reach/"))
 
 
 # -- Project information -----------------------------------------------------
@@ -38,28 +36,25 @@ templates_path = ["_templates"]
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ["sphinx.ext.autodoc", 
-              "sphinx.ext.intersphinx",
               "sphinx.ext.viewcode",
               "sphinx.ext.napoleon",
-              "m2r2",
-              "sphinxcontrib.apidoc",
-              "sphinx.ext.todo"
+              'sphinx.ext.inheritance_diagram',
+              "sphinx.ext.todo",
+              'sphinx_autodoc_typehints',    
+              "m2r2"
               ]
-# configure sphinxcontrib.apidoc
-apidoc_module_dir = '../../../commonroad_reach/'
-apidoc_output_dir = './'
-apidoc_excluded_paths = ['tests/']
-apidoc_separate_modules = False
-# apidoc_module_first = True
+# order of displaying the members in an automodule/autoclass
+autodoc_member_order = "bysource"
 
 # show todo items
 todo_include_todos = True
+
+autodoc_typehints = "both"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -82,6 +77,7 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False
 }
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

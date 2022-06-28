@@ -1,5 +1,4 @@
 import logging
-import warnings
 from typing import Union, List, Dict
 
 import networkx as nx
@@ -8,7 +7,7 @@ from commonroad.geometry.shape import Shape, ShapeGroup
 
 from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.driving_corridor import DrivingCorridor, ConnectedComponent
+from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor, ConnectedComponent
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 import commonroad_reach.utility.logger as util_logger

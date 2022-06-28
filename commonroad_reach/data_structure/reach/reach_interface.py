@@ -5,8 +5,8 @@ from typing import List
 from commonroad.geometry.shape import Shape
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.driving_corridor import DrivingCorridor
-from commonroad_reach.data_structure.driving_corridor_extractor import DrivingCorridorExtractor
+from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor
+from commonroad_reach.data_structure.reach.driving_corridor_extractor import DrivingCorridorExtractor
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 import commonroad_reach.utility.logger as util_logger
 
@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class ReachableSetInterface:
-    """Interface for reachable set computation."""
+    """
+    Interface for reachable set computation.
+    """
 
     def __init__(self, config: Configuration):
         self.config = None
@@ -43,7 +45,9 @@ class ReachableSetInterface:
         return self._reach.reachable_set
 
     def reset(self, config: Configuration):
-        """Resets configuration of the interface."""
+        """
+        Resets configuration of the interface.
+        """
         self.config = config
         self._reach = None
         self._reachable_set_computed = False
@@ -74,6 +78,9 @@ class ReachableSetInterface:
             return self._reach.reachable_set_at_step(step)
 
     def compute_reachable_sets(self, step_start: int = 1, step_end: int = 0):
+        """
+        Computes reachable sets between the given start and end steps.
+        """
         util_logger.print_and_log_info(logger, "* Computing reachable sets...")
 
         if not self._reach:
@@ -96,7 +103,16 @@ class ReachableSetInterface:
     def extract_driving_corridors(self, to_goal_region: bool = False, shape_terminal: Shape = None,
                                   is_cartesian_shape: bool = True, corridor_lon: DrivingCorridor = None,
                                   list_p_lon: List[float] = None) -> List[DrivingCorridor]:
-        """Extracts driving corridors within the reachable sets."""
+        """
+        Extracts driving corridors within the reachable sets.
+
+        :param to_goal_region: whether the corridors should intersect with the goal region
+        :param shape_terminal: a user-specified shape representing the terminal state
+        :param is_cartesian_shape: whether the shape is given in Cartesian coordinate system
+        :param corridor_lon: a longitudinal driving corridor
+        :param list_p_lon: a list of longitudinal positions
+        :return: a list of driving corridors
+        """
         if not self.reachable_set:
             util_logger.print_and_log_warning(logger, "Reachable sets are empty! "
                                                       "Compute reachable sets before extracting driving corridors.")

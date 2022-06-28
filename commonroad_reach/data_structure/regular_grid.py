@@ -14,7 +14,7 @@ USE_COLLISION = True
 CONVEX_SHAPE = True
 
 
-class ObstacleRegularGrid:
+class RegularGrid:
     def __init__(self, ll: Dict[int, np.ndarray], ur: Dict[int, np.ndarray], collision_checker: pycrcc.CollisionChecker,
                  dx: float, dy: float, planning_config: PlanningConfiguration, a_x: float, a_y: float, t_f: float,
                  grid_shapes: Dict[int, Tuple[int, int]]):
@@ -63,7 +63,7 @@ class ObstacleRegularGrid:
         self.ll: Dict[int, np.ndarray] = ll
         self.ur: Dict[int, np.ndarray] = ur
 
-    def occupancy_grid_at_time(self, step: int, translate_reachset: np.ndarray) -> np.ndarray:
+    def occupancy_grid_at_step(self, step: int, translate_reachset: np.ndarray) -> np.ndarray:
         """
         Get occupancy matrix defined over regular grid with 0 = occupied, 1 = free space.
         :param step: step of evaluation

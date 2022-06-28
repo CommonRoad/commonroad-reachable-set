@@ -35,7 +35,7 @@ def test_compute_disc_radius_and_distance(id_type_vehicle, reference_point, rad_
 
     # compute radius and circle distance
     _rad, _dist = util_configuration.compute_disc_radius_and_distance\
-        (vehicle_params.l, vehicle_params.w, ref_point=reference_point, rear_axle_dist=vehicle_params.b)
+        (vehicle_params.l, vehicle_params.w, ref_point=reference_point, dist_axle_rear=vehicle_params.b)
 
     assert np.isclose(_rad, rad_expected)
     assert np.isclose(_dist, dist_expected)

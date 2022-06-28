@@ -28,7 +28,7 @@ static_obstacle_initial_state = State(position=init_pos, orientation=0.0, time_s
 static_obstacle = StaticObstacle(static_obstacle_id, static_obstacle_type, static_obstacle_shape, static_obstacle_initial_state)
 
 # disc radius computation
-rad, dist = compute_disc_radius_and_distance(params.l, params.w, ref_point=reference_point, rear_axle_dist=params.b)
+rad, dist = compute_disc_radius_and_distance(params.l, params.w, ref_point=reference_point, dist_axle_rear=params.b)
 
 if reference_point == "REAR":
     center1 = rear_axle_pos

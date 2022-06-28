@@ -7,6 +7,9 @@ from commonroad_reach.data_structure.configuration import Configuration
 
 
 class ConfigurationBuilder:
+    """
+    Class to build a configuration.
+    """
     path_root: str = None
     path_config: str = None
     path_config_default: str = None
@@ -14,14 +17,14 @@ class ConfigurationBuilder:
     @classmethod
     def build_configuration(cls, name_scenario: str, path_root: str = None,
                             dir_config: str = "configurations", dir_config_default: str = "defaults") -> Configuration:
-        """Builds configuration from default, scenario-specific, and commandline config files.
+        """
+        Builds configuration from default, scenario-specific, and commandline config files.
 
-        Args:
-            name_scenario (str): considered scenario
-            path_root(str): root path of the package
-            dir_config (str): directory storing configurations
-            dir_config_default (str): directory storing default configurations
-
+        :param name_scenario: name of the considered scenario
+        :param path_root: root path of the package
+        :param dir_config: directory storing configurations
+        :param dir_config_default: directory storing default configurations
+        :return: built configuration
         """
         if path_root is None:
             path_root = os.path.normpath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -40,12 +43,12 @@ class ConfigurationBuilder:
 
     @classmethod
     def set_paths(cls, path_root: str, dir_config: str, dir_config_default: str):
-        """Sets necessary paths of the configuration builder.
+        """
+        Sets necessary paths of the configuration builder.
 
-        Args:
-            path_root (str): root directory
-            dir_config (str): directory storing configurations
-            dir_config_default (str): directory storing default configurations
+        :param path_root: root directory
+        :param dir_config: directory storing configurations
+        :param dir_config_default: directory storing default configurations
         """
         cls.path_root = path_root
         cls.path_config = os.path.join(path_root, dir_config)
@@ -53,9 +56,10 @@ class ConfigurationBuilder:
 
     @classmethod
     def construct_default_configuration(cls) -> Union[ListConfig, DictConfig]:
-        """Constructs default configuration by accumulating yaml files.
+        """
+        Constructs default configuration by accumulating yaml files.
 
-        Collects all configuration files ending with '.yaml'.
+        Collects all configuration files ending with '.yaml' in the directory storing default configurations.
         """
         config_default = OmegaConf.create()
         for path_file in glob.glob(cls.path_config_default + "/*.yaml"):
@@ -76,7 +80,9 @@ class ConfigurationBuilder:
 
     @classmethod
     def convert_to_absolute_paths(cls, config_default: Union[ListConfig, DictConfig]) -> Union[ListConfig, DictConfig]:
-        """Converts relative paths to absolute paths."""
+        """
+        Converts relative paths to absolute paths.
+        """
         for key, path in config_default["general"].items():
             path_relative = os.path.join(cls.path_root, path)
             if os.path.exists(path_relative):
@@ -86,7 +92,10 @@ class ConfigurationBuilder:
 
     @classmethod
     def construct_scenario_configuration(cls, name_scenario: str) -> Union[DictConfig, ListConfig]:
-        """Constructs scenario-specific configuration."""
+        """
+        Constructs scenario-specific configuration.
+
+        """
         config_scenario = OmegaConf.create()
 
         path_config_scenario = cls.path_config + f"/{name_scenario}.yaml"

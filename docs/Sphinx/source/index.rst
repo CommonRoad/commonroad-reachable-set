@@ -25,7 +25,7 @@ Overview
    :maxdepth: 2
 
    Getting Started <getting_started.rst>
-   API Documentation <api_documentation.rst>
+   API Documentation <api/index.rst>
    
 .. Add changelog
 .. mdinclude:: ../../../CHANGELOG.md

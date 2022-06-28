@@ -94,7 +94,7 @@ Run the following command in the root directory to generate C++ documentation.
 doxygen ./docs/Doxyfile
 ```
 
-Doxygen documentation is generated at `./docs/Doxygen/html/index.html`.
+Doxygen documentation can be launched by browsing ``./docs/Doxygen/html/index.html/``.
 
 ### Citation
 

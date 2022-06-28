@@ -1,24 +1,24 @@
 import logging
-
-from typing import List
+from typing import List, Dict
 
 import commonroad_dc.pycrcc as pycrcc
 import commonroad_reach.pycrreach as reach
 from commonroad.geometry.shape import Rectangle, ShapeGroup
-from commonroad.scenario.obstacle import StaticObstacle
+from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
 from commonroad.scenario.scenario import Scenario
 from commonroad_dc.boundary import boundary
 from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
 
+import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
-import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 
 
 class CollisionChecker:
-    """Collision checker using C++ backend.
+    """
+    Collision checker using C++ backend.
 
     It handles collision checks in both Cartesian and curvilinear coordinate systems.
     """
@@ -30,7 +30,6 @@ class CollisionChecker:
         logger.debug("CollisionChecker initialized.")
 
     def _initialize(self):
-        """Initializes the collision checker based on the specified coordinate system."""
         if self.config.planning.coordinate_system == "CART":
             self.cpp_collision_checker = self._create_cartesian_collision_checker()
 
@@ -43,7 +42,8 @@ class CollisionChecker:
             raise Exception(message)
 
     def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:
-        """Creates a Cartesian collision checker.
+        """
+        Creates a Cartesian collision checker.
 
         The collision checker is created by feeding in the scenario with road boundaries.
         """
@@ -57,9 +57,10 @@ class CollisionChecker:
 
     @staticmethod
     def create_scenario_with_road_boundaries(config: Configuration) -> Scenario:
-        """Returns a scenario with obstacles in the Cartesian coordinate system.
+        """
+        Returns a scenario with obstacles in the Cartesian coordinate system.
 
-        Elements included: lanelet network, obstacles, road boundaries
+        Elements included: lanelet network, obstacles, road boundaries.
         """
         scenario: Scenario = config.scenario
         scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
@@ -78,7 +79,7 @@ class CollisionChecker:
         return scenario_cc
 
     @staticmethod
-    def create_cartesian_collision_checker_from_scenario(scenario, params):
+    def create_cartesian_collision_checker_from_scenario(scenario: Scenario, params: Dict) -> pycrcc.CollisionChecker:
         collision_checker = pycrcc.CollisionChecker()
 
         # dynamic obstacles
@@ -102,7 +103,8 @@ class CollisionChecker:
         return collision_checker
 
     def _create_curvilinear_collision_checker(self) -> pycrcc.CollisionChecker:
-        """Creates a curvilinear collision checker.
+        """
+        Creates a curvilinear collision checker.
 
         The collision checker is created by adding a shape group containing occupancies of all static obstacles, and a
         time variant object containing shape groups of occupancies of all dynamic obstacles at different time steps.
@@ -125,7 +127,8 @@ class CollisionChecker:
 
     @staticmethod
     def retrieve_static_obstacles(scenario: Scenario, consider_traffic: bool) -> List[StaticObstacle]:
-        """Returns the list of static obstacles.
+        """
+        Returns the list of static obstacles.
 
         The static obstacles include static road traffic and road boundaries.
         """
@@ -141,8 +144,10 @@ class CollisionChecker:
         return list_obstacles_static
 
     @staticmethod
-    def obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static):
-        """Returns the vertices of polygons from a given list of static obstacles."""
+    def obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static: List[StaticObstacle]):
+        """
+        Returns the vertices of polygons from a given list of static obstacles.
+        """
         list_vertices_polygons_static = []
 
         for obstacle in list_obstacles_static:
@@ -158,7 +163,10 @@ class CollisionChecker:
 
         return list_vertices_polygons_static
 
-    def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic):
+    def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic: List[DynamicObstacle]):
+        """
+        Returns the vertices of polygons from a given list of dynamic obstacles.
+        """
         step_start = self.config.planning.step_start
         step_end = step_start + self.config.planning.steps_computation + 1
 
@@ -185,9 +193,10 @@ class CollisionChecker:
         return dict_time_to_list_vertices_polygons_dynamic
 
     def collides_at_step(self, step: int, input_rectangle: ReachPolygon) -> bool:
-        """Checks for collision with obstacles in the scenario at time step.
+        """
+        Returns true if the input rectangle collides with obstacles in the scenario at the given step.
 
-        Note: creating a query windows significantly decreases computation time.
+        Creating a query windows significantly decreases computation time.
         """
         # convert to collision object
         rect_collision = self.convert_reach_polygon_to_collision_object(input_rectangle)
@@ -203,6 +212,9 @@ class CollisionChecker:
 
     @staticmethod
     def convert_reach_polygon_to_collision_object(input_rectangle: ReachPolygon) -> pycrcc.RectAABB:
+        """
+        Converts a reach polygon object into a collision object of CommonRoad Drivability Checker.
+        """
         p_lon_min, p_lat_min, p_lon_max, p_lat_max = input_rectangle.bounds
 
         length = p_lon_max - p_lon_min

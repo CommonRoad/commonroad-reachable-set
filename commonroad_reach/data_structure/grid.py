@@ -6,12 +6,14 @@ logger = logging.getLogger(__name__)
 
 
 class Cell:
-    """Class representing a cell in the grid."""
+    """
+    Class representing a cell in a grid.
+    """
     cnt_id: int = 0
 
     def __init__(self, x_min: float, x_max: float, y_min: float, y_max: float):
-        assert x_min < x_max, "<Cell> x_min should be smaller than x_max"
-        assert y_min < y_max, "<Cell> y_min should be smaller than y_max"
+        assert x_min < x_max, "x_min should be smaller than x_max!"
+        assert y_min < y_max, "y_min should be smaller than y_max!"
 
         self.x_min = x_min
         self.x_max = x_max
@@ -27,7 +29,9 @@ class Cell:
 
 
 class Grid:
-    """Cartesian grid for discretizing the reachable sets."""
+    """
+    Cartesian grid for discretizing reachable sets in the graph-based propagation method.
+    """
 
     def __init__(self, x_min: float, x_max: float, y_min: float, y_max: float, size_grid: float):
         assert x_min < x_max, "<Grid> x_min should be smaller than x_max"
