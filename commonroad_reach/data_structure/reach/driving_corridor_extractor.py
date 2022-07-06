@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 from commonroad.geometry.shape import Shape, ShapeGroup
 
+import commonroad_reach.utility.reach_operation
 from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor, ConnectedComponent
@@ -227,7 +228,7 @@ class DrivingCorridorExtractor:
             overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
 
         else:
-            overlap = util_geometry.connected_reachset_py(list_nodes_reach, DIGITS)
+            overlap = commonroad_reach.utility.reach_operation.connected_reachset_py(list_nodes_reach, DIGITS)
         # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
         adjacency = []
         for v in overlap.values():
@@ -330,6 +331,6 @@ class DrivingCorridorExtractor:
         """
         area = 0.0
         for time_idx, reach_set_nodes in driving_corridor.items():
-            area += util_geometry.compute_area_of_reach_nodes(reach_set_nodes)
+            area += commonroad_reach.utility.reach_operation.compute_area_of_reach_nodes(reach_set_nodes)
 
         return area

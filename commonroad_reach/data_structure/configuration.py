@@ -381,38 +381,28 @@ class PlanningConfiguration:
             self.v_lon_initial, self.v_lat_initial = v_initial
 
     @property
-    def p_lon_lat_initial(self):
+    def p_initial(self):
         return np.array([self.p_lon_initial, self.p_lat_initial])
 
-    @p_lon_lat_initial.setter
-    def p_lon_lat_initial(self, p_lon_lat_initial: Tuple):
-        """
-        :param p_lon_lat_initial: Tuple of length 2 with
-                                  p_lon_lat_initial[0]: longitudinal position
-                                  p_lon_lat_initial[1]: lateral position
-        """
-        assert (type(p_lon_lat_initial is tuple)), "Initial lon/lat position must be of type tuple with length 2"
-        assert (len(p_lon_lat_initial) == 2), "Initial lon/lat position must be of type tuple with length 2"
+    @p_initial.setter
+    def p_initial(self, p_initial: Tuple):
+        assert (type(p_initial is tuple)), "Initial lon/lat position must be of type tuple with length 2"
+        assert (len(p_initial) == 2), "Initial lon/lat position must be of type tuple with length 2"
 
-        self.p_lon_initial = p_lon_lat_initial[0]
-        self.p_lat_initial = p_lon_lat_initial[1]
+        self.p_lon_initial = p_initial[0]
+        self.p_lat_initial = p_initial[1]
 
     @property
-    def v_lon_lat_initial(self):
+    def v_initial(self):
         return np.array([self.v_lon_initial, self.v_lat_initial])
 
-    @v_lon_lat_initial.setter
-    def v_lon_lat_initial(self, v_lon_lat_initial: Tuple):
-        """
-        :param v_lon_lat_initial: Tuple of length 2 with
-                                  v_lon_lat_initial[0]: longitudinal velocity
-                                  v_lon_lat_initial[1]: lateral velocity
-        """
-        assert (type(v_lon_lat_initial is tuple)), "Initial lon/lat velocity must be of type tuple with length 2"
-        assert (len(v_lon_lat_initial) == 2), "Initial lon/lat velocity must be of type tuple with length 2"
+    @v_initial.setter
+    def v_initial(self, v_initial: Tuple):
+        assert (type(v_initial is tuple)), "Initial lon/lat velocity must be of type tuple with length 2"
+        assert (len(v_initial) == 2), "Initial lon/lat velocity must be of type tuple with length 2"
 
-        self.v_lon_initial = v_lon_lat_initial[0]
-        self.v_lat_initial = v_lon_lat_initial[1]
+        self.v_lon_initial = v_initial[0]
+        self.v_lat_initial = v_initial[1]
 
 
 class ReachableSetConfiguration:

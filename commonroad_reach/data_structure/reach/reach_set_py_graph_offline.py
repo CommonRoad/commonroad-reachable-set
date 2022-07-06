@@ -82,7 +82,7 @@ class PyGraphReachableSetOffline(ReachableSet):
             self.polygon_zero_state_lat[steps] = reach_operation.create_zero_state_polygon(dt, a_lat_min, a_lat_max)
 
     def compute(self, step_start: int, step_end: int):
-        for step in range(step_start + 1, step_end + 1):
+        for step in range(step_start, step_end + 1):
             time_start = time.time()
             self._compute_drivable_area_at_step(step)
             self._compute_reachable_set_at_step(step)
@@ -262,7 +262,7 @@ class PyGraphReachableSetOffline(ReachableSet):
                       f"vlatmax{self.config.vehicle.ego.v_lat_max}_"
 
         self.config.reachable_set.name_pickle_offline = \
-            f"offline_nt{max(self.reachable_set())}_" \
+            f"offline_nt{max(self.reachable_set)}_" \
             f"{self.config.planning.coordinate_system}_" \
             + a_v_str + \
             f"ms{self.config.reachable_set.n_multi_steps}_" \

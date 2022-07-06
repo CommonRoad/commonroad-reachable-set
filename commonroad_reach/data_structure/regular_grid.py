@@ -34,8 +34,8 @@ class RegularGrid:
         self.grid_shapes = grid_shapes
 
         # filter irrelevant obstacles over complete time interval
-        init_pos = planning_config.p_lon_lat_initial
-        init_vel = planning_config.v_lon_lat_initial
+        init_pos = planning_config.p_initial
+        init_vel = planning_config.v_initial
 
         a_max = max([a_x, a_y])
         extreme_pos = np.array([init_pos + a_max * t_f ** 2 / 2 + init_vel * t_f,

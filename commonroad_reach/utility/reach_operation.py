@@ -1,5 +1,8 @@
 import logging
+from collections import defaultdict
 from decimal import Decimal
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 from math import ceil, floor
@@ -440,3 +443,81 @@ def remove_rectangles_out_of_kamms_circle(time_duration: float, a_max: float,
 
     return [rectangle for index, rectangle in enumerate(list_rectangles_adapted)
             if index not in list_idx_rectangles_to_be_deleted]
+
+
+def compute_area_of_reach_nodes(list_nodes_reach: List[ReachNode]) -> float:
+    """
+    Computes the area of a given list of reach nodes.
+
+    :param list_nodes_reach:
+    :return area: area of projection of the reachable sets on position domain
+    """
+    area = 0.0
+    if not list_nodes_reach:
+        return area
+
+    if isinstance(list_nodes_reach[0], ReachNode):
+        for node in list_nodes_reach:
+            area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
+
+    else:
+        for node in list_nodes_reach:
+            area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
+
+    return area
+
+
+def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
+    """Determines connected sets in the position domain.
+
+    This function is the equivalent python function to pycrreach.connected_reachset_boost().
+    Returns a dictionary with key=node idx in list and value=list of tuples
+    :param list_nodes_reach: list of reachable set node
+    :param num_digits
+    """
+    coefficient = np.power(10.0, num_digits)
+    dict_adjacency = defaultdict(list)
+
+    # list of drivable areas (i.e., position rectangles)
+    list_position_rectangles = list()
+
+    # preprocess
+    for node_reach in list_nodes_reach:
+        # enlarge position rectangles
+        vertices_rectangle_scaled = (np.floor(node_reach.p_lon_min * coefficient),
+                                     np.floor(node_reach.p_lat_min * coefficient),
+                                     np.ceil(node_reach.p_lon_max * coefficient),
+                                     np.ceil(node_reach.p_lat_max * coefficient))
+        list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
+
+    # iterate over all rectangles in list
+    for idx1, position_rect_1 in enumerate(list_position_rectangles):
+        for idx2, position_rect_2 in enumerate(list_position_rectangles):
+            if idx1 == idx2:
+                continue
+
+            # check for dict_adjacency via shapely intersects() function. If True, add tuple of idx to dict
+            if position_rect_1.intersects(position_rect_2):
+                dict_adjacency[idx1].append((idx1, idx2))
+
+    return dict_adjacency
+
+
+def lon_interval_connected_set(connected_set):
+    """Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions"""
+    # get min and max values for each reachable set in the connected set
+    min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
+    # get minimum and maximum value for the connected set
+    min_connected_set = np.min(min_max_array[:, 0])
+    max_connected_set = np.max(min_max_array[:, 1])
+    return min_connected_set, max_connected_set
+
+
+def lat_interval_connected_set(connected_set):
+    """Projects a connected set onto lateral position domain and returns min/max lateral positions"""
+    # get min and max values for each reachable set in the connected set
+    min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
+    # get minimum and maximum value for the connected set
+    min_connected_set = np.min(min_max_array[:, 0])
+    max_connected_set = np.max(min_max_array[:, 1])
+    return min_connected_set, max_connected_set

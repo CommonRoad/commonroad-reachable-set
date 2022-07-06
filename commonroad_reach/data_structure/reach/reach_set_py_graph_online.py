@@ -80,7 +80,7 @@ class PyGraphReachableSetOnline(ReachableSet):
     @lru_cache(128)
     def drivable_area_at_step(self, step: int) -> List[ReachPolygon]:
         if step not in self._list_steps_computed:
-            util_logger.print_and_log_warning(logger, "Given step for drivable area retrieval is out of range.")
+            util_logger.print_and_log_warning(logger, f"Given step {step} for drivable area retrieval is out of range.")
             return []
 
         else:
@@ -124,13 +124,13 @@ class PyGraphReachableSetOnline(ReachableSet):
         """
         return time_index + self.step_start
 
-    @lru_cache(124)
+    @lru_cache(128)
     def reachset_translation(self, step: int) -> np.ndarray:
         """
         Translation of initial state at the given step.
         """
-        return self.config.planning.p_lon_lat_initial \
-               + self.config.planning.v_lon_lat_initial * self.config.scenario.dt * step
+        return self.config.planning.p_initial \
+               + self.config.planning.v_initial * self.config.scenario.dt * step
 
     def initialize_new_scenario(self, scenario: Optional[Scenario] = None, planning_problem: [Optional] = None):
         """
