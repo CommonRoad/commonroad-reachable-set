@@ -6,14 +6,13 @@ from commonroad_reach.utility import visualization as util_visual
 
 def main():
     # ==== specify scenario
-    name_scenario = "DEU_Test-1_1_T-1"
-    # name_scenario = "ARG_Carcarana-1_1_T-1"
+    # name_scenario = "DEU_Test-1_1_T-1"
+    name_scenario = "ARG_Carcarana-1_1_T-1"
     # name_scenario = "USA_US101-6_1_T-1"
     # name_scenario = "ZAM_Intersection-1_1_T-1"
 
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
-    config.update_configuration()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
 

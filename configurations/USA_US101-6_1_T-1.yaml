@@ -1,12 +1,12 @@
 planning:
   dt: 0.1
-  steps_computation: 50
-  coordinate_system: "CVLN"
+  steps_computation: 2
+  coordinate_system: "CART"
 
-vehicle:
-  ego:
-    # velocity in m/s
-    v_lon_min: 0.0
+#vehicle:
+#  ego:
+#    # velocity in m/s
+#    v_lon_min: 0.0
 
 reachable_set:
   mode_computation: 2

@@ -13,7 +13,7 @@ def test_construct_configuration(config: Configuration):
 
 
 @pytest.mark.parametrize("length, width, wheelbase, radius_expected",
-                         [(6, 2, None, 1.5), (0, 2, 4, 1.5), (4.927, 2.208, None, 1.4)])
+                         [(6, 2, None, np.sqrt(2)), (0, 2, 4, 1.0), (4.927, 2.208, None, 1.37591)])
 def test_compute_disk_radius_and_wheelbase(length, width, wheelbase, radius_expected):
     _radius, _wheelbase = util_configuration.compute_disc_radius_and_wheelbase(length, width, wheelbase)
 

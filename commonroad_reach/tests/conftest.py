@@ -17,7 +17,9 @@ sys.path.append(os.getcwd())
 @pytest.fixture
 def config():
     path_root = str(pathlib.Path(__file__).parent.resolve())
-    return ConfigurationBuilder.build_configuration("DEU_Test-1_1_T-1", -1, path_root)
+    config = ConfigurationBuilder.build_configuration("DEU_Test-1_1_T-1", path_root)
+    config.update_configuration()
+    return config
 
 
 @pytest.fixture

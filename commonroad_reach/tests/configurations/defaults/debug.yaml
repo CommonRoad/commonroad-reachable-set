@@ -1,6 +1,7 @@
 save_plots: 1
 save_config: 1
-
+verbose_debug: 0
+verbose_info: 1
 # visualization settings
 # draw the reference the path
 draw_ref_path: False

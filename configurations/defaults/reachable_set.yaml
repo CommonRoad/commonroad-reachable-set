@@ -33,4 +33,4 @@ name_pickle_offline: offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax
 # number of multi-steps for graph-based propagation
 n_multi_steps: 6
 # number of threads for C++ backend
-num_threads: 4
+num_threads: 1

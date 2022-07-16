@@ -4,12 +4,13 @@ planning:
   coordinate_system: "CART"
 
 reachable_set:
-  mode_computation: 3
+  mode_computation: 1
   mode_repartition: 2
   mode_inflation: 1
-  size_grid: 0.5
+  size_grid: 0.25
   size_grid_2nd: 0.1
   radius_terminal_split: 0.7
+#  name_pickle_offline: offline_nt10_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.25_ver0.0.1.pickle
   name_pickle_offline: offline_nt30_CART_amax8.0_vmax30.0_ms6_dx0.5_ver0.0.1.pickle
 
 vehicle:
