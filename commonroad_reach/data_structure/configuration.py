@@ -371,9 +371,9 @@ class PlanningConfiguration:
                 candidate_holder = route_planner.plan_routes()
                 route = candidate_holder.retrieve_first_route()
 
-                self.reference_path = route.reference_path
-                self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
-                # self.set_reference_path(config, route.reference_path, route.list_ids_lanelets[0])
+                if route:
+                    self.reference_path = route.reference_path
+                    self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
 
             p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, state_initial)
 
