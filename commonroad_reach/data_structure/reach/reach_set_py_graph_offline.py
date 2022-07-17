@@ -41,8 +41,12 @@ class PyGraphReachableSetOffline(ReachableSet):
         config.planning_problem.initial_state.position *= 0.0
         config.planning_problem.initial_state.velocity *= 0.0
         config.planning_problem.initial_state.orientation *= 0.0
-        config.planning.update_configuration(config)
-        config.reachable_set.update_configuration(config)
+        try:
+            config.planning.update_configuration(config)
+            config.reachable_set.update_configuration(config)
+
+        except:
+            pass
 
     @property
     def path_offline_file(self):
