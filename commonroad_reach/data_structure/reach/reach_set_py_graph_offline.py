@@ -27,8 +27,7 @@ class PyGraphReachableSetOffline(ReachableSet):
     """
 
     def __init__(self, config: Configuration):
-        # self.dict_step_to_drivable_area: Dict[int, List[ReachPolygon]]
-        # self.dict_step_to_reachable_set: Dict[int, List[ReachNodeMultiGeneration]]
+        self._set_initial_state_to_origin(config)
         super().__init__(config)
         self.polygon_zero_state_lon: Dict[int, ReachPolygon] = dict()
         self.polygon_zero_state_lat: Dict[int, ReachPolygon] = dict()
@@ -37,6 +36,13 @@ class PyGraphReachableSetOffline(ReachableSet):
         self._initialize_zero_state_polygons()
 
         logger.debug("PyGraphReachableSetOffline initialized.")
+
+    def _set_initial_state_to_origin(self, config):
+        config.planning_problem.initial_state.position *= 0.0
+        config.planning_problem.initial_state.velocity *= 0.0
+        config.planning_problem.initial_state.orientation *= 0.0
+        config.planning.update_configuration(config)
+        config.reachable_set.update_configuration(config)
 
     @property
     def path_offline_file(self):
