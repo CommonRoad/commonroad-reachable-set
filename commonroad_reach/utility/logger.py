@@ -4,6 +4,9 @@ from datetime import datetime
 
 
 def initialize_logger(config) -> logging.Logger:
+    """
+    Initializes the logging module and returns a logger.
+    """
     # create log directory
     os.makedirs(config.general.path_logs, exist_ok=True)
 

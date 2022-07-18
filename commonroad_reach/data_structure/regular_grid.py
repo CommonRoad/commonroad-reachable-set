@@ -3,10 +3,10 @@ pyximport.install()
 
 from typing import Tuple, Dict
 
-import commonroad_dc.pycrcc as pycrcc
 import cv2 as cv
 import numpy as np
 
+import commonroad_dc.pycrcc as pycrcc
 from commonroad_reach.data_structure.configuration import PlanningConfiguration
 from commonroad_reach.utility.util_py_grid_online_reach import convert_cart2pixel_coordinates_c, get_vertices_from_rect
 
@@ -15,29 +15,33 @@ CONVEX_SHAPE = True
 
 
 class RegularGrid:
+    """
+    Class for computing uniformly spatial partitioned grid of obstacles.
+    """
     def __init__(self, ll: Dict[int, np.ndarray], ur: Dict[int, np.ndarray], collision_checker: pycrcc.CollisionChecker,
-                 dx: float, dy: float, planning_config: PlanningConfiguration, a_x: float, a_y: float, t_f: float,
+                 dx: float, dy: float, planning_config: PlanningConfiguration, a_lon: float, a_lat: float, t_f: float,
                  grid_shapes: Dict[int, Tuple[int, int]]):
         """
-        Class for computing uniformly spatial partitioned grid of obstacles
-        :param collision_object_dict:
         :param ll: lower-left coordinates of reachable set at every time step
         :param ur: upper-right coordinates of reachable set at current time step
         :param collision_checker: collision checker for discretization queries
         :param dx: grid length x
         :param dy: grid length y
-        :param params:
-        :param dynamic_only: only consider dynamic obstacles
+        :param planning_config: configuration related to planning
+        :param a_lon: acceleration in the longitudinal direction
+        :param a_lat: acceleration in the lateral direction
+        :param t_f: final time step
+        :param grid_shapes: shape of the grid
         """
         self.cc_static: pycrcc.CollisionChecker = pycrcc.CollisionChecker()
         self.cc_dynamic: pycrcc.CollisionChecker = pycrcc.CollisionChecker()
         self.grid_shapes = grid_shapes
 
-        # filter irrelevant obstacles over complete time interval
+        # only keep obstacles with possible collision by examining max acceleration
         init_pos = planning_config.p_initial
         init_vel = planning_config.v_initial
 
-        a_max = max([a_x, a_y])
+        a_max = max([a_lon, a_lat])
         extreme_pos = np.array([init_pos + a_max * t_f ** 2 / 2 + init_vel * t_f,
                                 init_pos - a_max * t_f ** 2 / 2 + init_vel * t_f,
                                 init_pos - a_max * t_f ** 2 / 2 - init_vel * t_f,
@@ -51,6 +55,7 @@ class RegularGrid:
         for obj in collision_checker.obstacles():
             if type(obj) == pycrcc.TimeVariantCollisionObject:
                 self.cc_dynamic.add_collision_object(obj)
+
             else:
                 self.cc_static.add_collision_object(obj)
 
@@ -66,9 +71,9 @@ class RegularGrid:
     def occupancy_grid_at_step(self, step: int, translate_reachset: np.ndarray) -> np.ndarray:
         """
         Get occupancy matrix defined over regular grid with 0 = occupied, 1 = free space.
+
         :param step: step of evaluation
         :param translate_reachset: translation of reachable set
-        :return:
         """
         occupancy_grid = np.ones(self.grid_shapes[step], dtype=np.uint8)
 
@@ -102,6 +107,9 @@ class RegularGrid:
                                      occupancy_grid: np.ndarray,
                                      ll_translated: np.ndarray,
                                      ur_translated: np.ndarray) -> np.ndarray:
+        """
+        Fill the occupancy grid considering the shape of the collision object.
+        """
         def fill_shape(occupancy_grid, collision_object):
             typ = type(collision_object)
             if typ == pycrcc.Polygon or typ == pycrcc.Triangle:
@@ -114,6 +122,7 @@ class RegularGrid:
                                                                        vertices.shape[0]))
                 vertices = vertices.reshape((-1, 1, 2))
                 cv.fillPoly(occupancy_grid, [vertices], (0))
+
             elif typ == pycrcc.RectOBB:
                 r_x = collision_object.r_x()
                 r_y = collision_object.r_y()
@@ -130,10 +139,12 @@ class RegularGrid:
                 vertices = vertices.reshape((-1, 1, 2))
 
                 occupancy_grid = cv.fillPoly(occupancy_grid, [vertices], (0))
+
             elif typ == pycrcc.RectAABB:
                 pt0 = convert_cart2pixel_coordinates(collision_object.min_x(), collision_object.min_y())
                 pt1 = convert_cart2pixel_coordinates(collision_object.max_x(), collision_object.max_y())
                 occupancy_grid = cv.rectangle(occupancy_grid, pt0, pt1, (0), -1)
+
             else:
                 raise NotImplementedError('Type {} not Implemented'.format(typ))
 
@@ -145,4 +156,5 @@ class RegularGrid:
                     round((x - ll_translated[0]) * self.dx_div))
 
         occupancy_grid = fill_shape(occupancy_grid, collision_object)
+
         return occupancy_grid

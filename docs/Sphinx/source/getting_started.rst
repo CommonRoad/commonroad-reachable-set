@@ -16,10 +16,6 @@ The C++ code depends on the following third party libraries:
 
 - `CommonRoad Drivability Checker <https://commonroad.in.tum.de/drivability-checker>`_
 - `Boost.Geometry <https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html>`_
-- `Eigen3 <https://eigen.tuxfamily.org/dox/>`_
-- `libccd <https://github.com/danfis/libccd>`_
-- `FCL <https://github.com/flexible-collision-library/fcl>`_
-- `s11n <http://www.s11n.net/>`_
 - `OpenMP <https://www.openmp.org/>`_
 - `yaml-cpp <https://github.com/jbeder/yaml-cpp>`_
 - `pybind11 <https://github.com/pybind/pybind11>`_

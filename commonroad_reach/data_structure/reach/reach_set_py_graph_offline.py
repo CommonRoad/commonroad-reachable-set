@@ -37,22 +37,25 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         logger.debug("PyGraphReachableSetOffline initialized.")
 
-    def _set_initial_state_to_origin(self, config):
-        config.planning_problem.initial_state.position *= 0.0
-        config.planning_problem.initial_state.velocity *= 0.0
-        config.planning_problem.initial_state.orientation *= 0.0
-        try:
-            config.planning.update_configuration(config)
-            config.reachable_set.update_configuration(config)
-
-        except:
-            pass
-
     @property
     def path_offline_file(self):
         if self.config.reachable_set.name_pickle_offline is None:
             return None
         return os.path.join(self.config.general.path_offline_data, self.config.reachable_set.name_pickle_offline)
+
+    @staticmethod
+    def _set_initial_state_to_origin(config):
+        config.planning_problem.initial_state.position *= 0.0
+        config.planning_problem.initial_state.velocity *= 0.0
+        config.planning_problem.initial_state.orientation *= 0.0
+        try:
+            config.planning.update_configuration(config)
+        except:
+            pass
+        try:
+            config.reachable_set.update_configuration(config)
+        except:
+            pass
 
     def _construct_initial_drivable_area(self) -> List[ReachPolygon]:
         tuple_vertices = reach_operation.generate_tuple_vertices_position_rectangle_initial(self.config)

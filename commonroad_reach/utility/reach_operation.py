@@ -17,16 +17,18 @@ from commonroad_reach.utility.sweep_line import SweepLine
 
 
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
-    """Returns the zero-state polygon of the system.
+    """
+    Returns the zero-state polygon of the system.
 
-            Steps:
-                1. prepare a bounding polygon to be intersected with halfspaces.
-                2. compute coefficients of halfspaces and intersect them with the bounding polygon. We use three halfspaces to approximate the upper bound of the polygon, this applies to the lower bound as well. A halfspace can be specified given a switching time (gamma).
-            
-            Args:
-                dt (float): time duration (one step)
-                a_min (float): minimum acceleration (maximum deceleration)
-                a_max (float): maximum acceleration
+    Steps:
+        1. prepare a bounding polygon to be intersected with halfspaces.
+        2. compute coefficients of halfspaces and intersect them with the bounding polygon.
+           We use three halfspaces to approximate the upper bound of the polygon, this applies to the lower bound as well
+           A halfspace can be specified given a switching time (gamma).
+
+    :param dt: time duration (one step)
+    :param a_min: minimum acceleration (maximum deceleration)
+    :param a_max: maximum acceleration
     """
     polygon_bounding = create_bounding_polygon(dt, a_min, a_max)
 
@@ -44,12 +46,12 @@ def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPol
 
 
 def create_bounding_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
-    """Returns a polygon that has the absolute min/max reachable position and velocity as its bounds.
+    """
+    Returns a polygon that has the min/max reachable position and velocity as its bounds.
 
-    Args:
-        dt (float): time duration (one step)
-        a_min (float): minimum acceleration (maximum deceleration)
-        a_max (float): maximum acceleration
+    :param dt: time duration (one step)
+    :param a_min: minimum acceleration (maximum deceleration)
+    :param a_max: maximum acceleration
     """
     tuple_vertices = (0.5 * a_min * (dt ** 2), a_min * dt, 0.5 * a_max * (dt ** 2), a_max * dt)
 
@@ -57,13 +59,13 @@ def create_bounding_polygon(dt: float, a_min: float, a_max: float) -> ReachPolyg
 
 
 def compute_halfspace_coefficients(dt: float, a_min: float, a_max: float, gamma: float) -> Tuple:
-    """Computes the coefficients of halfspaces to be intersected.
+    """
+    Computes the coefficients of halfspaces to be intersected.
 
-        Args:
-            dt (float): time duration
-            a_min (float): a_min
-            a_max (float): a_max
-            gamma (float): switching time between full braking and acceleration
+    :param dt: time duration (one step)
+    :param a_min: minimum acceleration (maximum deceleration)
+    :param a_max: maximum acceleration
+    :param gamma: switching time between full braking and acceleration
     """
     x_upper = a_max * dt ** 2 * (0.5 - gamma + 0.5 * gamma ** 2) + a_min * dt ** 2 * (gamma - 0.5 * gamma ** 2)
     v_upper = a_min * gamma * dt + a_max * dt * (1 - gamma)
@@ -82,7 +84,9 @@ def compute_halfspace_coefficients(dt: float, a_min: float, a_max: float, gamma:
 
 
 def generate_tuple_vertices_position_rectangle_initial(config: Configuration) -> Tuple:
-    """Returns tuple of vertices for the position rectangle construction."""
+    """
+    Returns a tuple of vertices for the position rectangle construction.
+    """
     config = config.planning
 
     tuple_vertices = (config.p_lon_initial - config.uncertainty_p_lon, config.p_lat_initial - config.uncertainty_p_lat,
@@ -92,7 +96,9 @@ def generate_tuple_vertices_position_rectangle_initial(config: Configuration) ->
 
 
 def generate_tuples_vertices_polygons_initial(config: Configuration) -> Tuple:
-    """Returns tuples of vertices for the initial polygons in two directions."""
+    """
+    Returns tuples of vertices for the initial polygons in two directions.
+    """
     config = config.planning
 
     tuple_vertices_polygon_lon = (
@@ -108,13 +114,14 @@ def generate_tuples_vertices_polygons_initial(config: Configuration) -> Tuple:
 
 def propagate_polygon(polygon: ReachPolygon, polygon_zero_state: ReachPolygon, dt: float,
                       v_min: float, v_max: float) -> ReachPolygon:
-    """Propagates the polygon of a reachset node.
+    """
+    Propagates the (lon/lat) polygon of a reach node.
 
-            Steps:
-                1. clone and convexify the polygon
-                2. compute the linear mapping (zero-input response) of the polygon
-                3. compute the minkowski sum of the zero-input and zero-state polygons
-                4. intersect with halfspaces to incorporate velocity limits
+    Steps:
+        1. convexify the polygon
+        2. compute the linear mapping (zero-input response) of the polygon
+        3. compute the minkowski sum of the zero-input and zero-state polygons
+        4. intersect with halfspaces to consider velocity limits
     """
     polygon_processed = polygon.clone(convexify=True)
     polygon_processed = util_geometry.linear_mapping(polygon_processed, (1, dt, 0, 1))
@@ -126,12 +133,15 @@ def propagate_polygon(polygon: ReachPolygon, polygon_zero_state: ReachPolygon, d
 
 
 def project_base_sets_to_position_domain(list_base_sets_propagated: List[ReachNode]) -> List[ReachPolygon]:
-    """Returns a list of rectangles projected onto the position domain."""
+    """
+    Returns a list of rectangles projected onto the position domain.
+    """
     return [base_set.position_rectangle for base_set in list_base_sets_propagated]
 
 
 def create_repartitioned_rectangles(list_rectangles: List[ReachPolygon], size_grid: float) -> List[ReachPolygon]:
-    """Returns a list of repartitioned rectangles.
+    """
+    Returns a list of repartitioned rectangles.
 
     Steps:
         1. obtain the minimum lon/lat positions of the list of rectangles.
@@ -156,7 +166,9 @@ def create_repartitioned_rectangles(list_rectangles: List[ReachPolygon], size_gr
 
 
 def compute_minimum_positions_of_rectangles(list_rectangles: List[ReachPolygon]) -> Tuple[float, float]:
-    """Returns minimum lon/lat positions of the given list of rectangles."""
+    """
+    Returns minimum lon/lat positions of the given list of rectangles.
+    """
     p_lon_min_rectangles = min([rectangle.p_lon_min for rectangle in list_rectangles])
     p_lat_min_rectangles = min([rectangle.p_lat_min for rectangle in list_rectangles])
 
@@ -164,7 +176,9 @@ def compute_minimum_positions_of_rectangles(list_rectangles: List[ReachPolygon])
 
 
 def compute_extremum_positions_of_rectangles(list_rectangles: List[ReachPolygon]) -> Tuple[float, float, float, float]:
-    """Returns extremum lon/lat positions of the given list of rectangles."""
+    """
+    Returns extremum lon/lat positions of the given list of rectangles.
+    """
     p_lon_min_rectangles = min([rectangle.p_lon_min for rectangle in list_rectangles])
     p_lon_max_rectangles = max([rectangle.p_lon_max for rectangle in list_rectangles])
     p_lat_min_rectangles = min([rectangle.p_lat_min for rectangle in list_rectangles])
@@ -175,10 +189,11 @@ def compute_extremum_positions_of_rectangles(list_rectangles: List[ReachPolygon]
 
 def discretize_rectangles(list_rectangles: List[ReachPolygon], tuple_p_min_rectangles: Tuple[float, float],
                           size_grid: float) -> List[ReachPolygon]:
-    """Discretizes the given list of rectangles.
+    """
+    Discretizes the given list of rectangles.
 
     p_discretized = (p_undiscretized - p_min) / size_grid
-    get floor for min values, and get ceil for max values for over-approximation.
+    For over-approximation, take floor for minimum values, and take ceil for maximum values.
     """
     list_rectangles_discretized = []
     p_lon_min_rectangles, p_lat_min_rectangles = tuple_p_min_rectangles
@@ -199,11 +214,12 @@ def discretize_rectangles(list_rectangles: List[ReachPolygon], tuple_p_min_recta
 
 
 def repartition_rectangles(list_rectangles: List[ReachPolygon]) -> List[ReachPolygon]:
-    """Returns a list of repartitioned rectangles.
+    """
+    Returns a list of repartitioned rectangles.
 
     Steps:
-        1. Obtain a list of vertical segments representing the contour of the union of the rectangles.
-        2. Create repartitioned rectangles from the list of vertical segments using sweep line algorithm.
+        1. Obtain a list of vertical segments representing the contour of the union of the input rectangles.
+        2. Create repartitioned rectangles from the list of vertical segments using the sweep line algorithm.
     """
     list_segments_vertical = SweepLine.obtain_vertical_segments_from_rectangles(list_rectangles)
 
@@ -214,7 +230,8 @@ def repartition_rectangles(list_rectangles: List[ReachPolygon]) -> List[ReachPol
 
 def undiscretized_rectangles(list_rectangles_discretized: List[ReachPolygon],
                              tuple_p_min_rectangles: Tuple[float, float], size_grid: float) -> List[ReachPolygon]:
-    """Restores previously discretized rectangles back to undiscretized.
+    """
+    Restores previously discretized rectangles back to undiscretized ones.
 
     p_undiscretized = p_discretized * size_grid + p_min
     """
@@ -235,16 +252,14 @@ def undiscretized_rectangles(list_rectangles_discretized: List[ReachPolygon],
 
 def check_collision_and_split_rectangles(collision_checker, step: int, list_rectangles: List[ReachPolygon],
                                          radius_terminal_split: float) -> List[ReachPolygon]:
-    """Check collision status of the rectangles and split them if they are colliding."""
+    """
+    Checks collision status of the input rectangles and split them if colliding.
+    """
     list_rectangles_collision_free = []
 
-    if not list_rectangles:
+    if not list_rectangles or not collision_checker:
         return []
 
-    if not collision_checker:
-        return list_rectangles
-
-    # check collision for each input rectangle
     radius_terminal_squared = radius_terminal_split ** 2
     for rectangle in list_rectangles:
         list_rectangles_collision_free += create_collision_free_rectangles(step, collision_checker, rectangle,
@@ -255,10 +270,11 @@ def check_collision_and_split_rectangles(collision_checker, step: int, list_rect
 
 def create_collision_free_rectangles(step: int, collision_checker, rectangle: ReachPolygon,
                                      radius_terminal_squared: float) -> List[ReachPolygon]:
-    """Recursively creates a list of collision-free rectangles.
+    """
+    Recursively creates a list of collision-free rectangles.
 
-    If a collision happens between a rectangle and other object, and that the diagonal of the rectangle is greater
-    than the terminal radius, it is split into two new rectangles in whichever edge (lon/lat) that is longer.
+    If a collision happens between a rectangle and other object, and the diagonal of the rectangle is greater
+    than the terminal radius, it is split into two new rectangles along its longer (lon/lat) edge.
     """
     # case 1: rectangle does not collide, return itself
     if not collision_checker.collides_at_step(step, rectangle):
@@ -268,7 +284,7 @@ def create_collision_free_rectangles(step: int, collision_checker, rectangle: Re
     elif rectangle.diagonal_squared < radius_terminal_squared:
         return []
 
-    # case 3: colliding but diagonal is long enough. split into two halves.
+    # case 3: colliding but diagonal is long enough. split into two new rectangles.
     else:
         rectangle_split_1, rectangle_split_2 = split_rectangle_into_two(rectangle)
         list_rectangles_split_1 = create_collision_free_rectangles(step, collision_checker, rectangle_split_1,
@@ -280,9 +296,10 @@ def create_collision_free_rectangles(step: int, collision_checker, rectangle: Re
 
 
 def split_rectangle_into_two(rectangle: ReachPolygon) -> Tuple[ReachPolygon, ReachPolygon]:
-    """Returns two rectangles each of which is a half of the initial rectangle.
+    """
+    Returns two rectangles each of which is a half of the initial rectangle.
 
-    Split in the longer axis of the two (longitudinal / lateral or x / y).
+    Split in the longer axis (longitudinal / lateral or x / y).
     """
     if (rectangle.p_lon_max - rectangle.p_lon_min) > (rectangle.p_lat_max - rectangle.p_lat_min):
         rectangle_split_1 = ReachPolygon.from_rectangle_vertices(rectangle.p_lon_min, rectangle.p_lat_min,
@@ -301,13 +318,14 @@ def split_rectangle_into_two(rectangle: ReachPolygon) -> Tuple[ReachPolygon, Rea
 def construct_reach_nodes(drivable_area: List[ReachPolygon],
                           list_base_sets_propagated: List[ReachNode],
                           has_multi_generation: bool = False) -> List[ReachNode]:
-    """Constructs nodes of the reachability graph.
+    """
+    Constructs nodes of the reachability graph.
 
-    The nodes are constructed by cutting down the propagated base sets to the drivable area to determine the reachable
+    The nodes are constructed by intersecting propagated base sets with the drivable areas to determine the reachable
     positions and velocities.
 
     Steps:
-        1. examine the adjacency of drivable area and the propagated base sets. They are considered adjacent if they
+        1. examine the adjacency of drivable areas and the propagated base sets. They are considered adjacent if they
            overlap in the position domain.
         2. create a node from each drivable area and its adjacent propagated base sets.
     """
@@ -319,7 +337,6 @@ def construct_reach_nodes(drivable_area: List[ReachPolygon],
                                                                          list_rectangles_base_sets)
 
     for idx_drivable_area, list_idx_base_sets_adjacent in dict_rectangle_adjacency.items():
-        # examine each drivable area rectangle
         rectangle_drivable_area = list_rectangles_drivable_area[idx_drivable_area]
 
         reach_node = construct_reach_node(rectangle_drivable_area, list_base_sets_propagated,
@@ -334,11 +351,12 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
                          list_base_sets_propagated: List[ReachNode],
                          list_idx_base_sets_adjacent: List[int],
                          multi_generation=False):
-    """Returns a reach node constructed from the propagated base sets.
+    """
+    Returns a reach node constructed from the propagated base sets.
 
-    Iterate through base sets that are adjacent to the drivable area, and cut the base sets down with position
-    constraints from the drivable area. A non-empty intersected polygon imply that it is a valid base set and is
-    considered as a parent of the rectangle (reachable from the node from which the base set is propagated).
+    Iterate through base sets that are adjacent to the drivable areas, and intersect the base sets with position
+    constraints from the drivable areas. A non-empty intersected polygon imply that it is a valid base set and is
+    considered as a parent of the rectangle (reachable from the node from which the base set was propagated).
     """
     if not multi_generation:
         Node = ReachNode
@@ -349,7 +367,7 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
     list_base_sets_parent = []
     list_vertices_polygon_lon_new = []
     list_vertices_polygon_lat_new = []
-    # retrieve each of the adjacent base sets
+    # iterate through adjacent base sets
     for idx_base_set_adjacent in list_idx_base_sets_adjacent:
         base_set_adjacent = list_base_sets_propagated[idx_base_set_adjacent]
         polygon_lon = ReachPolygon.from_polygon(base_set_adjacent.polygon_lon)
@@ -382,7 +400,9 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
 
 
 def connect_children_to_parents(step: int, list_nodes: List[ReachNode]):
-    """Connects the child reach nodes to their parent nodes."""
+    """
+    Connects child reach nodes to their parent nodes.
+    """
     list_nodes_reachable_set_new = []
 
     for node_child in list_nodes:
@@ -398,10 +418,14 @@ def connect_children_to_parents(step: int, list_nodes: List[ReachNode]):
 
 
 def adapt_rectangles_to_grid(list_rectangles: List[ReachPolygon], size_grid: float) -> List[ReachPolygon]:
-    """Adapts the given list of position rectangles to a Cartesian grid."""
+    """
+    Adapts the given list of position rectangles to a Cartesian grid.
+    """
 
     def is_disjoint(_rectangle: ReachPolygon, _cell: Cell) -> bool:
-        """Returns True if the given rectangle and cell are disjoint."""
+        """
+        Returns True if the given rectangle and cell are disjoint.
+        """
         if _rectangle.p_lon_max < _cell.x_min or _rectangle.p_lon_min > _cell.x_max or \
                 _rectangle.p_lat_max < _cell.y_min or _rectangle.p_lat_min > _cell.y_max:
             return True
@@ -409,7 +433,9 @@ def adapt_rectangles_to_grid(list_rectangles: List[ReachPolygon], size_grid: flo
         return False
 
     def adapt_rectangle_to_cell(_rectangle: ReachPolygon, _cell: Cell) -> ReachPolygon:
-        """Adapts the given rectangle to the given cell."""
+        """
+        Adapts the given rectangle to the given cell.
+        """
         rectangle_intersected = _rectangle.clone(convexify=False)
         rectangle_intersected = rectangle_intersected.intersect_halfspace(1, 0, _cell.x_max)
         rectangle_intersected = rectangle_intersected.intersect_halfspace(-1, 0, -_cell.x_min)
@@ -430,27 +456,30 @@ def adapt_rectangles_to_grid(list_rectangles: List[ReachPolygon], size_grid: flo
     return list_rectangles_adapted
 
 
-def remove_rectangles_out_of_kamms_circle(time_duration: float, a_max: float,
-                                          list_rectangles_adapted: List[ReachPolygon]) -> List[ReachPolygon]:
-    """Discard position rectangles that do not intersect with Kamm's friction circle."""
+def remove_rectangles_out_of_kamms_circle(dt: float, a_max: float,
+                                          list_rectangles: List[ReachPolygon]) -> List[ReachPolygon]:
+    """
+    Discards position rectangles that do not intersect with Kamm's friction circle.
+    
+    :param dt: time duration
+    :param a_max: maximum acceleration
+    :param list_rectangles: input list of rectangles
+    """
     center_circle = (0, 0)
-    radius_circle = 0.5 * a_max * time_duration ** 2
+    radius_circle = 0.5 * a_max * dt ** 2
 
     list_idx_rectangles_to_be_deleted = list()
-    for index, rectangle in enumerate(list_rectangles_adapted):
+    for index, rectangle in enumerate(list_rectangles):
         if not util_geometry.rectangle_intersects_with_circle(rectangle, center_circle, radius_circle):
             list_idx_rectangles_to_be_deleted.append(index)
 
-    return [rectangle for index, rectangle in enumerate(list_rectangles_adapted)
+    return [rectangle for index, rectangle in enumerate(list_rectangles)
             if index not in list_idx_rectangles_to_be_deleted]
 
 
 def compute_area_of_reach_nodes(list_nodes_reach: List[ReachNode]) -> float:
     """
     Computes the area of a given list of reach nodes.
-
-    :param list_nodes_reach:
-    :return area: area of projection of the reachable sets on position domain
     """
     area = 0.0
     if not list_nodes_reach:
@@ -468,19 +497,15 @@ def compute_area_of_reach_nodes(list_nodes_reach: List[ReachNode]) -> float:
 
 
 def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
-    """Determines connected sets in the position domain.
+    """
+    Determines connected sets in the position domain.
 
+    Returns a dictionary in the form of {node index:list of tuples (node index, node index)}.
     This function is the equivalent python function to pycrreach.connected_reachset_boost().
-    Returns a dictionary with key=node idx in list and value=list of tuples
-    :param list_nodes_reach: list of reachable set node
-    :param num_digits
     """
     coefficient = np.power(10.0, num_digits)
     dict_adjacency = defaultdict(list)
-
-    # list of drivable areas (i.e., position rectangles)
     list_position_rectangles = list()
-
     # preprocess
     for node_reach in list_nodes_reach:
         # enlarge position rectangles
@@ -490,7 +515,7 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
                                      np.ceil(node_reach.p_lat_max * coefficient))
         list_position_rectangles.append(ReachPolygon.from_rectangle_vertices(*vertices_rectangle_scaled))
 
-    # iterate over all rectangles in list
+    # iterate over all rectangles
     for idx1, position_rect_1 in enumerate(list_position_rectangles):
         for idx2, position_rect_2 in enumerate(list_position_rectangles):
             if idx1 == idx2:
@@ -504,20 +529,26 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
 
 
 def lon_interval_connected_set(connected_set):
-    """Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions"""
+    """
+    Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions.
+    """
     # get min and max values for each reachable set in the connected set
     min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
     max_connected_set = np.max(min_max_array[:, 1])
+
     return min_connected_set, max_connected_set
 
 
 def lat_interval_connected_set(connected_set):
-    """Projects a connected set onto lateral position domain and returns min/max lateral positions"""
+    """
+    Projects a connected set onto lateral position domain and returns min/max lateral positions.
+    """
     # get min and max values for each reachable set in the connected set
     min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
     max_connected_set = np.max(min_max_array[:, 1])
+
     return min_connected_set, max_connected_set

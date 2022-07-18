@@ -96,8 +96,6 @@ def compute_disc_radius_and_wheelbase(length: float, width: float, wheelbase: fl
     width_square = width / 2
     radius = (length_square ** 2 + width_square ** 2) ** 0.5
 
-    # ceil up to 1 digit
-    # radius_disc = np.ceil(radius * 10) / 10
     radius_disc = radius
 
     return radius_disc, wheelbase
@@ -117,11 +115,11 @@ def compute_inflation_radius(mode_inflation: int, length: float, width: float, r
     if mode_inflation == 1:
         return length / 2 if length < width else width / 2
 
-    # 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
+    # Circumscribed circle (over-approximation of the shape of the ego vehicle)
     elif mode_inflation == 2:
         return length / 2 if length > width else width / 2
 
-    # 3: Three disc approximation of vehicle occupancy
+    # Three disc approximation of vehicle occupancy
     elif mode_inflation == 3:
         return radius_disc
 

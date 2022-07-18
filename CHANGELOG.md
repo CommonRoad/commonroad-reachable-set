@@ -4,4 +4,4 @@
 
 ### Added
 
-- Initial release of the CommonRoad-Reach toolbox.
+- First release of the toolbox.

@@ -1,16 +1,16 @@
 ###########################################################################
 CommonRoad-Reach: A Toolbox for Reachability Analysis of Automated Vehicles
 ###########################################################################
-Reachability analysis has gained increasing popularity in motion planning and safeguarding of
+Reachability analysis has gained considerable popularity in motion planning and safeguarding of
 automated vehicles (AVs). While existing tools for reachability analysis mainly focus on
-general-purpose algorithms for formal verification of dynamical systems, a toolbox tailored to
+general-purpose algorithms for formal verification of dynamical systems, a toolbox tailored to 
 AV-specific applications is not yet available. The CommonRoad-Reach toolbox
 
-- integrates different methods for computing reachable sets using polytopic set propagation and graph-based propagation;
+- integrates two methods for computing reachable sets, i.e., using polytopic set propagation and graph-based propagation;
 
-- provides Python and C++ implementations of the algorithms, thus offering convenient prototyping and real-time computation for the users; and
+- extracts driving corridors which can be used as planning constraints for motion planners; and
 
-- extracts driving corridors which can be used as planning constraints for motion planners.
+- provides Python and C++ implementations of the algorithms, offering convenient prototyping and real-time computation to the users.
 
 .. seealso::
 	* `CommonRoad Input-Output <https://commonroad.in.tum.de/commonroad-io>`_
