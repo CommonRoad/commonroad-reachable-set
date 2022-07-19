@@ -33,6 +33,8 @@ class PyGraphReachableSetOffline(ReachableSet):
         self.polygon_zero_state_lat: Dict[int, ReachPolygon] = dict()
         self.dict_step_to_drivable_area[self.step_start] = self._construct_initial_drivable_area()
         self.dict_step_to_reachable_set[self.step_start] = self._construct_initial_reachable_set()
+        config.planning.p_lon_initial = config.planning.p_lat_initial = 0.0
+        config.planning.v_lon_initial = config.planning.v_lat_initial = 0.0
         self._initialize_zero_state_polygons()
 
         logger.debug("PyGraphReachableSetOffline initialized.")
