@@ -65,6 +65,6 @@ int main() {
      //======== visualization of results
     auto util_visualization = py::module_::import("commonroad_reach.utility.visualization");
     util_visualization.attr("plot_scenario_with_reachable_sets_cpp")(reachable_set, obj_config_py);
-    
+
     return 0;
 }
