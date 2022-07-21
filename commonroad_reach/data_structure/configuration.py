@@ -98,10 +98,10 @@ class Configuration:
         config_ego = self.vehicle.ego
         string += "# Vehicle (Ego):\n"
         string += f"# \tvehicle type id: {self.vehicle.ego.id_type_vehicle}\n"
-        string += f"# \tv: lon_min={config_ego.v_lon_min}, lon_max={config_ego.v_lon_max}, " \
-                  f"lat_min={config_ego.v_lat_min}, lat_max={config_ego.v_lat_max}, max={config_ego.v_max}\n"
-        string += f"# \ta: lon_min={config_ego.a_lon_min}, lon_max={config_ego.a_lon_max}, " \
-                  f"lat_min={config_ego.a_lat_min}, lat_max={config_ego.a_lat_max}, max={config_ego.a_max}\n"
+        string += f"# \tv: lon_min = {config_ego.v_lon_min}, lon_max = {config_ego.v_lon_max}, " \
+                  f"lat_min = {config_ego.v_lat_min}, lat_max = {config_ego.v_lat_max}, max = {config_ego.v_max}\n"
+        string += f"# \ta: lon_min = {config_ego.a_lon_min}, lon_max = {config_ego.a_lon_max}, " \
+                  f"lat_min = {config_ego.a_lat_min}, lat_max = {config_ego.a_lat_max}, max = {config_ego.a_max}\n"
 
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation}\n"
