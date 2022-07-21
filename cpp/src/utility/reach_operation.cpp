@@ -547,7 +547,7 @@ vec_rectangles_drivable_area, vec_base_sets_propagated, reachable_set)
 
             auto const idx_drivable_area = it->first;
             auto const vec_idx_base_sets_adjacent = it->second;
-            auto rectangle_drivable_area = vec_rectangles_drivable_area[idx_drivable_area];
+            auto const& rectangle_drivable_area = vec_rectangles_drivable_area[idx_drivable_area];
 
             auto reach_node = construct_reach_node(rectangle_drivable_area,
                                                    vec_base_sets_propagated,
@@ -595,7 +595,7 @@ ReachNodePtr reach::construct_reach_node(ReachPolygonPtr const& rectangle_drivab
 
     // iterate through each of the adjacent base sets
     for (auto const& idx_base_set_adjacent: vec_idx_base_sets_adjacent) {
-        auto base_set_adjacent = vec_base_sets_propagated[idx_base_set_adjacent];
+        auto const& base_set_adjacent = vec_base_sets_propagated[idx_base_set_adjacent];
         auto polygon_lon = base_set_adjacent->polygon_lon->clone();
         auto polygon_lat = base_set_adjacent->polygon_lat->clone();
         // cut down to position range of the drivable area rectangle

@@ -1,11 +1,12 @@
 planning:
-  steps_computation: 11
+  steps_computation: 30
   dt: 0.1
   coordinate_system: "CART"
 
 reachable_set:
-  mode_computation: 3
-  size_grid: 0.5
+  mode_computation: 2
+  size_grid: 0.25
+  radius_terminal_split: 0.7
 #  name_pickle_offline: offline_nt12_CVLN_alonmax11.5_alatmax2.0_vlonmax50.8_vlatmax4.0_ms6_dx0.5_ver0.0.1.pickle
   name_pickle_offline: offline_nt12_CART_amax8.0_vmax50.8_ms6_dx0.5_ver0.0.1.pickle
 #vehicle:

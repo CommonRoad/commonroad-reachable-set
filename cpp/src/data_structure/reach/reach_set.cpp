@@ -37,8 +37,8 @@ vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
 std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const {
     vector<ReachNodePtr> vec_node;
 
-    auto[tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] =
-    generate_tuples_vertices_polygons_initial(config);
+    auto [tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] =
+            generate_tuples_vertices_polygons_initial(config);
     auto polygon_lon = make_shared<ReachPolygon>(tuple_vertices_polygon_lon);
     auto polygon_lat = make_shared<ReachPolygon>(tuple_vertices_polygon_lat);
     vec_node.emplace_back(make_shared<ReachNode>(config->planning().step_start, polygon_lon, polygon_lat));
@@ -97,8 +97,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
                     step, collision_checker,
                     vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
                     config->reachable_set().num_threads);
-        }
-        else {
+        } else {
             drivable_area_collision_free = check_collision_and_split_rectangles(
                     step, collision_checker, vec_rectangles_repartitioned,
                     config->reachable_set().radius_terminal_split,
@@ -116,8 +115,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
                     step, collision_checker,
                     vec_rectangles_projected, config->reachable_set().radius_terminal_split,
                     config->reachable_set().num_threads);
-        }
-        else {
+        } else {
             vec_rectangles_collision_free = check_collision_and_split_rectangles(
                     step, collision_checker, vec_rectangles_projected,
                     config->reachable_set().radius_terminal_split,
@@ -140,8 +138,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
                     step, collision_checker,
                     vec_rectangles_repartitioned, config->reachable_set().radius_terminal_split,
                     config->reachable_set().num_threads);
-        }
-        else {
+        } else {
             vec_rectangles_collision_free = check_collision_and_split_rectangles(
                     step, collision_checker, vec_rectangles_projected,
                     config->reachable_set().radius_terminal_split,

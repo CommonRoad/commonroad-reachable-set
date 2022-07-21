@@ -1,16 +1,17 @@
+# !!null values are read from the vehicle parameters of the specified CR vehicle type
 ego:
   &physical_parameters
   # 1 = Ford Escord, 2 = BMW 320i (default), 3 = VW Vanagon, 4 = Semi-trailer truck
   id_type_vehicle: 2
 
-  # physical dimensions (explicitly provide to overwrite the default parameters of CR vehicle type)
+  # physical dimensions
   length: !!null
   width: !!null
   # distance front/rear axle to vehicle center
   wb_front_axle: !!null
   wb_rear_axle: !!null
 
-  # longitudinal velocity bounds in m/s (explicitly provide to overwrite the default parameters of CR vehicle type)
+  # longitudinal velocity bounds in m/s
   v_lon_min: !!null
   v_lon_max: !!null
 
@@ -18,10 +19,10 @@ ego:
   v_lat_min: -4.0
   v_lat_max: 4.0
 
-  # absolute max velocity in m/s (explicitly provide to overwrite the default parameters of CR vehicle type)
-  v_max: !!null
+  # absolute max velocity in m/s
+  v_max: 30.0
 
-  # longitudinal acceleration bounds in m/s^2 ((explicitly provide to overwrite the default parameters of CR vehicle type)
+  # longitudinal acceleration bounds in m/s^2
   a_lon_min: !!null
   a_lon_max: !!null
 
@@ -29,7 +30,7 @@ ego:
   a_lat_min: -2.0
   a_lat_max: 2.0
 
-  # maximum engine power in m/s^2 (explicitly provide to overwrite the default parameters of CR vehicle type)
+  # maximum engine power in m/s^2
   a_max: 8.0
 
 other:

@@ -10,9 +10,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
+from commonroad_reach import pycrreach
 from commonroad.geometry.shape import Polygon, Rectangle
 from commonroad.visualization.mp_renderer import MPRenderer
-
+from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
@@ -716,3 +717,134 @@ def _render_obstacle_3d(occupancy_rect: Rectangle, ax, z_tuple: Tuple):
     pc.set_alpha(0.9)
     pc.set_zorder(20)
     ax.add_collection3d(pc)
+
+
+def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet, config: Configuration,
+                                          step_start: int = 0, step_end: int = 0, steps: List[int] = None,
+                                          plot_limits: List = None, figsize: Tuple = None, path_output: str = None,
+                                          save_gif: bool = True, duration: float = None, terminal_set=None):
+    """
+    Plots scenario with computed reachable sets.
+
+    Called by C++ script.
+    """
+    scenario = config.scenario
+    planning_problem = config.planning_problem
+    ref_path = config.planning.reference_path
+
+    path_output = path_output or config.general.path_output
+    Path(path_output).mkdir(parents=True, exist_ok=True)
+
+    figsize = figsize if figsize else (25, 15)
+    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets_cpp(reachable_set, config)
+    palette = sns.color_palette("GnBu_d", 3)
+    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
+    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    step_start = step_start or reachable_set.step_start
+    step_end = step_end or reachable_set.step_end
+    if steps:
+        steps = [step for step in steps if step <= step_end + 1]
+    else:
+        steps = range(step_start, step_end + 1)
+    duration = duration if duration else config.planning.dt
+
+    util_logger.print_and_log_info(logger, "* Plotting reachable sets...")
+    renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
+    for step in steps:
+        time_step = step * round(config.planning.dt / config.scenario.dt)
+        if config.debug.save_plots:
+            # clear previous plot
+            plt.cla()
+        else:
+            # create new figure
+            plt.figure(figsize=figsize)
+            renderer = MPRenderer(plot_limits=plot_limits)
+
+        # plot scenario and planning problem
+        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
+                                             "trajectory": {"draw_trajectory": True},
+                                             "time_begin": time_step,
+                                             "lanelet": {"show_label": True}})
+        if config.debug.draw_planning_problem:
+            planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
+                'draw_arrow': False, "radius": 0.5}}}})
+
+        list_nodes = reachable_set.reachable_set_at_step(step)
+        draw_reachable_sets(list_nodes, config, renderer, draw_params)
+
+        # plot terminal set
+        if terminal_set:
+            terminal_set.draw(renderer,
+                              draw_params={"polygon": {
+                                  "opacity": 1.0,
+                                  "linewidth": 0.5,
+                                  "facecolor": "#f1b514",
+                                  "edgecolor": "#302404",
+                                  "zorder": 15}})
+        # plot reference path
+        if config.debug.draw_ref_path and ref_path is not None:
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1],
+                             color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
+
+        # settings and adjustments
+        plt.rc("axes", axisbelow=True)
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        ax.set_title(f"$t = {time_step / 10.0:.1f}$ [s]", fontsize=28)
+        ax.set_xlabel(f"$s$ [m]", fontsize=28)
+        ax.set_ylabel("$d$ [m]", fontsize=28)
+        plt.margins(0, 0)
+        renderer.render()
+
+        if config.debug.save_plots:
+            save_fig(save_gif, path_output, step)
+        else:
+            plt.show()
+
+    if config.debug.save_plots and save_gif:
+        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration)
+
+    util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
+
+
+def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
+                                                config: Configuration, margin: int = 20):
+    """
+    Returns plot limits from the computed reachable sets.
+
+    :param reachable_set: C++ class holding the computed reachable sets.
+    :param config: configuration file.
+    :param margin: additional margin for the plot limits.
+    :return:
+    """
+    x_min = y_min = np.infty
+    x_max = y_max = -np.infty
+    coordinate_system = config.planning.coordinate_system
+
+    if coordinate_system == "CART":
+        for step in range(reachable_set.step_start, reachable_set.step_end):
+            for rectangle in reachable_set.drivable_area_at_step(step):
+                bounds = (rectangle.p_lon_min(), rectangle.p_lat_min(), rectangle.p_lon_max(), rectangle.p_lat_max())
+                x_min = min(x_min, bounds[0])
+                y_min = min(y_min, bounds[1])
+                x_max = max(x_max, bounds[2])
+                y_max = max(y_max, bounds[3])
+
+    elif coordinate_system == "CVLN":
+        for step in range(reachable_set.step_start, reachable_set.step_end):
+            for rectangle_cvln in reachable_set.drivable_area_at_step(step):
+                list_rectangles_cart = util_coordinate_system.convert_to_cartesian_polygons(rectangle_cvln,
+                                                                                            config.planning.CLCS, False)
+                for rectangle_cart in list_rectangles_cart:
+                    bounds = rectangle_cart.bounds
+                    x_min = min(x_min, bounds[0])
+                    y_min = min(y_min, bounds[1])
+                    x_max = max(x_max, bounds[2])
+                    y_max = max(y_max, bounds[3])
+
+    if np.inf in (x_min, y_min) or -np.inf in (x_max, y_max):
+        return None
+
+    else:
+        return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]

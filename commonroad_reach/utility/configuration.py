@@ -140,7 +140,7 @@ def compute_initial_state_cart(config) -> Tuple:
     Computes the initial state of the ego vehicle given a planning problem in the Cartesian coordinate system.
     """
     planning_problem = config.planning_problem
-    state_initial = config.state_initial if config.state_initial else planning_problem.initial_state
+    state_initial = config.planning.state_initial if config.planning.state_initial else planning_problem.initial_state
     wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = state_initial.position

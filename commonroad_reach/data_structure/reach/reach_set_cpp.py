@@ -5,7 +5,6 @@ from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 logger = logging.getLogger(__name__)
 
 import commonroad_reach.pycrreach as reach
-
 from commonroad_reach.data_structure.collision_checker import CollisionChecker
 from commonroad_reach.data_structure.configuration import Configuration
 

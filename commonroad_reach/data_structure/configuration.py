@@ -26,19 +26,16 @@ class Configuration:
     Class holding all relevant configurations.
     """
 
-    def __init__(self, config: Union[ListConfig, DictConfig]):
-        self.name_scenario = config.general.name_scenario
+    def __init__(self, config_omega: Union[ListConfig, DictConfig]):
+        self.name_scenario = config_omega.general.name_scenario
         self.scenario: Optional[Scenario] = None
         self.planning_problem: Optional[PlanningProblem] = None
-        self.state_initial: Optional[State] = None
-        self.goal_region: Optional[GoalRegion] = None
-        self.CLCS: Optional[CurvilinearCoordinateSystem] = None
 
-        self.general: GeneralConfiguration = GeneralConfiguration(config)
-        self.vehicle: VehicleConfiguration = VehicleConfiguration(config)
-        self.planning: PlanningConfiguration = PlanningConfiguration(config)
-        self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config)
-        self.debug: DebugConfiguration = DebugConfiguration(config)
+        self.general: GeneralConfiguration = GeneralConfiguration(config_omega)
+        self.planning: PlanningConfiguration = PlanningConfiguration(config_omega)
+        self.vehicle: VehicleConfiguration = VehicleConfiguration(config_omega)
+        self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config_omega)
+        self.debug: DebugConfiguration = DebugConfiguration(config_omega)
 
     def update_configuration(self, scenario: Scenario = None,
                              planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
@@ -66,11 +63,12 @@ class Configuration:
 
         self.scenario = scenario
         self.planning_problem = planning_problem
-        self.state_initial = state_initial
-        self.goal_region = goal_region
-        self.CLCS = CLCS
 
+        self.planning.state_initial = state_initial
+        self.planning.goal_region = goal_region
+        self.planning.CLCS = CLCS
         self.planning.update_configuration(self)
+
         self.reachable_set.update_configuration(self)
 
     def print_configuration_summary(self):
@@ -96,7 +94,15 @@ class Configuration:
         string += f"# \tdt: {self.planning.dt}\n"
         string += f"# \ttime steps: {self.planning.steps_computation}\n"
         string += f"# \tcoordinate system: {CLCS}\n"
+
+        config_ego = self.vehicle.ego
+        string += "# Vehicle (Ego):\n"
         string += f"# \tvehicle type id: {self.vehicle.ego.id_type_vehicle}\n"
+        string += f"# \tv: lon_min={config_ego.v_lon_min}, lon_max={config_ego.v_lon_max}, " \
+                  f"lat_min={config_ego.v_lat_min}, lat_max={config_ego.v_lat_max}, max={config_ego.v_max}\n"
+        string += f"# \ta: lon_min={config_ego.a_lon_min}, lon_max={config_ego.a_lon_max}, " \
+                  f"lat_min={config_ego.a_lat_min}, lat_max={config_ego.a_lat_max}, max={config_ego.a_max}\n"
+
         string += "# Reachable set:\n"
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
@@ -254,6 +260,13 @@ class VehicleConfiguration:
                                                                                 self.length, self.width,
                                                                                 self.radius_disc)
 
+            # overwrite velocity and acceleration parameters if computing within Cartesian coordinate system
+            if config.planning.coordinate_system == "CART":
+                self.v_lon_min = self.v_lat_min = -self.v_max
+                self.v_lon_max = self.v_lat_max = self.v_max
+                self.a_lon_min = self.a_lat_min = -self.a_max
+                self.a_lon_max = self.a_lat_max = self.a_max
+
     class Other:
         def __init__(self, config: Union[ListConfig, DictConfig]):
             config_relevant = config.vehicle.other
@@ -320,31 +333,28 @@ class PlanningConfiguration:
         self.p_lat_initial = None
         self.uncertainty_p_lon = config_relevant.uncertainty_p_lon
         self.uncertainty_p_lat = config_relevant.uncertainty_p_lat
-
         self.v_lon_initial = None
         self.v_lat_initial = None
         self.uncertainty_v_lon = config_relevant.uncertainty_v_lon
         self.uncertainty_v_lat = config_relevant.uncertainty_v_lat
-
-        self.o_initial = 0
+        self.o_initial = None
 
         # related to specific planning problem
+        self.state_initial = None
+        self.goal_region = None
         self.reference_path = None
         self.lanelet_network = None
-
+        self.CLCS = None
         self.coordinate_system = config_relevant.coordinate_system
         self.reference_point = config_relevant.reference_point
-        self.CLCS = None
 
     def update_configuration(self, config: Configuration):
         scenario = config.scenario
         planning_problem = config.planning_problem
-        state_initial = config.state_initial
-        goal_region = config.goal_region
-        CLCS = config.CLCS
 
         self.lanelet_network = scenario.lanelet_network
-        self.step_start = planning_problem.initial_state.time_step if not state_initial else state_initial.time_step
+        self.step_start = planning_problem.initial_state.time_step \
+            if not self.state_initial else self.state_initial.time_step
 
         assert round(self.dt * 100) % round(scenario.dt * 100) == 0, \
             f"Value of dt ({self.dt}) should be a multiple of scenario dt ({scenario.dt})."
@@ -357,17 +367,16 @@ class PlanningConfiguration:
             self.o_initial = o_initial
 
         elif self.coordinate_system == "CVLN":
-            if CLCS:
+            if self.CLCS:
                 # CLCS is given, retrieve reference path
-                self.CLCS = CLCS
                 self.reference_path = np.array(self.CLCS.reference_path())
 
             else:
                 # plans a route from the initial lanelet to the goal lanelet, set curvilinear coordinate system
                 route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
                                              planning_problem=planning_problem,
-                                             state_initial=state_initial,
-                                             goal_region=goal_region)
+                                             state_initial=self.state_initial,
+                                             goal_region=self.goal_region)
                 candidate_holder = route_planner.plan_routes()
                 route = candidate_holder.retrieve_first_route()
 
@@ -375,7 +384,7 @@ class PlanningConfiguration:
                     self.reference_path = route.reference_path
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
 
-            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, state_initial)
+            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, self.state_initial)
 
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
@@ -424,7 +433,8 @@ class ReachableSetConfiguration:
 
         self.num_threads = config_relevant.num_threads
 
-        self.path_to_lut = os.path.abspath(os.path.join(config.general.path_scenarios, "..", config_relevant.path_to_lut))
+        self.path_to_lut = os.path.abspath(
+            os.path.join(config.general.path_scenarios, "..", config_relevant.path_to_lut))
         self.lut_longitudinal_enlargement = None
 
     def update_configuration(self, config: Configuration):
