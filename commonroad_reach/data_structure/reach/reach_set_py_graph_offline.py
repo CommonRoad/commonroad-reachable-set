@@ -27,10 +27,10 @@ class PyGraphReachableSetOffline(ReachableSet):
     """
 
     def __init__(self, config: Configuration):
-        self._set_initial_state_to_origin(config)
         super().__init__(config)
         self.polygon_zero_state_lon: Dict[int, ReachPolygon] = dict()
         self.polygon_zero_state_lat: Dict[int, ReachPolygon] = dict()
+        self._set_initial_state_to_origin(config)
         self.dict_step_to_drivable_area[self.step_start] = self._construct_initial_drivable_area()
         self.dict_step_to_reachable_set[self.step_start] = self._construct_initial_reachable_set()
         config.planning.p_lon_initial = config.planning.p_lat_initial = 0.0
@@ -54,10 +54,16 @@ class PyGraphReachableSetOffline(ReachableSet):
             config.planning.update_configuration(config)
         except:
             pass
+
         try:
             config.reachable_set.update_configuration(config)
         except:
             pass
+
+        config.planning.p_lon_initial *= 0.0
+        config.planning.p_lat_initial *= 0.0
+        config.planning.v_lon_initial *= 0.0
+        config.planning.v_lat_initial *= 0.0
 
     def _construct_initial_drivable_area(self) -> List[ReachPolygon]:
         tuple_vertices = reach_operation.generate_tuple_vertices_position_rectangle_initial(self.config)
