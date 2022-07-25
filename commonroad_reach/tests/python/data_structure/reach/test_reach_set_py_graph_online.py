@@ -71,7 +71,7 @@ def test_offline_online_compatibility():
     os.makedirs(offline_dir)
     try:
         name_scenario = "DEU_Offline-1_1_T-1"
-        dt = 10
+        dt = 8
 
         config = ConfigurationBuilder.build_configuration(name_scenario)
         reach_offline = PyGraphReachableSetOffline(config)
@@ -96,7 +96,7 @@ def test_online_reach():
     name_scenario = "DEU_Offline-1_1_T-1"
     # name_scenario = "ARG_Carcarana-1_1_T-1"
     # name_scenario = "ZAM_Tjunction-1_313_T-1"
-    dt = 33
+    dt = 8
 
     config = ConfigurationBuilder.build_configuration(name_scenario)
     config.reachable_set.mode_computation = 3
@@ -117,26 +117,6 @@ def test_online_reach():
     reach_interface._reachable_set_computed = True
     config.debug.save_plots = True
 
-
-def test_initialize_new_scenario():
-    name_scenario = "ARG_Carcarana-1_1_T-1"
-    config = ConfigurationBuilder.build_configuration(name_scenario)
-    config.reachable_set.mode_computation = 3
-    config.reachable_set.n_multi_steps = 5
-    config.print_configuration_summary()
-
-    reach_interface = ReachableSetInterface(config)
-    times = []
-    for path_scenario in glob(os.path.join(config.general.path_scenarios, "*.xml")):
-        scenario, pp = CommonRoadFileReader(path_scenario).open()
-        reach_interface._reach.initialize_new_scenario(scenario, list(pp.planning_problem_dict.values())[0])
-        t=time.time()
-        reach_interface.compute_reachable_sets()
-        times.append(time.time()-t)
-
-    plt.figure()
-    plt.hist(times)
-    plt.show()
 
 
 

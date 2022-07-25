@@ -104,6 +104,8 @@ class PyGraphReachableSetOffline(ReachableSet):
 
     def compute(self, step_start: int, step_end: int):
         for step in range(step_start, step_end + 1):
+            if step in self.dict_step_to_reachable_set:
+                continue
             time_start = time.time()
             self._compute_drivable_area_at_step(step)
             self._compute_reachable_set_at_step(step)
