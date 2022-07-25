@@ -32,4 +32,4 @@ name_pickle_offline: offline_nt30_CART_amax8.0_vmax30.0_ms6_dx0.5_ver0.0.1.pickl
 # number of multi-steps for graph-based propagation
 n_multi_steps: 6
 # number of threads for C++ backend
-num_threads: 1
+num_threads: 4

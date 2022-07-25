@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import Optional, Union, Tuple
+from omegaconf import ListConfig, DictConfig
 
 import numpy as np
 import commonroad_reach.pycrreach as reach
@@ -12,7 +13,6 @@ from commonroad.common.solution import VehicleType
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 from commonroad_route_planner.route_planner import RoutePlanner
-from omegaconf import ListConfig, DictConfig
 
 import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.utility import configuration as util_configuration
@@ -110,6 +110,7 @@ class Configuration:
         string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
         string += f"# \tsplit radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_step}\n"
+        string += f"# \tnum threads: {self.reachable_set.num_threads}\n"
         string += "# ================================= #"
 
         for line in string.split("\n"):
