@@ -69,6 +69,8 @@ class Configuration:
         self.planning.CLCS = CLCS
         self.planning.update_configuration(self)
 
+        self.vehicle.update_configuration(self)
+
         self.reachable_set.update_configuration(self)
 
     def print_configuration_summary(self):
@@ -92,7 +94,7 @@ class Configuration:
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
         string += f"# \tdt: {self.planning.dt}\n"
-        string += f"# \ttime steps: {self.planning.steps_computation}\n"
+        string += f"# \tsteps: {self.planning.steps_computation}\n"
         string += f"# \tcoordinate system: {CLCS}\n"
 
         config_ego = self.vehicle.ego
@@ -260,7 +262,9 @@ class VehicleConfiguration:
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,
                                                                                 self.radius_disc)
+            self.update_configuration(config)
 
+        def update_configuration(self, config):
             # overwrite velocity and acceleration parameters if computing within Cartesian coordinate system
             if config.planning.coordinate_system == "CART":
                 self.v_lon_min = self.v_lat_min = -self.v_max
@@ -320,6 +324,9 @@ class VehicleConfiguration:
     def __init__(self, config: Union[ListConfig, DictConfig]):
         self.ego = VehicleConfiguration.Ego(config)
         self.other = VehicleConfiguration.Other(config)
+
+    def update_configuration(self, config: Configuration):
+        self.ego.update_configuration(config)
 
 
 class PlanningConfiguration:
@@ -455,6 +462,7 @@ class DebugConfiguration:
         self.draw_ref_path = config_relevant.draw_ref_path
         self.draw_planning_problem = config_relevant.draw_planning_problem
         self.draw_icons = config_relevant.draw_icons
+        self.draw_lanelet_labels = config_relevant.draw_lanelet_labels
         self.plot_limits = config_relevant.plot_limits
         self.plot_azimuth = config_relevant.plot_azimuth
         self.plot_elevation = config_relevant.plot_elevation

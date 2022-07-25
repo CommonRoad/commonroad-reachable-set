@@ -20,12 +20,12 @@ def main():
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets()
 
-    # # ==== for recomputing reachable sets
-    # # config.update_configuration(scenario=,state_initial=,CLCS=)
+    # ==== for recomputing reachable sets
+    # config.update_configuration(scenario=,state_initial=,CLCS=, ..)
     # reach_interface.reset(config)
-    # # reach_interface.compute_reachable_sets()
+    # reach_interface.compute_reachable_sets()
     #
-    # # ==== extract driving corridors
+    # ==== extract driving corridors
     # list_corridors_lon = reach_interface.extract_driving_corridors(to_goal_region=False)
     # print(f"\t#DCs (lon): {len(list_corridors_lon)}")
     #

@@ -70,7 +70,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
                                              "trajectory": {"draw_trajectory": True},
                                              "time_begin": time_step,
-                                             "lanelet": {"show_label": True}})
+                                             "lanelet": {"show_label":config.debug.draw_lanelet_labels}})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
@@ -765,7 +765,7 @@ def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
                                              "trajectory": {"draw_trajectory": True},
                                              "time_begin": time_step,
-                                             "lanelet": {"show_label": True}})
+                                             "lanelet": {"show_label":config.debug.draw_lanelet_labels}})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})

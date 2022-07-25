@@ -165,7 +165,7 @@ class PyGraphReachableSetOnline(ReachableSet):
         self.reachable_set_at_step.cache_clear()
         self.drivable_area_at_step.cache_clear()
         self._occ_grid_at_step.cache_clear()
-        self._list_steps_computed = []
+        self._list_steps_computed = [0]
         self._reachability_grid[self.step_start] = np.ones((1, 1), dtype=bool)
 
     def _restore_parent_node_relationships(self, reachset: List[ReachNode], step: int):

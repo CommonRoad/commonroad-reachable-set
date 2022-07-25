@@ -294,7 +294,7 @@ class PyGraphReachableSetOffline(ReachableSet):
         with open(self.path_offline_file, 'wb') as f:
             pickle.dump(dict_data, f)
 
-        util_logger.print_and_log_info(logger, f"Computation result saved to pickle file: {self.path_offline_file}")
+        util_logger.print_and_log_info(logger, f"result saved to pickle file: {self.path_offline_file}")
 
     def create_projection_matrices(self):
         """
