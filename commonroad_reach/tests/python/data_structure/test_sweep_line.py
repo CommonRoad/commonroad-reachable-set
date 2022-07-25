@@ -1,7 +1,7 @@
 import pytest
 
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
-from commonroad_reach.utility.sweep_line import SweepLine
+from commonroad_reach.utility.sweep_line import SweepLine, Event, EventType
 
 
 def test_compute_extremum_lateral_positions_of_rectangles():
@@ -17,26 +17,26 @@ def test_compute_extremum_lateral_positions_of_rectangles():
 
 
 def test_sort_events():
-    list_events = [SweepLine.Event(SweepLine.EventType.EXIT, 5, 5, 10),
-                   SweepLine.Event(SweepLine.EventType.EXIT, 3, 2, 10),
-                   SweepLine.Event(SweepLine.EventType.EXIT, 10, 2, 10),
-                   SweepLine.Event(SweepLine.EventType.ENTER, 10, 3, 10),
-                   SweepLine.Event(SweepLine.EventType.ENTER, 10, 2, 10)]
+    list_events = [Event(EventType.EXIT, 5, 5, 10),
+                   Event(EventType.EXIT, 3, 2, 10),
+                   Event(EventType.EXIT, 10, 2, 10),
+                   Event(EventType.ENTER, 10, 3, 10),
+                   Event(EventType.ENTER, 10, 2, 10)]
 
     list_events = SweepLine.sort_events(list_events)
 
     assert list_events[0].p_lon == 3 and \
            list_events[1].p_lon == 5 and \
-           list_events[2].type == SweepLine.EventType.ENTER and \
+           list_events[2].type == EventType.ENTER and \
            list_events[3].p_lat_low == 3
 
 
 def test_create_event_list():
     list_rectangles = [ReachPolygon([(1, 1), (3, 1), (3, 3), (1, 3)]), ReachPolygon([(2, 2), (4, 2), (4, 4), (2, 4)])]
-    list_events_expected = [SweepLine.Event(SweepLine.EventType.ENTER, 1, 1, 3),
-                            SweepLine.Event(SweepLine.EventType.EXIT, 3, 1, 3),
-                            SweepLine.Event(SweepLine.EventType.ENTER, 2, 2, 4),
-                            SweepLine.Event(SweepLine.EventType.EXIT, 4, 2, 4)]
+    list_events_expected = [Event(EventType.ENTER, 1, 1, 3),
+                            Event(EventType.EXIT, 3, 1, 3),
+                            Event(EventType.ENTER, 2, 2, 4),
+                            Event(EventType.EXIT, 4, 2, 4)]
 
     list_events = SweepLine.create_event_list(list_rectangles)
 
