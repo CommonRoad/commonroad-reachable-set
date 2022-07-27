@@ -351,19 +351,35 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         time_step = step * round(config.planning.dt / config.scenario.dt)
         # plot driving corridor and scenario at the specified time step
         plt.cla()
-        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True}, "time_begin": time_step})
+        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
+                                             "time_begin": time_step})
         # draw planning problem
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
+
         # reach set nodes in driving corridor at specified time step
-        list_nodes = driving_corridor[step]
+        list_nodes = driving_corridor.reach_nodes_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
-        # draw reference path
-        if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
-                             linewidth=1.5)
+        # draw terminal_set
+        if terminal_set is not None:
+            from commonroad.geometry.shape import Polygon
+            # convert terminal_set to Cartesian
+            CLCS = config.planning.CLCS
+            # ts_x, ts_y = terminal_set.shapely_object.exterior.coords.xy
+            # terminal_set_vertices = [vertex for vertex in zip(ts_x, ts_y)]
+            transformed_rectangle, triangle_mesh = CLCS.convert_rectangle_to_cartesian_coords(
+                terminal_set[0], terminal_set[1], terminal_set[2], terminal_set[3])  #
+            # create CommonRoad Polygon
+            terminal_shape = Polygon(vertices=np.array(transformed_rectangle))
+            terminal_shape.draw(renderer, draw_params={"polygon": {
+                "opacity": 1.0,
+                "linewidth": 0.5,
+                "facecolor": "#f1b514",
+                "edgecolor": "#302404",
+                "zorder": 15
+            }})
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -371,6 +387,11 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
         ax.set_aspect("equal")
         plt.margins(0, 0)
         renderer.render()
+
+        # draw reference path
+        if config.debug.draw_ref_path and ref_path is not None:
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
+                             linewidth=1.5)
 
         if config.debug.save_plots:
             save_format = "svg" if as_svg else "png"
@@ -381,62 +402,6 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
 
     if config.debug.save_plots and save_gif:
         make_gif(path_output_lon_dc, "driving_corridor_", steps, ("driving_corridor_%s" % dc_id), duration)
-
-        for time_step in range(step_end + 1):
-            # plot driving corridor and scenario at the specified time step
-            plt.cla()
-            scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": True}, "time_begin": time_step})
-
-            # draw terminal_set
-            if terminal_set is not None:
-                from commonroad.geometry.shape import Polygon
-                # convert terminal_set to Cartesian
-                CLCS = config.planning.CLCS
-                # ts_x, ts_y = terminal_set.shapely_object.exterior.coords.xy
-                # terminal_set_vertices = [vertex for vertex in zip(ts_x, ts_y)]
-                transformed_rectangle, triangle_mesh = CLCS.convert_rectangle_to_cartesian_coords(
-                    terminal_set[0], terminal_set[1], terminal_set[2], terminal_set[3])  #
-                # create CommonRoad Polygon
-                terminal_shape = Polygon(vertices=np.array(transformed_rectangle))
-                terminal_shape.draw(renderer,
-                                    draw_params={"polygon": {
-                                        "opacity": 1.0,
-                                        "linewidth": 0.5,
-                                        "facecolor": "#f1b514",
-                                        "edgecolor": "#302404",
-                                        "zorder": 15
-                                    }})
-
-            # draw planning problem
-            if config.debug.draw_planning_problem:
-                planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
-                    'draw_arrow': False, "radius": 0.5}}}})
-            # reach set nodes in driving corridor at specified time step
-            list_nodes = driving_corridor[time_step]
-            draw_reachable_sets(list_nodes, config, renderer, draw_params)
-
-            # plot
-            plt.rc("axes", axisbelow=True)
-            ax = plt.gca()
-            ax.set_aspect("equal")
-            plt.margins(0, 0)
-            renderer.render()
-
-            # draw reference path
-            if config.debug.draw_ref_path and ref_path is not None:
-                renderer.ax.plot(ref_path[:, 0], ref_path[:, 1], color='g', marker='.', markersize=1, zorder=19,
-                                 linewidth=1.5)
-
-            if config.debug.save_plots:
-                save_format = "svg" if as_svg else "png"
-                print("\tSaving",
-                      os.path.join(path_output_lon_dc, f'{"lon_driving_corridor"}_{time_step:05d}.{save_format}'))
-                plt.savefig(
-                    f'{path_output_lon_dc}{"lon_driving_corridor"}_{time_step:05d}.{save_format}',
-                    format=save_format, bbox_inches="tight", transparent=False)
-
-        if config.debug.save_plots and save_gif:
-            make_gif(path_output_lon_dc, "lon_driving_corridor_", steps, ("lon_driving_corridor_%s" % dc_id))
 
     util_logger.print_and_log_info(logger, f"\tDriving corridor {dc_id} plotted.")
 
