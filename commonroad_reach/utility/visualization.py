@@ -18,6 +18,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor
 import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
@@ -299,7 +300,7 @@ def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
     imageio.mimsave(os.path.join(path, "../", file_save_name + ".gif"), images, duration=duration)
 
 
-def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_interface: ReachableSetInterface,
+def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,
                                         step_start: Union[int, None] = None, step_end: Union[int, None] = None,
                                         steps: Union[List[int], None] = None, save_gif: bool = False,
                                         duration: float = None, as_svg=False, terminal_set=None):
@@ -406,8 +407,8 @@ def plot_scenario_with_driving_corridor(driving_corridor, dc_id: int, reach_inte
     util_logger.print_and_log_info(logger, f"\tDriving corridor {dc_id} plotted.")
 
 
-def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
-                             trajectory: np.ndarray = None, as_svg=False):
+def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,
+                             trajectory: np.ndarray = None, as_svg: bool =False):
     """
     Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor.
     """
@@ -442,9 +443,9 @@ def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: Rea
             'draw_arrow': False, "radius": 0.5}}}})
 
     # plot full driving corridor (for all time steps)
-    for step in driving_corridor.keys():
+    for step in driving_corridor.dict_step_to_cc.keys():
         # reach set nodes in driving corridor at specified time step
-        list_nodes = driving_corridor[step]
+        list_nodes = driving_corridor.reach_nodes_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
     # plot
@@ -465,8 +466,8 @@ def draw_driving_corridor_2d(driving_corridor: Dict, dc_id, reach_interface: Rea
             bbox_inches="tight", transparent=False)
 
 
-def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: ReachableSetInterface,
-                             lanelet_ids: List[int] = None, list_obstacles: List = None, as_svg=False):
+def draw_driving_corridor_3d(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,
+                             list_obstacle_ids: List[int] = None, as_svg: bool = False):
     """
     Draws full driving corridor with 3D projection.
     """
@@ -474,11 +475,9 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
 
     # get settings from config
     config = reach_interface.config
-    lanelet_network = create_lanelet_network_from_ids(config.scenario.lanelet_network, lanelet_ids) \
-        if lanelet_ids else config.scenario.lanelet_network
 
     # temporal length of driving corridor
-    step_end = len(driving_corridor) - 1
+    step_end = driving_corridor.step_final
 
     # setup figure
     fig = plt.figure(figsize=(20, 10))
@@ -487,6 +486,16 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
     palette = sns.color_palette("GnBu_d", 3)
     # set plot limits
     plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
+
+    # get relevant lanelet IDs from plot limits
+    plot_window_length, plot_window_width = plot_limits[1] - plot_limits[0], plot_limits[3]-plot_limits[2]
+    center = np.array([plot_limits[0] + plot_window_length/2, plot_limits[2] + plot_window_width/2])
+    rect = Rectangle(plot_window_length, plot_window_width, center)
+    lanelet_ids = config.scenario.lanelet_network.find_lanelet_by_shape(rect)
+
+    # create lanelet network for plotting
+    lanelet_network = create_lanelet_network_from_ids(config.scenario.lanelet_network, lanelet_ids) \
+        if lanelet_ids else config.scenario.lanelet_network
 
     # create output directory
     path_output = config.general.path_output
@@ -505,31 +514,28 @@ def draw_driving_corridor_3d(driving_corridor: Dict, dc_id, reach_interface: Rea
         z_tuple = (step * interval, step * interval + height)
 
         # 3D rendering of obstacles
-        if list_obstacles:
-            for obs in list_obstacles:
+        if list_obstacle_ids:
+            for obs_id in list_obstacle_ids:
+                obs = config.scenario.obstacle_by_id(obs_id)
                 occ_rectangle = obs.occupancy_at_time(time_step).shape
                 _render_obstacle_3d(occ_rectangle, ax, z_tuple)
 
         # 3D rendering of reachable sets
-        list_reach_nodes = driving_corridor[step]
+        list_reach_nodes = driving_corridor.reach_nodes_at_step(step)
         _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette)
 
     # axis settings
     ax.set_xlim(plot_limits[0:2])
     ax.set_ylim(plot_limits[2:4])
     ax.set_zlim([0, 3.5])
-    # ax.set_xticks([])
-    # ax.set_yticks([])
-    # ax.set_zticks([])
     ax.set_axis_off()
     ax.view_init(azim=config.debug.plot_azimuth, elev=config.debug.plot_elevation)
     ax.dist = config.debug.ax_distance
 
     if config.debug.save_plots:
         save_format = "svg" if as_svg else "png"
-        plt.savefig(f'{path_output}{"lon_driving_corridor"}_{dc_id}_3D.{save_format}', format=save_format,
+        plt.savefig(f'{path_output}{"driving_corridor"}_{dc_id}_3D.{save_format}', format=save_format,
                     bbox_inches='tight', transparent=False)
-    plt.show()
 
     util_logger.print_and_log_info(logger, "\t3D driving corridor plotted.")
 
