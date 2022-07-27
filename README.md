@@ -8,23 +8,27 @@ Reachability analysis has gained increasing popularity in motion planning and sa
 
 ### System Requirements
 
-The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04. It should be compatible with later versions.
+The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04. It should be compatible with later 
+versions. For building the code, the following minimum versions are required:
+  * **GCC and G++**: version 9 or above
+  * **CMake**: version 3.15 or above.
+  * **Pip**: version 21.3 or above
+
 
 ### Third Party Libraries and Packages
 
-The C++ code depends on the following libraries:
+The C++ code depends on the following libraries: 
 
-* CommonRoad Drivability Checker
-
-* Boost.Geometry
-* Eigen3
-* CCD
-* FCL
-* s11n
-* OpenMP
-* yaml-cpp
-* pybind11
-* Doctest (optional: for building unit tests)
+**Essential dependencies**:
+* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker)
+* [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
+* [OpenMP](https://www.openmp.org/)
+* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+* [pybind11](https://github.com/pybind/pybind11)
+  
+**Optional dependencies**:
+* [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
+* [Doxygen](https://doxygen.nl/) (optional: for building documentation)
 
 The Python dependencies are listed in `requirements.txt`.
 
@@ -37,11 +41,6 @@ The Python dependencies are listed in `requirements.txt`.
   ```bash
   $ pip install -r requirements.txt
   ```
-
-* Check the following minimum required versions and update if necessary:
-  * **GCC and G++**: version 9 or above
-  * **CMake**: version 3.15 or above.
-  * **Pip**: version 21.3 or above
 
 * Install [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker). Please refer to its [documentation](https://commonroad.in.tum.de/docs/commonroad-drivability-checker/sphinx/installation.html) for installation.
 
@@ -64,6 +63,8 @@ The Python dependencies are listed in `requirements.txt`.
   ```bash
   $ CRDC_DIR="/path/to/commonroad-drivability-checker/" pip install -v .
   ```
+  This will build the python binding (pycrreach) required for collision checks and other C++-boosted computations.
+
 
 **Note**: 
 
