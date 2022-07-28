@@ -3,7 +3,6 @@ from typing import Dict, List, Union
 import commonroad_reach.utility.reach_operation
 from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
-from commonroad_reach.utility import geometry as util_geometry
 
 # scaling factor (avoid numerical errors)
 DIGITS = 2
