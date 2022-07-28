@@ -1,15 +1,16 @@
 planning:
-  steps_computation: 30
+  steps_computation: 10
   dt: 0.1
   coordinate_system: "CVLN"
 
 reachable_set:
   mode_computation: 2
   mode_inflation: 1
-  size_grid: 0.2
+  size_grid: 0.25
   radius_terminal_split: 0.7
 #  name_pickle_offline: offline_nt12_CVLN_alonmax11.5_alatmax2.0_vlonmax50.8_vlatmax4.0_ms6_dx0.5_ver0.0.1.pickle
-  name_pickle_offline: offline_nt12_CART_amax8.0_vmax50.8_ms6_dx0.5_ver0.0.1.pickle
+#   name_pickle_offline: offline_nt12_CART_amax8.0_vmax50.8_ms6_dx0.5_ver0.0.1.pickle
+  name_pickle_offline: offline_nt10_CART_amax8.0_vmax50.8_ms6_dx0.5_ver0.0.1.pickle
 
 vehicle:
   ego:
@@ -23,7 +24,7 @@ vehicle:
 
     # acceleration in m/s^2
     a_lon_min: -6.0
-    a_lon_max: 4.0
+    a_lon_max: 64.0
     a_lat_min: -2.0
     a_lat_max: 2.0
     # maximum engine power
