@@ -12,8 +12,7 @@ mode_repartition: 2
 # mode for considering the shape of the ego vehicle
 # 1: Inscribed circle (under-approximation of the shape of the ego vehicle)
 # 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
-# 3: Three circle approximation of vehicle occupancy
-     # (see Ziegler J., Stiller C. (2010): Fast collision checking for intelligent vehicle motion planning)
+# 3: Three circle approximation of vehicle occupancy (see Ziegler J., Stiller C. (2010): Fast collision checking for intelligent vehicle motion planning)
 mode_inflation: 1
 # path to LUT for enlargement (only used if mode_inflation=3)
 path_to_lut: external/matlab/

@@ -34,14 +34,14 @@ set(REACH_SOURCE
 
 # ========= building playground
 # 1. create executables which uses the source files set above
-add_executable(playground
-        ${CMAKE_CURRENT_LIST_DIR}/src/playground.cpp
+add_executable(example
+        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp
         ${REACH_SOURCE})
 # 2. include directories
-target_include_directories(playground PRIVATE
+target_include_directories(example PRIVATE
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
-target_link_libraries(playground PRIVATE
+target_link_libraries(example PRIVATE
         ${CRDC_LIBRARY}
         fcl
         ccd

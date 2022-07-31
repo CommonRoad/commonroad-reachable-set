@@ -29,12 +29,12 @@ int main() {
     string name_scenario = "ARG_Carcarana-1_1_T-1";
     //string name_scenario = "ZAM_Tjunction-1_313_T-1";
 
-    // append path to interpreter
+    // append root path to python interpreter
     string path_root = "/home/edmond/Softwares/commonroad/commonroad-reachable-set/";
     py::module_ sys = py::module_::import("sys");
     sys.attr("path").attr("append")(path_root);
 
-    // ======== configuration from python ConfigurationBuilder
+    // ======== create configuration
     auto cls_ConfigurationBuilder_py =
             py::module_::import("commonroad_reach.data_structure.configuration_builder").attr(
                     "ConfigurationBuilder");
@@ -47,14 +47,14 @@ int main() {
         auto CLCS = make_shared<geometry::CurvilinearCoordinateSystem>(
                 obj_config_py.attr("planning").attr("reference_path").cast<geometry::EigenPolyline>(), 25.0, 0.1);
     }
-    // ======== collision checker from python collision checker
+    // ======== collision checker
     auto cls_CollisionChecker_py =
             py::module_::import("commonroad_reach.data_structure.collision_checker").attr("CollisionChecker");
     auto obj_collision_checker_py = cls_CollisionChecker_py(obj_config_py);
     auto collision_checker =
             obj_collision_checker_py.attr("cpp_collision_checker").cast<CollisionCheckerPtr>();
 
-    // ======== reachable set computation
+    // ======== compute reachable sets
     auto reachable_set = ReachableSet(config, collision_checker);
     auto start = high_resolution_clock::now();
     cout << "Computing reachable sets..." << endl;
@@ -62,7 +62,7 @@ int main() {
     auto end = high_resolution_clock::now();
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
 
-     //======== visualization of results
+     //======== plot computation results
     auto util_visualization = py::module_::import("commonroad_reach.utility.visualization");
     util_visualization.attr("plot_scenario_with_reachable_sets_cpp")(reachable_set, obj_config_py);
 

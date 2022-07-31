@@ -1,5 +1,5 @@
 planning:
-  steps_computation: 10
+  steps_computation: 30
   dt: 0.1
   coordinate_system: "CVLN"
 

@@ -109,13 +109,13 @@ DebugConfiguration::DebugConfiguration(YAML::Node const& node) {
     auto node_debug = node["debug"];
 }
 
-Configuration::Configuration(YAML::Node const& node) :
-        config_general(GeneralConfiguration(node)),
-        config_vehicle(VehicleConfiguration(node)),
-        config_planning(PlanningConfiguration(node)),
-        config_reachable_set(ReachableSetConfiguration(node)),
-        config_debug(DebugConfiguration(node)
-        ) {}
+Configuration::Configuration(YAML::Node const& node) {
+    config_general = GeneralConfiguration(node);
+    config_vehicle = VehicleConfiguration(node);
+    config_planning = PlanningConfiguration(node);
+    config_reachable_set = ReachableSetConfiguration(node);
+    config_debug = DebugConfiguration(node);
+}
 
 ConfigurationPtr Configuration::load_configuration(string const& file_yaml) {
     YAML::Node node = YAML::LoadFile(file_yaml);
