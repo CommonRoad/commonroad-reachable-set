@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, List
 from omegaconf import ListConfig, DictConfig
 
 import numpy as np
@@ -40,7 +40,7 @@ class Configuration:
     def update_configuration(self, scenario: Scenario = None,
                              planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
                              state_initial: State = None, goal_region: GoalRegion = None,
-                             CLCS: CurvilinearCoordinateSystem = None):
+                             CLCS: CurvilinearCoordinateSystem = None, list_ids_lanelets: List[int] = None):
         """
         Updates configuration based on the given attributes.
 
@@ -50,7 +50,9 @@ class Configuration:
             2. Scenario + planning problem (+ initial state): computes route and CLCS
             3. Scenario + initial state + goal region: computes route and CLCS
             4. Scenario + initial state + CLCS: retrieve reference path from CLCS
-            
+
+        Additionally, a list of lanelet IDs (e.g., from a given route) can be passed to restrict the reachable set
+        computation a-priori to a desired set of lanelets.
         """
         # patterns that do not require loading scenario and planning problem from xml files.
         if scenario and (planning_problem or
@@ -67,6 +69,7 @@ class Configuration:
         self.planning.state_initial = state_initial
         self.planning.goal_region = goal_region
         self.planning.CLCS = CLCS
+        self.planning.list_ids_lanelets = list_ids_lanelets
         self.planning.update_configuration(self)
 
         self.vehicle.update_configuration(self)
@@ -191,6 +194,7 @@ class Configuration:
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
         config.reachable_set.num_threads = self.reachable_set.num_threads
         config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
+        config.reachable_set.rasterize_obstacles = self.reachable_set.rasterize_obstacles
 
         # convert lut dict to Cpp configuration via PyBind function
         if self.reachable_set.mode_inflation == 3:
@@ -352,6 +356,7 @@ class PlanningConfiguration:
         self.goal_region = None
         self.reference_path = None
         self.lanelet_network = None
+        self.list_ids_lanelets = None
         self.CLCS = None
         self.coordinate_system = config_relevant.coordinate_system
         self.reference_point = config_relevant.reference_point
@@ -360,7 +365,9 @@ class PlanningConfiguration:
         scenario = config.scenario
         planning_problem = config.planning_problem
 
-        self.lanelet_network = scenario.lanelet_network
+        self.lanelet_network = scenario.lanelet_network if not self.list_ids_lanelets \
+            else util_general.create_lanelet_network_from_ids(scenario.lanelet_network, self.list_ids_lanelets)
+
         self.step_start = planning_problem.initial_state.time_step \
             if not self.state_initial else self.state_initial.time_step
 
@@ -430,6 +437,7 @@ class ReachableSetConfiguration:
         self.mode_repartition = config_relevant.mode_repartition
         self.mode_inflation = config_relevant.mode_inflation
         self.consider_traffic = config_relevant.consider_traffic
+        self.rasterize_obstacles = config_relevant.rasterize_obstacles
 
         self.size_grid = config_relevant.size_grid
         self.size_grid_2nd = config_relevant.size_grid_2nd
