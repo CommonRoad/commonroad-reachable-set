@@ -12,6 +12,7 @@ from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.common.solution import VehicleType
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_dc.geometry.util import resample_polyline
 from commonroad_route_planner.route_planner import RoutePlanner
 
 import commonroad_reach.utility.logger as util_logger
@@ -396,8 +397,10 @@ class PlanningConfiguration:
                 route = candidate_holder.retrieve_first_route()
 
                 if route:
-                    self.reference_path = route.reference_path
+                    ref_path_mod = resample_polyline(route.reference_path, 0.5)
+                    self.reference_path = ref_path_mod
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+                    self.reference_path = np.array(self.CLCS.reference_path())
 
             p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, self.state_initial)
 

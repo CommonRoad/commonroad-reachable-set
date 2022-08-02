@@ -124,12 +124,12 @@ def compute_inflation_radius(mode_inflation: int, length: float, width: float, r
         return radius_disc
 
 
-def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 25.0,
-                                         eps: float = 0.1) -> pycrccosy.CurvilinearCoordinateSystem:
+def create_curvilinear_coordinate_system(reference_path: np.ndarray, limit_projection_domain: float = 30.0,
+                                         eps: float = 0.1, eps2: float = 1e-4) -> pycrccosy.CurvilinearCoordinateSystem:
     """
     Creates a curvilinear coordinate system from the given reference path.
     """
-    CLCS = pycrccosy.CurvilinearCoordinateSystem(reference_path, limit_projection_domain, eps)
+    CLCS = pycrccosy.CurvilinearCoordinateSystem(reference_path, limit_projection_domain, eps, eps2)
     CLCS.compute_and_set_curvature()
 
     return CLCS

@@ -85,14 +85,17 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
 }
 
 
-tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> reach::create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
+tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
+    reach::create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
         vector<Polyline> const& vec_polylines_static,
         map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         CurvilinearCoordinateSystemPtr const& CLCS,
         int const& num_threads,
         BufferConfig const& buffer_config) {
 
-    // TODO create boost geometry polygon from projection domain for check and filter
+    // boost geometry polygon for projection domain for pre-filtering
+    auto proj_domain_polyline = CLCS->projectionDomainBorder();
+    auto proj_domain_geometry_polygon = convert_polyline_to_geometry_polygon(proj_domain_polyline);
 
     // create output vector / map
     vector<RectangleAABBPtr> vec_aabbs_static;
@@ -108,12 +111,14 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> reach::creat
     // static obstacle polylines
     for (auto const& polyline: vec_polylines_static) {
         auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
-        auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
-        auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+        if (bg::intersects(polygon_geometry, proj_domain_geometry_polygon)) {
+            auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
+            auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
 
-        // add to polylines list and group
-        polylines_list_out.emplace_back(polyline_inflated);
-        polygon_groups_out.push_back(0);
+            // add to polylines list and group
+            polylines_list_out.emplace_back(polyline_inflated);
+            polygon_groups_out.push_back(0);
+        }
     }
 
     // dynamic obstacle polylines
@@ -124,17 +129,20 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> reach::creat
 
         for (auto const& polyline: vec_polylines_dynamic){
             auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
-            auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
-            auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
-
-            // add to dynamic polylines list and group
-            polylines_list_out_dynamic.emplace_back(polyline_inflated);
-            polygon_groups_out_dynamic.push_back(group_count);
+            if (bg::intersects(polygon_geometry, proj_domain_geometry_polygon)) {
+                auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
+                auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+                // add to dynamic polylines list and group
+                polylines_list_out_dynamic.emplace_back(polyline_inflated);
+                polygon_groups_out_dynamic.push_back(group_count);
+            }
         }
 
         if (not polygon_groups_out_dynamic.empty()) {
-            polylines_list_out.insert(polylines_list_out.end(), polylines_list_out_dynamic.begin(), polylines_list_out_dynamic.end());
-            polygon_groups_out.insert(polygon_groups_out.end(), polygon_groups_out_dynamic.begin(), polygon_groups_out_dynamic.end());
+            polylines_list_out.insert(polylines_list_out.end(), polylines_list_out_dynamic.begin(),
+                polylines_list_out_dynamic.end());
+            polygon_groups_out.insert(polygon_groups_out.end(), polygon_groups_out_dynamic.begin(),
+                polygon_groups_out_dynamic.end());
             group_count++;
         }
         else {
@@ -146,7 +154,8 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> reach::creat
     }
 
     CLCS->convertListOfPolygonsToCurvilinearCoordsAndRasterize(
-        polylines_list_out, polygon_groups_out, group_count+1, num_threads, transformed_polygon, transformed_polygon_rasterized);
+        polylines_list_out, polygon_groups_out, group_count+1, num_threads, transformed_polygon,
+        transformed_polygon_rasterized);
 
     // add rasterized static AABBs to output
     vec_aabbs_static.reserve(transformed_polygon_rasterized[0].size());
