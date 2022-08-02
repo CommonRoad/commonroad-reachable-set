@@ -35,17 +35,20 @@ ConfigurationBuilder
    :members:
    :undoc-members:
 
-.. todo::
-   probably merge grid with regular grid, update regular grid here.
+**********************
+RegularGrid
+**********************
+.. automodule:: commonroad_reach.data_structure.regular_grid
 
-**********************
-Grid
-**********************
-.. automodule:: commonroad_reach.data_structure.grid
+``RegularGrid`` RegularGrid
+----------------------------------
+.. autoclass:: RegularGrid
+   :members:
+   :undoc-members:
 
 ``Grid`` class
 ----------------------------------
-.. autoclass:: Grid
+.. autoclass:: Cell
    :members:
    :undoc-members:
 

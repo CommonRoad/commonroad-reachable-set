@@ -118,9 +118,6 @@ PyGraphReachableSetOnline
    :members:
    :undoc-members:
 
-.. todo::
-   update documentation of DCs after Gerald has checked the DC implementations.
-   
 **********************
 DrivingCorridor
 **********************
