@@ -225,8 +225,11 @@ class ConfigurationBase:
     def to_dict(self):
         dict_config = dict()
         for key, val in self.__dict__.items():
-            if isinstance(val, (str, int, float)):
-                dict_config[key] = str(val)
+            if isinstance(val, np.float64):
+                val = float(val)
+
+            if isinstance(val, (str, int, float, bool)):
+                dict_config[key] = val
 
         return dict_config
 
@@ -362,12 +365,18 @@ class VehicleConfiguration(ConfigurationBase):
     def to_dict(self):
         dict_config = {"ego": dict(), "other": dict()}
         for key, val in self.ego.__dict__.items():
-            if isinstance(val, (str, int, float)):
-                dict_config["ego"][key] = str(val)
+            if isinstance(val, np.float64):
+                val = float(val)
+
+            if isinstance(val, (str, int, float, bool)):
+                dict_config["ego"][key] = val
 
         for key, val in self.other.__dict__.items():
-            if isinstance(val, (str, int, float)):
-                dict_config["other"][key] = str(val)
+            if isinstance(val, np.float64):
+                val = float(val)
+
+            if isinstance(val, (str, int, float, bool)):
+                dict_config["other"][key] = val
 
         return dict_config
 
