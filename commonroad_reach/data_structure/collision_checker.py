@@ -75,7 +75,7 @@ class CollisionChecker:
             scenario_cc.add_objects(scenario.obstacles)
 
         # add road boundary static object
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="triangulation")
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc)
         scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
@@ -122,7 +122,8 @@ class CollisionChecker:
         # dynamic obstacles
         list_obstacles_dynamic = scenario.dynamic_obstacles
         dict_time_to_list_vertices_polygons_dynamic = \
-            self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic)
+            self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic,
+                                                                   self.config.reachable_set.consider_traffic)
 
         return reach.create_curvilinear_collision_checker(list_vertices_polygons_static,
                                                           dict_time_to_list_vertices_polygons_dynamic,
@@ -148,7 +149,7 @@ class CollisionChecker:
         scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
         # add lanelet network
         scenario_cc.add_objects(lanelet_network)
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="triangulation")
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc)
         list_obstacles_static.append(object_road_boundary)
 
         return list_obstacles_static
@@ -173,7 +174,8 @@ class CollisionChecker:
 
         return list_vertices_polygons_static
 
-    def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic: List[DynamicObstacle]):
+    def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic: List[DynamicObstacle],
+                                                          consider_traffic: bool):
         """
         Returns the vertices of polygons from a given list of dynamic obstacles.
         """
@@ -182,23 +184,24 @@ class CollisionChecker:
 
         dict_time_to_list_vertices_polygons_dynamic = {step: [] for step in range(step_start, step_end)}
 
-        for step in range(step_start, step_end):
-            list_vertices_polygons_dynamic = []
-            time_step = step * round(self.config.planning.dt / self.config.scenario.dt)
-            for obstacle in list_obstacles_dynamic:
-                occupancy = obstacle.occupancy_at_time(time_step)
-                if not occupancy:
-                    continue
-                shape = occupancy.shape
+        if consider_traffic:
+            for step in range(step_start, step_end):
+                list_vertices_polygons_dynamic = []
+                time_step = step * round(self.config.planning.dt / self.config.scenario.dt)
+                for obstacle in list_obstacles_dynamic:
+                    occupancy = obstacle.occupancy_at_time(time_step)
+                    if not occupancy:
+                        continue
+                    shape = occupancy.shape
 
-                if isinstance(shape, Rectangle):
-                    list_vertices_polygons_dynamic.append(shape.vertices)
-
-                elif isinstance(shape, ShapeGroup):
-                    for shape in shape.shapes:
+                    if isinstance(shape, Rectangle):
                         list_vertices_polygons_dynamic.append(shape.vertices)
 
-            dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
+                    elif isinstance(shape, ShapeGroup):
+                        for shape in shape.shapes:
+                            list_vertices_polygons_dynamic.append(shape.vertices)
+
+                dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
 
         return dict_time_to_list_vertices_polygons_dynamic
 
