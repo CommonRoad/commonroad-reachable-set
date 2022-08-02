@@ -19,31 +19,61 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
         map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         CurvilinearCoordinateSystemPtr const& CLCS,
         double const& radius_disc_vehicle,
-        int const& num_omp_threads) {
+        int const& num_omp_threads,
+        bool const& rasterize_obstacles) {
 
+    // set up buffer config for inflation (Minkwoski sum)
     auto buffer_config = reach::BufferConfig(radius_disc_vehicle);
 
-    // 1. process static obstacles - convert each polyline into an aabb
-    auto vec_aabb_CVLN_static = create_curvilinear_aabbs_from_cartesian_polylines(
-            vec_polylines_static, CLCS, num_omp_threads, buffer_config);
-    // add the aabbs to a shape group
+    // shape group for all static obstacles
     auto shape_group_static = make_shared<ShapeGroup>();
-    for (auto const& aabb: vec_aabb_CVLN_static) {
-        shape_group_static->addToGroup(aabb);
-    }
-
-    // 2. process dynamic obstacles - create a shape group for each time step and add aabbs (from polylines) into it
+    // TVO for all dynamic obstacles: at each time step, the TVO contains a shape group of all dynamic AABBs
     auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
-    for (auto const&[step, vec_polylines_dynamic]: map_step_to_vec_polylines_dynamic) {
-        auto vec_aabb_CVLN_dynamic = create_curvilinear_aabbs_from_cartesian_polylines(
-                vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config);
 
-        auto shape_group = make_shared<ShapeGroup>();
-        for (auto const& aabb: vec_aabb_CVLN_dynamic) {
-            shape_group->addToGroup(aabb);
+    if (not rasterize_obstacles) {
+        // no rasterization: obstacles are overapproximated by one AABB after conversion to CVLN
+
+        // 1. process static obstacles - convert each polyline into an aabb
+        auto vec_aabb_CVLN_static = create_curvilinear_aabbs_from_cartesian_polylines(
+                vec_polylines_static, CLCS, num_omp_threads, buffer_config);
+
+        // add the static aabbs to a static shape group
+        for (auto const& aabb: vec_aabb_CVLN_static) {
+            shape_group_static->addToGroup(aabb);
         }
 
-        tvo_dynamic->appendObstacle(shape_group);
+        // 2. process dynamic obstacles - create a shape group for each time step and add aabbs (from polylines) into it
+        for (auto const&[step, vec_polylines_dynamic]: map_step_to_vec_polylines_dynamic) {
+            auto vec_aabb_CVLN_dynamic = create_curvilinear_aabbs_from_cartesian_polylines(
+                    vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config);
+
+            auto shape_group = make_shared<ShapeGroup>();
+            for (auto const& aabb: vec_aabb_CVLN_dynamic) {
+                shape_group->addToGroup(aabb);
+            }
+            tvo_dynamic->appendObstacle(shape_group);
+        }
+    } else {
+        // rasterization: obstacles are rasterized in CVLN with multiple AABBs -> less overapproximation
+
+        // process static and dynamic obstacles - convert, rasterize and return rasterized AABBs (static and dynamic)
+        auto const&[vec_aabb_CVLN_static, map_step_to_vec_aabb_CVLN_dynamic] =
+                create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
+                    vec_polylines_static, map_step_to_vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config);
+
+        // add the static AABBs to a static shape group
+        for (auto const& aabb: vec_aabb_CVLN_static) {
+            shape_group_static->addToGroup(aabb);
+        }
+
+        // add dynamic AABBs to dynamic shape group
+        for (auto const&[step, vec_aabb_CVLN_dynamic]: map_step_to_vec_aabb_CVLN_dynamic) {
+            auto shape_group = make_shared<ShapeGroup>();
+            for (auto const& aabb: vec_aabb_CVLN_dynamic) {
+                shape_group->addToGroup(aabb);
+            }
+            tvo_dynamic->appendObstacle(shape_group);
+        }
     }
 
     // create the collision checker
@@ -53,6 +83,91 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
 
     return collision_checker;
 }
+
+
+tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> reach::create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
+        vector<Polyline> const& vec_polylines_static,
+        map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        CurvilinearCoordinateSystemPtr const& CLCS,
+        int const& num_threads,
+        BufferConfig const& buffer_config) {
+
+    // TODO create boost geometry polygon from projection domain for check and filter
+
+    // create output vector / map
+    vector<RectangleAABBPtr> vec_aabbs_static;
+    map<int, vector<RectangleAABBPtr>> map_step_to_vec_aabbs_dynamic;
+
+    // inputs/outputs for rasterization function
+    std::vector<Polyline> polylines_list_out;
+    std::vector<int> polygon_groups_out;
+    int group_count = 0;
+    std::vector<std::vector<EigenPolyline>> transformed_polygon;
+    std::vector<std::vector<EigenPolyline>> transformed_polygon_rasterized;
+
+    // static obstacle polylines
+    for (auto const& polyline: vec_polylines_static) {
+        auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
+        auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
+        auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+
+        // add to polylines list and group
+        polylines_list_out.emplace_back(polyline_inflated);
+        polygon_groups_out.push_back(0);
+    }
+
+    // dynamic obstacle polylines
+    group_count++;
+    for (auto const&[step, vec_polylines_dynamic]: map_step_to_vec_polylines_dynamic) {
+        std::vector<Polyline> polylines_list_out_dynamic;
+        std::vector<int> polygon_groups_out_dynamic;
+
+        for (auto const& polyline: vec_polylines_dynamic){
+            auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
+            auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
+            auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+
+            // add to dynamic polylines list and group
+            polylines_list_out_dynamic.emplace_back(polyline_inflated);
+            polygon_groups_out_dynamic.push_back(group_count);
+        }
+
+        if (not polygon_groups_out_dynamic.empty()) {
+            polylines_list_out.insert(polylines_list_out.end(), polylines_list_out_dynamic.begin(), polylines_list_out_dynamic.end());
+            polygon_groups_out.insert(polygon_groups_out.end(), polygon_groups_out_dynamic.begin(), polygon_groups_out_dynamic.end());
+            group_count++;
+        }
+        else {
+        Polyline empty_polyline;
+        polylines_list_out.push_back(empty_polyline);
+        polygon_groups_out.push_back(group_count);
+        group_count++;
+        }
+    }
+
+    CLCS->convertListOfPolygonsToCurvilinearCoordsAndRasterize(
+        polylines_list_out, polygon_groups_out, group_count+1, num_threads, transformed_polygon, transformed_polygon_rasterized);
+
+    // add rasterized static AABBs to output
+    vec_aabbs_static.reserve(transformed_polygon_rasterized[0].size());
+    for (auto polyline_CVLN: transformed_polygon_rasterized[0]) {
+        vec_aabbs_static.emplace_back(create_aabb_from_polyline(polyline_CVLN));
+    }
+
+    // add rasterized dynamic AABBs to output
+    for (int i = 1; i<transformed_polygon_rasterized.size(); i++) {
+        vector<RectangleAABBPtr> vec_aabbs_dynamic;
+        vec_aabbs_dynamic.reserve(transformed_polygon_rasterized[i].size());
+        for (auto polyline_CVLN: transformed_polygon_rasterized[i]) {
+            vec_aabbs_dynamic.emplace_back(create_aabb_from_polyline(polyline_CVLN));
+        }
+        map_step_to_vec_aabbs_dynamic.insert({i, vec_aabbs_dynamic});
+    }
+
+    // return rasterized static AABBs vector and rasterized dynamic AABBs map
+    return make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
+}
+
 
 vector<RectangleAABBPtr> reach::create_curvilinear_aabbs_from_cartesian_polylines(
         vector<Polyline> const& vec_polylines,

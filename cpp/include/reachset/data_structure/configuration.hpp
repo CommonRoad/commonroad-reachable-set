@@ -147,6 +147,8 @@ struct ReachableSetConfiguration {
     int num_threads{};
     // flag whether to prune reach nodes not reaching the final time step
     bool prune_nodes{};
+    // flag whether to rasterize obstacles when using CVLN frame (reduces over-approximation after conversion to CVLN)
+    bool rasterize_obstacles{};
     // look-up table for longitudinal enlargement for collision checking
     LUTLongitudinalEnlargementConstPtr lut_lon_enlargement;
 
