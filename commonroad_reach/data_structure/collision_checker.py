@@ -5,7 +5,7 @@ import commonroad_dc.pycrcc as pycrcc
 import commonroad_reach.pycrreach as reach
 from commonroad.geometry.shape import Rectangle, ShapeGroup
 from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
-from commonroad.scenario.scenario import Scenario
+from commonroad.scenario.scenario import Scenario, LaneletNetwork
 from commonroad_dc.boundary import boundary
 from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
 
@@ -63,17 +63,19 @@ class CollisionChecker:
         Elements included: lanelet network, obstacles, road boundaries.
         """
         scenario: Scenario = config.scenario
+        lanelet_network: LaneletNetwork = config.planning.lanelet_network
+
         scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
 
         # add lanelet network
-        scenario_cc.add_objects(scenario.lanelet_network)
+        scenario_cc.add_objects(lanelet_network)
 
         # add obstacles
         if config.reachable_set.consider_traffic:
             scenario_cc.add_objects(scenario.obstacles)
 
         # add road boundary static object
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="triangulation")
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc)
         scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
@@ -110,35 +112,44 @@ class CollisionChecker:
         time variant object containing shape groups of occupancies of all dynamic obstacles at different time steps.
         """
         scenario = self.config.scenario
+        lanelet_network = self.config.planning.lanelet_network
 
         # static obstacles
-        list_obstacles_static = self.retrieve_static_obstacles(scenario, self.config.reachable_set.consider_traffic)
+        list_obstacles_static = self.retrieve_static_obstacles(scenario, lanelet_network,
+                                                               self.config.reachable_set.consider_traffic)
         list_vertices_polygons_static = self.obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static)
 
         # dynamic obstacles
         list_obstacles_dynamic = scenario.dynamic_obstacles
         dict_time_to_list_vertices_polygons_dynamic = \
-            self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic)
+            self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic,
+                                                                   self.config.reachable_set.consider_traffic)
 
         return reach.create_curvilinear_collision_checker(list_vertices_polygons_static,
                                                           dict_time_to_list_vertices_polygons_dynamic,
                                                           self.config.planning.CLCS,
-                                                          self.config.vehicle.ego.radius_inflation, 4)
+                                                          self.config.vehicle.ego.radius_inflation, 4,
+                                                          self.config.reachable_set.rasterize_obstacles)
 
     @staticmethod
-    def retrieve_static_obstacles(scenario: Scenario, consider_traffic: bool) -> List[StaticObstacle]:
+    def retrieve_static_obstacles(scenario: Scenario, lanelet_network: LaneletNetwork, consider_traffic: bool) \
+            -> List[StaticObstacle]:
         """
         Returns the list of static obstacles.
 
-        The static obstacles include static road traffic and road boundaries.
+        The static obstacles include static road traffic (obtained from scenario object) and road boundaries (obtained
+        from lanelet_network object).
         """
         list_obstacles_static = []
 
         if consider_traffic:
             list_obstacles_static += scenario.static_obstacles
 
-        # add road boundary
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario, method="triangulation")
+        # compute road boundary
+        scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
+        # add lanelet network
+        scenario_cc.add_objects(lanelet_network)
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, width=2e-3)
         list_obstacles_static.append(object_road_boundary)
 
         return list_obstacles_static
@@ -163,7 +174,8 @@ class CollisionChecker:
 
         return list_vertices_polygons_static
 
-    def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic: List[DynamicObstacle]):
+    def obtain_vertices_of_polygons_for_dynamic_obstacles(self, list_obstacles_dynamic: List[DynamicObstacle],
+                                                          consider_traffic: bool):
         """
         Returns the vertices of polygons from a given list of dynamic obstacles.
         """
@@ -172,23 +184,24 @@ class CollisionChecker:
 
         dict_time_to_list_vertices_polygons_dynamic = {step: [] for step in range(step_start, step_end)}
 
-        for step in range(step_start, step_end):
-            list_vertices_polygons_dynamic = []
-            time_step = step * round(self.config.planning.dt / self.config.scenario.dt)
-            for obstacle in list_obstacles_dynamic:
-                occupancy = obstacle.occupancy_at_time(time_step)
-                if not occupancy:
-                    continue
-                shape = occupancy.shape
+        if consider_traffic:
+            for step in range(step_start, step_end):
+                list_vertices_polygons_dynamic = []
+                time_step = step * round(self.config.planning.dt / self.config.scenario.dt)
+                for obstacle in list_obstacles_dynamic:
+                    occupancy = obstacle.occupancy_at_time(time_step)
+                    if not occupancy:
+                        continue
+                    shape = occupancy.shape
 
-                if isinstance(shape, Rectangle):
-                    list_vertices_polygons_dynamic.append(shape.vertices)
-
-                elif isinstance(shape, ShapeGroup):
-                    for shape in shape.shapes:
+                    if isinstance(shape, Rectangle):
                         list_vertices_polygons_dynamic.append(shape.vertices)
 
-            dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
+                    elif isinstance(shape, ShapeGroup):
+                        for shape in shape.shapes:
+                            list_vertices_polygons_dynamic.append(shape.vertices)
+
+                dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
 
         return dict_time_to_list_vertices_polygons_dynamic
 
