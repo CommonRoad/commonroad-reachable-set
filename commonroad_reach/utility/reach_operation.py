@@ -9,7 +9,7 @@ from math import ceil, floor
 from typing import List, Tuple
 
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.grid import Grid, Cell
+from commonroad_reach.data_structure.regular_grid import Grid, Cell
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachNodeMultiGeneration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry

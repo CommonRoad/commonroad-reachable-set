@@ -1,17 +1,17 @@
 import logging
 from typing import Union, List, Dict
 
-import networkx as nx
 import numpy as np
+import networkx as nx
 from commonroad.geometry.shape import Shape, ShapeGroup
 
-import commonroad_reach.utility.reach_operation
 from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
-from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor, ConnectedComponent
 from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPolygon
+from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor, ConnectedComponent
 from commonroad_reach.utility import geometry as util_geometry
-import commonroad_reach.utility.logger as util_logger
+from commonroad_reach.utility import logger as util_logger
+import commonroad_reach.utility.reach_operation
 
 logger = logging.getLogger(__name__)
 # scaling factor (avoid numerical errors)
@@ -19,7 +19,9 @@ DIGITS = 2
 
 
 class DrivingCorridorExtractor:
-    """Class to extract driving corridors from computed reachable sets and drivable areas."""
+    """
+    Class to extract driving corridors from reachable sets and drivable areas.
+    """
 
     def __init__(self, reachable_sets: Dict[int, List[Union[pycrreach.ReachNode, ReachNode]]], config: Configuration):
         self.reachable_sets = reachable_sets
@@ -34,11 +36,19 @@ class DrivingCorridorExtractor:
 
     def extract(self, to_goal_region: bool = False, shape_terminal: Shape = None, is_cartesian_shape: bool = True,
                 corridor_lon: DrivingCorridor = None, list_p_lon: List[float] = None) -> List[DrivingCorridor]:
-        """Extracts driving corridors within the reachable sets.
+        """
+        Extracts driving corridors within the reachable sets.
 
         If a longitudinal DC and a list of positions are given, lateral DCs are extracted. Otherwise,
         proceed to longitudinal DC extraction. Optionally, one can specify whether the longitudinal DC should reach
         the goal region of the planning problem or a user-given terminal states represented by a shape.
+
+        :param to_goal_region: whether a driving corridor should end in the goal region of the planning problem
+        :param shape_terminal: terminal positions represented by a CR Shape object
+        :param is_cartesian_shape: flag indicating whether the shape is described in Cartesian coordinate system
+        :param corridor_lon: a longitudinal driving corridor
+        :param list_p_lon: a list of positions in the longitudinal direction
+        :return: a list of extracted driving corridors
         """
         list_shapes_terminal = self._determine_terminal_shapes(to_goal_region, shape_terminal)
 
@@ -47,13 +57,19 @@ class DrivingCorridorExtractor:
             list_nodes_terminal = self._determine_terminal_nodes(shape, is_cartesian_shape, corridor_lon, list_p_lon)
             list_corridors += self._extract_driving_corridors(list_nodes_terminal, corridor_lon, list_p_lon)
 
+        list_corridors.sort(key=lambda dc: dc.area, reverse=True)
+
         return list_corridors
 
     def _determine_terminal_shapes(self, to_goal_region: bool = False, shape_terminal: Shape = None):
-        """Determines the terminal shape for driving corridor extraction.
+        """
+        Determines the terminal shapes for driving corridor extraction.
 
-        If to_goal_region set to true, set the goal region of the planning problem as the terminal shape.
-        Otherwise, set the given terminal shape.
+        If to_goal_region is set to true, set the goal region of the planning problem as the terminal shape.
+        Otherwise, set the given terminal shape as the terminal shape.
+
+        :param to_goal_region: whether a driving corridor should end in the goal region of the planning problem
+        :param shape_terminal: terminal positions represented by a CR Shape object
         """
         if to_goal_region:
             # extract all driving corridors reaching the goal region represented by a shape(group)
@@ -73,6 +89,14 @@ class DrivingCorridorExtractor:
     def _determine_terminal_nodes(self, shape_terminal: Shape = None, is_cartesian_shape: bool = True,
                                   corridor_lon: DrivingCorridor = None, list_p_lon: List[float] = None) \
             -> List[Union[pycrreach.ReachNode, ReachNode]]:
+        """
+        Determines terminal reach nodes that overlap with the given terminal shapes.
+
+        :param shape_terminal: terminal positions represented by a CR Shape object
+        :param is_cartesian_shape: flag indicating whether the shape is described in Cartesian coordinate system
+        :param corridor_lon: a longitudinal driving corridor
+        :param list_p_lon: a list of positions in the longitudinal direction
+        """
         if not corridor_lon and not list_p_lon:
             # extract longitudinal driving corridors
             util_logger.print_and_log_info(logger, "\tLongitudinal DC.")
@@ -116,11 +140,17 @@ class DrivingCorridorExtractor:
 
     def _extract_driving_corridors(self, list_nodes_terminal, corridor_lon: DrivingCorridor = None,
                                    list_p_lon: List[float] = None) -> List[DrivingCorridor]:
-        """Extracts longitudinal or lateral driving corridors.
+        """
+        Extracts longitudinal or lateral driving corridors.
 
         If no parameter is passed, longitudinal driving corridors are extracted from the reachable sets.
         If a longitudinal driving corridor and a given list of longitudinal positions are given, lateral driving
         corridors are extracted.
+
+        :param list_nodes_terminal: a list of reach nodes from which the corridor extraction should be performed
+        :param corridor_lon: a longitudinal driving corridor
+        :param list_p_lon: a list of positions in the longitudinal direction
+        :return: a list of extracted driving corridors
         """
         list_corridors = list()
 
@@ -161,11 +191,12 @@ class DrivingCorridorExtractor:
     def _determine_overlapping_nodes_longitudinal(self, list_nodes_reach, shape_terminal: Shape,
                                                   is_cartesian_shape: bool = True) \
             -> List[Union[pycrreach.ReachNode, ReachNode]]:
-        """Determines the terminal reach nodes that overlap with the given terminal shape.
+        """
+        Determines the terminal reach nodes that overlap with the given terminal shape.
 
-        :param list_nodes_reach list of reach nodes at the final time step
-        :param shape_terminal terminal positions represented by a CR Shape object
-        :param is_cartesian_shape flag indicating whether the shape is described in Cartesian coordinate system
+        :param list_nodes_reach: list of reach nodes at the final time step
+        :param shape_terminal: terminal positions represented by a CR Shape object
+        :param is_cartesian_shape: flag indicating whether the shape is described in Cartesian coordinate system
         :return: list of reach nodes overlapping with terminal positions
         """
         if self.config.planning.coordinate_system == "CVLN" and not is_cartesian_shape:
@@ -202,7 +233,8 @@ class DrivingCorridorExtractor:
                                              p_lon: float):
         """
         Checks which drivable areas of the given reachable sets contain a given longitudinal position and returns the
-        corresponding reachable sets
+        corresponding reachable sets.
+
         :param list_nodes_reach: List of reachable set nodes
         :param p_lon: given longitudinal positions
         :return set_nodes_terminal: Set containing the reachable set nodes which overlap with longitudinal position
@@ -217,9 +249,11 @@ class DrivingCorridorExtractor:
 
     def _determine_connected_components(self, list_nodes_reach,
                                         exclude_small_area: bool = False) -> List[ConnectedComponent]:
-        """Determines and returns the connected reachable sets in the position domain.
+        """
+        Determines and returns the connected reachable sets in the position domain.
 
-        Connected components are sorted according to a heuristic (area of connected reachable sets)
+        Connected components are sorted according to a heuristic (area of connected reachable sets).
+
         :param list_nodes_reach: list of reach nodes
         :param exclude_small_area: excludes connected components with an area smaller than the threshold
         :return: list of connected reachable sets
@@ -258,9 +292,11 @@ class DrivingCorridorExtractor:
     def _create_connected_component_graph(self, list_lists_ids_cc: List[int], graph_cc: nx.Graph,
                                           cc_current: ConnectedComponent, corridor_lon: DrivingCorridor = None,
                                           dict_step_to_p_lon: Dict[int, float] = None, id_cc_terminal: int = 0):
-        """Traverses graph of connected reachable sets backwards in time and extracts paths starting from a terminal set.
+        """
+        Traverses graph of connected reachable sets backwards in time and extracts paths starting from a terminal set.
 
-        A path within the graph corresponds to a possible driving corridor
+        A path within the graph corresponds to a possible driving corridor.
+
         :param list_lists_ids_cc: list of found driving corridors in the reachable set
         :param graph_cc: graph of possible driving corridors
         :param cc_current: currently examined connected component
@@ -325,9 +361,7 @@ class DrivingCorridorExtractor:
     @staticmethod
     def _determine_area_of_driving_corridor(driving_corridor: Dict[int, List[Union[pycrreach.ReachNode, ReachNode]]]):
         """
-        Function to compute the cumulative area of a driving corridor, i.e.,
-        :param driving_corridor:
-        :return: area
+        Function to compute the cumulative area of a driving corridor.
         """
         area = 0.0
         for time_idx, reach_set_nodes in driving_corridor.items():

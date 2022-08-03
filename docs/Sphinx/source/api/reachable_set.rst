@@ -118,13 +118,16 @@ PyGraphReachableSetOnline
    :members:
    :undoc-members:
 
-.. todo::
-   update documentation of DCs after Gerald has checked the DC implementations.
-
 **********************
 DrivingCorridor
 **********************
 .. automodule:: commonroad_reach.data_structure.reach.driving_corridor
+
+``ConnectedComponent`` class
+----------------------------------
+.. autoclass:: ConnectedComponent
+   :members:
+   :undoc-members:
 
 ``DrivingCorridor`` class
 ----------------------------------

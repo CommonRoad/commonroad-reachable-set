@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import Optional, Union, Tuple, List
+import yaml
 from omegaconf import ListConfig, DictConfig
 
 import numpy as np
@@ -123,6 +124,25 @@ class Configuration:
         for line in string.split("\n"):
             util_logger.print_and_log_info(logger, line)
 
+    def save(self, path_save: str, name_file: str):
+        """
+        Saves configuration to a yaml file.
+        """
+        dict_save = {"name_scenario": self.name_scenario}
+
+        for name_obj, obj in self.__dict__.items():
+            try:
+                dict_obj = obj.to_dict()
+
+            except AttributeError:
+                continue
+
+            else:
+                dict_save.update({name_obj: dict_obj})
+
+        with open(f'{path_save}/{name_file}.yml', 'w') as file_yaml:
+            yaml.dump(dict_save, file_yaml, default_flow_style=False, allow_unicode=True)
+
     def convert_to_cpp_configuration(self) -> reach.Configuration:
         """
         Converts to a configuration that is readable by the C++ binding code.
@@ -206,7 +226,20 @@ class Configuration:
         return config
 
 
-class GeneralConfiguration:
+class ConfigurationBase:
+    def to_dict(self):
+        dict_config = dict()
+        for key, val in self.__dict__.items():
+            if isinstance(val, np.float64):
+                val = float(val)
+
+            if isinstance(val, (str, int, float, bool)):
+                dict_config[key] = val
+
+        return dict_config
+
+
+class GeneralConfiguration(ConfigurationBase):
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.general
         name_scenario = config_relevant.name_scenario
@@ -218,7 +251,7 @@ class GeneralConfiguration:
         self.path_offline_data = config_relevant.path_offline_data
 
 
-class VehicleConfiguration:
+class VehicleConfiguration(ConfigurationBase):
     class Ego:
         def __init__(self, config: Union[ListConfig, DictConfig]):
             config_relevant = config.vehicle.ego
@@ -334,8 +367,26 @@ class VehicleConfiguration:
     def update_configuration(self, config: Configuration):
         self.ego.update_configuration(config)
 
+    def to_dict(self):
+        dict_config = {"ego": dict(), "other": dict()}
+        for key, val in self.ego.__dict__.items():
+            if isinstance(val, np.float64):
+                val = float(val)
 
-class PlanningConfiguration:
+            if isinstance(val, (str, int, float, bool)):
+                dict_config["ego"][key] = val
+
+        for key, val in self.other.__dict__.items():
+            if isinstance(val, np.float64):
+                val = float(val)
+
+            if isinstance(val, (str, int, float, bool)):
+                dict_config["other"][key] = val
+
+        return dict_config
+
+
+class PlanningConfiguration(ConfigurationBase):
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.planning
 
@@ -362,6 +413,30 @@ class PlanningConfiguration:
         self.CLCS = None
         self.coordinate_system = config_relevant.coordinate_system
         self.reference_point = config_relevant.reference_point
+
+    @property
+    def p_initial(self):
+        return np.array([self.p_lon_initial, self.p_lat_initial])
+
+    @p_initial.setter
+    def p_initial(self, p_initial: Tuple):
+        assert (type(p_initial is tuple)), "Initial lon/lat position must be of type tuple with length 2"
+        assert (len(p_initial) == 2), "Initial lon/lat position must be of type tuple with length 2"
+
+        self.p_lon_initial = p_initial[0]
+        self.p_lat_initial = p_initial[1]
+
+    @property
+    def v_initial(self):
+        return np.array([self.v_lon_initial, self.v_lat_initial])
+
+    @v_initial.setter
+    def v_initial(self, v_initial: Tuple):
+        assert (type(v_initial is tuple)), "Initial lon/lat velocity must be of type tuple with length 2"
+        assert (len(v_initial) == 2), "Initial lon/lat velocity must be of type tuple with length 2"
+
+        self.v_lon_initial = v_initial[0]
+        self.v_lat_initial = v_initial[1]
 
     def update_configuration(self, config: Configuration):
         scenario = config.scenario
@@ -408,32 +483,8 @@ class PlanningConfiguration:
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
 
-    @property
-    def p_initial(self):
-        return np.array([self.p_lon_initial, self.p_lat_initial])
 
-    @p_initial.setter
-    def p_initial(self, p_initial: Tuple):
-        assert (type(p_initial is tuple)), "Initial lon/lat position must be of type tuple with length 2"
-        assert (len(p_initial) == 2), "Initial lon/lat position must be of type tuple with length 2"
-
-        self.p_lon_initial = p_initial[0]
-        self.p_lat_initial = p_initial[1]
-
-    @property
-    def v_initial(self):
-        return np.array([self.v_lon_initial, self.v_lat_initial])
-
-    @v_initial.setter
-    def v_initial(self, v_initial: Tuple):
-        assert (type(v_initial is tuple)), "Initial lon/lat velocity must be of type tuple with length 2"
-        assert (len(v_initial) == 2), "Initial lon/lat velocity must be of type tuple with length 2"
-
-        self.v_lon_initial = v_initial[0]
-        self.v_lat_initial = v_initial[1]
-
-
-class ReachableSetConfiguration:
+class ReachableSetConfiguration(ConfigurationBase):
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.reachable_set
 
@@ -463,7 +514,7 @@ class ReachableSetConfiguration:
                 config.planning.reference_point, config.vehicle.ego.circle_distance, self.path_to_lut)
 
 
-class DebugConfiguration:
+class DebugConfiguration(ConfigurationBase):
     def __init__(self, config: Union[ListConfig, DictConfig]):
         config_relevant = config.debug
 

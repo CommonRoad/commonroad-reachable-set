@@ -65,18 +65,13 @@ We strongly recommend using Anaconda_ to manage Python virtual environments.
 
     This will build the python binding (pycrreach) required for collision checks and other C++-boosted computations.
 
-.. todo::
-    check the ``-e`` flag (Xiao's issue).
-
 .. note::
     - Replace ``"/path/to/commonroad-drivability-checker/"`` with your local path to the Drivability Checker directory.
 
     - The ``-v`` flag prints verbose information about the build progress.
 
     **Optional**:
-
-    - To install the package in editable mode, add flag ``-e`` to the pip command above.
-
+    
     - To add unit tests,  set variable ``ADD_TESTS=ON`` before the pip command.
 
     - To build the code in Debug mode, set ``debug=1`` in the setup configuration file (:guilabel:`setup.cfg`).

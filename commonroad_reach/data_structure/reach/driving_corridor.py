@@ -1,15 +1,17 @@
 from typing import Dict, List, Union
 
-import commonroad_reach.utility.reach_operation
 from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
-from commonroad_reach.utility import geometry as util_geometry
+import commonroad_reach.utility.reach_operation
 
 # scaling factor (avoid numerical errors)
 DIGITS = 2
 
 
 class ConnectedComponent:
+    """
+    Class representing a list of connected :class:`~commonroad_reach.data_structure.reach.reach_node.ReachNode`.
+    """
     cnt_id = 0
 
     def __init__(self, list_nodes_reach: List[Union[pycrreach.ReachNode, ReachNode]] = None):
@@ -25,6 +27,10 @@ class ConnectedComponent:
 
 
 class DrivingCorridor:
+    """
+    Class representing a sequence of :class:`ConnectedComponent`.
+    """
+
     def __init__(self):
         self.dict_step_to_cc: Dict[int, ConnectedComponent] = dict()
         self.area = 0

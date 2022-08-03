@@ -1,25 +1,25 @@
-import os
 import logging
+import os
 from copy import deepcopy
-from typing import Tuple, Union, List, Dict
+from pathlib import Path
+from typing import Tuple, Union, List
 
 import imageio
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from pathlib import Path
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
-
-from commonroad_reach import pycrreach
 from commonroad.geometry.shape import Polygon, Rectangle
 from commonroad.visualization.mp_renderer import MPRenderer
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
+
+import commonroad_reach.utility.logger as util_logger
+from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
+from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
+from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
-from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
-from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor
-import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -71,7 +71,7 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
                                              "trajectory": {"draw_trajectory": True},
                                              "time_begin": time_step,
-                                             "lanelet": {"show_label":config.debug.draw_lanelet_labels}})
+                                             "lanelet": {"show_label": config.debug.draw_lanelet_labels}})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
@@ -112,6 +112,10 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration)
 
     util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
+
+    if config.debug.save_config:
+        config.save(path_output, str(scenario.scenario_id))
+        util_logger.print_and_log_debug(logger, "\tConfiguration file saved.", verbose=False)
 
 
 def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
@@ -300,7 +304,8 @@ def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
     imageio.mimsave(os.path.join(path, "../", file_save_name + ".gif"), images, duration=duration)
 
 
-def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,
+def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id: int,
+                                        reach_interface: ReachableSetInterface,
                                         step_start: Union[int, None] = None, step_end: Union[int, None] = None,
                                         steps: Union[List[int], None] = None, save_gif: bool = False,
                                         duration: float = None, as_svg=False, terminal_set=None):
@@ -408,7 +413,7 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
 
 
 def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,
-                             trajectory: np.ndarray = None, as_svg: bool =False):
+                             trajectory: np.ndarray = None, as_svg: bool = False):
     """
     Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor.
     """
@@ -488,8 +493,8 @@ def draw_driving_corridor_3d(driving_corridor: DrivingCorridor, dc_id: int, reac
     plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
 
     # get relevant lanelet IDs from plot limits
-    plot_window_length, plot_window_width = plot_limits[1] - plot_limits[0], plot_limits[3]-plot_limits[2]
-    center = np.array([plot_limits[0] + plot_window_length/2, plot_limits[2] + plot_window_width/2])
+    plot_window_length, plot_window_width = plot_limits[1] - plot_limits[0], plot_limits[3] - plot_limits[2]
+    center = np.array([plot_limits[0] + plot_window_length / 2, plot_limits[2] + plot_window_width / 2])
     rect = Rectangle(plot_window_length, plot_window_width, center)
     lanelet_ids = config.scenario.lanelet_network.find_lanelet_by_shape(rect)
 
@@ -736,7 +741,7 @@ def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
         scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
                                              "trajectory": {"draw_trajectory": True},
                                              "time_begin": time_step,
-                                             "lanelet": {"show_label":config.debug.draw_lanelet_labels}})
+                                             "lanelet": {"show_label": config.debug.draw_lanelet_labels}})
         if config.debug.draw_planning_problem:
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})

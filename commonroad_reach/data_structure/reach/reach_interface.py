@@ -77,7 +77,7 @@ class ReachableSetInterface:
         else:
             return self._reach.reachable_set_at_step(step)
 
-    def compute_reachable_sets(self, step_start: int = 1, step_end: int = 0):
+    def compute_reachable_sets(self, step_start: int = 0, step_end: int = 0):
         """
         Computes reachable sets between the given start and end steps.
         """
@@ -87,6 +87,7 @@ class ReachableSetInterface:
             util_logger.print_and_log_warning(logger, "Reachable set is not initialized, aborting computation.")
             return None
 
+        step_start = step_start if step_start else self.step_start + 1
         step_end = step_end if step_end else self.step_end
 
         if not (0 < step_start < step_end):
