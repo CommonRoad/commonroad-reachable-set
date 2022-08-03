@@ -19,10 +19,6 @@ def main():
 
     # ==== compute reachable sets using reachability interface
     reach_interface = ReachableSetInterface(config)
-
-    util_visual.plot_scenario_with_projection_domain(reach_interface)
-    util_visual.plot_collision_checker(reach_interface)
-
     reach_interface.compute_reachable_sets()
 
     # ==== plot computation results
