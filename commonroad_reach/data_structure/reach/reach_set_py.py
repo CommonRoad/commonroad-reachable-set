@@ -76,6 +76,8 @@ class PyReachableSet(ReachableSet):
         reachable_set_previous = self.dict_step_to_reachable_set[step - 1]
 
         if len(reachable_set_previous) < 1:
+            self.dict_step_to_drivable_area[step] = list()
+            self.dict_step_to_base_set_propagated[step] = list()
             return None
 
         list_base_sets_propagated = self._propagate_reachable_set(reachable_set_previous)
@@ -166,6 +168,7 @@ class PyReachableSet(ReachableSet):
         drivable_area = self.dict_step_to_drivable_area[step]
 
         if not drivable_area:
+            self.dict_step_to_reachable_set[step] = list()
             return None
 
         list_nodes = reach_operation.construct_reach_nodes(drivable_area, base_sets_propagated)

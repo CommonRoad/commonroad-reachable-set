@@ -18,8 +18,8 @@ ReachableSet::ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collisio
 void ReachableSet::_initialize() {
     step_start = config->planning().step_start;
     step_end = step_start + config->planning().steps_computation;
-    map_time_to_drivable_area[step_start] = _construct_initial_drivable_area();
-    map_time_to_reachable_set[step_start] = _construct_initial_reachable_set();
+    map_step_to_drivable_area[step_start] = _construct_initial_drivable_area();
+    map_step_to_reachable_set[step_start] = _construct_initial_reachable_set();
     _initialize_zero_state_polygons();
 }
 
@@ -74,14 +74,18 @@ void ReachableSet::compute(int step_start, int step_end) {
 }
 
 /// *Steps*:
-/// 1. Propagate each node of the reachable set from the last time step. This forms a list of propagated base sets.
+/// 1. Propagate each node of the reachable set from the last step. This forms a list of propagated base sets.
 /// 2. Project the base sets onto the position domain.
 /// 3. Merge and repartition these rectangles to reduce computation load.
 /// 4. Check for collision and split the repartitioned rectangles into collision-free rectangles.
 /// 5. Merge and repartition the collision-free rectangles again to reduce number of nodes.
 void ReachableSet::_compute_drivable_area_at_step(int const& step) {
-    auto reachable_set_previous = map_time_to_reachable_set[step - 1];
-    if (reachable_set_previous.empty()) return;
+    auto reachable_set_previous = map_step_to_reachable_set[step - 1];
+    if (reachable_set_previous.empty()) {
+        map_step_to_drivable_area[step] = vector<ReachPolygonPtr>{};
+        map_step_to_base_set_propagated[step] = vector<ReachNodePtr>{};
+        return;
+    }
 
     auto vec_base_sets_propagated = _propagate_reachable_set(reachable_set_previous);
 
@@ -154,8 +158,8 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
 
     } else throw std::logic_error("Invalid mode for repartition.");
 
-    map_time_to_drivable_area[step] = drivable_area_collision_free;
-    map_time_to_base_set_propagated[step] = vec_base_sets_propagated;
+    map_step_to_drivable_area[step] = drivable_area_collision_free;
+    map_step_to_base_set_propagated[step] = vec_base_sets_propagated;
 }
 
 vector<ReachNodePtr> ReachableSet::_propagate_reachable_set(vector<ReachNodePtr> const& vec_nodes) {
@@ -205,17 +209,20 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
 /// 1. construct reach nodes from drivable area and the propagated base sets.
 /// 2. update parent-child relationship of the nodes.
 void ReachableSet::_compute_reachable_set_at_step(int const& step) {
-    auto drivable_area = map_time_to_drivable_area[step];
-    auto vec_base_sets_propagated = map_time_to_base_set_propagated[step];
+    auto drivable_area = map_step_to_drivable_area[step];
+    auto vec_base_sets_propagated = map_step_to_base_set_propagated[step];
     auto num_threads = config->reachable_set().num_threads;
 
-    if (drivable_area.empty()) return;
+    if (drivable_area.empty()) {
+        map_step_to_reachable_set[step] = vector<ReachNodePtr>{};
+        return;
+    }
 
     auto vec_nodes = construct_reach_nodes(drivable_area, vec_base_sets_propagated, num_threads);
 
     auto reachable_set = connect_children_to_parents(step, vec_nodes, num_threads);
 
-    map_time_to_reachable_set[step] = reachable_set;
+    map_step_to_reachable_set[step] = reachable_set;
 }
 
 /// Iterates through reachability graph backward in time, discards nodes that don't have a child node.
@@ -254,9 +261,9 @@ void ReachableSet::prune_nodes_not_reaching_final_step() {
             }
         }
         // update drivable area and reachable set dictionaries
-        map_time_to_drivable_area[step] = vec_drivable_area_updated;
-        map_time_to_reachable_set[step] = vec_reachable_set_updated;
-        cnt_nodes_after_pruning += map_time_to_reachable_set[step].size();
+        map_step_to_drivable_area[step] = vec_drivable_area_updated;
+        map_step_to_reachable_set[step] = vec_reachable_set_updated;
+        cnt_nodes_after_pruning += map_step_to_reachable_set[step].size();
     }
 
     _pruned = true;

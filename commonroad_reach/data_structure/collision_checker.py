@@ -109,7 +109,7 @@ class CollisionChecker:
         Creates a curvilinear collision checker.
 
         The collision checker is created by adding a shape group containing occupancies of all static obstacles, and a
-        time variant object containing shape groups of occupancies of all dynamic obstacles at different time steps.
+        time variant object containing shape groups of occupancies of all dynamic obstacles at different steps.
         """
         scenario = self.config.scenario
         lanelet_network = self.config.planning.lanelet_network

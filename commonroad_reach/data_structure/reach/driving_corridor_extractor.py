@@ -110,7 +110,7 @@ class DrivingCorridorExtractor:
                     return []
 
             else:
-                # use all base sets in last time step
+                # use all base sets in last step
                 list_nodes_terminal = list_nodes_final
 
         elif corridor_lon and list_p_lon:
@@ -194,7 +194,7 @@ class DrivingCorridorExtractor:
         """
         Determines the terminal reach nodes that overlap with the given terminal shape.
 
-        :param list_nodes_reach: list of reach nodes at the final time step
+        :param list_nodes_reach: list of reach nodes at the final step
         :param shape_terminal: terminal positions represented by a CR Shape object
         :param is_cartesian_shape: flag indicating whether the shape is described in Cartesian coordinate system
         :return: list of reach nodes overlapping with terminal positions
