@@ -42,6 +42,7 @@ collision::CollisionCheckerPtr create_curvilinear_collision_checker(
         double const& radius_disc_vehicle, int const& num_omp_threads, bool const& rasterize_obstacles);
 
 /// Creates axis-aligned bounding boxes in curvilinear coordinate system from polylines in Cartesian coordinate system.
+/// The converted polygons are overapproximated with one AABB in CVLN frame.
 /// @param vec_polylines vector of polylines to be considered
 /// @param CLCS a curvilinear coordinate system object
 /// @param num_threads number of threads for parallel computing
@@ -54,6 +55,8 @@ std::vector<collision::RectangleAABBPtr> create_curvilinear_aabbs_from_cartesian
         BufferConfig const& buffer_config);
 
 /// Creates axis-aligned bounding boxes in curvilinear coordinate system from polylines in Cartesian coordinate system.
+/// With Rasterization: The converted polygons are rasterized and approximated with multiple AABBs in CVLN frame. This
+/// reduces overapproximation of converted polygons.
 /// @param vec_polylines vector of polylines to be considered
 /// @param CLCS a curvilinear coordinate system object
 /// @param num_threads number of threads for parallel computing
