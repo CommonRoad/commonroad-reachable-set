@@ -39,10 +39,10 @@ class Configuration:
         self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config_omega)
         self.debug: DebugConfiguration = DebugConfiguration(config_omega)
 
-    def update_configuration(self, scenario: Scenario = None,
-                             planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
-                             state_initial: State = None, goal_region: GoalRegion = None,
-                             CLCS: CurvilinearCoordinateSystem = None, list_ids_lanelets: List[int] = None):
+    def update(self, scenario: Scenario = None,
+               planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
+               state_initial: State = None, goal_region: GoalRegion = None,
+               CLCS: CurvilinearCoordinateSystem = None, list_ids_lanelets: List[int] = None):
         """
         Updates configuration based on the given attributes.
 
