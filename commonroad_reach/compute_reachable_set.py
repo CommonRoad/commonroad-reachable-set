@@ -14,6 +14,7 @@ def main():
 
     # ==== build configuration
     config = ConfigurationBuilder.build_configuration(name_scenario)
+    config.update_configuration()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
 

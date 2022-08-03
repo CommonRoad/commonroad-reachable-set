@@ -458,6 +458,13 @@ class PlanningConfiguration(ConfigurationBase):
             self.v_lon_initial, self.v_lat_initial = v_initial
             self.o_initial = o_initial
 
+            v_max = config.vehicle.ego.v_max
+            assert -v_max <= self.v_lon_initial <= v_max, \
+                f"Initial x velocity {self.v_lon_initial} exceeds valid velocity interval [{-v_max}, {v_max}]."
+            
+            assert -v_max <= self.v_lat_initial <= v_max, \
+                f"Initial y velocity {self.v_lat_initial} exceeds valid velocity interval [{-v_max}, {v_max}]."
+
         elif self.coordinate_system == "CVLN":
             if self.CLCS:
                 # CLCS is given, retrieve reference path
@@ -482,6 +489,14 @@ class PlanningConfiguration(ConfigurationBase):
 
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
+
+            assert config.vehicle.ego.v_lon_min <= self.v_lon_initial <= config.vehicle.ego.v_lon_max, \
+                f"Initial longitudinal velocity {self.v_lon_initial} exceeds valid velocity interval " \
+                f"[{config.vehicle.ego.v_lon_min}, {config.vehicle.ego.v_lon_max}]."
+
+            assert config.vehicle.ego.v_lat_min <= self.v_lat_initial <= config.vehicle.ego.v_lat_max, \
+                f"Initial lateral velocity {self.v_lat_initial} exceeds valid velocity interval " \
+                f"[{config.vehicle.ego.v_lat_min}, {config.vehicle.ego.v_lat_max}]."
 
 
 class ReachableSetConfiguration(ConfigurationBase):

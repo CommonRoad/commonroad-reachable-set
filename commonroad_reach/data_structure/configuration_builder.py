@@ -39,7 +39,6 @@ class ConfigurationBuilder:
         config_merged = OmegaConf.merge(config_default, config_scenario, config_cli)
         config = Configuration(config_merged)
 
-        config.update_configuration()
         return config
 
     @classmethod
