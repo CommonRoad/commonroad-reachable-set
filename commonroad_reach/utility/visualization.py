@@ -819,3 +819,29 @@ def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.Reachab
 
     else:
         return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
+
+
+def plot_scenario_with_projection_domain(reach_interface: ReachableSetInterface):
+    rnd = MPRenderer(figsize=(20, 10))
+    reach_interface.config.scenario.draw(rnd, draw_params={"time_begin": 0})
+    rnd.render()
+
+    if reach_interface.config.planning.coordinate_system == "CVLN":
+        rnd.ax.plot(reach_interface.config.planning.reference_path[:, 0],
+                    reach_interface.config.planning.reference_path[:, 1],
+                    color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
+        proj_domain_border = np.asarray(reach_interface.config.planning.CLCS.projection_domain())
+        rnd.ax.plot(proj_domain_border[:, 0], proj_domain_border[:, 1], zorder=100, color='orange')
+    plt.show()
+
+
+def plot_collision_checker(reach_interface: ReachableSetInterface):
+    rnd = MPRenderer(figsize=(20, 10))
+    cc = reach_interface._reach._reach.collision_checker
+    cc.draw(rnd)
+    rnd.render()
+
+    if reach_interface.config.planning.coordinate_system == "CVLN":
+        curv_projection_domain_border = np.asarray(reach_interface.config.planning.CLCS.curvilinear_projection_domain())
+        rnd.ax.plot(curv_projection_domain_border[:, 0], curv_projection_domain_border[:, 1], zorder=100, color='orange')
+    plt.show()
