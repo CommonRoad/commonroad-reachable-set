@@ -113,6 +113,7 @@ class Configuration:
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
         string += f"# \tinflation mode: {mode_inflation}\n"
+        string += f"# \tobstacle rasterization: {self.reachable_set.rasterize_obstacles}\n"
         string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
         string += f"# \tsplit radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_step}\n"
