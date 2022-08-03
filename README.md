@@ -20,7 +20,7 @@ versions. For building the code, the following minimum versions are required:
 The C++ code depends on the following libraries: 
 
 **Essential dependencies**:
-* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker)
+* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker) (version >= 2022.1)
 * [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
 * [OpenMP](https://www.openmp.org/)
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
