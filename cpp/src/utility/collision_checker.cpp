@@ -27,7 +27,7 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
 
     // shape group for all static obstacles
     auto shape_group_static = make_shared<ShapeGroup>();
-    // TVO for all dynamic obstacles: at each time step, the TVO contains a shape group of all dynamic AABBs
+    // TVO for all dynamic obstacles: at each step, the TVO contains a shape group of all dynamic AABBs
     auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
 
     if (not rasterize_obstacles) {

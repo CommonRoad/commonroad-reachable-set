@@ -315,8 +315,8 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
     :param driving_corridor: Driving corridor to visualize
     :param dc_id: id of driving corridor (idx in DC list)
     :param reach_interface: ReachableSetInterface object
-    :param step_start: start time step for plotting
-    :param step_end: end time step
+    :param step_start: start step for plotting
+    :param step_end: end step
     :param steps: list of steps to plot
     :param save_gif: make gif (works only if step_end is given)
     :param as_svg: save figures as svg for nice paper plots
@@ -364,7 +364,7 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
             planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
                 'draw_arrow': False, "radius": 0.5}}}})
 
-        # reach set nodes in driving corridor at specified time step
+        # reach set nodes in driving corridor at specified step
         list_nodes = driving_corridor.reach_nodes_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
@@ -437,7 +437,7 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
     plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
 
-    # draw scenario at first time step
+    # draw scenario at first step
     plt.cla()
     scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons,
                                                               "trajectory": {"draw_trajectory": False}},
@@ -447,9 +447,9 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
         planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
             'draw_arrow': False, "radius": 0.5}}}})
 
-    # plot full driving corridor (for all time steps)
+    # plot full driving corridor (for all steps)
     for step in driving_corridor.dict_step_to_cc.keys():
-        # reach set nodes in driving corridor at specified time step
+        # reach set nodes in driving corridor at specified step
         list_nodes = driving_corridor.reach_nodes_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 

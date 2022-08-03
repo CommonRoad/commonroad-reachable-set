@@ -30,7 +30,7 @@ struct BufferConfig {
 
 /// Creates a collision checker with obstacles converted into curvilinear coordinate system.
 /// @param vec_polylines_static vector of polylines describing static obstacles
-/// @param map_step_to_vec_polylines_dynamic map from time step to vector of polylines describing dynamic obstacles
+/// @param map_step_to_vec_polylines_dynamic map from step to vector of polylines describing dynamic obstacles
 /// @param CLCS a curvilinear coordinate system object
 /// @param radius_disc_vehicle radius of the three discs approximating the occupancy of the vehicle
 /// @param num_omp_threads number of threads for parallel computing

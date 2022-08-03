@@ -88,15 +88,15 @@ class RegularGrid:
                  dx: float, dy: float, planning_config: PlanningConfiguration, a_lon: float, a_lat: float, t_f: float,
                  grid_shapes: Dict[int, Tuple[int, int]]):
         """
-        :param ll: lower-left coordinates of reachable set at every time step
-        :param ur: upper-right coordinates of reachable set at current time step
+        :param ll: lower-left coordinates of reachable set at every step
+        :param ur: upper-right coordinates of reachable set at current step
         :param collision_checker: collision checker for discretization queries
         :param dx: grid length x
         :param dy: grid length y
         :param planning_config: configuration related to planning
         :param a_lon: acceleration in the longitudinal direction
         :param a_lat: acceleration in the lateral direction
-        :param t_f: final time step
+        :param t_f: final step
         :param grid_shapes: shape of the grid
         """
         self.cc_static: pycrcc.CollisionChecker = pycrcc.CollisionChecker()

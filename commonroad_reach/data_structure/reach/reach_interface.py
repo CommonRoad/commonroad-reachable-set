@@ -91,7 +91,7 @@ class ReachableSetInterface:
         step_end = step_end if step_end else self.step_end
 
         if not (0 < step_start < step_end):
-            util_logger.print_and_log_warning(logger, "Time steps for computation are invalid, aborting computation.")
+            util_logger.print_and_log_warning(logger, "Steps for computation are invalid, aborting computation.")
             return None
 
         time_start = time.time()

@@ -145,7 +145,7 @@ struct ReachableSetConfiguration {
     double radius_terminal_split{};
     // number of threads in parallel computation
     int num_threads{};
-    // flag whether to prune reach nodes not reaching the final time step
+    // flag whether to prune reach nodes not reaching the final step
     bool prune_nodes{};
     // flag whether to rasterize obstacles when using CVLN frame (reduces over-approximation after conversion to CVLN)
     bool rasterize_obstacles{};

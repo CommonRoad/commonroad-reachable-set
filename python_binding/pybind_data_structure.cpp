@@ -43,7 +43,7 @@ void export_reach_polygon(py::module& m) {
 void export_reach_node(py::module& m) {
     py::class_<ReachNode, shared_ptr<ReachNode>>(m, "ReachNode")
             .def(py::init<int const&, ReachPolygonPtr const&, ReachPolygonPtr const&>(),
-                 py::arg("time step"),
+                 py::arg("step"),
                  py::arg("polygon_lon"),
                  py::arg("polygon_lat"))
             .def("p_lon_min", &ReachNode::p_lon_min)
