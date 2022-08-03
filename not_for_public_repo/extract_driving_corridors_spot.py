@@ -145,7 +145,7 @@ def main():
     ego_CLCS = iss_results_list[-1].iss_lanelet_result_dict[ego_lanelet_id].cvln_lanelet.CLCS
 
     config = ReachConfigurationBuilder.build_configuration(str(scenario.scenario_id))
-    config.update_configuration(scenario=scenario, planning_problem=planning_problem, CLCS=ego_CLCS)
+    config.update(scenario=scenario, planning_problem=planning_problem, CLCS=ego_CLCS)
 
     config.planning.time_step_start = time_step_start
     config.planning.time_steps_computation = time_steps_computation

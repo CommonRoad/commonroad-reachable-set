@@ -10,7 +10,7 @@ name_scenario = "ARG_Carcarana-1_1_T-1"
 
 # ==== build configuration
 config = ConfigurationBuilder.build_configuration(name_scenario)
-config.update_configuration()
+config.update()
 config.print_configuration_summary()
 
 # ==== compute reachable sets using reachability interface

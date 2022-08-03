@@ -18,7 +18,7 @@ sys.path.append(os.getcwd())
 def config():
     path_root = str(pathlib.Path(__file__).parent.resolve())
     config = ConfigurationBuilder.build_configuration("DEU_Test-1_1_T-1", path_root)
-    config.update_configuration()
+    config.update()
     return config
 
 

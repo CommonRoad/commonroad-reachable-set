@@ -51,12 +51,12 @@ class PyGraphReachableSetOffline(ReachableSet):
         config.planning_problem.initial_state.velocity *= 0.0
         config.planning_problem.initial_state.orientation *= 0.0
         try:
-            config.planning.update_configuration(config)
+            config.planning.update(config)
         except:
             pass
 
         try:
-            config.reachable_set.update_configuration(config)
+            config.reachable_set.update(config)
         except:
             pass
 
