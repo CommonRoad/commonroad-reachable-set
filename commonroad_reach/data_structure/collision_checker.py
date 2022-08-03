@@ -75,7 +75,7 @@ class CollisionChecker:
             scenario_cc.add_objects(scenario.obstacles)
 
         # add road boundary static object
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc)
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="aligned_triangulation", axis=1)
         scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
@@ -149,7 +149,7 @@ class CollisionChecker:
         scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
         # add lanelet network
         scenario_cc.add_objects(lanelet_network)
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, width=2e-3)
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="aligned_triangulation", axis=1)
         list_obstacles_static.append(object_road_boundary)
 
         return list_obstacles_static
