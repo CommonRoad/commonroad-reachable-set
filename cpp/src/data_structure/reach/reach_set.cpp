@@ -81,7 +81,11 @@ void ReachableSet::compute(int step_start, int step_end) {
 /// 5. Merge and repartition the collision-free rectangles again to reduce number of nodes.
 void ReachableSet::_compute_drivable_area_at_step(int const& step) {
     auto reachable_set_previous = map_time_to_reachable_set[step - 1];
-    if (reachable_set_previous.empty()) return;
+    if (reachable_set_previous.empty()) {
+        map_time_to_drivable_area[step] = vector<ReachPolygonPtr>{};
+        map_time_to_base_set_propagated[step] = vector<ReachNodePtr>{};
+        return;
+    }
 
     auto vec_base_sets_propagated = _propagate_reachable_set(reachable_set_previous);
 
@@ -209,7 +213,10 @@ void ReachableSet::_compute_reachable_set_at_step(int const& step) {
     auto vec_base_sets_propagated = map_time_to_base_set_propagated[step];
     auto num_threads = config->reachable_set().num_threads;
 
-    if (drivable_area.empty()) return;
+    if (drivable_area.empty()) {
+        map_time_to_reachable_set[step] = vector<ReachNodePtr>{};
+        return;
+    }
 
     auto vec_nodes = construct_reach_nodes(drivable_area, vec_base_sets_propagated, num_threads);
 
