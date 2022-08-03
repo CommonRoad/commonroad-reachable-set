@@ -24,6 +24,8 @@ size_grid_2nd: 0.05
 radius_terminal_split: 0.7
 # if set to false, static and dynamic obstacles will be omitted
 consider_traffic: true
+# rasterize obstacles when using the CVLN frame (reduces over-approximation of obstacles after conversion to CVLN)
+rasterize_obstacles: false
 # flag whether to prune reach nodes not reaching the final time step
 prune_nodes_not_reaching_final_step: true
 # name of the pickle file of the offline computation

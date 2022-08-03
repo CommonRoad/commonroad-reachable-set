@@ -1,7 +1,6 @@
 import os
 import logging
-from typing import Optional, Union, Tuple
-
+from typing import Optional, Union, Tuple, List
 import yaml
 from omegaconf import ListConfig, DictConfig
 
@@ -14,6 +13,7 @@ from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.common.solution import VehicleType
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_dc.geometry.util import resample_polyline
 from commonroad_route_planner.route_planner import RoutePlanner
 
 import commonroad_reach.utility.logger as util_logger
@@ -42,7 +42,7 @@ class Configuration:
     def update_configuration(self, scenario: Scenario = None,
                              planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
                              state_initial: State = None, goal_region: GoalRegion = None,
-                             CLCS: CurvilinearCoordinateSystem = None):
+                             CLCS: CurvilinearCoordinateSystem = None, list_ids_lanelets: List[int] = None):
         """
         Updates configuration based on the given attributes.
 
@@ -52,7 +52,9 @@ class Configuration:
             2. Scenario + planning problem (+ initial state): computes route and CLCS
             3. Scenario + initial state + goal region: computes route and CLCS
             4. Scenario + initial state + CLCS: retrieve reference path from CLCS
-            
+
+        Additionally, a list of lanelet IDs (e.g., from a given route) can be passed to restrict the reachable set
+        computation a-priori to a desired set of lanelets.
         """
         # patterns that do not require loading scenario and planning problem from xml files.
         if scenario and (planning_problem or
@@ -69,6 +71,7 @@ class Configuration:
         self.planning.state_initial = state_initial
         self.planning.goal_region = goal_region
         self.planning.CLCS = CLCS
+        self.planning.list_ids_lanelets = list_ids_lanelets
         self.planning.update_configuration(self)
 
         self.vehicle.update_configuration(self)
@@ -111,6 +114,7 @@ class Configuration:
         string += f"# \tcomputation mode: {mode_computation}\n"
         string += f"# \trepartition mode: {mode_repartition}\n"
         string += f"# \tinflation mode: {mode_inflation}\n"
+        string += f"# \tobstacle rasterization: {self.reachable_set.rasterize_obstacles}\n"
         string += f"# \tgrid size: {self.reachable_set.size_grid}\n"
         string += f"# \tsplit radius: {self.reachable_set.radius_terminal_split}\n"
         string += f"# \tprune: {self.reachable_set.prune_nodes_not_reaching_final_step}\n"
@@ -212,6 +216,7 @@ class Configuration:
         config.reachable_set.radius_terminal_split = self.reachable_set.radius_terminal_split
         config.reachable_set.num_threads = self.reachable_set.num_threads
         config.reachable_set.prune_nodes = self.reachable_set.prune_nodes_not_reaching_final_step
+        config.reachable_set.rasterize_obstacles = self.reachable_set.rasterize_obstacles
 
         # convert lut dict to Cpp configuration via PyBind function
         if self.reachable_set.mode_inflation == 3:
@@ -404,6 +409,7 @@ class PlanningConfiguration(ConfigurationBase):
         self.goal_region = None
         self.reference_path = None
         self.lanelet_network = None
+        self.list_ids_lanelets = None
         self.CLCS = None
         self.coordinate_system = config_relevant.coordinate_system
         self.reference_point = config_relevant.reference_point
@@ -436,7 +442,9 @@ class PlanningConfiguration(ConfigurationBase):
         scenario = config.scenario
         planning_problem = config.planning_problem
 
-        self.lanelet_network = scenario.lanelet_network
+        self.lanelet_network = scenario.lanelet_network if not self.list_ids_lanelets \
+            else util_general.create_lanelet_network_from_ids(scenario.lanelet_network, self.list_ids_lanelets)
+
         self.step_start = planning_problem.initial_state.time_step \
             if not self.state_initial else self.state_initial.time_step
 
@@ -472,8 +480,10 @@ class PlanningConfiguration(ConfigurationBase):
                 route = candidate_holder.retrieve_first_route()
 
                 if route:
-                    self.reference_path = route.reference_path
+                    ref_path_mod = resample_polyline(route.reference_path, 0.5)
+                    self.reference_path = ref_path_mod
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
+                    self.reference_path = np.array(self.CLCS.reference_path())
 
             p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, self.state_initial)
 
@@ -497,6 +507,7 @@ class ReachableSetConfiguration(ConfigurationBase):
         self.mode_repartition = config_relevant.mode_repartition
         self.mode_inflation = config_relevant.mode_inflation
         self.consider_traffic = config_relevant.consider_traffic
+        self.rasterize_obstacles = config_relevant.rasterize_obstacles
 
         self.size_grid = config_relevant.size_grid
         self.size_grid_2nd = config_relevant.size_grid_2nd
