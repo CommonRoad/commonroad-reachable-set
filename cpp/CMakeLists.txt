@@ -6,7 +6,7 @@ set(CRDC_INCLUDE
 set(CRDC_LIBRARY
         ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
         ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
-        ${CRDC_DIR}/commonroad_dc/libtriangle.a # curvilinear collision checker
+        ${CRDC_DIR}/commonroad_dc/libgpc.a # curvilinear collision checker
         CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant include directories
