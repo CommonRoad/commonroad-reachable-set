@@ -66,7 +66,8 @@ class Configuration:
             scenario, planning_problem = util_general.load_scenario_and_planning_problem(self, idx_planning_problem)
 
         self.scenario = scenario
-        self.planning_problem = planning_problem
+        if planning_problem is not None:
+            self.planning_problem = planning_problem
 
         self.planning.state_initial = state_initial
         self.planning.goal_region = goal_region
