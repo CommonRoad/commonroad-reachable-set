@@ -4,9 +4,6 @@ from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.reach.reach_node import ReachNode
 import commonroad_reach.utility.reach_operation
 
-# scaling factor (avoid numerical errors)
-DIGITS = 2
-
 
 class ConnectedComponent:
     """

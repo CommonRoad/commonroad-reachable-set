@@ -514,6 +514,7 @@ class ReachableSetConfiguration(ConfigurationBase):
         self.size_grid_2nd = config_relevant.size_grid_2nd
         self.radius_terminal_split = config_relevant.radius_terminal_split
         self.prune_nodes_not_reaching_final_step = config_relevant.prune_nodes_not_reaching_final_step
+        self.exclude_small_components_corridor = config_relevant.exclude_small_components_corridor
 
         self.name_pickle_offline = config_relevant.name_pickle_offline
         self.n_multi_steps = config_relevant.n_multi_steps

@@ -255,7 +255,8 @@ class DrivingCorridorExtractor:
         Connected components are sorted according to a heuristic (area of connected reachable sets).
 
         :param list_nodes_reach: list of reach nodes
-        :param exclude_small_area: excludes connected components with an area smaller than the threshold
+        :param exclude_small_area: excludes connected components with an area smaller than the threshold and if there are
+        more than 1 connected component at the current time step
         :return: list of connected reachable sets
         """
         if self.backend == "CPP":
@@ -279,8 +280,8 @@ class DrivingCorridorExtractor:
             connected_component = ConnectedComponent(list_nodes_reach_in_cc)
 
             # todo: add threshold to config?
-            if exclude_small_area and len(set_indices_nodes_reach_connected) <= 2 and connected_component.area < 0.05:
-                pass
+            if exclude_small_area and len(set_indices_nodes_reach_connected) >= 2 and connected_component.area < 0.05:
+                continue
 
             list_connected_component.append(connected_component)
 
@@ -346,9 +347,9 @@ class DrivingCorridorExtractor:
             set_nodes_reach_parent.intersection_update(corridor_lon.reach_nodes_at_step(step_parent))
             list_nodes_parent_filtered = list(set_nodes_reach_parent)
 
-        # todo: make as a config parameter?
         # determine connected components in parent reach nodes
-        exclude_small_area = cc_current.step > 5
+        exclude_small_area = self.config.reachable_set.exclude_small_components_corridor and \
+                             cc_current.step - self.steps[0] > 5
         cc_parent = self._determine_connected_components(list_nodes_parent_filtered, exclude_small_area)
 
         # recursion backwards in time
