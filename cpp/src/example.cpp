@@ -39,11 +39,12 @@ int main() {
             py::module_::import("commonroad_reach.data_structure.configuration_builder").attr(
                     "ConfigurationBuilder");
     auto obj_config_py = cls_ConfigurationBuilder_py.attr("build_configuration")(name_scenario);
+    obj_config_py.attr("update")();
     obj_config_py.attr("print_configuration_summary")();
     auto config = obj_config_py.attr("convert_to_cpp_configuration")().cast<ConfigurationPtr>();
 
     // ======== curvilinear coordinate system
-    if(config->planning().coordinate_system == CoordinateSystem::CURVILINEAR) {
+    if (config->planning().coordinate_system == CoordinateSystem::CURVILINEAR) {
         auto CLCS = make_shared<geometry::CurvilinearCoordinateSystem>(
                 obj_config_py.attr("planning").attr("reference_path").cast<geometry::EigenPolyline>(), 25.0, 0.1);
     }
@@ -62,9 +63,10 @@ int main() {
     auto end = high_resolution_clock::now();
     cout << "Computation time: " << duration_cast<milliseconds>(end - start).count() << "ms" << endl;
 
-     //======== plot computation results
+    // ======== plot computation results
     auto util_visualization = py::module_::import("commonroad_reach.utility.visualization");
-    util_visualization.attr("plot_scenario_with_reachable_sets_cpp")(reachable_set, obj_config_py);
+    // requires opencv-python==4.3.0.36
+    //util_visualization.attr("plot_scenario_with_reachable_sets_cpp")(reachable_set, obj_config_py);
 
     return 0;
 }

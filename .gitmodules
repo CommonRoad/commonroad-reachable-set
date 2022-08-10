@@ -1,6 +1,0 @@
-[submodule "external/spot-cpp"]
-	path = external/spot-cpp
-	url = git@gitlab.lrz.de:cps/spot-cpp.git
-[submodule "external/commonroad-drivability-checker"]
-	path = external/commonroad-drivability-checker
-	url = git@gitlab.lrz.de:cps/commonroad-drivability-checker.git

@@ -1,6 +1,6 @@
 dt: 0.1
 step_start: 0
-steps_computation: 30
+steps_computation: 5
 
 # position uncertainty in two directions
 uncertainty_p_lon: 0.01
