@@ -113,7 +113,7 @@ class DrivingCorridorExtractor:
                 # use all base sets in last step
                 list_nodes_terminal = list_nodes_final
 
-        elif corridor_lon and list_p_lon:
+        elif corridor_lon and list_p_lon is not None:
             # extract lateral driving corridors
             util_logger.print_and_log_info(logger, "\tLateral DC.")
 
@@ -155,7 +155,7 @@ class DrivingCorridorExtractor:
         list_corridors = list()
 
         # zip steps and longitudinal positions
-        if list_p_lon:
+        if list_p_lon is not None:
             step_final = self.steps[-1]
             list_p_lon = list_p_lon[0:step_final + 1]
             dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))

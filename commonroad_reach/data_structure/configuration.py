@@ -408,6 +408,7 @@ class PlanningConfiguration(ConfigurationBase):
         # related to specific planning problem
         self.state_initial = None
         self.goal_region = None
+        self.route = None
         self.reference_path = None
         self.lanelet_network = None
         self.list_ids_lanelets = None
@@ -481,6 +482,7 @@ class PlanningConfiguration(ConfigurationBase):
                 route = candidate_holder.retrieve_first_route()
 
                 if route:
+                    self.route = route
                     ref_path_mod = resample_polyline(route.reference_path, 0.5)
                     self.reference_path = ref_path_mod
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
