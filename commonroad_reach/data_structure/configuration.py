@@ -66,7 +66,8 @@ class Configuration:
             scenario, planning_problem = util_general.load_scenario_and_planning_problem(self, idx_planning_problem)
 
         self.scenario = scenario
-        self.planning_problem = planning_problem
+        if planning_problem is not None:
+            self.planning_problem = planning_problem
 
         self.planning.state_initial = state_initial
         self.planning.goal_region = goal_region
@@ -513,6 +514,7 @@ class ReachableSetConfiguration(ConfigurationBase):
         self.size_grid_2nd = config_relevant.size_grid_2nd
         self.radius_terminal_split = config_relevant.radius_terminal_split
         self.prune_nodes_not_reaching_final_step = config_relevant.prune_nodes_not_reaching_final_step
+        self.exclude_small_components_corridor = config_relevant.exclude_small_components_corridor
 
         self.name_pickle_offline = config_relevant.name_pickle_offline
         self.n_multi_steps = config_relevant.n_multi_steps
