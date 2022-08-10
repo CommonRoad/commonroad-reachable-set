@@ -22,6 +22,12 @@ class ConnectedComponent:
     def __repr__(self):
         return f"ConnectedComponent(step={self.step}, #nodes={len(self.list_nodes_reach)}, area={self.area})"
 
+    def __len__(self):
+        return len(self.list_nodes_reach)
+
+    def __getitem__(self, item):
+        return self.list_nodes_reach[item]
+
 
 class DrivingCorridor:
     """
@@ -38,6 +44,24 @@ class DrivingCorridor:
 
     def __repr__(self):
         return f"DrivingCorridor(step_final={self.step_final}, #CC={len(self.dict_step_to_cc)}, area={self.area})"
+
+    def __len__(self):
+        return len(self.dict_step_to_cc)
+
+    def __getitem__(self, name):
+        return self.dict_step_to_cc[name]
+
+    def __iter__(self):
+        return iter(self.dict_step_to_cc)
+
+    def keys(self):
+        return self.dict_step_to_cc.keys()
+
+    def items(self):
+        return self.dict_step_to_cc.items()
+
+    def values(self):
+        return self.dict_step_to_cc.values()
 
     def add_connected_component(self, cc: ConnectedComponent):
         self.dict_step_to_cc[cc.step] = cc
