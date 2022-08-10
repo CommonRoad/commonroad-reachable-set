@@ -25,12 +25,12 @@ size_grid_2nd: 0.05
 radius_terminal_split: 0.5
 # if set to false, static and dynamic obstacles will be omitted
 consider_traffic: true
+# rasterize obstacles when using the CVLN frame (reduces over-approximation of obstacles after conversion to CVLN)
+rasterize_obstacles: false
 # flag whether to prune reach nodes not reaching the final time step
 prune_nodes_not_reaching_final_step: true
 # name of the pickle file of the offline computation
-name_pickle_offline: offline_nt10_CART_amax8.0_vmax50.8_ms6_dx0.5_ver0.0.1.pickle
-#name_pickle_offline: offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.4_ver0.0.1.pickle
-#name_pickle_offline: offline_nt30_CART_amax8.0_vmax30.0_ms6_dx0.5_ver0.0.1.pickle
+name_pickle_offline: offline_nt5_CART_amax6.0_vmax30.0_ms6_dx0.5_ver2022.1.pickle
 # number of multi-steps for graph-based propagation
 n_multi_steps: 6
 # number of threads for C++ backend

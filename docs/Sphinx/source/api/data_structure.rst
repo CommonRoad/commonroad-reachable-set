@@ -48,7 +48,7 @@ RegularGrid
 
 ``Grid`` class
 ----------------------------------
-.. autoclass:: Cell
+.. autoclass:: Grid
    :members:
    :undoc-members:
 
