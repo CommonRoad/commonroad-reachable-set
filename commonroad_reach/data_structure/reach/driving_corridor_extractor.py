@@ -240,10 +240,16 @@ class DrivingCorridorExtractor:
         :return set_nodes_terminal: Set containing the reachable set nodes which overlap with longitudinal position
         """
         set_nodes_terminal = set()
-        for node_reach in list_nodes_reach:
-            if np.greater_equal(round(p_lon * 10.0 ** DIGITS), np.floor(node_reach.p_lon_min() * 10.0 ** DIGITS)) and \
-                    np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** DIGITS), round(p_lon * 10.0 ** DIGITS)):
-                set_nodes_terminal.add(node_reach)
+        if type(list_nodes_reach[0]) == pycrreach.ReachNode:
+            for node_reach in list_nodes_reach:
+                if np.greater_equal(round(p_lon * 10.0 ** DIGITS), np.floor(node_reach.p_lon_min() * 10.0 ** DIGITS)) and \
+                        np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** DIGITS), round(p_lon * 10.0 ** DIGITS)):
+                    set_nodes_terminal.add(node_reach)
+        else:
+            for node_reach in list_nodes_reach:
+                if np.greater_equal(round(p_lon * 10.0 ** DIGITS), np.floor(node_reach.p_lon_min * 10.0 ** DIGITS)) and \
+                        np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** DIGITS), round(p_lon * 10.0 ** DIGITS)):
+                    set_nodes_terminal.add(node_reach)
 
         return list(set_nodes_terminal)
 

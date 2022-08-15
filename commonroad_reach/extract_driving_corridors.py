@@ -28,7 +28,7 @@ def main():
 
     # plot specific driving corridor (dc_idx: idx in list)
     dc_idx = 0
-    plot = "3D"
+    plot = "2D"
 
     if plot == "2D":
         util_visual.plot_scenario_with_driving_corridor(longitudinal_driving_corridors[dc_idx], dc_idx, reach_interface,

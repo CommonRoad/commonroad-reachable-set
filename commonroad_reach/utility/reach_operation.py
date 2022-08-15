@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from decimal import Decimal
+from typing import Union
 
 import numpy as np
 
@@ -14,6 +15,8 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachNod
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility.sweep_line import SweepLine
+from commonroad_reach import pycrreach
+
 
 
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -528,12 +531,18 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
     return dict_adjacency
 
 
-def lon_interval_connected_set(connected_set):
+def lon_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
     """
     Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions.
     """
     # get min and max values for each reachable set in the connected set
-    min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
+    if type(connected_set[0]) == pycrreach.ReachNode:
+        # C++ backend
+        min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
+    else:
+        # Python backend
+        min_max_array = np.asarray([[reach_node.p_lon_min, reach_node.p_lon_max] for reach_node in connected_set])
+
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
     max_connected_set = np.max(min_max_array[:, 1])
@@ -541,12 +550,18 @@ def lon_interval_connected_set(connected_set):
     return min_connected_set, max_connected_set
 
 
-def lat_interval_connected_set(connected_set):
+def lat_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
     """
     Projects a connected set onto lateral position domain and returns min/max lateral positions.
     """
     # get min and max values for each reachable set in the connected set
-    min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
+    if type(connected_set[0]) == pycrreach.ReachNode:
+        # C++ backend
+        min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
+    else:
+        # Python backend
+        min_max_array = np.asarray([[reach_node.p_lat_min, reach_node.p_lat_max] for reach_node in connected_set])
+
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
     max_connected_set = np.max(min_max_array[:, 1])
