@@ -32,26 +32,27 @@ def simulate_state(vehicle_dynamics, current_state, input_state, dt, ego_params)
 
 
 if __name__ == '__main__':
-    # define paths
-    scenario_path = "../../../scenarios/DEU_Test-1_1_T-1.xml"
 
-    # read files
-    scenario, planning_problem_set = CommonRoadFileReader(scenario_path).open()
-
-    # preprocess scenario
-    initial_state = list(planning_problem_set.planning_problem_dict.values())[0].initial_state
-    initial_state.orientation = 0.0
-    initial_state.acceleration = 0
+    # point mass dynamics
     vehicle_dynamics = VehicleDynamics.PM(VehicleType.BMW_320i)
 
     # reachable set
     name_scenario = "DEU_Test-1_1_T-1"
 
     config = ConfigurationBuilder.build_configuration(name_scenario)
+    config.update()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
+    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
 
     ego_params = config.vehicle.ego
+    planning_params = config.planning
+
+    # construct initial state for PM Model
+    initial_state = State(position=planning_params.p_initial,
+                          velocity=planning_params.v_lon_initial,
+                          velocity_y=planning_params.v_lat_initial,
+                          time_step=0)
 
     # ==== construct reachability interface and compute reachable sets
     reach_interface = ReachableSetInterface(config)
@@ -61,14 +62,14 @@ if __name__ == '__main__':
     list_samples_alon = np.linspace(ego_params.a_lon_min, ego_params.a_lon_max, 11)
     list_samples_alat = np.linspace(ego_params.a_lat_min, ego_params.a_lat_max, 11)
 
-    for t_end in range(1,2):
+    for t_end in range(0, 2):
         fig1, (ax1, ax2, ax3) = plt.subplots(figsize=(15, 5), nrows=1, ncols=3)
         for alon, alat in itertools.product(list_samples_alon, list_samples_alat):
             if alon ** 2 + alat ** 2 > ego_params.a_max ** 2:
                 continue
-            input_state = State(
-                acceleration=alon, acceleration_y=alat, time_step=0
-            )
+            input_state = State(acceleration=alon,
+                                acceleration_y=alat,
+                                time_step=0)
             initial_state_copied = copy.deepcopy(initial_state)
             state_list = []
             s_x_list = []
@@ -87,7 +88,7 @@ if __name__ == '__main__':
                 initial_state_copied = simulate_state(vehicle_dynamics,
                                                       initial_state_copied,
                                                       input_state,
-                                                      scenario.dt,
+                                                      config.scenario.dt,
                                                       ego_params)
                 if initial_state_copied is None:
                     break
@@ -98,8 +99,10 @@ if __name__ == '__main__':
                 ax3.scatter(s_x_list[-1], v_x_list[-1], c="r")
 
         # draw drivable area
-        # vertices_rs = reach_interface.reachable_set_at_time_step(t_end)[0].position_rectangle().vertices()
-        vertices_rs = reach_interface.reachable_set_at_time_step(t_end)[0].position_rectangle.vertices
+        if backend == "CPP":
+            vertices_rs = reach_interface.reachable_set_at_step(t_end)[0].position_rectangle().vertices()
+        else:
+            vertices_rs = reach_interface.reachable_set_at_step(t_end)[0].position_rectangle.vertices
         polygon = Polygon(vertices_rs)
         x, y = polygon.exterior.xy
         ax1.plot(x, y)
@@ -107,15 +110,23 @@ if __name__ == '__main__':
         ax1.title.set_text('position rectangle: p_x-p_y')
 
         # draw lateral polygon
-        poly_lat = reach_interface.reachable_set_at_time_step(t_end)[0].polygon_lat
-        p_lat, v_lat = poly_lat.exterior.xy
+        poly_lat = reach_interface.reachable_set_at_step(t_end)[0].polygon_lat
+        if backend == "CPP":
+            poly_lat_shapely = Polygon(poly_lat.vertices())
+            p_lat, v_lat = poly_lat_shapely.exterior.xy
+        else:
+            p_lat, v_lat = poly_lat.exterior.xy
         ax2.plot(p_lat, v_lat)
         ax2.grid('on')
         ax2.title.set_text('lateral polygon: p_y, v_y')
 
         # draw  longitudinal polygon
-        poly_lon = reach_interface.reachable_set_at_time_step(t_end)[0].polygon_lon
-        p_lon, v_lon = poly_lon.exterior.xy
+        poly_lon = reach_interface.reachable_set_at_step(t_end)[0].polygon_lon
+        if backend == "CPP":
+            poly_lon_shapely = Polygon(poly_lon.vertices())
+            p_lon, v_lon = poly_lon_shapely.exterior.xy
+        else:
+            p_lon, v_lon = poly_lon.exterior.xy
         ax3.plot(p_lon, v_lon)
         ax3.grid('on')
         ax3.title.set_text('longitudinal polygon: p_x, v_x')
