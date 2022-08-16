@@ -118,7 +118,7 @@ class DrivingCorridorExtractor:
             util_logger.print_and_log_info(logger, "\tLateral DC.")
 
             step_final = self.steps[-1]
-            if len(list_p_lon) < step_final:
+            if len(list_p_lon) < len(self.steps):
                 message = "#Elements in provided list of longitudinal positions is less than reachable set steps."
                 util_logger.print_and_log_error(logger, message)
                 raise ValueError(message)
