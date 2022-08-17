@@ -15,7 +15,7 @@ class ReachableSet {
 private:
     bool _reachable_set_computed{false};
     bool _pruned{false};
-    std::vector<int> _vec_steps_computed{0};
+    std::vector<int> _vec_steps_computed{};
 
     void _initialize();
 
