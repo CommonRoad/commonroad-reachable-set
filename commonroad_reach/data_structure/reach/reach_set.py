@@ -26,7 +26,7 @@ class ReachableSet(ABC):
         self._prune_reachable_set = config.reachable_set.prune_nodes_not_reaching_final_step
         self._pruned = False
 
-        self._list_steps_computed = [0]
+        self._list_steps_computed = [self.step_start]
 
     @property
     def drivable_area(self):
