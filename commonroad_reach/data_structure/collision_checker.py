@@ -200,6 +200,9 @@ class CollisionChecker:
                     elif isinstance(shape, ShapeGroup):
                         for shape in shape.shapes:
                             list_vertices_polygons_dynamic.append(shape.vertices)
+                    else:
+                        raise NotImplementedError(f"collision_checker.py: "
+                                                  f"obstacle occupancy shape {shape} is not supported!")
 
                 dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
 
