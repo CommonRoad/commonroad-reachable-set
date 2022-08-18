@@ -7,7 +7,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 from math import ceil, floor
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.regular_grid import Grid, Cell
@@ -589,3 +589,24 @@ def lon_velocity_interval_connected_set(connected_set: List[Union[ReachNode, pyc
 
     return min_connected_set, max_connected_set
 
+
+def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrreach.ReachNode, ReachNode]],
+                                             p_lon: float) -> List[Union[pycrreach.ReachNode, ReachNode]]:
+    """
+    Projects reachset nodes onto longitudinal position domain and determines reachset nodes which contain a given
+    longitudinal position
+    """
+    set_nodes_overlap = set()
+
+    if type(list_nodes_reach[0]) == pycrreach.ReachNode:
+        for node_reach in list_nodes_reach:
+            if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min() * 10.0 ** 2)) and \
+                    np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
+                set_nodes_overlap.add(node_reach)
+    else:
+        for node_reach in list_nodes_reach:
+            if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min * 10.0 ** 2)) and \
+                    np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
+                set_nodes_overlap.add(node_reach)
+
+    return list(set_nodes_overlap)

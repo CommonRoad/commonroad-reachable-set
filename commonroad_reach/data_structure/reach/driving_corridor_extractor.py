@@ -11,7 +11,7 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNode, ReachPol
 from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor, ConnectedComponent
 from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility import logger as util_logger
-import commonroad_reach.utility.reach_operation
+from commonroad_reach.utility import reach_operation as util_reach_operation
 
 logger = logging.getLogger(__name__)
 # scaling factor (avoid numerical errors)
@@ -127,8 +127,9 @@ class DrivingCorridorExtractor:
             dict_step_to_p_lon = dict(zip(self.steps, list_p_lon))
 
             list_nodes_terminal = \
-                self._determine_overlapping_nodes_lateral(corridor_lon.reach_nodes_at_step(step_final),
-                                                          dict_step_to_p_lon[step_final])
+                util_reach_operation.determine_overlapping_nodes_with_lon_pos(
+                    corridor_lon.reach_nodes_at_step(step_final),
+                    dict_step_to_p_lon[step_final])
 
         else:
             message = "Please provide both longitudinal positions and a longitudinal driving corridor if you wish to " \
@@ -228,31 +229,6 @@ class DrivingCorridorExtractor:
 
         return list_nodes_terminal
 
-    @staticmethod
-    def _determine_overlapping_nodes_lateral(list_nodes_reach: List[Union[pycrreach.ReachNode, ReachNode]],
-                                             p_lon: float):
-        """
-        Checks which drivable areas of the given reachable sets contain a given longitudinal position and returns the
-        corresponding reachable sets.
-
-        :param list_nodes_reach: List of reachable set nodes
-        :param p_lon: given longitudinal positions
-        :return set_nodes_terminal: Set containing the reachable set nodes which overlap with longitudinal position
-        """
-        set_nodes_terminal = set()
-        if type(list_nodes_reach[0]) == pycrreach.ReachNode:
-            for node_reach in list_nodes_reach:
-                if np.greater_equal(round(p_lon * 10.0 ** DIGITS), np.floor(node_reach.p_lon_min() * 10.0 ** DIGITS)) and \
-                        np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** DIGITS), round(p_lon * 10.0 ** DIGITS)):
-                    set_nodes_terminal.add(node_reach)
-        else:
-            for node_reach in list_nodes_reach:
-                if np.greater_equal(round(p_lon * 10.0 ** DIGITS), np.floor(node_reach.p_lon_min * 10.0 ** DIGITS)) and \
-                        np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** DIGITS), round(p_lon * 10.0 ** DIGITS)):
-                    set_nodes_terminal.add(node_reach)
-
-        return list(set_nodes_terminal)
-
     def _determine_connected_components(self, list_nodes_reach,
                                         exclude_small_area: bool = False) -> List[ConnectedComponent]:
         """
@@ -269,7 +245,7 @@ class DrivingCorridorExtractor:
             overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
 
         else:
-            overlap = commonroad_reach.utility.reach_operation.connected_reachset_py(list_nodes_reach, DIGITS)
+            overlap = util_reach_operation.connected_reachset_py(list_nodes_reach, DIGITS)
         # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
         adjacency = []
         for v in overlap.values():
@@ -340,8 +316,9 @@ class DrivingCorridorExtractor:
             # extract lateral DC
             # consider only reach nodes that overlap with given longitudinal position
             step_parent = cc_current.step - 1
-            list_nodes_parent_filtered = self._determine_overlapping_nodes_lateral(list(set_nodes_reach_parent),
-                                                                                   dict_step_to_p_lon[step_parent])
+            list_nodes_parent_filtered = util_reach_operation.determine_overlapping_nodes_with_lon_pos(
+                list(set_nodes_reach_parent), dict_step_to_p_lon[step_parent])
+
             # todo: update this message?
             if not list_nodes_parent_filtered:
                 util_logger.print_and_log_warning(logger,
@@ -372,6 +349,6 @@ class DrivingCorridorExtractor:
         """
         area = 0.0
         for time_idx, reach_set_nodes in driving_corridor.items():
-            area += commonroad_reach.utility.reach_operation.compute_area_of_reach_nodes(reach_set_nodes)
+            area += util_reach_operation.compute_area_of_reach_nodes(reach_set_nodes)
 
         return area
