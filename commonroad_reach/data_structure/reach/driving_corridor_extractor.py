@@ -163,7 +163,7 @@ class DrivingCorridorExtractor:
         else:
             dict_step_to_p_lon = dict()
 
-        list_cc_terminal = self._determine_connected_components(list_nodes_terminal)
+        list_cc_terminal = _determine_connected_components(list_nodes_terminal)
         for cc_terminal in list_cc_terminal:
             list_lists_ids_cc = list()
 
@@ -229,49 +229,6 @@ class DrivingCorridorExtractor:
 
         return list_nodes_terminal
 
-    def _determine_connected_components(self, list_nodes_reach,
-                                        exclude_small_area: bool = False) -> List[ConnectedComponent]:
-        """
-        Determines and returns the connected reachable sets in the position domain.
-
-        Connected components are sorted according to a heuristic (area of connected reachable sets).
-
-        :param list_nodes_reach: list of reach nodes
-        :param exclude_small_area: excludes connected components with an area smaller than the threshold and if there are
-        more than 1 connected component at the current time step
-        :return: list of connected reachable sets
-        """
-        if self.backend == "CPP":
-            overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
-
-        else:
-            overlap = util_reach_operation.connected_reachset_py(list_nodes_reach, DIGITS)
-        # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
-        adjacency = []
-        for v in overlap.values():
-            adjacency += v
-
-        list_connected_component = list()
-        # create graph with nodes = reach nodes and edges = adjacency status
-        graph = nx.Graph()
-        graph.add_nodes_from(list(range(len(list_nodes_reach))))
-        graph.add_edges_from(adjacency)
-
-        for set_indices_nodes_reach_connected in nx.connected_components(graph):
-            list_nodes_reach_in_cc = [list_nodes_reach[idx] for idx in set_indices_nodes_reach_connected]
-            connected_component = ConnectedComponent(list_nodes_reach_in_cc)
-
-            # todo: add threshold to config?
-            if exclude_small_area and len(set_indices_nodes_reach_connected) >= 2 and connected_component.area < 0.05:
-                continue
-
-            list_connected_component.append(connected_component)
-
-        # sort connected components based on their areas
-        list_connected_component.sort(key=lambda cc: cc.area, reverse=True)
-
-        return list_connected_component
-
     def _create_connected_component_graph(self, list_lists_ids_cc: List[int], graph_cc: nx.Graph,
                                           cc_current: ConnectedComponent, corridor_lon: DrivingCorridor = None,
                                           dict_step_to_p_lon: Dict[int, float] = None, id_cc_terminal: int = 0):
@@ -333,7 +290,7 @@ class DrivingCorridorExtractor:
         # determine connected components in parent reach nodes
         exclude_small_area = self.config.reachable_set.exclude_small_components_corridor and \
                              cc_current.step - self.steps[0] > 5
-        cc_parent = self._determine_connected_components(list_nodes_parent_filtered, exclude_small_area)
+        cc_parent = _determine_connected_components(list_nodes_parent_filtered, exclude_small_area)
 
         # recursion backwards in time
         for cc_next in cc_parent:
@@ -352,3 +309,46 @@ class DrivingCorridorExtractor:
             area += util_reach_operation.compute_area_of_reach_nodes(reach_set_nodes)
 
         return area
+
+
+def _determine_connected_components(list_nodes_reach, exclude_small_area: bool = False) -> List[ConnectedComponent]:
+    """
+    Determines and returns the connected reachable sets in the position domain.
+
+    Connected components are sorted according to a heuristic (area of connected reachable sets).
+
+    :param list_nodes_reach: list of reach nodes
+    :param exclude_small_area: excludes connected components with an area smaller than the threshold and if there are
+    more than 1 connected component at the current time step
+    :return: list of connected reachable sets
+    """
+    if type(list_nodes_reach[0]) == pycrreach.ReachNode:
+        overlap = pycrreach.connected_reachset_boost(list_nodes_reach, DIGITS)
+    else:
+        overlap = util_reach_operation.connected_reachset_py(list_nodes_reach, DIGITS)
+
+    # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
+    adjacency = []
+    for v in overlap.values():
+        adjacency += v
+
+    list_connected_component = list()
+    # create graph with nodes = reach nodes and edges = adjacency status
+    graph = nx.Graph()
+    graph.add_nodes_from(list(range(len(list_nodes_reach))))
+    graph.add_edges_from(adjacency)
+
+    for set_indices_nodes_reach_connected in nx.connected_components(graph):
+        list_nodes_reach_in_cc = [list_nodes_reach[idx] for idx in set_indices_nodes_reach_connected]
+        connected_component = ConnectedComponent(list_nodes_reach_in_cc)
+
+        # todo: add threshold to config?
+        if exclude_small_area and len(set_indices_nodes_reach_connected) >= 2 and connected_component.area < 0.05:
+            continue
+
+        list_connected_component.append(connected_component)
+
+    # sort connected components based on their areas
+    list_connected_component.sort(key=lambda cc: cc.area, reverse=True)
+
+    return list_connected_component
