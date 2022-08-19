@@ -413,7 +413,7 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
 
 
 def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,
-                             trajectory: np.ndarray = None, as_svg: bool = False):
+                             trajectory: np.ndarray = None, as_svg: bool = False, rnd: MPRenderer = None):
     """
     Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor.
     """
@@ -434,11 +434,14 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
     Path(path_output).mkdir(parents=True, exist_ok=True)
 
     # set plot limits & create renderer
-    plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-    renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+    if rnd is None:
+        plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
+        renderer = MPRenderer(plot_limits=plot_limits, figsize=(25, 15))
+        plt.cla()
+    else:
+        renderer = rnd
 
     # draw scenario at first step
-    plt.cla()
     scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons,
                                                               "trajectory": {"draw_trajectory": False}},
                                          "time_begin": 0})
@@ -458,7 +461,9 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
     ax = plt.gca()
     ax.set_aspect("equal")
     plt.margins(0, 0)
-    renderer.render()
+
+    if rnd is None:
+        renderer.render()
 
     if trajectory is not None:
         renderer.ax.plot(trajectory[:, 0], trajectory[:, 1],
