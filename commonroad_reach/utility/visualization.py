@@ -832,6 +832,9 @@ def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.Reachab
 
 
 def plot_scenario_with_projection_domain(reach_interface: ReachableSetInterface):
+    """
+    Plots scenario including projection domain of the curvilinear coordinate system used by reach_interface
+    """
     rnd = MPRenderer(figsize=(20, 10))
     reach_interface.config.scenario.draw(rnd, draw_params={"time_begin": 0})
     rnd.render()
@@ -846,6 +849,9 @@ def plot_scenario_with_projection_domain(reach_interface: ReachableSetInterface)
 
 
 def plot_collision_checker(reach_interface: ReachableSetInterface):
+    """
+    Plots the collision checker used by reach_interface
+    """
     rnd = MPRenderer(figsize=(20, 10))
     cc = reach_interface._reach._reach.collision_checker
     cc.draw(rnd)
