@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import List
+from typing import List, Union
 
 from commonroad.geometry.shape import Shape
 
@@ -18,13 +18,14 @@ class ReachableSetInterface:
     Interface for reachable set computation.
     """
 
-    def __init__(self, config: Configuration):
+    def __init__(self, config: Union[Configuration, None]):
         self.config = None
         self._reach = None
         self._reachable_set_computed = False
         self._driving_corridor_extractor = None
 
-        self.reset(config)
+        if config is not None:
+            self.reset(config)
 
         util_logger.print_and_log_debug(logger, "Reachable set interface initialized.")
 
