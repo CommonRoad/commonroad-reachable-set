@@ -7,7 +7,7 @@ from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.common.file_reader import CommonRoadFileReader
 
 
-def load_scenario_and_planning_problem(config, idx_planning_problem: int = 0) -> Tuple[Scenario, PlanningProblem]:
+def load_scenario_and_planning_problem(config, idx_planning_problem: int = None) -> Tuple[Scenario, PlanningProblem]:
     """
     Loads a scenario and planning problem from the configuration.
 
