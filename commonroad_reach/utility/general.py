@@ -16,7 +16,12 @@ def load_scenario_and_planning_problem(config, idx_planning_problem: int = 0) ->
     :return: scenario and planning problem
     """
     scenario, planning_problem_set = CommonRoadFileReader(config.general.path_scenario).open()
-    planning_problem = list(planning_problem_set.planning_problem_dict.values())[idx_planning_problem]
+    if idx_planning_problem:
+        # get planning problem from dict by ID (if provided)
+        planning_problem = planning_problem_set.find_planning_problem_by_id(idx_planning_problem)
+    else:
+        # else: retrieve first planning problem
+        planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
 
     return scenario, planning_problem
 
