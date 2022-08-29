@@ -59,6 +59,11 @@ class DrivingCorridorExtractor:
 
         list_corridors.sort(key=lambda dc: dc.area, reverse=True)
 
+        if not corridor_lon and not list_p_lon:
+            util_logger.print_and_log_info(logger, f"\tNo. of longitudinal DCs: \t{len(list_corridors)}")
+        else:
+            util_logger.print_and_log_info(logger, f"\tNo. of lateral DCs: \t{len(list_corridors)}")
+
         return list_corridors
 
     def _determine_terminal_shapes(self, to_goal_region: bool = False, shape_terminal: Shape = None):
