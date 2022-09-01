@@ -18,9 +18,10 @@ ReachableSet::ReachableSet(ConfigurationPtr config, CollisionCheckerPtr collisio
 void ReachableSet::_initialize() {
     step_start = config->planning().step_start;
     step_end = step_start + config->planning().steps_computation;
-    _vec_steps_computed.emplace_back(step_start);
     map_step_to_drivable_area[step_start] = _construct_initial_drivable_area();
     map_step_to_reachable_set[step_start] = _construct_initial_reachable_set();
+
+    _vec_steps_computed.emplace_back(step_start);
     _initialize_zero_state_polygons();
 }
 

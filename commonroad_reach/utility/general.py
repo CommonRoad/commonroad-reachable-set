@@ -3,8 +3,20 @@ from itertools import chain, combinations
 
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
-from commonroad.planning.planning_problem import PlanningProblem
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.common.file_reader import CommonRoadFileReader
+
+
+def load_scenario_and_planning_problem_set(config) -> Tuple[Scenario, PlanningProblemSet]:
+    """
+    Loads a scenario and planning problem set from the configuration.
+
+    :param config: configuration
+    :return: scenario and planning problem set
+    """
+    scenario, planning_problem_set = CommonRoadFileReader(config.general.path_scenario).open()
+
+    return scenario, planning_problem_set
 
 
 def load_scenario_and_planning_problem(config, idx_planning_problem: int = 0) -> Tuple[Scenario, PlanningProblem]:
@@ -15,8 +27,8 @@ def load_scenario_and_planning_problem(config, idx_planning_problem: int = 0) ->
     :param idx_planning_problem: index of the planning problem
     :return: scenario and planning problem
     """
-    scenario, planning_problem_set = CommonRoadFileReader(config.general.path_scenario).open()
-    planning_problem = list(planning_problem_set.planning_problem_dict.values())[idx_planning_problem]
+    scenario, planning_problem_set = load_scenario_and_planning_problem_set(config)
+
 
     return scenario, planning_problem
 
