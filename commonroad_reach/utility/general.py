@@ -7,19 +7,7 @@ from commonroad.planning.planning_problem import PlanningProblem, PlanningProble
 from commonroad.common.file_reader import CommonRoadFileReader
 
 
-def load_scenario_and_planning_problem_set(config) -> Tuple[Scenario, PlanningProblemSet]:
-    """
-    Loads a scenario and planning problem set from the configuration.
-
-    :param config: configuration
-    :return: scenario and planning problem set
-    """
-    scenario, planning_problem_set = CommonRoadFileReader(config.general.path_scenario).open()
-
-    return scenario, planning_problem_set
-
-
-def load_scenario_and_planning_problem(config, idx_planning_problem: int = 0) -> Tuple[Scenario, PlanningProblem]:
+def load_scenario_and_planning_problem(config, idx_planning_problem: int = None) -> Tuple[Scenario, PlanningProblem]:
     """
     Loads a scenario and planning problem from the configuration.
 
@@ -27,7 +15,13 @@ def load_scenario_and_planning_problem(config, idx_planning_problem: int = 0) ->
     :param idx_planning_problem: index of the planning problem
     :return: scenario and planning problem
     """
-    scenario, planning_problem_set = load_scenario_and_planning_problem_set(config)
+    scenario, planning_problem_set = CommonRoadFileReader(config.general.path_scenario).open()
+    if idx_planning_problem:
+        # get planning problem from dict by ID (if provided)
+        planning_problem = planning_problem_set.find_planning_problem_by_id(idx_planning_problem)
+    else:
+        # else: retrieve first planning problem
+        planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
 
 
     return scenario, planning_problem

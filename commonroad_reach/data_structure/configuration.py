@@ -562,7 +562,7 @@ class ReachableSetConfiguration(ConfigurationBase):
         self.lut_longitudinal_enlargement = None
 
     def update_configuration(self, config: Configuration):
-        if self.mode_inflation == 3:
+        if self.mode_inflation == 3 and self.lut_longitudinal_enlargement is None:
             self.lut_longitudinal_enlargement = util_configuration.read_lut_longitudinal_enlargement(
                 config.planning.reference_point, config.vehicle.ego.circle_distance, self.path_to_lut)
 

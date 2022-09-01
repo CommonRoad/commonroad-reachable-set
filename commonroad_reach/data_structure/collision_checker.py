@@ -3,7 +3,7 @@ from typing import List, Dict
 
 import commonroad_dc.pycrcc as pycrcc
 import commonroad_reach.pycrreach as reach
-from commonroad.geometry.shape import Rectangle, ShapeGroup
+from commonroad.geometry.shape import Rectangle, ShapeGroup, Polygon
 from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
 from commonroad.scenario.scenario import Scenario, LaneletNetwork
 from commonroad_dc.boundary import boundary
@@ -194,12 +194,15 @@ class CollisionChecker:
                         continue
                     shape = occupancy.shape
 
-                    if isinstance(shape, Rectangle):
+                    if isinstance(shape, Rectangle) or isinstance(shape, Polygon):
                         list_vertices_polygons_dynamic.append(shape.vertices)
 
                     elif isinstance(shape, ShapeGroup):
                         for shape in shape.shapes:
                             list_vertices_polygons_dynamic.append(shape.vertices)
+                    else:
+                        raise NotImplementedError(f"collision_checker.py: "
+                                                  f"obstacle occupancy shape {shape} is not supported!")
 
                 dict_time_to_list_vertices_polygons_dynamic[step] += list_vertices_polygons_dynamic
 
