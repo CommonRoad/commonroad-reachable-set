@@ -248,7 +248,7 @@ class Configuration:
 
         return config_cloned
 
-    def split_to_planning_problem(self):
+    def split_to_planning_problems(self):
         list_config = list()
 
         assert self.planning_problem_set, "Planning problem set is not provided."
@@ -284,6 +284,7 @@ class GeneralConfiguration(ConfigurationBase):
         self.path_output = config_relevant.path_output + name_scenario + "/"
         self.path_logs = config_relevant.path_logs
         self.path_offline_data = config_relevant.path_offline_data
+        self.path_pickles = config_relevant.path_pickles
 
 
 class VehicleConfiguration(ConfigurationBase):
