@@ -301,7 +301,7 @@ class PyGraphReachableSetOnline(ReachableSet):
             self._list_steps_computed.append(step)
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_step:
-            self._prune_nodes_not_reaching_final_step()
+            self.prune_nodes_not_reaching_final_step()
 
     def _forward_propagation(self, step: int, n_multi_steps: int):
         """
@@ -342,7 +342,7 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         self._reachability_grid[step] = reachability_grid_prop
 
-    def _prune_nodes_not_reaching_final_step(self):
+    def prune_nodes_not_reaching_final_step(self):
         """
         Prunes nodes that do not reach the final time step.
         """

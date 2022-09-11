@@ -62,7 +62,20 @@ class PyReachableSet(ReachableSet):
             self._list_steps_computed.append(step)
 
         if self.config.reachable_set.prune_nodes_not_reaching_final_step:
-            self._prune_nodes_not_reaching_final_step()
+            self.prune_nodes_not_reaching_final_step()
+
+    def compute_drivable_area_at_step(self, step):
+        logger.debug(f"Computing drivable area for step {step}")
+        self._compute_drivable_area_at_step(step)
+
+        if step not in self._list_steps_computed:
+            self._list_steps_computed.append(step)
+
+    def compute_reachable_set_at_step(self, step):
+        logger.debug(f"Computing reachable set for step {step}")
+        self._compute_reachable_set_at_step(step)
+        if step not in self._list_steps_computed:
+            self._list_steps_computed.append(step)
 
     def _compute_drivable_area_at_step(self, step: int):
         """
@@ -77,7 +90,7 @@ class PyReachableSet(ReachableSet):
 
         if len(reachable_set_previous) < 1:
             self.dict_step_to_drivable_area[step] = list()
-            self.dict_step_to_base_set_propagated[step] = list()
+            self.dict_step_to_propagated_set[step] = list()
             return None
 
         list_base_sets_propagated = self._propagate_reachable_set(reachable_set_previous)
@@ -124,7 +137,7 @@ class PyReachableSet(ReachableSet):
             raise Exception("Invalid mode for repartition.")
 
         self.dict_step_to_drivable_area[step] = drivable_area
-        self.dict_step_to_base_set_propagated[step] = list_base_sets_propagated
+        self.dict_step_to_propagated_set[step] = list_base_sets_propagated
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
         """
@@ -164,7 +177,7 @@ class PyReachableSet(ReachableSet):
             1. construct reach nodes from drivable area and the propagated based sets.
             2. update parent-child relationship of the nodes.
         """
-        base_sets_propagated = self.dict_step_to_base_set_propagated[step]
+        base_sets_propagated = self.dict_step_to_propagated_set[step]
         drivable_area = self.dict_step_to_drivable_area[step]
 
         if not drivable_area:
@@ -177,7 +190,15 @@ class PyReachableSet(ReachableSet):
 
         self.dict_step_to_reachable_set[step] = reachable_set
 
-    def _prune_nodes_not_reaching_final_step(self):
+    def _reset_reachable_set_at_step(self, step: int, reachable_set: List[ReachNode]):
+        reachable_set_cur: List[ReachNode] = self.dict_step_to_reachable_set[step]
+        for node in reachable_set_cur:
+            for node_parent in node.list_nodes_parent:
+                node_parent.remove_child_node(node)
+
+        self.dict_step_to_reachable_set[step] = reachable_set
+
+    def prune_nodes_not_reaching_final_step(self):
         util_logger.print_and_log_info(logger, f"\tPruning nodes not reaching final step...")
         cnt_nodes_before_pruning = cnt_nodes_after_pruning = len(self.reachable_set_at_step(self.step_end))
 

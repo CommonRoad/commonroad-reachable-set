@@ -37,6 +37,10 @@ class ReachableSetInterface:
         return self._reach.step_end
 
     @property
+    def propagated_set(self):
+        return self._reach.propagated_set
+
+    @property
     def drivable_area(self):
         return self._reach.drivable_area
 
@@ -61,6 +65,15 @@ class ReachableSetInterface:
             util_logger.print_and_log_error(logger, message)
             raise Exception(message)
 
+    def propagated_set_at_step(self, step: int):
+        if not self._reachable_set_computed and step != 0:
+            util_logger.print_and_log_warning(logger,
+                                              "Reachable set is not computed, retrieving propagated set failed.")
+            return []
+
+        else:
+            return self._reach.propagated_set_at_step(step)
+
     def drivable_area_at_step(self, step: int):
         if not self._reachable_set_computed and step != 0:
             util_logger.print_and_log_warning(logger, "Reachable set is not computed, retrieving drivable area failed.")
@@ -68,6 +81,14 @@ class ReachableSetInterface:
 
         else:
             return self._reach.drivable_area_at_step(step)
+
+    def reset_drivable_area_at_step(self, step: int, drivable_area):
+        if not self._reachable_set_computed and step != 0:
+            util_logger.print_and_log_warning(logger, "Reachable set is not computed, resetting drivable area failed.")
+            return []
+
+        else:
+            return self._reach.reset_drivable_area_at_step(step, drivable_area)
 
     def reachable_set_at_step(self, step: int):
         if not self._reachable_set_computed and step != 0:
@@ -77,11 +98,19 @@ class ReachableSetInterface:
         else:
             return self._reach.reachable_set_at_step(step)
 
-    def compute_reachable_sets(self, step_start: int = 0, step_end: int = 0):
+    def reset_reachable_set_at_step(self, step: int, reachable_set):
+        if not self._reachable_set_computed and step != 0:
+            util_logger.print_and_log_warning(logger, "Reachable set is not computed, resetting reachable set failed.")
+            return []
+
+        else:
+            return self._reach.reset_reachable_set_at_step(step, reachable_set)
+
+    def compute_reachable_sets(self, step_start: int = 0, step_end: int = 0, verbose=True):
         """
         Computes reachable sets between the given start and end steps.
         """
-        util_logger.print_and_log_info(logger, "* Computing reachable sets...")
+        util_logger.print_and_log_info(logger, "* Computing reachable sets...", verbose)
 
         if not self._reach:
             util_logger.print_and_log_warning(logger, "Reachable set is not initialized, aborting computation.")
@@ -90,7 +119,7 @@ class ReachableSetInterface:
         step_start = step_start if step_start else self.step_start + 1
         step_end = step_end if step_end else self.step_end
 
-        if not (0 < step_start < step_end):
+        if not (0 < step_start <= step_end):
             util_logger.print_and_log_warning(logger, "Steps for computation are invalid, aborting computation.")
             return None
 
@@ -99,7 +128,42 @@ class ReachableSetInterface:
         self._reachable_set_computed = True
         time_computation = time.time() - time_start
 
-        util_logger.print_and_log_info(logger, f"\tTook: \t{time_computation:.3f}s")
+        util_logger.print_and_log_info(logger, f"\tTook: \t{time_computation:.3f}s", verbose)
+
+    def compute_drivable_area_at_step(self, step: int = 0):
+        """
+        Computes reachable sets between the given start and end steps.
+        """
+        if not self._reach:
+            util_logger.print_and_log_warning(logger, "Reachable set is not initialized, aborting computation.")
+            return None
+
+        if step <= 0:
+            util_logger.print_and_log_warning(logger, "Steps for computation are invalid, aborting computation.")
+            return None
+
+        self._reach.compute_drivable_area_at_step(step)
+        self._reachable_set_computed = True
+
+    def compute_reachable_set_at_step(self, step: int = 0):
+        """
+        Computes reachable sets between the given start and end steps.
+        """
+        if not self._reach:
+            util_logger.print_and_log_warning(logger, "Reachable set is not initialized, aborting computation.")
+            return None
+
+        if step <= 0:
+            util_logger.print_and_log_warning(logger, "Steps for computation are invalid, aborting computation.")
+            return None
+
+        self._reach.compute_drivable_area_at_step(step)
+
+    def prune_reachable_sets(self):
+        """
+        Prunes reachable sets not reaching the final step.
+        """
+        self._reach.prune_nodes_not_reaching_final_step()
 
     def extract_driving_corridors(self, to_goal_region: bool = False, shape_terminal: Shape = None,
                                   is_cartesian_shape: bool = True, corridor_lon: DrivingCorridor = None,
