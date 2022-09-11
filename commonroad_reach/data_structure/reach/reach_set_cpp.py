@@ -33,5 +33,14 @@ class CppReachableSet(ReachableSet):
         if self.config.reachable_set.prune_nodes_not_reaching_final_step:
             self.prune_nodes_not_reaching_final_step()
 
+    def compute_drivable_area_at_step(self, step):
+        pass
+
+    def compute_reachable_set_at_step(self, step):
+        pass
+
+    def _reset_reachable_set_at_step(self, step: int, reachable_set):
+        pass
+
     def prune_nodes_not_reaching_final_step(self):
         self._reach.prune_nodes_not_reaching_final_step()
