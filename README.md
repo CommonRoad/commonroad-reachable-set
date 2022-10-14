@@ -26,6 +26,7 @@ The C++ code depends on the following libraries:
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * [pybind11](https://github.com/pybind/pybind11)
   
+
 **Optional dependencies**:
 * [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
 * [Doxygen](https://doxygen.nl/) (optional: for building documentation)
@@ -73,7 +74,6 @@ The Python dependencies are listed in `requirements.txt`.
 
 **Optional:**
 
-- To install the package in editable mode, add flag `-e` to the pip command above.
 - To add unit tests,  set variable `ADD_TESTS=ON` before the pip command.
 - To build the code in Debug mode, set `debug=1` in the setup configuration file (`setup.cfg`).
 
