@@ -7,7 +7,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 from math import ceil, floor
-from typing import List, Tuple, Set
+from typing import List, Tuple
 
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.regular_grid import Grid, Cell
@@ -16,7 +16,6 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility.sweep_line import SweepLine
 from commonroad_reach import pycrreach
-
 
 
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -135,11 +134,11 @@ def propagate_polygon(polygon: ReachPolygon, polygon_zero_state: ReachPolygon, d
     return polygon_processed
 
 
-def project_base_sets_to_position_domain(list_base_sets_propagated: List[ReachNode]) -> List[ReachPolygon]:
+def project_propagated_sets_to_position_domain(list_propagated_sets: List[ReachNode]) -> List[ReachPolygon]:
     """
     Returns a list of rectangles projected onto the position domain.
     """
-    return [base_set.position_rectangle for base_set in list_base_sets_propagated]
+    return [propagated_set.position_rectangle for propagated_set in list_propagated_sets]
 
 
 def create_repartitioned_rectangles(list_rectangles: List[ReachPolygon], size_grid: float) -> List[ReachPolygon]:
@@ -319,31 +318,31 @@ def split_rectangle_into_two(rectangle: ReachPolygon) -> Tuple[ReachPolygon, Rea
 
 
 def construct_reach_nodes(drivable_area: List[ReachPolygon],
-                          list_base_sets_propagated: List[ReachNode],
+                          list_propagated_set: List[ReachNode],
                           has_multi_generation: bool = False) -> List[ReachNode]:
     """
     Constructs nodes of the reachability graph.
 
-    The nodes are constructed by intersecting propagated base sets with the drivable areas to determine the reachable
+    The nodes are constructed by intersecting propagated sets with the drivable areas to determine the reachable
     positions and velocities.
 
     Steps:
-        1. examine the adjacency of drivable areas and the propagated base sets. They are considered adjacent if they
+        1. examine the adjacency of drivable areas and the propagated sets. They are considered adjacent if they
            overlap in the position domain.
-        2. create a node from each drivable area and its adjacent propagated base sets.
+        2. create a node from each drivable area and its adjacent propagated sets.
     """
     reachable_set = []
 
-    list_rectangles_base_sets = [base_set.position_rectangle for base_set in list_base_sets_propagated]
+    list_rectangles_propagated_set = [propagated_set.position_rectangle for propagated_set in list_propagated_set]
     list_rectangles_drivable_area = drivable_area
     dict_rectangle_adjacency = util_geometry.create_adjacency_dictionary(list_rectangles_drivable_area,
-                                                                         list_rectangles_base_sets)
+                                                                         list_rectangles_propagated_set)
 
-    for idx_drivable_area, list_idx_base_sets_adjacent in dict_rectangle_adjacency.items():
+    for idx_drivable_area, list_idx_propagated_sets_adjacent in dict_rectangle_adjacency.items():
         rectangle_drivable_area = list_rectangles_drivable_area[idx_drivable_area]
 
-        reach_node = construct_reach_node(rectangle_drivable_area, list_base_sets_propagated,
-                                          list_idx_base_sets_adjacent, has_multi_generation)
+        reach_node = construct_reach_node(rectangle_drivable_area, list_propagated_set,
+                                          list_idx_propagated_sets_adjacent, has_multi_generation)
         if reach_node:
             reachable_set.append(reach_node)
 
@@ -351,11 +350,11 @@ def construct_reach_nodes(drivable_area: List[ReachPolygon],
 
 
 def construct_reach_node(rectangle_drivable_area: ReachPolygon,
-                         list_base_sets_propagated: List[ReachNode],
-                         list_idx_base_sets_adjacent: List[int],
+                         list_propagated_set: List[ReachNode],
+                         list_idx_propagated_sets_adjacent: List[int],
                          multi_generation=False):
     """
-    Returns a reach node constructed from the propagated base sets.
+    Returns a reach node constructed from the propagated sets.
 
     Iterate through base sets that are adjacent to the drivable areas, and intersect the base sets with position
     constraints from the drivable areas. A non-empty intersected polygon imply that it is a valid base set and is
@@ -367,14 +366,14 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
     else:
         Node = ReachNodeMultiGeneration
 
-    list_base_sets_parent = []
+    list_nodes_parent = []
     list_vertices_polygon_lon_new = []
     list_vertices_polygon_lat_new = []
-    # iterate through adjacent base sets
-    for idx_base_set_adjacent in list_idx_base_sets_adjacent:
-        base_set_adjacent = list_base_sets_propagated[idx_base_set_adjacent]
-        polygon_lon = ReachPolygon.from_polygon(base_set_adjacent.polygon_lon)
-        polygon_lat = ReachPolygon.from_polygon(base_set_adjacent.polygon_lat)
+    # iterate through adjacent propagated sets
+    for idx_base_set_adjacent in list_idx_propagated_sets_adjacent:
+        propagated_set_adjacent = list_propagated_set[idx_base_set_adjacent]
+        polygon_lon = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lon)
+        polygon_lat = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lat)
         # cut down to position range of the drivable area rectangle
         try:
             polygon_lon = polygon_lon.intersect_halfspace(1, 0, rectangle_drivable_area.p_lon_max)
@@ -390,14 +389,15 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
             if polygon_lon and not polygon_lon.is_empty and polygon_lat and not polygon_lat.is_empty:
                 list_vertices_polygon_lon_new += polygon_lon.vertices
                 list_vertices_polygon_lat_new += polygon_lat.vertices
-                list_base_sets_parent.append(base_set_adjacent.source_propagation)
+                node_parent = propagated_set_adjacent.source_propagation
+                list_nodes_parent.append(node_parent)
 
-    # if there is at least one valid base set, create the adapted base set
+    # if there is at least one valid propagated set, create node
     if list_vertices_polygon_lon_new and list_vertices_polygon_lat_new:
         polygon_lon_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lon_new).convex_hull)
         polygon_lat_new = ReachPolygon.from_polygon(ReachPolygon(list_vertices_polygon_lat_new).convex_hull)
         reach_node = Node(polygon_lon_new, polygon_lat_new)
-        reach_node.source_propagation = list_base_sets_parent
+        reach_node.source_propagation = list_nodes_parent
 
         return reach_node
 

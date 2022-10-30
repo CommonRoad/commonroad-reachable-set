@@ -1,5 +1,5 @@
 commonroad-io>=2021.4,<2022.2
-commonroad-route-planner>=2022.1
+commonroad-route-planner>=2022.2
 numpy>=1.19.2
 matplotlib>=3.3.3
 seaborn>=0.10.0

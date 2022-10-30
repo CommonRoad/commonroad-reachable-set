@@ -118,7 +118,9 @@ class ReachPolygon(Polygon, ABC):
 
     @property
     def vertices(self) -> List[Tuple[np.ndarray, np.ndarray]]:
-        """Returns the list of vertices of the polygon."""
+        """
+        Returns the list of vertices of the polygon.
+        """
         if isinstance(self, Polygon):
             list_x, list_y = self.exterior.coords.xy
 

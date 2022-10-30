@@ -139,7 +139,7 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         list_base_sets_propagated = self._propagate_reachable_set(reachable_set_previous)
 
-        list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
+        list_rectangles_projected = reach_operation.project_propagated_sets_to_position_domain(list_base_sets_propagated)
 
         list_rectangles_repartitioned = \
             reach_operation.create_repartitioned_rectangles(list_rectangles_projected, size_grid)

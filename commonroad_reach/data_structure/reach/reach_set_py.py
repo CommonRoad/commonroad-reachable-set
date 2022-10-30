@@ -93,9 +93,9 @@ class PyReachableSet(ReachableSet):
             self.dict_step_to_propagated_set[step] = list()
             return None
 
-        list_base_sets_propagated = self._propagate_reachable_set(reachable_set_previous)
+        list_propagated_set = self._propagate_reachable_set(reachable_set_previous)
 
-        list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
+        list_rectangles_projected = reach_operation.project_propagated_sets_to_position_domain(list_propagated_set)
 
         mode_repartition = self.config.reachable_set.mode_repartition
         size_grid = self.config.reachable_set.size_grid
@@ -106,7 +106,6 @@ class PyReachableSet(ReachableSet):
         if mode_repartition == 1:
             list_rectangles_repartitioned = \
                 reach_operation.create_repartitioned_rectangles(list_rectangles_projected, size_grid)
-
             drivable_area = reach_operation.check_collision_and_split_rectangles(self.collision_checker, step,
                                                                                  list_rectangles_repartitioned,
                                                                                  radius_terminal_split)
@@ -137,14 +136,13 @@ class PyReachableSet(ReachableSet):
             raise Exception("Invalid mode for repartition.")
 
         self.dict_step_to_drivable_area[step] = drivable_area
-        self.dict_step_to_propagated_set[step] = list_base_sets_propagated
+        self.dict_step_to_propagated_set[step] = list_propagated_set
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNode]) -> List[ReachNode]:
         """
         Propagates nodes of the reachable set.
         """
         list_base_sets_propagated = []
-
         for node in list_nodes:
             try:
                 # propagate in both directions
@@ -174,17 +172,17 @@ class PyReachableSet(ReachableSet):
         Computes reachable set for the given step.
 
         Steps:
-            1. construct reach nodes from drivable area and the propagated based sets.
+            1. construct reach nodes from drivable area and the propagated sets.
             2. update parent-child relationship of the nodes.
         """
-        base_sets_propagated = self.dict_step_to_propagated_set[step]
+        propagated_set = self.dict_step_to_propagated_set[step]
         drivable_area = self.dict_step_to_drivable_area[step]
 
         if not drivable_area:
             self.dict_step_to_reachable_set[step] = list()
             return None
 
-        list_nodes = reach_operation.construct_reach_nodes(drivable_area, base_sets_propagated)
+        list_nodes = reach_operation.construct_reach_nodes(drivable_area, propagated_set)
 
         reachable_set = reach_operation.connect_children_to_parents(step, list_nodes)
 
