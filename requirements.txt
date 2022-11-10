@@ -11,7 +11,7 @@ pytest>=6.2.2
 cython>=0.29.28
 
 
-setuptools~=50.3.2
+setuptools==57.0.0
 pybind11~=2.9.1
 psutil~=5.8.0
 typing~=3.7.4.3
