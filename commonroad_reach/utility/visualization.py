@@ -88,10 +88,6 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
                                   "facecolor": "#f1b514",
                                   "edgecolor": "#302404",
                                   "zorder": 15}})
-        # plot reference path
-        if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1],
-                             color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -102,6 +98,11 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
         ax.set_ylabel("$d$ [m]", fontsize=28)
         plt.margins(0, 0)
         renderer.render()
+
+        # plot reference path
+        if config.debug.draw_ref_path and ref_path is not None:
+            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1],
+                             color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         if config.debug.save_plots:
             save_fig(save_gif, path_output, step)
@@ -473,7 +474,7 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
         save_format = "svg" if as_svg else "png"
         plt.savefig(
             f'{path_output}{"driving_corridor"}_{dc_id}_2D.{save_format}', format=save_format,
-            bbox_inches="tight", transparent=False)
+            bbox_inches="tight", transparent=False, dpi=300)
 
 
 def draw_driving_corridor_3d(driving_corridor: DrivingCorridor, dc_id: int, reach_interface: ReachableSetInterface,

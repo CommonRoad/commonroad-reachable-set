@@ -24,7 +24,7 @@ vehicle:
 
     # acceleration in m/s^2
     a_lon_min: -6.0
-    a_lon_max: 64.0
+    a_lon_max: 6.0
     a_lat_min: -2.0
     a_lat_max: 2.0
     # maximum engine power
