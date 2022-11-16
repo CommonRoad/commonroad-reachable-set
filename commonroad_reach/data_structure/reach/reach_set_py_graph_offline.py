@@ -139,7 +139,7 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         list_base_sets_propagated = self._propagate_reachable_set(reachable_set_previous)
 
-        list_rectangles_projected = reach_operation.project_base_sets_to_position_domain(list_base_sets_propagated)
+        list_rectangles_projected = reach_operation.project_propagated_sets_to_position_domain(list_base_sets_propagated)
 
         list_rectangles_repartitioned = \
             reach_operation.create_repartitioned_rectangles(list_rectangles_projected, size_grid)
@@ -147,7 +147,7 @@ class PyGraphReachableSetOffline(ReachableSet):
         list_rectangles_adapted = reach_operation.adapt_rectangles_to_grid(list_rectangles_repartitioned, size_grid)
 
         self.dict_step_to_drivable_area[step] = list_rectangles_adapted
-        self.dict_step_to_base_set_propagated[step] = list_base_sets_propagated
+        self.dict_step_to_propagated_set[step] = list_base_sets_propagated
 
     def _propagate_reachable_set(self, list_nodes: List[ReachNodeMultiGeneration],
                                  steps=1) -> List[ReachNodeMultiGeneration]:
@@ -200,7 +200,7 @@ class PyGraphReachableSetOffline(ReachableSet):
             1. construct reach nodes from drivable area and the propagated based sets.
             2. update parent-child relationship of the nodes.
         """
-        base_sets_propagated = self.dict_step_to_base_set_propagated[step]
+        base_sets_propagated = self.dict_step_to_propagated_set[step]
         drivable_area = self.dict_step_to_drivable_area[step]
         if not drivable_area:
             return []
@@ -422,5 +422,5 @@ class PyGraphReachableSetOffline(ReachableSet):
 
         return dict_data
 
-    def _prune_nodes_not_reaching_final_step(self):
+    def prune_nodes_not_reaching_final_step(self):
         raise NotImplementedError

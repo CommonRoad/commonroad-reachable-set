@@ -31,54 +31,55 @@ class ReachPolygon(Polygon, ABC):
                 list_vertices.append(list_vertices[0])
 
         super(ReachPolygon, self).__init__(list_vertices)
+        self._bounds = self.bounds
 
     def __repr__(self):
-        return f"ReachPolygon({self.bounds[0]:.4}, {self.bounds[1]:.4}, {self.bounds[2]:.4}, {self.bounds[3]:.4})"
+        return f"ReachPolygon({self._bounds[0]:.4}, {self._bounds[1]:.4}, {self._bounds[2]:.4}, {self._bounds[3]:.4})"
 
     def __str__(self):
-        return f"{self.bounds}"
+        return f"{self._bounds}"
 
     @property
     def p_min(self):
         """
         Minimum position in the position-velocity domain.
         """
-        return self.bounds[0]
+        return self._bounds[0]
 
     @property
     def p_max(self):
         """
         Maximum position in the position-velocity domain.
         """
-        return self.bounds[2]
+        return self._bounds[2]
 
     @property
     def v_min(self):
         """
         Minimum velocity in the position-velocity domain.
         """
-        return self.bounds[1]
+        return self._bounds[1]
 
     @property
     def v_max(self):
         """
         Maximum velocity in the position-velocity domain.
         """
-        return self.bounds[3]
+        return self._bounds[3]
 
     @property
     def p_lon_min(self):
         """
         Minimum longitudinal position in the position domain.
         """
-        return self.bounds[0]
+        return self._bounds[0]
 
     @property
     def p_lon_max(self):
         """
         Maximum longitudinal position in the position domain.
         """
-        return self.bounds[2]
+        return self._bounds[2]
 
     @property
     def p_lon_center(self):
@@ -92,14 +93,14 @@ class ReachPolygon(Polygon, ABC):
         """
         Minimum lateral position in the position domain.
         """
-        return self.bounds[1]
+        return self._bounds[1]
 
     @property
     def p_lat_max(self):
         """
         Maximum lateral position in the position domain.
         """
-        return self.bounds[3]
+        return self._bounds[3]
 
     @property
     def p_lat_center(self):
@@ -117,7 +118,9 @@ class ReachPolygon(Polygon, ABC):
 
     @property
     def vertices(self) -> List[Tuple[np.ndarray, np.ndarray]]:
-        """Returns the list of vertices of the polygon."""
+        """
+        Returns the list of vertices of the polygon.
+        """
         if isinstance(self, Polygon):
             list_x, list_y = self.exterior.coords.xy
 
@@ -153,7 +156,7 @@ class ReachPolygon(Polygon, ABC):
         """
         assert not (a == 0 and b == 0), "Halfspace parameters are not valid."
 
-        polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self.bounds)
+        polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self._bounds)
         polygon_intersected = self.intersection(polygon_halfspace)
 
         if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:

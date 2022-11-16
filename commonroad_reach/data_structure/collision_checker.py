@@ -2,16 +2,18 @@ import logging
 from typing import List, Dict
 
 import commonroad_dc.pycrcc as pycrcc
-import commonroad_reach.pycrreach as reach
-from commonroad.geometry.shape import Rectangle, ShapeGroup, Polygon
-from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
-from commonroad.scenario.scenario import Scenario, LaneletNetwork
 from commonroad_dc.boundary import boundary
 from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
 
-import commonroad_reach.utility.logger as util_logger
+import commonroad_reach.pycrreach as reach
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
+
+from commonroad.geometry.shape import Rectangle, ShapeGroup, Polygon
+from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
+from commonroad.scenario.scenario import Scenario, LaneletNetwork
+
+import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +77,8 @@ class CollisionChecker:
             scenario_cc.add_objects(scenario.obstacles)
 
         # add road boundary static object
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="aligned_triangulation", axis=1)
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="aligned_triangulation",
+                                                                         axis=1)
         scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
@@ -149,7 +152,8 @@ class CollisionChecker:
         scenario_cc = Scenario(scenario.dt, scenario.scenario_id)
         # add lanelet network
         scenario_cc.add_objects(lanelet_network)
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="obb_rectangles", width=2e-3)
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="obb_rectangles",
+                                                                         width=2e-3)
         list_obstacles_static.append(object_road_boundary)
 
         return list_obstacles_static

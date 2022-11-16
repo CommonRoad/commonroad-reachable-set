@@ -1,16 +1,18 @@
 import os
+import copy
 import logging
 from typing import Optional, Union, Tuple, List
 import yaml
 from omegaconf import ListConfig, DictConfig
 
 import numpy as np
-import commonroad_reach.pycrreach as reach
+from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.trajectory import State
 from commonroad.planning.goal import GoalRegion
-from commonroad.planning.planning_problem import PlanningProblem
+from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.common.solution import VehicleType
+from commonroad_reach import pycrreach
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
 from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
 from commonroad_dc.geometry.util import resample_polyline
@@ -29,9 +31,11 @@ class Configuration:
     """
 
     def __init__(self, config_omega: Union[ListConfig, DictConfig]):
+        self.config_omega = config_omega
         self.name_scenario = config_omega.general.name_scenario
         self.scenario: Optional[Scenario] = None
         self.planning_problem: Optional[PlanningProblem] = None
+        self.planning_problem_set: Optional[PlanningProblemSet] = None
 
         self.general: GeneralConfiguration = GeneralConfiguration(config_omega)
         self.planning: PlanningConfiguration = PlanningConfiguration(config_omega)
@@ -39,7 +43,11 @@ class Configuration:
         self.reachable_set: ReachableSetConfiguration = ReachableSetConfiguration(config_omega)
         self.debug: DebugConfiguration = DebugConfiguration(config_omega)
 
-    def update(self, scenario: Scenario = None,
+    def __repr__(self):
+        return f"Configuration(scenario_id={self.scenario.scenario_id}," \
+               f"planning_problem_id={self.planning_problem.planning_problem_id})"
+
+    def update(self, scenario: Scenario = None, planning_problem_set: PlanningProblemSet = None,
                planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
                state_initial: State = None, goal_region: GoalRegion = None,
                CLCS: CurvilinearCoordinateSystem = None, list_ids_lanelets: List[int] = None):
@@ -48,8 +56,8 @@ class Configuration:
 
         Possible ways of completing the configuration:
 
-            1. Empty attributes: loads scenario and planning problem from the xml files, computes route and CLCS
-            2. Scenario + planning problem (+ initial state): computes route and CLCS
+            1. Empty attributes: loads scenario and planning problem (set) from the xml files, computes route and CLCS
+            2. Scenario + planning problem (set) (+ initial state): computes route and CLCS
             3. Scenario + initial state + goal region: computes route and CLCS
             4. Scenario + initial state + CLCS: retrieve reference path from CLCS
 
@@ -57,17 +65,23 @@ class Configuration:
         computation a-priori to a desired set of lanelets.
         """
         # patterns that do not require loading scenario and planning problem from xml files.
-        if scenario and (planning_problem or
+        if scenario and (planning_problem_set or
+                         planning_problem or
                          (state_initial and goal_region) or
                          (state_initial and CLCS)):
             pass
 
         else:
-            scenario, planning_problem = util_general.load_scenario_and_planning_problem(self, idx_planning_problem)
+            scenario, planning_problem_set = CommonRoadFileReader(self.general.path_scenario).open()
 
         self.scenario = scenario
-        if planning_problem is not None:
-            self.planning_problem = planning_problem
+
+        self.planning_problem_set = planning_problem_set
+
+        if planning_problem_set and not planning_problem:
+            planning_problem = list(planning_problem_set.planning_problem_dict.values())[idx_planning_problem]
+
+        self.planning_problem = planning_problem
 
         self.planning.state_initial = state_initial
         self.planning.goal_region = goal_region
@@ -144,11 +158,11 @@ class Configuration:
         with open(f'{path_save}/{name_file}.yml', 'w') as file_yaml:
             yaml.dump(dict_save, file_yaml, default_flow_style=False, allow_unicode=True)
 
-    def convert_to_cpp_configuration(self) -> reach.Configuration:
+    def convert_to_cpp_configuration(self) -> pycrreach.Configuration:
         """
         Converts to a configuration that is readable by the C++ binding code.
         """
-        config = reach.Configuration()
+        config = pycrreach.Configuration()
 
         config.general.name_scenario = self.name_scenario
         config.general.path_scenarios = self.general.path_scenarios
@@ -198,17 +212,17 @@ class Configuration:
         config.planning.uncertainty_v_lat = self.planning.uncertainty_v_lat
 
         if self.planning.coordinate_system == "CART":
-            config.planning.coordinate_system = reach.CoordinateSystem.CARTESIAN
+            config.planning.coordinate_system = pycrreach.CoordinateSystem.CARTESIAN
 
         else:
-            config.planning.coordinate_system = reach.CoordinateSystem.CURVILINEAR
+            config.planning.coordinate_system = pycrreach.CoordinateSystem.CURVILINEAR
             config.planning.CLCS = self.planning.CLCS
 
         if self.planning.reference_point == "REAR":
-            config.planning.reference_point = reach.ReferencePoint.REAR
+            config.planning.reference_point = pycrreach.ReferencePoint.REAR
 
         else:
-            config.planning.reference_point = reach.ReferencePoint.CENTER
+            config.planning.reference_point = pycrreach.ReferencePoint.CENTER
 
         config.reachable_set.mode_repartition = self.reachable_set.mode_repartition
         config.reachable_set.mode_inflation = self.reachable_set.mode_inflation
@@ -222,9 +236,29 @@ class Configuration:
         # convert lut dict to Cpp configuration via PyBind function
         if self.reachable_set.mode_inflation == 3:
             config.reachable_set.lut_lon_enlargement = \
-                reach.LUTLongitudinalEnlargement(self.reachable_set.lut_longitudinal_enlargement)
+                pycrreach.LUTLongitudinalEnlargement(self.reachable_set.lut_longitudinal_enlargement)
 
         return config
+
+    def clone(self):
+        config_cloned = Configuration(self.config_omega)
+
+        for key, val in self.__dict__.items():
+            config_cloned.__dict__[key] = copy.deepcopy(val)
+
+        return config_cloned
+
+    def split_to_planning_problems(self):
+        list_config = list()
+
+        assert self.planning_problem_set, "Planning problem set is not provided."
+
+        for idx_pp, pp in self.planning_problem_set.planning_problem_dict.items():
+            config = self.clone()
+            config.update(scenario=self.scenario, planning_problem=pp)
+            list_config.append(config)
+
+        return list_config
 
 
 class ConfigurationBase:
@@ -250,6 +284,7 @@ class GeneralConfiguration(ConfigurationBase):
         self.path_output = config_relevant.path_output + name_scenario + "/"
         self.path_logs = config_relevant.path_logs
         self.path_offline_data = config_relevant.path_offline_data
+        self.path_pickles = config_relevant.path_pickles
 
 
 class VehicleConfiguration(ConfigurationBase):
@@ -463,7 +498,7 @@ class PlanningConfiguration(ConfigurationBase):
             v_max = config.vehicle.ego.v_max
             assert -v_max <= self.v_lon_initial <= v_max, \
                 f"Initial x velocity {self.v_lon_initial} exceeds valid velocity interval [{-v_max}, {v_max}]."
-            
+
             assert -v_max <= self.v_lat_initial <= v_max, \
                 f"Initial y velocity {self.v_lat_initial} exceeds valid velocity interval [{-v_max}, {v_max}]."
 

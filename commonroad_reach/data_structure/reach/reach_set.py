@@ -19,7 +19,7 @@ class ReachableSet(ABC):
         self.step_start = config.planning.step_start
         self.step_end = config.planning.steps_computation + self.step_start
 
-        self.dict_step_to_base_set_propagated = defaultdict(list)
+        self.dict_step_to_propagated_set = defaultdict(list)
         self.dict_step_to_drivable_area = defaultdict(list)
         self.dict_step_to_reachable_set = defaultdict(list)
 
@@ -29,12 +29,25 @@ class ReachableSet(ABC):
         self._list_steps_computed = [self.step_start]
 
     @property
+    def propagated_set(self):
+        return self.dict_step_to_propagated_set
+
+    @property
     def drivable_area(self):
         return self.dict_step_to_drivable_area
 
     @property
     def reachable_set(self):
         return self.dict_step_to_reachable_set
+
+    def propagated_set_at_step(self, step: int):
+        if step not in self._list_steps_computed:
+            util_logger.print_and_log_warning(logger,
+                                              f"Given step {step} for propagated set retrieval is out of range.")
+            return []
+
+        else:
+            return self.dict_step_to_propagated_set[step]
 
     def drivable_area_at_step(self, step: int):
         if step not in self._list_steps_computed:
@@ -54,6 +67,26 @@ class ReachableSet(ABC):
         else:
             return self.dict_step_to_reachable_set[step]
 
+    def reset_drivable_area_at_step(self, step: int, drivable_area):
+        if step not in self._list_steps_computed:
+            util_logger.print_and_log_warning(logger,
+                                              f"Given step {step} for resetting drivable area is out of range.")
+
+        else:
+            self.dict_step_to_drivable_area[step] = drivable_area
+
+    def reset_reachable_set_at_step(self, step: int, reachable_set):
+        if step not in self._list_steps_computed:
+            util_logger.print_and_log_warning(logger,
+                                              f"Given step {step} for resetting reachable set is out of range.")
+
+        else:
+            self._reset_reachable_set_at_step(step, reachable_set)
+
+    @abstractmethod
+    def _reset_reachable_set_at_step(self, step: int, reachable_set):
+        pass
+
     @abstractmethod
     def compute(self, step_start: int, step_end: int):
         """
@@ -62,7 +95,21 @@ class ReachableSet(ABC):
         pass
 
     @abstractmethod
-    def _prune_nodes_not_reaching_final_step(self):
+    def compute_drivable_area_at_step(self, step):
+        """
+        Computes drivable area at a specific step.
+        """
+        pass
+
+    @abstractmethod
+    def compute_reachable_set_at_step(self, step):
+        """
+        Computes reachable set at a specific step.
+        """
+        pass
+
+    @abstractmethod
+    def prune_nodes_not_reaching_final_step(self):
         """
         Prunes nodes that do not reach the final step.
 
