@@ -105,12 +105,12 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
                              color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
 
         if config.debug.save_plots:
-            save_fig(save_gif, path_output, step)
+            save_fig(save_gif, path_output, step, verbose=(step % 5 == 0))
         else:
             plt.show()
 
     if config.debug.save_plots and save_gif:
-        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration)
+        make_gif(path_output, "png_reach_", steps, str(scenario.scenario_id), duration)
 
     util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
 
@@ -188,7 +188,7 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
         renderer.render()
 
         if config.debug.save_plots:
-            save_fig(save_gif, path_output, time_step)
+            save_fig(save_gif, path_output, time_step, "drivable_area", verbose=(step % 5 == 0))
         else:
             plt.show()
 
@@ -275,19 +275,21 @@ def draw_drivable_area(list_rectangles, config, renderer, draw_params):
                 Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
 
 
-def save_fig(save_gif: bool, path_output: str, time_step: int):
+def save_fig(save_gif: bool, path_output: str, time_step: int, identifier: str = "reach", verbose: bool = True):
     if save_gif:
         # save as png
-        print("\tSaving", os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'))
-        plt.savefig(os.path.join(path_output, f'{"png_reachset"}_{time_step:05d}.png'), format="png",
-                    bbox_inches="tight",
-                    transparent=False)
+        name_figure = "png_" + identifier
+        path_figure = os.path.join(path_output, f'{name_figure}_{time_step:05d}.png')
+        plt.savefig(path_figure, format="png", bbox_inches="tight", transparent=False)
 
     else:
         # save as svg
-        print("\tSaving", os.path.join(path_output, f'{"svg_reachset"}_{time_step:05d}.svg'))
-        plt.savefig(f'{path_output}{"svg_reachset"}_{time_step:05d}.svg', format="svg", bbox_inches="tight",
-                    transparent=False)
+        name_figure = "svg" + identifier
+        path_figure = os.path.join(path_output, f'{name_figure}_{time_step:05d}.svg')
+        plt.savefig(path_figure, format="svg", bbox_inches="tight", transparent=False)
+
+    if verbose:
+        print("\tSaving", path_figure)
 
 
 def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
@@ -781,7 +783,7 @@ def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
         renderer.render()
 
         if config.debug.save_plots:
-            save_fig(save_gif, path_output, step)
+            save_fig(save_gif, path_output, step, verbose=(step % 5 == 0))
         else:
             plt.show()
 
@@ -861,5 +863,6 @@ def plot_collision_checker(reach_interface: ReachableSetInterface):
 
     if reach_interface.config.planning.coordinate_system == "CVLN":
         curv_projection_domain_border = np.asarray(reach_interface.config.planning.CLCS.curvilinear_projection_domain())
-        rnd.ax.plot(curv_projection_domain_border[:, 0], curv_projection_domain_border[:, 1], zorder=100, color='orange')
+        rnd.ax.plot(curv_projection_domain_border[:, 0], curv_projection_domain_border[:, 1], zorder=100,
+                    color='orange')
     plt.show()
