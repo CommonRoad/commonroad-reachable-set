@@ -26,6 +26,8 @@ radius_terminal_split: 0.7
 consider_traffic: true
 # rasterize obstacles when using the CVLN frame (reduces over-approximation of obstacles after conversion to CVLN)
 rasterize_obstacles: false
+# do not rasterize static obstacles (e.g., road boundaries): parameter only works if rasterize_obstacles=True
+rasterize_exclude_static: true
 # flag whether to prune reach nodes not reaching the final time step
 prune_nodes_not_reaching_final_step: true
 # if set to True, small components (area below a threshold) are excluded in the driving corridor extraction

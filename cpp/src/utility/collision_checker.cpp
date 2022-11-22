@@ -20,7 +20,8 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
         CurvilinearCoordinateSystemPtr const& CLCS,
         double const& radius_disc_vehicle,
         int const& num_omp_threads,
-        bool const& rasterize_obstacles) {
+        bool const& rasterize_obstacles,
+        bool const& rasterize_exclude_static) {
 
     // set up buffer config for inflation (Minkwoski sum)
     auto buffer_config = reach::BufferConfig(radius_disc_vehicle);
@@ -55,11 +56,13 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
         }
     } else {
         // rasterization: obstacles are rasterized in CVLN with multiple AABBs -> less overapproximation
+        // rasterization of static obstacles can be excluded by setting rasterize_exclude_static=True
 
         // process static and dynamic obstacles - convert, rasterize and return rasterized AABBs (static and dynamic)
         auto const&[vec_aabb_CVLN_static, map_step_to_vec_aabb_CVLN_dynamic] =
                 create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
-                    vec_polylines_static, map_step_to_vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config);
+                    vec_polylines_static, map_step_to_vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config,
+                    rasterize_exclude_static);
 
         // add the static AABBs to a static shape group
         for (auto const& aabb: vec_aabb_CVLN_static) {
@@ -91,7 +94,8 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
         map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         CurvilinearCoordinateSystemPtr const& CLCS,
         int const& num_threads,
-        BufferConfig const& buffer_config) {
+        BufferConfig const& buffer_config,
+        bool const& rasterize_exclude_static) {
 
     // boost geometry polygon for projection domain for pre-filtering
     auto proj_domain_polyline = CLCS->projectionDomainBorder();
@@ -109,15 +113,32 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
     std::vector<std::vector<EigenPolyline>> transformed_polygon_rasterized;
 
     // static obstacle polylines
-    for (auto const& polyline: vec_polylines_static) {
-        auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
-        if (bg::intersects(polygon_geometry, proj_domain_geometry_polygon)) {
-            auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
-            auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+    if (rasterize_exclude_static) {
+        // do not rasterize static obstacles, only convert to CVLN AABBs
+        auto vec_aabbs_CVLN_static = create_curvilinear_aabbs_from_cartesian_polylines(
+                vec_polylines_static, CLCS, num_threads, buffer_config);
 
-            // add to polylines list and group
-            polylines_list_out.emplace_back(polyline_inflated);
-            polygon_groups_out.push_back(0);
+        // add the static aabbs to static output vector
+        for (auto aabb: vec_aabbs_CVLN_static) {
+            vec_aabbs_static.emplace_back(aabb);
+        }
+
+        // hack: create fake empty polyline for static input
+        Polyline empty_polyline_static;
+        polylines_list_out.emplace_back(empty_polyline_static);
+        polygon_groups_out.push_back(0);
+    } else{
+        // rasterize static obstacles after conversion to CVLN
+        for (auto const& polyline: vec_polylines_static) {
+            auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
+            if (bg::intersects(polygon_geometry, proj_domain_geometry_polygon)) {
+                auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
+                auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+
+                // add to polylines list and group
+                polylines_list_out.emplace_back(polyline_inflated);
+                polygon_groups_out.push_back(0);
+            }
         }
     }
 
@@ -153,14 +174,17 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
         }
     }
 
+    // convert to CVLN and rasterize
     CLCS->convertListOfPolygonsToCurvilinearCoordsAndRasterize(
         polylines_list_out, polygon_groups_out, group_count+1, num_threads, transformed_polygon,
         transformed_polygon_rasterized);
 
-    // add rasterized static AABBs to output
-    vec_aabbs_static.reserve(transformed_polygon_rasterized[0].size());
-    for (auto polyline_CVLN: transformed_polygon_rasterized[0]) {
-        vec_aabbs_static.emplace_back(create_aabb_from_polyline(polyline_CVLN));
+    // add rasterized static AABBs to output (if static should be rasterized)
+    if (not rasterize_exclude_static){
+        vec_aabbs_static.reserve(transformed_polygon_rasterized[0].size());
+        for (auto polyline_CVLN: transformed_polygon_rasterized[0]) {
+            vec_aabbs_static.emplace_back(create_aabb_from_polyline(polyline_CVLN));
+        }
     }
 
     // add rasterized dynamic AABBs to output
@@ -173,7 +197,15 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
         map_step_to_vec_aabbs_dynamic.insert({i, vec_aabbs_dynamic});
     }
 
-    // return rasterized static AABBs vector and rasterized dynamic AABBs map
+    // tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> out_tuple;
+
+    // if (rasterize_static) {
+    //     out_tuple = make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
+    // } else {
+    //     out_tuple = make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
+    // }
+
+    // return (rasterized or unrasterized) static AABBs vector and rasterized dynamic AABBs map
     return make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
 }
 
