@@ -30,7 +30,7 @@ int main() {
     //string name_scenario = "ZAM_Tjunction-1_313_T-1";
 
     // append root path to python interpreter
-    string path_root = "/home/edmond/Softwares/commonroad/commonroad-reachable-set/";
+    string path_root = "/home/edmond/Softwares/commonroad/commonroad-reach/";
     py::module_ sys = py::module_::import("sys");
     sys.attr("path").attr("append")(path_root);
 
@@ -38,16 +38,11 @@ int main() {
     auto cls_ConfigurationBuilder_py =
             py::module_::import("commonroad_reach.data_structure.configuration_builder").attr(
                     "ConfigurationBuilder");
-    auto obj_config_py = cls_ConfigurationBuilder_py.attr("build_configuration")(name_scenario);
+    auto obj_config_py = cls_ConfigurationBuilder_py.attr("build_configuration")(name_scenario, path_root);
     obj_config_py.attr("update")();
     obj_config_py.attr("print_configuration_summary")();
     auto config = obj_config_py.attr("convert_to_cpp_configuration")().cast<ConfigurationPtr>();
 
-    // ======== curvilinear coordinate system
-    if (config->planning().coordinate_system == CoordinateSystem::CURVILINEAR) {
-        auto CLCS = make_shared<geometry::CurvilinearCoordinateSystem>(
-                obj_config_py.attr("planning").attr("reference_path").cast<geometry::EigenPolyline>(), 25.0, 0.1);
-    }
     // ======== collision checker
     auto cls_CollisionChecker_py =
             py::module_::import("commonroad_reach.data_structure.collision_checker").attr("CollisionChecker");
