@@ -6,9 +6,9 @@ from commonroad_reach.utility import visualization as util_visual
 
 def main():
     # ==== specify scenario
-    # name_scenario = "DEU_Test-1_1_T-1"
+    name_scenario = "DEU_Test-1_1_T-1"
     # name_scenario = "ZAM_Over-1_1"
-    name_scenario = "ARG_Carcarana-1_1_T-1"
+    # name_scenario = "ARG_Carcarana-1_1_T-1"
     # name_scenario = "USA_US101-6_1_T-1"
     # name_scenario = "ZAM_Intersection-1_1_T-1"
 
@@ -23,7 +23,9 @@ def main():
     reach_interface.compute_reachable_sets()
 
     # ==== plot computation results
-    util_visual.plot_scenario_with_reachable_sets(reach_interface)
+    # util_visual.plot_scenario_with_reachable_sets(reach_interface)
+
+    util_visual.plot_collision_checker(reach_interface)
 
 
 if __name__ == "__main__":

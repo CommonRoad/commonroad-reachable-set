@@ -132,7 +132,8 @@ class CollisionChecker:
                                                           dict_time_to_list_vertices_polygons_dynamic,
                                                           self.config.planning.CLCS,
                                                           self.config.vehicle.ego.radius_inflation, 4,
-                                                          self.config.reachable_set.rasterize_obstacles)
+                                                          self.config.reachable_set.rasterize_obstacles,
+                                                          self.config.reachable_set.rasterize_exclude_static)
 
     @staticmethod
     def retrieve_static_obstacles(scenario: Scenario, lanelet_network: LaneletNetwork, consider_traffic: bool) \

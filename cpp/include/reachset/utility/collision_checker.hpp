@@ -39,7 +39,8 @@ collision::CollisionCheckerPtr create_curvilinear_collision_checker(
         std::vector<Polyline> const& vec_polylines_static,
         std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         std::shared_ptr<geometry::CurvilinearCoordinateSystem> const& CLCS,
-        double const& radius_disc_vehicle, int const& num_omp_threads, bool const& rasterize_obstacles);
+        double const& radius_disc_vehicle, int const& num_omp_threads, bool const& rasterize_obstacles,
+        bool const& rasterize_exclude_static);
 
 /// Creates axis-aligned bounding boxes in curvilinear coordinate system from polylines in Cartesian coordinate system.
 /// The converted polygons are overapproximated with one AABB in CVLN frame.
@@ -68,7 +69,8 @@ std::tuple<std::vector<collision::RectangleAABBPtr>, std::map<int, std::vector<c
         std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         std::shared_ptr<geometry::CurvilinearCoordinateSystem> const& CLCS,
         int const& num_threads,
-        BufferConfig const& buffer_config);
+        BufferConfig const& buffer_config,
+        bool const& rasterize_exclude_static);
 
 /// Converts an Eigen polyline into a Boost.Geometry polygon.
 GeometryPolygon convert_polyline_to_geometry_polygon(Polyline const& polyline);
