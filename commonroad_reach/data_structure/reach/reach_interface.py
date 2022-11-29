@@ -49,6 +49,10 @@ class ReachableSetInterface:
     def reachable_set(self):
         return self._reach.reachable_set
 
+    @property
+    def collision_checker(self):
+        return self._reach.collision_checker.cpp_collision_checker
+
     def reset(self, config: Configuration):
         """
         Resets configuration of the interface.

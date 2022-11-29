@@ -15,6 +15,7 @@ class ReachableSet(ABC):
 
     def __init__(self, config: Configuration):
         self.config: Configuration = config
+        self.collision_checker = None
 
         self.step_start = config.planning.step_start
         self.step_end = config.planning.steps_computation + self.step_start

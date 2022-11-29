@@ -147,7 +147,7 @@ class PyGraphReachableSetOnline(ReachableSet):
             self.config.scenario = scenario
 
         if planning_problem is not None:
-            self.config.update(scenario, planning_problem)
+            self.config.update(scenario, planning_problem=planning_problem)
             self.reachset_translation.cache_clear()
 
         if update_cc:
@@ -372,3 +372,12 @@ class PyGraphReachableSetOnline(ReachableSet):
 
         self._reachability_grid[step] = \
             np.logical_and(self._reachability_grid[step], reachability_grid_prop_pruned)
+
+    def compute_drivable_area_at_step(self, step: int):
+        pass
+
+    def compute_reachable_set_at_step(self, step: int):
+        pass
+
+    def _reset_reachable_set_at_step(self, step: int, reachable_set):
+        pass

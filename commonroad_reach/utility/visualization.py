@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from commonroad.geometry.shape import Polygon, Rectangle
+from commonroad.visualization.draw_params import MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
@@ -45,7 +46,11 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
-    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # generate default drawing parameters
+    draw_params = generate_default_drawing_parameters(config)
+    draw_params.shape.facecolor = palette[0]
+    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reach_interface.step_start
     step_end = step_end or reach_interface.step_end
@@ -68,26 +73,25 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
             renderer = MPRenderer(plot_limits=plot_limits)
 
         # plot scenario and planning problem
-        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
-                                             "trajectory": {"draw_trajectory": True},
-                                             "time_begin": time_step,
-                                             "lanelet": {"show_label": config.debug.draw_lanelet_labels}})
+        draw_params.time_begin = time_step
+        scenario.draw(renderer, draw_params)
+
         if config.debug.draw_planning_problem:
-            planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
-                'draw_arrow': False, "radius": 0.5}}}})
+            planning_problem.draw(renderer, draw_params)
 
         list_nodes = reach_interface.reachable_set_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
         # plot terminal set
         if terminal_set:
-            terminal_set.draw(renderer,
-                              draw_params={"polygon": {
-                                  "opacity": 1.0,
-                                  "linewidth": 0.5,
-                                  "facecolor": "#f1b514",
-                                  "edgecolor": "#302404",
-                                  "zorder": 15}})
+            draw_params_temp = MPDrawParams()
+            draw_params_temp.shape.opacity = 1.0
+            draw_params_temp.shape.linewidth = 0.5
+            draw_params_temp.shape.facecolor = "#f1b514"
+            draw_params_temp.shape.edgecolor = "#302404"
+            draw_params_temp.shape.zorder = 15
+
+            terminal_set.draw(renderer, draw_params_temp)
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -139,7 +143,11 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
-    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # generate default drawing parameters
+    draw_params = generate_default_drawing_parameters(config)
+    draw_params.shape.facecolor = palette[0]
+    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reach_interface.step_start
     step_end = step_end or reach_interface.step_end
@@ -162,12 +170,11 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
             renderer = MPRenderer(plot_limits=plot_limits)
 
         # plot scenario and planning problem
-        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
-                                             "trajectory": {"draw_trajectory": True},
-                                             "time_begin": time_step})
+        draw_params.time_begin = time_step
+        scenario.draw(renderer, draw_params)
+
         if config.debug.draw_planning_problem:
-            planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
-                'draw_arrow': False, "radius": 0.5}}}})
+            planning_problem.draw(renderer, draw_params)
 
         list_nodes = reach_interface.drivable_area_at_step(step)
         draw_drivable_area(list_nodes, config, renderer, draw_params)
@@ -196,6 +203,18 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
         make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration=duration)
 
     util_logger.print_and_log_info(logger, "\tDrivable area plotted.")
+
+
+def generate_default_drawing_parameters(config: Configuration) -> MPDrawParams:
+    draw_params = MPDrawParams()
+
+    draw_params.dynamic_obstacle.draw_icon = config.debug.draw_icons
+    draw_params.dynamic_obstacle.trajectory.draw_trajectory = True
+    draw_params.lanelet_network.lanelet.show_label = config.debug.draw_lanelet_labels
+    draw_params.planning_problem.initial_state.state.draw_arrow = False
+    draw_params.planning_problem.initial_state.state.radius = 0.5
+
+    return draw_params
 
 
 def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterface, margin: int = 20):
@@ -241,14 +260,14 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
         return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
 
 
-def draw_reachable_sets(list_nodes, config, renderer, draw_params):
+def draw_reachable_sets(list_nodes, config, renderer, draw_params: MPDrawParams):
     backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for node in list_nodes:
             vertices = node.position_rectangle.vertices if backend == "PYTHON" else node.position_rectangle().vertices()
-            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params)
+            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
 
     elif coordinate_system == "CVLN":
         for node in list_nodes:
@@ -256,7 +275,7 @@ def draw_reachable_sets(list_nodes, config, renderer, draw_params):
             list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
             for polygon in list_polygons_cart:
-                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
+                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params)
 
 
 def draw_drivable_area(list_rectangles, config, renderer, draw_params):
@@ -266,13 +285,13 @@ def draw_drivable_area(list_rectangles, config, renderer, draw_params):
     if coordinate_system == "CART":
         for rect in list_rectangles:
             vertices = rect.vertices if backend == "PYTHON" else rect.vertices()
-            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params=draw_params)
+            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
 
     elif coordinate_system == "CVLN":
         for rect in list_rectangles:
             list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(rect, config.planning.CLCS, True)
             for polygon in list_polygons_cart:
-                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params=draw_params)
+                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params)
 
 
 def save_fig(save_gif: bool, path_output: str, time_step: int, identifier: str = "reach", verbose: bool = True):
@@ -342,7 +361,11 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
     plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
-    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # generate default drawing parameters
+    draw_params = generate_default_drawing_parameters(config)
+    draw_params.shape.facecolor = palette[0]
+    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reach_interface.step_start
     step_end = step_end or reach_interface.step_end
@@ -361,12 +384,12 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
         time_step = step * round(config.planning.dt / config.scenario.dt)
         # plot driving corridor and scenario at the specified time step
         plt.cla()
-        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
-                                             "time_begin": time_step})
+
+        draw_params.time_begin = time_step
+        scenario.draw(renderer, draw_params)
         # draw planning problem
         if config.debug.draw_planning_problem:
-            planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
-                'draw_arrow': False, "radius": 0.5}}}})
+            planning_problem.draw(renderer, draw_params)
 
         # reach set nodes in driving corridor at specified step
         list_nodes = driving_corridor.reach_nodes_at_step(step)
@@ -383,13 +406,14 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
                 terminal_set[0], terminal_set[1], terminal_set[2], terminal_set[3])  #
             # create CommonRoad Polygon
             terminal_shape = Polygon(vertices=np.array(transformed_rectangle))
-            terminal_shape.draw(renderer, draw_params={"polygon": {
-                "opacity": 1.0,
-                "linewidth": 0.5,
-                "facecolor": "#f1b514",
-                "edgecolor": "#302404",
-                "zorder": 15
-            }})
+
+            draw_params_temp = MPDrawParams()
+            draw_params_temp.shape.opacity = 1.0
+            draw_params_temp.shape.linewidth = 0.5
+            draw_params_temp.shape.facecolor = "#f1b514"
+            draw_params_temp.shape.edgecolor = "#302404"
+            draw_params_temp.shape.zorder = 15
+            terminal_shape.draw(renderer, draw_params_temp)
 
         # settings and adjustments
         plt.rc("axes", axisbelow=True)
@@ -405,7 +429,10 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
 
         if config.debug.save_plots:
             save_format = "svg" if as_svg else "png"
-            print("\tSaving", os.path.join(path_output_lon_dc, f'{"driving_corridor"}_{time_step:05d}.{save_format}'))
+            if step % 5 == 0:
+                print("\tSaving",
+                      os.path.join(path_output_lon_dc, f'{"driving_corridor"}_{time_step:05d}.{save_format}'))
+
             plt.savefig(
                 f'{path_output_lon_dc}{"driving_corridor"}_{time_step:05d}.{save_format}',
                 format=save_format, bbox_inches="tight", transparent=False)
@@ -431,7 +458,11 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
     # set color
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
-    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # generate default drawing parameters
+    draw_params = generate_default_drawing_parameters(config)
+    draw_params.shape.facecolor = palette[0]
+    draw_params.shape.edgecolor = edge_color
 
     # create output directory
     path_output = config.general.path_output
@@ -446,13 +477,12 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
         renderer = rnd
 
     # draw scenario at first step
-    scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons,
-                                                              "trajectory": {"draw_trajectory": False}},
-                                         "time_begin": 0})
+    draw_params.time_begin = 0
+    scenario.draw(renderer, draw_params)
+
     # draw planning problem
     if config.debug.draw_planning_problem:
-        planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
-            'draw_arrow': False, "radius": 0.5}}}})
+        planning_problem.draw(renderer, draw_params)
 
     # plot full driving corridor (for all steps)
     for step in driving_corridor.dict_step_to_cc.keys():
@@ -724,7 +754,11 @@ def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets_cpp(reachable_set, config)
     palette = sns.color_palette("GnBu_d", 3)
     edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
-    draw_params = {"shape": {"polygon": {"facecolor": palette[0], "edgecolor": edge_color}}}
+
+    # generate default drawing parameters
+    draw_params = generate_default_drawing_parameters(config)
+    draw_params.shape.facecolor = palette[0]
+    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reachable_set.step_start
     step_end = step_end or reachable_set.step_end
@@ -747,26 +781,26 @@ def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
             renderer = MPRenderer(plot_limits=plot_limits)
 
         # plot scenario and planning problem
-        scenario.draw(renderer, draw_params={"dynamic_obstacle": {"draw_icon": config.debug.draw_icons},
-                                             "trajectory": {"draw_trajectory": True},
-                                             "time_begin": time_step,
-                                             "lanelet": {"show_label": config.debug.draw_lanelet_labels}})
+        draw_params.time_begin = time_step
+        scenario.draw(renderer, draw_params)
+
         if config.debug.draw_planning_problem:
-            planning_problem.draw(renderer, draw_params={'planning_problem': {'initial_state': {'state': {
-                'draw_arrow': False, "radius": 0.5}}}})
+            planning_problem.draw(renderer, draw_params)
 
         list_nodes = reachable_set.reachable_set_at_step(step)
         draw_reachable_sets(list_nodes, config, renderer, draw_params)
 
         # plot terminal set
         if terminal_set:
-            terminal_set.draw(renderer,
-                              draw_params={"polygon": {
-                                  "opacity": 1.0,
-                                  "linewidth": 0.5,
-                                  "facecolor": "#f1b514",
-                                  "edgecolor": "#302404",
-                                  "zorder": 15}})
+            draw_params_temp = MPDrawParams()
+            draw_params_temp.shape.opacity = 1.0
+            draw_params_temp.shape.linewidth = 0.5
+            draw_params_temp.shape.facecolor = "#f1b514"
+            draw_params_temp.shape.edgecolor = "#302404"
+            draw_params_temp.shape.zorder = 15
+
+            terminal_set.draw(renderer, draw_params_temp)
+
         # plot reference path
         if config.debug.draw_ref_path and ref_path is not None:
             renderer.ax.plot(ref_path[:, 0], ref_path[:, 1],
@@ -840,7 +874,10 @@ def plot_scenario_with_projection_domain(reach_interface: ReachableSetInterface)
     Plots scenario including projection domain of the curvilinear coordinate system used by reach_interface
     """
     rnd = MPRenderer(figsize=(20, 10))
-    reach_interface.config.scenario.draw(rnd, draw_params={"time_begin": 0})
+    draw_param = MPDrawParams()
+    draw_param.time_begin = 0
+
+    reach_interface.config.scenario.draw(rnd, draw_param)
     rnd.render()
 
     if reach_interface.config.planning.coordinate_system == "CVLN":
@@ -857,7 +894,7 @@ def plot_collision_checker(reach_interface: ReachableSetInterface):
     Plots the collision checker used by reach_interface
     """
     rnd = MPRenderer(figsize=(20, 10))
-    cc = reach_interface._reach._reach.collision_checker
+    cc = reach_interface.collision_checker
     cc.draw(rnd)
     rnd.render()
 

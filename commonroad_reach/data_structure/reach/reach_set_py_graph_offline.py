@@ -424,3 +424,12 @@ class PyGraphReachableSetOffline(ReachableSet):
 
     def prune_nodes_not_reaching_final_step(self):
         raise NotImplementedError
+
+    def compute_drivable_area_at_step(self, step: int):
+        pass
+
+    def compute_reachable_set_at_step(self, step: int):
+        pass
+
+    def _reset_reachable_set_at_step(self, step: int, reachable_set):
+        pass
