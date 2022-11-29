@@ -8,7 +8,7 @@ namespace reach {
 /// Each node is a Cartesian product of polygon_lon and polygon_lat. In curvilinear coordinate system, polygon_lon
 /// is a polygon in the longitudinal p-v domain, and polygon_lat is a polygon in the lateral p-v domain; In Cartesian
 /// coordinate system, they represent polygons in the x-v and y-v domains, respectively. ReachNode inherits ReachBaseSet.
-/// In addition, it has a time step, an ID, and lists of parent nodes and child nodes.
+/// In addition, it has a step, an ID, and lists of parent nodes and child nodes.
 class ReachNode {
 private:
     static int cnt_id;
@@ -19,7 +19,7 @@ public:
     ReachNode() = default;
 
     /// Constructor of ReachNode.
-    /// @param step time step of the node
+    /// @param step step of the node
     /// @param polygon_lon longitudinal polygon of the node
     /// @param polygon_lat lateral polygon of the node
     ReachNode(int const& step, ReachPolygonPtr  polygon_lon, ReachPolygonPtr  polygon_lat);

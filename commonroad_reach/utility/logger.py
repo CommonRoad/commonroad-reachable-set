@@ -2,10 +2,11 @@ import logging
 import os
 from datetime import datetime
 
-from commonroad_reach.data_structure.configuration import Configuration
 
-
-def initialize_logger(config: Configuration) -> logging.Logger:
+def initialize_logger(config) -> logging.Logger:
+    """
+    Initializes the logging module and returns a logger.
+    """
     # create log directory
     os.makedirs(config.general.path_logs, exist_ok=True)
 
@@ -31,3 +32,27 @@ def initialize_logger(config: Configuration) -> logging.Logger:
     logger.addHandler(file_handler)
 
     return logger
+
+
+def print_and_log_debug(logger: logging.Logger, message: str, verbose: bool = False):
+    if verbose:
+        print(message)
+    logger.debug(message)
+
+
+def print_and_log_info(logger: logging.Logger, message: str, verbose: bool = True):
+    if verbose:
+        print(message)
+    logger.info(message)
+
+
+def print_and_log_warning(logger: logging.Logger, message: str, verbose: bool = True):
+    if verbose:
+        print(message)
+    logger.warning(message)
+
+
+def print_and_log_error(logger: logging.Logger, message: str, verbose: bool = True):
+    if verbose:
+        print(message)
+    logger.error(message)

@@ -30,7 +30,7 @@ struct BufferConfig {
 
 /// Creates a collision checker with obstacles converted into curvilinear coordinate system.
 /// @param vec_polylines_static vector of polylines describing static obstacles
-/// @param map_step_to_vec_polylines_dynamic map from time step to vector of polylines describing dynamic obstacles
+/// @param map_step_to_vec_polylines_dynamic map from step to vector of polylines describing dynamic obstacles
 /// @param CLCS a curvilinear coordinate system object
 /// @param radius_disc_vehicle radius of the three discs approximating the occupancy of the vehicle
 /// @param num_omp_threads number of threads for parallel computing
@@ -39,9 +39,11 @@ collision::CollisionCheckerPtr create_curvilinear_collision_checker(
         std::vector<Polyline> const& vec_polylines_static,
         std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         std::shared_ptr<geometry::CurvilinearCoordinateSystem> const& CLCS,
-        double const& radius_disc_vehicle, int const& num_omp_threads);
+        double const& radius_disc_vehicle, int const& num_omp_threads, bool const& rasterize_obstacles,
+        bool const& rasterize_exclude_static);
 
 /// Creates axis-aligned bounding boxes in curvilinear coordinate system from polylines in Cartesian coordinate system.
+/// The converted polygons are overapproximated with one AABB in CVLN frame.
 /// @param vec_polylines vector of polylines to be considered
 /// @param CLCS a curvilinear coordinate system object
 /// @param num_threads number of threads for parallel computing
@@ -52,6 +54,23 @@ std::vector<collision::RectangleAABBPtr> create_curvilinear_aabbs_from_cartesian
         std::shared_ptr<geometry::CurvilinearCoordinateSystem> const& CLCS,
         int const& num_threads,
         BufferConfig const& buffer_config);
+
+/// Creates axis-aligned bounding boxes in curvilinear coordinate system from polylines in Cartesian coordinate system.
+/// With Rasterization: The converted polygons are rasterized and approximated with multiple AABBs in CVLN frame. This
+/// reduces overapproximation of converted polygons.
+/// @param vec_polylines vector of polylines to be considered
+/// @param CLCS a curvilinear coordinate system object
+/// @param num_threads number of threads for parallel computing
+/// @param buffer_config buffer config used in Boost.Geometry library
+/// @return vector of pointers to rectangles
+std::tuple<std::vector<collision::RectangleAABBPtr>, std::map<int, std::vector<collision::RectangleAABBPtr>>>
+    create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
+        std::vector<Polyline> const& vec_polylines_static,
+        std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        std::shared_ptr<geometry::CurvilinearCoordinateSystem> const& CLCS,
+        int const& num_threads,
+        BufferConfig const& buffer_config,
+        bool const& rasterize_exclude_static);
 
 /// Converts an Eigen polyline into a Boost.Geometry polygon.
 GeometryPolygon convert_polyline_to_geometry_polygon(Polyline const& polyline);

@@ -19,7 +19,7 @@ debug:
 general:
   name_scenario: "DEU_Test-1_1_T-1"
   # paths are relative to the root directory
-  path_scenarios: scenarios/
+  path_scenarios: "scenarios/"
   path_output: output/
   path_logs: output/logs/
   path_offline_data: output/offline_data/
@@ -27,8 +27,8 @@ general:
 
 planning:
   dt: 0.1
-  time_step_start: 0
-  time_steps_computation: 30
+  step_start: 0
+  steps_computation: 30
 
   # position uncertainty in two directions
   uncertainty_p_lon: 0.01
@@ -53,6 +53,11 @@ reachable_set:
   # 2: Collision check, then repartition (reduces number of nodes)
   # 3: Repartition, collision check, then repartition again (reduces number of nodes)
   mode_repartition: 2
+  # mode for considering the shape of the ego vehicle
+  # 1: Inscribed circle (under-approximation of the shape of the ego vehicle)
+  # 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
+  # 3: Three circle approximation of vehicle occupancy (see Ziegler J., Stiller C. (2010): Fast collision checking for intelligent vehicle motion planning)
+  mode_inflation: 1
   # grid size for rectangle alignment (before collision check)
   size_grid: 0.2
   # grid size for second time rectangle alignment (after collision check)
@@ -63,7 +68,7 @@ reachable_set:
   consider_traffic: true
   # number of thread for C++ reachable set computation
   num_threads: 4
-  # flag whether to prune reach nodes not reaching the final time step
+  # flag whether to prune reach nodes not reaching the final step
   prune_nodes_not_reaching_final_time_step: true
   # name of the pickle file of the offline computation
   name_pickle_offline: offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.4_ver0.0.1.pickle

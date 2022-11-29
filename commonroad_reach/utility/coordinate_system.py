@@ -12,8 +12,9 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
 def create_curvilinear_aabb_from_obstacle(
         obstacle, CLCS: pycrccosy.CurvilinearCoordinateSystem,
-        radius_disc: float, step: int = None, resolution: int = 5, ) -> List[pycrcc.RectAABB]:
-    """Returns a list of axis-aligned bounding boxes from an obstacle in Curvilinear coordinate system.
+        radius_disc: float, step: int = None, resolution: int = 5) -> List[pycrcc.RectAABB]:
+    """
+    Returns a list of axis-aligned bounding boxes in a curvilinear coordinate system from an obstacle.
 
     The shapes are dilated with the disc radius of the ego vehicle to consider its shape.
     """
@@ -40,12 +41,14 @@ def create_curvilinear_aabb_from_obstacle(
 
 def create_curvilinear_and_rasterized_aabb_from_shape(
         shape: Shape, CLCS: pycrccosy.CurvilinearCoordinateSystem) -> List[pycrcc.RectAABB]:
-    """Returns a list of axis-aligned and rasterized boxes from a CommonRoad shape in Curvilinear coordinate system.
+    """
+    Returns a list of axis-aligned and rasterized boxes in Curvilinear coordinate system from a CommonRoad shape.
 
-    Since we use axis-aligned rectangles (bounding boxes) for collision checks in Curvilinear coordinate system,
-    simply using the rectangle with min/max lon/lat vertices converted from the Cartesian coordinates incurs a large
-    over-approximation of the shape of the obstacle. We therefore rasterize (partition) the converted rectangle in
-    the longitudinal direction and adjust their lateral coordinates to reduce the over-approximation.
+    .. note::
+        Since we use axis-aligned rectangles (bounding boxes) for collision checks in Curvilinear coordinate system,
+        simply using the rectangle with min/max lon/lat vertices converted from the Cartesian coordinates incurs a large
+        over-approximation of the shape of the obstacle. We therefore rasterize (partition) the converted rectangle in
+        the longitudinal direction and adjust their lateral coordinates to reduce the over-approximation.
     """
     list_aabb_cvln = []
 
@@ -107,7 +110,9 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
 
 
 def convert_to_curvilinear_vertices(vertices_cart: np.ndarray, CLCS: pycrccosy.CurvilinearCoordinateSystem):
-    """Converts a list of Cartesian vertices to Curvilinear vertices."""
+    """
+    Converts a list of Cartesian vertices to Curvilinear vertices.
+    """
     try:
         list_vertices_cvln = [CLCS.convert_to_curvilinear_coords(vertex[0], vertex[1]) for vertex in vertices_cart]
 
@@ -118,10 +123,12 @@ def convert_to_curvilinear_vertices(vertices_cart: np.ndarray, CLCS: pycrccosy.C
         return list_vertices_cvln
 
 
-def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle: bool):
-    """Returns a list of rectangles converted to Cartesian coordinate system.
+def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle: bool) \
+        -> List[ReachPolygon]:
+    """
+    Returns a list of rectangles converted to Cartesian coordinate system.
 
-    If split_wrt_angle set to True, the converted rectangles will be further split into smaller ones if their
+    If `split_wrt_angle` set to True, the converted rectangles will be further split into smaller ones if their
     upper and lower edges has a difference in angle greater than a threshold. This is to smoothen the plotting.
     """
     if isinstance(rectangle_cvln, ReachPolygon):
@@ -136,7 +143,8 @@ def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoo
         return convert_to_cartesian_polygon((p_lon_min, p_lat_min, p_lon_max, p_lat_max), CLCS, split_wrt_angle)
 
 
-def convert_to_cartesian_polygon(tuple_vertices, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle):
+def convert_to_cartesian_polygon(tuple_vertices, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle) \
+        -> List[ReachPolygon]:
     """Converts a curvilinear polygon into list of cartesian polygons.
 
     If split_wrt_angle is set to True, the converted rectangle will be recursively split if its upper and lower edges

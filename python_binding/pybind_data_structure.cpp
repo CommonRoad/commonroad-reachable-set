@@ -32,6 +32,8 @@ void export_reach_polygon(py::module& m) {
             })
             .def("convexify", &ReachPolygon::convexify)
             .def("minkowski_sum", &ReachPolygon::minkowski_sum)
+            .def("intersects", &ReachPolygon::intersects)
+            .def("intersect_halfspace", &ReachPolygon::intersect_halfspace, py::arg("a"), py::arg("b"), py::arg("c"))
             .def("__repr__", [](ReachPolygon const& polygon) {
                 return "(" + std::to_string(polygon.p_lon_min()) + ", " + std::to_string(polygon.p_lat_min())
                        + ", " + std::to_string(polygon.p_lon_max()) + ", " + std::to_string(polygon.p_lat_max()) + ")";
@@ -41,7 +43,7 @@ void export_reach_polygon(py::module& m) {
 void export_reach_node(py::module& m) {
     py::class_<ReachNode, shared_ptr<ReachNode>>(m, "ReachNode")
             .def(py::init<int const&, ReachPolygonPtr const&, ReachPolygonPtr const&>(),
-                 py::arg("time step"),
+                 py::arg("step"),
                  py::arg("polygon_lon"),
                  py::arg("polygon_lat"))
             .def("p_lon_min", &ReachNode::p_lon_min)
@@ -97,6 +99,7 @@ void export_configuration(py::module& m) {
             .def_readwrite("length", &Ego::length)
             .def_readwrite("width", &Ego::width)
             .def_readwrite("radius_disc", &Ego::radius_disc)
+            .def_readwrite("circle_distance", &Ego::circle_distance)
             .def_readwrite("wheelbase", &Ego::wheelbase)
             .def_readwrite("v_lon_min", &Ego::v_lon_min)
             .def_readwrite("v_lon_max", &Ego::v_lon_max)
@@ -117,6 +120,7 @@ void export_configuration(py::module& m) {
             .def_readwrite("length", &Other::length)
             .def_readwrite("width", &Other::width)
             .def_readwrite("radius_disc", &Other::radius_disc)
+            .def_readwrite("circle_distance", &Other::circle_distance)
             .def_readwrite("wheelbase", &Other::wheelbase)
             .def_readwrite("v_lon_min", &Other::v_lon_min)
             .def_readwrite("v_lon_max", &Other::v_lon_max)
@@ -145,16 +149,20 @@ void export_configuration(py::module& m) {
             .def_readwrite("step_start", &PlanningConfiguration::step_start)
             .def_readwrite("id_lanelet_initial", &PlanningConfiguration::id_lanelet_initial)
             .def_readwrite("coordinate_system", &PlanningConfiguration::coordinate_system)
-            .def_readwrite("reference_point", &PlanningConfiguration::reference_point);
+            .def_readwrite("reference_point", &PlanningConfiguration::reference_point)
+            .def_readwrite("CLCS", &PlanningConfiguration::CLCS);
 
     py::class_<ReachableSetConfiguration, shared_ptr<ReachableSetConfiguration>>(m, "ReachableSetConfiguration")
             .def(py::init<>())
             .def_readwrite("mode_repartition", &ReachableSetConfiguration::mode_repartition)
+            .def_readwrite("mode_inflation", &ReachableSetConfiguration::mode_inflation)
             .def_readwrite("size_grid", &ReachableSetConfiguration::size_grid)
             .def_readwrite("size_grid_2nd", &ReachableSetConfiguration::size_grid_2nd)
             .def_readwrite("radius_terminal_split", &ReachableSetConfiguration::radius_terminal_split)
             .def_readwrite("num_threads", &ReachableSetConfiguration::num_threads)
-            .def_readwrite("prune_nodes",&ReachableSetConfiguration::prune_nodes);
+            .def_readwrite("prune_nodes",&ReachableSetConfiguration::prune_nodes)
+            .def_readwrite("lut_lon_enlargement", &ReachableSetConfiguration::lut_lon_enlargement)
+            .def_readwrite("rasterize_obstacles", &ReachableSetConfiguration::rasterize_obstacles);
 
     py::class_<DebugConfiguration, shared_ptr<DebugConfiguration>>(m, "DebugConfiguration")
             .def(py::init<>())

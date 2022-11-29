@@ -1,0 +1,39 @@
+planning:
+  steps_computation: 40
+  dt: 0.1
+  coordinate_system: "CVLN"
+  reference_point: "REAR"
+
+reachable_set:
+  mode_computation: 2
+  mode_repartition: 2
+  mode_inflation: 3
+  size_grid: 0.25
+  size_grid_2nd: 0.1
+  radius_terminal_split: 0.7
+
+vehicle:
+  ego:
+    # velocity in m/s
+    v_lon_min: 0.0
+    v_lon_max: !!null
+    v_lat_min: -4.0
+    v_lat_max: 4.0
+    # absolute max velocity
+    v_max: 30.0
+
+    # acceleration in m/s^2
+    a_lon_min: -6.0
+    a_lon_max: 3.5
+    a_lat_min: -2.0
+    a_lat_max: 2.0
+    # maximum engine power
+    a_max: 9.81
+
+debug:
+  draw_ref_path: False
+  draw_planning_problem: True
+  draw_icons: False
+  plot_azimuth: -120
+  plot_elevation: 30
+  ax_distance: 7

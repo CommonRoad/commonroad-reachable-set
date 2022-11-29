@@ -15,7 +15,7 @@ class ReachableSet {
 private:
     bool _reachable_set_computed{false};
     bool _pruned{false};
-    std::vector<int> _vec_steps_computed{0};
+    std::vector<int> _vec_steps_computed{};
 
     void _initialize();
 
@@ -42,32 +42,32 @@ public:
 
     int step_start{};
     int step_end{};
-    std::map<int, std::vector<ReachPolygonPtr>> map_time_to_drivable_area;
-    std::map<int, std::vector<ReachNodePtr>> map_time_to_base_set_propagated;
-    std::map<int, std::vector<ReachNodePtr>> map_time_to_reachable_set;
-    std::map<int, std::vector<ReachNodePtr>> map_time_to_reachable_set_pruned;
+    std::map<int, std::vector<ReachPolygonPtr>> map_step_to_drivable_area;
+    std::map<int, std::vector<ReachNodePtr>> map_step_to_base_set_propagated;
+    std::map<int, std::vector<ReachNodePtr>> map_step_to_reachable_set;
+    std::map<int, std::vector<ReachNodePtr>> map_step_to_reachable_set_pruned;
 
     ReachPolygonPtr polygon_zero_state_lon;
     ReachPolygonPtr polygon_zero_state_lat;
 
-    inline std::map<int, std::vector<ReachPolygonPtr>> drivable_area() const { return map_time_to_drivable_area; }
+    inline std::map<int, std::vector<ReachPolygonPtr>> drivable_area() const { return map_step_to_drivable_area; }
 
-    inline std::map<int, std::vector<ReachNodePtr>> reachable_set() const { return map_time_to_reachable_set; }
+    inline std::map<int, std::vector<ReachNodePtr>> reachable_set() const { return map_step_to_reachable_set; }
 
-    inline std::vector<ReachPolygonPtr> drivable_area_at_step(int const& time_step) {
-        if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), time_step)
+    inline std::vector<ReachPolygonPtr> drivable_area_at_step(int const& step) {
+        if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), step)
             == _vec_steps_computed.end()) {
-            cout << "Given time step " << time_step << "for drivable area retrieval is out of range." << endl;
+            cout << "Given step " << step << "for drivable area retrieval is out of range." << endl;
             return {};
-        } else return map_time_to_drivable_area[time_step];
+        } else return map_step_to_drivable_area[step];
     }
 
-    inline std::vector<ReachNodePtr> reachable_set_at_step(int const& time_step) {
-        if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), time_step)
+    inline std::vector<ReachNodePtr> reachable_set_at_step(int const& step) {
+        if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), step)
             == _vec_steps_computed.end()) {
-            cout << "Given time step " << time_step << "for reachable set retrieval is out of range." << endl;
+            cout << "Given step " << step << "for reachable set retrieval is out of range." << endl;
             return {};
-        } else return map_time_to_reachable_set[time_step];
+        } else return map_step_to_reachable_set[step];
     }
 
     void compute(int step_start = 0, int step_end = 0);

@@ -6,7 +6,7 @@ set(CRDC_INCLUDE
 set(CRDC_LIBRARY
         ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
         ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
-        ${CRDC_DIR}/commonroad_dc/libtriangle.a # curvilinear collision checker
+        ${CRDC_DIR}/commonroad_dc/libgpc.a # curvilinear collision checker
         CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant include directories
@@ -19,13 +19,14 @@ set(REACH_INCLUDE_DIR
 # set a variable to hold all relevant cpp source files of reachable sets
 set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_vertex.cpp
-#        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_node.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_line.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_set.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/utility/lut_longitudinal_enlargement.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/utility/enlargement.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
@@ -33,14 +34,14 @@ set(REACH_SOURCE
 
 # ========= building playground
 # 1. create executables which uses the source files set above
-add_executable(playground
-        ${CMAKE_CURRENT_LIST_DIR}/src/playground.cpp
+add_executable(example
+        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp
         ${REACH_SOURCE})
 # 2. include directories
-target_include_directories(playground PRIVATE
+target_include_directories(example PRIVATE
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
-target_link_libraries(playground PRIVATE
+target_link_libraries(example PRIVATE
         ${CRDC_LIBRARY}
         fcl
         ccd

@@ -12,7 +12,10 @@ mode_repartition: 2
 # mode for considering the shape of the ego vehicle
 # 1: Inscribed circle (under-approximation of the shape of the ego vehicle)
 # 2: Circumscribed circle (over-approximation of the shape of the ego vehicle)
+# 3: Three circle approximation of vehicle occupancy (see Ziegler J., Stiller C. (2010): Fast collision checking for intelligent vehicle motion planning)
 mode_inflation: 1
+# path to LUT for enlargement (only used if mode_inflation=3)
+path_to_lut: external/matlab/
 # grid size for discretizing drivable area
 size_grid: 0.2
 # grid size for discretizing drivable area (second time)
@@ -21,11 +24,16 @@ size_grid_2nd: 0.05
 radius_terminal_split: 0.7
 # if set to false, static and dynamic obstacles will be omitted
 consider_traffic: true
+# rasterize obstacles when using the CVLN frame (reduces over-approximation of obstacles after conversion to CVLN)
+rasterize_obstacles: false
+# do not rasterize static obstacles (e.g., road boundaries): parameter only works if rasterize_obstacles=True
+rasterize_exclude_static: true
 # flag whether to prune reach nodes not reaching the final time step
 prune_nodes_not_reaching_final_step: true
+# if set to True, small components (area below a threshold) are excluded in the driving corridor extraction
+exclude_small_components_corridor: false
 # name of the pickle file of the offline computation
-name_pickle_offline: offline_nt40_CVLN_alonmax4.0_alatmax2.0_vlonmax20.0_vlatmax4.0_ms6_dx0.4_ver0.0.1.pickle
-#name_pickle_offline: offline_nt30_CART_amax8.0_vmax30.0_ms6_dx0.5_ver0.0.1.pickle
+name_pickle_offline: offline_nt10_CVLN_alonmax11.5_alatmax2.0_vlonmax50.8_vlatmax4.0_ms6_dx0.5_ver0.0.1.pickle
 # number of multi-steps for graph-based propagation
 n_multi_steps: 6
 # number of threads for C++ backend
