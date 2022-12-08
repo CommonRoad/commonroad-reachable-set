@@ -546,6 +546,7 @@ class ReachableSetConfiguration(ConfigurationBase):
         self.mode_inflation = config_relevant.mode_inflation
         self.consider_traffic = config_relevant.consider_traffic
         self.rasterize_obstacles = config_relevant.rasterize_obstacles
+        self.rasterize_exclude_static = config_relevant.rasterize_exclude_static
 
         self.size_grid = config_relevant.size_grid
         self.size_grid_2nd = config_relevant.size_grid_2nd

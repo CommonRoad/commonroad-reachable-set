@@ -23,6 +23,7 @@ def main():
     reach_interface.compute_reachable_sets()
 
     # ==== plot computation results
+    util_visual.plot_collision_checker(reach_interface)
     util_visual.plot_scenario_with_reachable_sets(reach_interface)
 
 

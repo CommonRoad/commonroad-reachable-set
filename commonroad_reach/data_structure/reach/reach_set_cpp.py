@@ -16,8 +16,9 @@ class CppReachableSet(ReachableSet):
 
     def __init__(self, config: Configuration):
         super().__init__(config)
+        self.collision_checker = CollisionChecker(self.config)
         self._reach = reach.ReachableSet(self.config.convert_to_cpp_configuration(),
-                                         CollisionChecker(self.config).cpp_collision_checker)
+                                         self.collision_checker.cpp_collision_checker)
 
         logger.debug("CppReachableSet initialized.")
 

@@ -16,8 +16,8 @@ ReachPolygonPtr reach::create_zero_state_polygon(double const& dt, double const&
     auto polygon = create_bounding_box(dt, a_min, a_max);
 
     for (auto& gamma: {0.0, 0.5, 1.0}) {
-        auto[tuple_coefficients_upper, tuple_coefficients_lower] =
-        compute_halfspace_coefficients(dt, a_min, a_max, gamma);
+        auto [tuple_coefficients_upper, tuple_coefficients_lower] =
+                compute_halfspace_coefficients(dt, a_min, a_max, gamma);
         polygon->intersect_halfspace(std::get<0>(tuple_coefficients_upper),
                                      std::get<1>(tuple_coefficients_upper),
                                      std::get<2>(tuple_coefficients_upper));
@@ -186,7 +186,7 @@ vector<ReachPolygonPtr> reach::discretize_rectangles(vector<ReachPolygonPtr> con
                                                      double const& size_grid) {
     vector<ReachPolygonPtr> vec_rectangles_discretized;
     vec_rectangles_discretized.reserve(vec_rectangles.size());
-    auto[p_lon_min_rectangles, p_lat_min_rectangles] = tuple_p_min_rectangles;
+    auto [p_lon_min_rectangles, p_lat_min_rectangles] = tuple_p_min_rectangles;
     double p_lon_min, p_lat_min, p_lon_max, p_lat_max;
 
     for (auto const& rectangle: vec_rectangles) {
@@ -207,7 +207,7 @@ vector<ReachPolygonPtr> reach::undiscretize_rectangles(vector<ReachPolygonPtr> c
                                                        double const& size_grid) {
     vector<ReachPolygonPtr> vec_rectangles_undiscretized;
     vec_rectangles_undiscretized.reserve(vec_rectangles.size());
-    auto[p_lon_min_rectangles, p_lat_min_rectangles] = tuple_p_min_rectangles;
+    auto [p_lon_min_rectangles, p_lat_min_rectangles] = tuple_p_min_rectangles;
     double p_lon_min, p_lat_min, p_lon_max, p_lat_max;
 
     for (auto const& rectangle: vec_rectangles) {
@@ -270,7 +270,7 @@ vector<ReachPolygonPtr> reach::check_collision_and_split_rectangles(int const& s
                                                                     double const& radius_terminal_split,
                                                                     int const& num_threads,
                                                                     double const& circle_distance,
-                                                                    const geometry::CurvilinearCoordinateSystem &cosy,
+                                                                    const geometry::CurvilinearCoordinateSystem& cosy,
                                                                     const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                     ReferencePoint reference_point) {
     if (vec_rectangles.empty()) return {};
@@ -402,7 +402,7 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
     else if (diagonal_squared(rectangle) < radius_terminal_squared) return {};
         // case 3: colliding but diagonal is long enough. split into two halves.
     else {
-        auto[rectangle_split_a, rectangle_split_b] = split_rectangle_into_two(rectangle);
+        auto [rectangle_split_a, rectangle_split_b] = split_rectangle_into_two(rectangle);
 
         auto vec_rectangles_split_a =
                 create_collision_free_rectangles(collision_checker, rectangle_split_a, radius_terminal_squared);
@@ -421,7 +421,7 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
                                                                  RectangleAABBPtr const& rectangle,
                                                                  double const& radius_terminal_squared,
                                                                  double const& circle_distance,
-                                                                 const geometry::CurvilinearCoordinateSystem &cosy,
+                                                                 const geometry::CurvilinearCoordinateSystem& cosy,
                                                                  const LUTLongitudinalEnlargement& lut_lon_enlargement,
                                                                  ReferencePoint reference_point) {
 
@@ -447,19 +447,19 @@ vector<RectangleAABBPtr> reach::create_collision_free_rectangles(CollisionChecke
     collision::RectangleAABBConstPtr enlarged_rect = std::make_shared<collision::RectangleAABB>(
             (x_hi - x_lo) / 2.0,
             (y_hi - y_lo) / 2.0,
-            Eigen::Vector2d((x_hi + x_lo) / 2.0,(y_hi + y_lo) / 2.0));
+            Eigen::Vector2d((x_hi + x_lo) / 2.0, (y_hi + y_lo) / 2.0));
 
     // check for collision with enlarged rectangle
     bool col_res = false;
     col_res = collision_checker->collide(enlarged_rect);
     // case 1: enlarged rectangle does not collide, return original rectangle as collision free
     if (not col_res) return {rectangle};
-    // case 2: the diagonal of the original rectangle is smaller than the terminal radius, return nothing
+        // case 2: the diagonal of the original rectangle is smaller than the terminal radius, return nothing
     else if (diagonal_squared(rectangle) < radius_terminal_squared) return {};
-    // case 3: colliding but diagonal is long enough. split original rectangle into two halves.
+        // case 3: colliding but diagonal is long enough. split original rectangle into two halves.
     else {
         // split rectangles into two
-        auto[rectangle_split_a, rectangle_split_b] = split_rectangle_into_two(rectangle);
+        auto [rectangle_split_a, rectangle_split_b] = split_rectangle_into_two(rectangle);
 
         // recursion: check first rectangle for collision
         auto vec_rectangles_split_a =
@@ -626,18 +626,22 @@ ReachNodePtr reach::construct_reach_node(ReachPolygonPtr const& rectangle_drivab
     }
 
     if (not vec_vertices_polygon_lon_new.empty() and not vec_vertices_polygon_lat_new.empty()) {
-        // if there is at least one valid base set
-        auto polygon_lon_new = make_shared<ReachPolygon>(vec_vertices_polygon_lon_new);
-        auto polygon_lat_new = make_shared<ReachPolygon>(vec_vertices_polygon_lat_new);
-        polygon_lon_new->convexify();
-        polygon_lat_new->convexify();
+        try {
+            // if there is at least one valid base set
+            auto polygon_lon_new = make_shared<ReachPolygon>(vec_vertices_polygon_lon_new);
+            auto polygon_lat_new = make_shared<ReachPolygon>(vec_vertices_polygon_lat_new);
+            polygon_lon_new->convexify();
+            polygon_lat_new->convexify();
 
-        auto reach_node =
-                make_shared<ReachNode>(-1, polygon_lon_new, polygon_lat_new);
-        reach_node->vec_nodes_source = vec_base_sets_parent;
+            auto reach_node =
+                    make_shared<ReachNode>(-1, polygon_lon_new, polygon_lat_new);
+            reach_node->vec_nodes_source = vec_base_sets_parent;
 
-        return reach_node;
-
+            return reach_node;
+        }
+        catch (std::exception& e) {
+            return nullptr;
+        }
     } else
         return nullptr;
 }
