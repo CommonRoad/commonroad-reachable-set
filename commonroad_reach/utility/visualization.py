@@ -210,6 +210,7 @@ def generate_default_drawing_parameters(config: Configuration) -> MPDrawParams:
 
     draw_params.dynamic_obstacle.draw_icon = config.debug.draw_icons
     draw_params.dynamic_obstacle.trajectory.draw_trajectory = True
+    draw_params.dynamic_obstacle.occupancy.draw_occupancies = False
     draw_params.lanelet_network.lanelet.show_label = config.debug.draw_lanelet_labels
     draw_params.planning_problem.initial_state.state.draw_arrow = False
     draw_params.planning_problem.initial_state.state.radius = 0.5
