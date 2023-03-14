@@ -118,11 +118,6 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
 
     util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
 
-    # todo: move this to config file
-    if config.debug.save_config:
-        config.save(path_output, str(scenario.scenario_id))
-        util_logger.print_and_log_debug(logger, "\tConfiguration file saved.", verbose=False)
-
 
 def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
                                      step_start: int = 0, step_end: int = 0, steps: List[int] = None,
