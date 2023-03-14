@@ -321,13 +321,14 @@ class VehicleConfiguration(ConfigurationBase):
             # distances front/rear axle to vehicle center
             self.wb_front_axle = vehicle_parameters.a
             self.wb_rear_axle = vehicle_parameters.b
-            # wheelbase
-            self.wheelbase = self.wb_front_axle + self.wb_rear_axle
 
             # overwrite with parameters given by vehicle ID if they are explicitly provided in the *.yaml file
             for key, value in config_relevant.items():
                 if value is not None:
                     setattr(self, key, value)
+
+            # wheelbase
+            self.wheelbase = self.wb_front_axle + self.wb_rear_axle
 
             self.radius_disc, self.circle_distance = \
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
