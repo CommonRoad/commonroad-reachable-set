@@ -3,7 +3,7 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon
 import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
@@ -132,14 +132,6 @@ class ReachPolygon(ABC):
         if isinstance(self._shapely_polygon, Polygon):
             list_x, list_y = self._shapely_polygon.exterior.coords.xy
 
-        # TODO Maybe remove
-        elif isinstance(self._shapely_polygon, MultiPolygon):
-            list_x = []
-            list_y = []
-            for polygon in self._shapely_polygon:
-                list_x.extend(polygon.exterior.coords.xy[0])
-                list_y.extend(polygon.exterior.coords.xy[1])
-
         else:
             message = "Polygon type error."
             util_logger.print_and_log_error(logger, message)
@@ -196,18 +188,10 @@ class ReachPolygon(ABC):
         return ReachPolygon(list_vertices)
 
     @staticmethod
-    def get_vertices(polygon: Union[Polygon, MultiPolygon]) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def get_vertices(polygon: Polygon) -> List[Tuple[np.ndarray, np.ndarray]]:
         """Returns the list of vertices of the polygon."""
         if isinstance(polygon, Polygon):
             list_x, list_y = polygon.exterior.coords.xy
-
-        # TODO Maybe remove
-        elif isinstance(polygon, MultiPolygon):
-            list_x = []
-            list_y = []
-            for plg in polygon:
-                list_x.extend(plg.exterior.coords.xy[0])
-                list_y.extend(plg.exterior.coords.xy[1])
 
         else:
             message = "Polygon type error."
