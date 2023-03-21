@@ -71,7 +71,8 @@ class CMakeBuild(build_ext):
             return None
 
         # pass version of current python binary
-        cmake_args += ['-DPYTHON_VER=' + platform.python_version()[0:3]]
+        python_ver = platform.python_version()[0] + platform.python_version()[2]
+        cmake_args += ['-DPYTHON_VER=' + python_ver]
 
         # add tests
         if 'ADD_TESTS' in os.environ:
@@ -128,7 +129,7 @@ setup(name='commonroad-reach', version=__version__,
       install_requires=["commonroad-io>=2022.3",
                         "commonroad-route-planner>=2022.3",
                         "omegaconf>=2.1.1",
-                        "setuptools>=50.3.2",
+                        "setuptools>=62.1.0",
                         "numpy>=1.19.2",
                         "shapely>=1.7.0",
                         "enum34>=1.1.10",
