@@ -44,6 +44,10 @@ class ReachPolygon(ABC):
         return self._shapely_polygon
 
     @property
+    def bounds(self) -> List:
+        return self._bounds
+
+    @property
     def p_min(self):
         """
         Minimum position in the position-velocity domain.
@@ -128,6 +132,7 @@ class ReachPolygon(ABC):
         if isinstance(self._shapely_polygon, Polygon):
             list_x, list_y = self._shapely_polygon.exterior.coords.xy
 
+        # TODO Maybe remove
         elif isinstance(self._shapely_polygon, MultiPolygon):
             list_x = []
             list_y = []
@@ -196,6 +201,7 @@ class ReachPolygon(ABC):
         if isinstance(polygon, Polygon):
             list_x, list_y = polygon.exterior.coords.xy
 
+        # TODO Maybe remove
         elif isinstance(polygon, MultiPolygon):
             list_x = []
             list_y = []
