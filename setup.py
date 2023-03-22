@@ -110,11 +110,11 @@ class CMakeBuild(build_ext):
 setup(name='commonroad-reach', version=__version__,
       description='CommonRoad Reach: A Toolbox for Computing Reachable Sets of Automated Vehicles',
       keywords='autonomous automated vehicles driving motion planning',
-      url='https://commonroad.in.tum.de/',
+      url='https://commonroad.in.tum.de/tools/commonroad-reach',
       project_urls={
-          'Documentation': '',
-          'Forum': '',
-          'Source': ','
+          'Documentation': 'https://commonroad.in.tum.de/docs/commonroad-reach/',
+          'Forum': 'https://commonroad.in.tum.de/forum/c/comonroad-reach/19',
+          'Source': 'https://gitlab.lrz.de/tum-cps/commonroad-reach'
       },
       author='Cyber-Physical Systems Group, Technical University of Munich',
       author_email='commonroad@lists.lrz.de',
@@ -125,8 +125,8 @@ setup(name='commonroad-reach', version=__version__,
           CMakeExtension("commonroad_reach"),
       ],
       cmdclass={"build_ext": CMakeBuild},
-
-      install_requires=["commonroad-io>=2022.3",
+      python_requires='>=3.7',
+      install_requires=["commonroad-io>=2023.1",
                         "commonroad-route-planner>=2022.3",
                         "omegaconf>=2.1.1",
                         "setuptools>=62.1.0",

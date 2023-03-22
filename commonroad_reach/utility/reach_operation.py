@@ -44,7 +44,7 @@ def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPol
         a, b, c = tuple_coefficients_lower
         polygon_intersected = polygon_intersected.intersect_halfspace(a, b, c)
 
-    return ReachPolygon.from_polygon(polygon_intersected)
+    return polygon_intersected
 
 
 def create_bounding_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -372,8 +372,8 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
     # iterate through adjacent propagated sets
     for idx_base_set_adjacent in list_idx_propagated_sets_adjacent:
         propagated_set_adjacent = list_propagated_set[idx_base_set_adjacent]
-        polygon_lon = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lon)
-        polygon_lat = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lat)
+        polygon_lon = propagated_set_adjacent.polygon_lon
+        polygon_lat = propagated_set_adjacent.polygon_lat
         # cut down to position range of the drivable area rectangle
         try:
             polygon_lon = polygon_lon.intersect_halfspace(1, 0, rectangle_drivable_area.p_lon_max)
@@ -610,3 +610,4 @@ def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrre
                 set_nodes_overlap.add(node_reach)
 
     return list(set_nodes_overlap)
+

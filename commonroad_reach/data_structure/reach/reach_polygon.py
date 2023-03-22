@@ -3,6 +3,7 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
+from shapely import Point
 from shapely.geometry import Polygon
 import commonroad_reach.utility.logger as util_logger
 
@@ -141,6 +142,32 @@ class ReachPolygon(ABC):
 
         return list_vertices[:-1]
 
+    @property
+    def is_empty(self):
+        """
+        True if the set of points in this polygon is empty, else False
+        """
+        return self._shapely_polygon.is_empty
+
+    @property
+    def convex_hull(self) -> Polygon:
+        """
+        The convex hull of the polygon
+        """
+        return self._shapely_polygon.convex_hull
+
+    def intersects(self, other_polygon: "ReachPolygon") -> bool:
+        """
+        Returns True if geometries intersect, else False
+        """
+        return self._shapely_polygon.intersects(other_polygon._shapely_polygon)
+
+    def contains(self, point: Point) -> bool:
+        """
+        Returns True if the geometry contains the other, else False
+        """
+        return self._shapely_polygon.contains(point)
+
     def clone(self, convexify: bool) -> "ReachPolygon":
         """
         Returns a cloned (and convexified) polygon.
@@ -162,7 +189,18 @@ class ReachPolygon(ABC):
 
         if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
             return ReachPolygon.from_polygon(polygon_intersected)
+        else:
+            return None
 
+    def intersection(self, other_polygon: "ReachPolygon") -> Union["ReachPolygon", None]:
+        """
+        Computes intersection of a reach polygon with another reach polygon.
+        If polygons intersect, resulting intersection is returned as a reach polygon, else None.
+        """
+        polygon_intersected = self._shapely_polygon.intersection(other_polygon._shapely_polygon)
+
+        if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
+            return ReachPolygon.from_polygon(polygon_intersected)
         else:
             return None
 
@@ -272,3 +310,4 @@ class ReachPolygon(ABC):
                 list_vertices.append(vertex_new)
 
         return Polygon(list_vertices)
+
