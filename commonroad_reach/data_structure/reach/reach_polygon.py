@@ -189,7 +189,18 @@ class ReachPolygon(ABC):
 
         if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
             return ReachPolygon.from_polygon(polygon_intersected)
+        else:
+            return None
 
+    def intersection(self, other_polygon: "ReachPolygon") -> Union["ReachPolygon", None]:
+        """
+        Computes intersection of a reach polygon with another reach polygon.
+        If polygons intersect, resulting intersection is returned as a reach polygon, else None.
+        """
+        polygon_intersected = self._shapely_polygon.intersection(other_polygon._shapely_polygon)
+
+        if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
+            return ReachPolygon.from_polygon(polygon_intersected)
         else:
             return None
 

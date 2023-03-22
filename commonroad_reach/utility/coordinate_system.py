@@ -89,10 +89,8 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
 
         # find the intersection with the polygon of the obstacle
         polygon_intersection = polygon_obstacle_cart.intersection(polygon_partition_cart)
-        if polygon_intersection.is_empty:
+        if polygon_intersection is None:
             continue
-
-        polygon_intersection = ReachPolygon.from_polygon(polygon_intersection)
 
         # convert the vertices of the intersected polygon to CVLN and find the new lateral extremum coordinates
         list_p_lat = []
