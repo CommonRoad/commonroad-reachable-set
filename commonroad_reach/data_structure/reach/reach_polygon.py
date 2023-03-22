@@ -141,6 +141,13 @@ class ReachPolygon(ABC):
 
         return list_vertices[:-1]
 
+    @property
+    def is_empty(self):
+        """
+        True if the set of points in this polygon is empty, else False
+        """
+        return self._shapely_polygon.is_empty
+
     def clone(self, convexify: bool) -> "ReachPolygon":
         """
         Returns a cloned (and convexified) polygon.
@@ -272,3 +279,4 @@ class ReachPolygon(ABC):
                 list_vertices.append(vertex_new)
 
         return Polygon(list_vertices)
+

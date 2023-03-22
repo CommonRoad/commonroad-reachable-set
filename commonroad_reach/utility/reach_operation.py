@@ -44,7 +44,7 @@ def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPol
         a, b, c = tuple_coefficients_lower
         polygon_intersected = polygon_intersected.intersect_halfspace(a, b, c)
 
-    return ReachPolygon.from_polygon(polygon_intersected)
+    return polygon_intersected
 
 
 def create_bounding_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -610,3 +610,4 @@ def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrre
                 set_nodes_overlap.add(node_reach)
 
     return list(set_nodes_overlap)
+
