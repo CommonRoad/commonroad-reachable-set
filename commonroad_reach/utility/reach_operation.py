@@ -372,8 +372,8 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
     # iterate through adjacent propagated sets
     for idx_base_set_adjacent in list_idx_propagated_sets_adjacent:
         propagated_set_adjacent = list_propagated_set[idx_base_set_adjacent]
-        polygon_lon = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lon)
-        polygon_lat = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lat)
+        polygon_lon = propagated_set_adjacent.polygon_lon
+        polygon_lat = propagated_set_adjacent.polygon_lat
         # cut down to position range of the drivable area rectangle
         try:
             polygon_lon = polygon_lon.intersect_halfspace(1, 0, rectangle_drivable_area.p_lon_max)

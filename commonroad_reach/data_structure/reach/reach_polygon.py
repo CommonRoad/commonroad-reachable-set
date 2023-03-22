@@ -3,6 +3,7 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
+from shapely import Point
 from shapely.geometry import Polygon
 import commonroad_reach.utility.logger as util_logger
 
@@ -147,6 +148,25 @@ class ReachPolygon(ABC):
         True if the set of points in this polygon is empty, else False
         """
         return self._shapely_polygon.is_empty
+
+    @property
+    def convex_hull(self) -> Polygon:
+        """
+        The convex hull of the polygon
+        """
+        return self._shapely_polygon.convex_hull
+
+    def intersects(self, other_polygon: "ReachPolygon") -> bool:
+        """
+        Returns True if geometries intersect, else False
+        """
+        return self._shapely_polygon.intersects(other_polygon._shapely_polygon)
+
+    def contains(self, point: Point) -> bool:
+        """
+        Returns True if the geometry contains the other, else False
+        """
+        return self._shapely_polygon.contains(point)
 
     def clone(self, convexify: bool) -> "ReachPolygon":
         """
