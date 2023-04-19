@@ -1,5 +1,6 @@
 import logging
 from typing import List, Dict
+from shapely.geometry import Point
 
 import commonroad_dc.pycrcc as pycrcc
 from commonroad_dc.boundary import boundary
@@ -9,7 +10,7 @@ import commonroad_reach.pycrreach as reach
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 
-from commonroad.geometry.shape import Rectangle, ShapeGroup, Polygon
+from commonroad.geometry.shape import Rectangle, ShapeGroup, Polygon, Circle
 from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
 from commonroad.scenario.scenario import Scenario, LaneletNetwork
 
@@ -201,7 +202,8 @@ class CollisionChecker:
 
                     if isinstance(shape, Rectangle) or isinstance(shape, Polygon):
                         list_vertices_polygons_dynamic.append(shape.vertices)
-
+                    elif isinstance(shape, Circle):
+                        list_vertices_polygons_dynamic.append(Polygon(shape.shapely_object.buffer(0.01).exterior).vertices)
                     elif isinstance(shape, ShapeGroup):
                         for shape in shape.shapes:
                             list_vertices_polygons_dynamic.append(shape.vertices)
