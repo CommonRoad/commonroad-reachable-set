@@ -3,13 +3,13 @@ pybind11_add_module(pycrreach MODULE
         pybind.cpp
         pybind_data_structure.cpp
         pybind_utility.cpp
-        pybind_reachset.cpp
-        ${REACH_SOURCE})
+        pybind_reachset.cpp)
 # add include directories
 target_include_directories(pycrreach PRIVATE
         ${REACH_INCLUDE_DIR})
 # link to external libraries
 target_link_libraries(pycrreach PRIVATE
+        crreach
         yaml-cpp
         ${CRDC_LIBRARY}
         fcl

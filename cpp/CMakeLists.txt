@@ -32,16 +32,32 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
         CACHE STRING "" FORCE)
 
+# ========= building library
+# 1. create library from source files above
+add_library(crreach STATIC ${REACH_SOURCE})
+# build position independent code so that we can link this in the Python bindings (builds shared lib)
+set_property(TARGET crreach PROPERTY POSITION_INDEPENDENT_CODE ON)
+# 2. include directories
+target_include_directories(crreach PRIVATE
+        ${REACH_INCLUDE_DIR})
+# 3. link to external libraries
+target_link_libraries(crreach PRIVATE
+        ${CRDC_LIBRARY}
+        fcl
+        ccd
+        ${S11N_LIBRARY}
+        yaml-cpp)
+
 # ========= building playground
 # 1. create executables which uses the source files set above
 add_executable(example
-        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp
-        ${REACH_SOURCE})
+        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp)
 # 2. include directories
 target_include_directories(example PRIVATE
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
 target_link_libraries(example PRIVATE
+        crreach
         ${CRDC_LIBRARY}
         fcl
         ccd
