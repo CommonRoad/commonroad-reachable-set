@@ -16,6 +16,7 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility.sweep_line import SweepLine
 from commonroad_reach import pycrreach
+from commonroad_reach.data_structure.reach.driving_corridor import ConnectedComponent
 
 
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -611,3 +612,47 @@ def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrre
 
     return list(set_nodes_overlap)
 
+
+def determine_connected_components(list_nodes_reach, exclude_small_area: bool = False) -> List[ConnectedComponent]:
+    """
+    Determines and returns the connected reachable sets in the position domain.
+
+    Connected components are sorted according to a heuristic (area of connected reachable sets).
+
+    :param list_nodes_reach: list of reach nodes
+    :param exclude_small_area: excludes connected components with an area smaller than the threshold and if there are
+    more than 1 connected component at the current time step
+    :return: list of connected reachable sets
+    """
+    num_digits = 2
+
+    if type(list_nodes_reach[0]) == pycrreach.ReachNode:
+        overlap = pycrreach.connected_reachset_boost(list_nodes_reach, num_digits)
+    else:
+        overlap = connected_reachset_py(list_nodes_reach, num_digits)
+
+    # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
+    adjacency = []
+    for v in overlap.values():
+        adjacency += v
+
+    list_connected_component = list()
+    # create graph with nodes = reach nodes and edges = adjacency status
+    graph = nx.Graph()
+    graph.add_nodes_from(list(range(len(list_nodes_reach))))
+    graph.add_edges_from(adjacency)
+
+    for set_indices_nodes_reach_connected in nx.connected_components(graph):
+        list_nodes_reach_in_cc = [list_nodes_reach[idx] for idx in set_indices_nodes_reach_connected]
+        connected_component = ConnectedComponent(list_nodes_reach_in_cc)
+
+        # todo: add threshold to config?
+        if exclude_small_area and len(set_indices_nodes_reach_connected) >= 2 and connected_component.area < 0.05:
+            continue
+
+        list_connected_component.append(connected_component)
+
+    # sort connected components based on their areas
+    list_connected_component.sort(key=lambda cc: cc.area, reverse=True)
+
+    return list_connected_component
