@@ -532,7 +532,7 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
     return dict_adjacency
 
 
-def lon_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
+def lon_interval_connected_set(connected_set: ConnectedComponent):
     """
     Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions.
     """
@@ -551,7 +551,7 @@ def lon_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.Re
     return min_connected_set, max_connected_set
 
 
-def lat_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
+def lat_interval_connected_set(connected_set: ConnectedComponent):
     """
     Projects a connected set onto lateral position domain and returns min/max lateral positions.
     """
@@ -570,7 +570,7 @@ def lat_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.Re
     return min_connected_set, max_connected_set
 
 
-def lon_velocity_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
+def lon_velocity_interval_connected_set(connected_set: ConnectedComponent):
     """
     Projects a connected reachable set onto longitudinal velocity domain and returns min/max longitudinal velocities
     """
