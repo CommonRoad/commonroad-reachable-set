@@ -4,17 +4,9 @@ pybind11_add_module(pycrreach MODULE
         pybind_data_structure.cpp
         pybind_utility.cpp
         pybind_reachset.cpp)
-# add include directories
-target_include_directories(pycrreach PRIVATE
-        ${REACH_INCLUDE_DIR})
 # link to external libraries
 target_link_libraries(pycrreach PRIVATE
         crreach
-        yaml-cpp
-        ${CRDC_LIBRARY}
-        fcl
-        ccd
-        ${S11N_LIBRARY}
         pybind11::module)
 
 message(STATUS "Found python bindings for pycrreach.")
