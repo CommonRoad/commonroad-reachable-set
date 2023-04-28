@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Union
 
 import numpy as np
+import networkx as nx
 
 logger = logging.getLogger(__name__)
 from math import ceil, floor
@@ -16,7 +17,6 @@ from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility.sweep_line import SweepLine
 from commonroad_reach import pycrreach
-from commonroad_reach.data_structure.reach.driving_corridor import ConnectedComponent
 
 
 def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -532,7 +532,7 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
     return dict_adjacency
 
 
-def lon_interval_connected_set(connected_set: ConnectedComponent):
+def lon_interval_connected_set(connected_set):
     """
     Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions.
     """
@@ -551,7 +551,7 @@ def lon_interval_connected_set(connected_set: ConnectedComponent):
     return min_connected_set, max_connected_set
 
 
-def lat_interval_connected_set(connected_set: ConnectedComponent):
+def lat_interval_connected_set(connected_set):
     """
     Projects a connected set onto lateral position domain and returns min/max lateral positions.
     """
@@ -570,7 +570,7 @@ def lat_interval_connected_set(connected_set: ConnectedComponent):
     return min_connected_set, max_connected_set
 
 
-def lon_velocity_interval_connected_set(connected_set: ConnectedComponent):
+def lon_velocity_interval_connected_set(connected_set):
     """
     Projects a connected reachable set onto longitudinal velocity domain and returns min/max longitudinal velocities
     """
@@ -613,7 +613,7 @@ def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrre
     return list(set_nodes_overlap)
 
 
-def determine_connected_components(list_nodes_reach, exclude_small_area: bool = False) -> List[ConnectedComponent]:
+def determine_connected_components(list_nodes_reach, exclude_small_area: bool = False):
     """
     Determines and returns the connected reachable sets in the position domain.
 
@@ -624,6 +624,8 @@ def determine_connected_components(list_nodes_reach, exclude_small_area: bool = 
     more than 1 connected component at the current time step
     :return: list of connected reachable sets
     """
+    from commonroad_reach.data_structure.reach.driving_corridor import ConnectedComponent
+
     num_digits = 2
 
     if type(list_nodes_reach[0]) == pycrreach.ReachNode:

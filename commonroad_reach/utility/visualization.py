@@ -444,10 +444,11 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
     """
     Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor.
     """
-    util_logger.print_and_log_info(logger, "* Plotting full 2D driving corridor ...")
     # set ups
     config = reach_interface.config
     scenario = config.scenario
+
+    util_logger.print_and_log_info(logger, "* Plotting full 2D driving corridor ...", verbose=config.debug.verbose_info)
 
     planning_problem = config.planning_problem
 
