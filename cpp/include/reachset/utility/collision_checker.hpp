@@ -111,14 +111,16 @@ collision::CollisionCheckerPtr create_cartesian_collision_checker(
         double const& radius_disc_vehicle, int const& num_omp_threads);
 
 
-/// BLA
-/// BLA
-/// BLA
+/// creates Cartesian collision polygons from a given polyline. The input polyline is inflated (Minkowski Sum) using
+/// Boost.Geometry's Buffer functions
+/// @param vec_polylines vector of polylines to be considered
+/// @param num_threads number of threads for parallel computing
+/// @param buffer_config buffer config used in Boost.Geometry library
 std::vector<collision::PolygonPtr> create_cartesian_polygons_from_polylines(
         std::vector<Polyline> const& vec_polylines,
         int const& num_threads,
         BufferConfig const& buffer_config);
 
-// BLA
+// Creates an collision Polygon from the input Polyline.
 collision::PolygonPtr create_polygon_from_polyline(Polyline const& polyline);
 }

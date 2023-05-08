@@ -30,7 +30,6 @@ CollisionCheckerPtr reach::create_cartesian_collision_checker(
 
 
     // 1. process static obstacles - inflate each polyline and convert to collision Polygon
-    // TODO implement this function
     auto vec_polygons_CART_static = create_cartesian_polygons_from_polylines(
             vec_polylines_static, num_omp_threads, buffer_config);
 
@@ -41,7 +40,6 @@ CollisionCheckerPtr reach::create_cartesian_collision_checker(
 
     // 2. process dynamic obstacles - create a shape group for each time step and add inflated Polygons (from polylines) into it
     for (auto const&[step, vec_polylines_dynamic]: map_step_to_vec_polylines_dynamic) {
-        // TODO implement this function
         auto vec_polygons_CART_dynamic = create_cartesian_polygons_from_polylines(
                 vec_polylines_dynamic, num_omp_threads, buffer_config);
 
@@ -155,7 +153,6 @@ vector<collision::PolygonPtr> reach::create_cartesian_polygons_from_polylines(
             auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
 
             if (polyline_inflated.size() >= 2) {
-            // TODO implement this function
                 vec_polygons_thread.emplace_back(create_polygon_from_polyline(polyline_inflated));
             }
         }
@@ -171,7 +168,6 @@ vector<collision::PolygonPtr> reach::create_cartesian_polygons_from_polylines(
 
 
 PolygonPtr reach::create_polygon_from_polyline(Polyline const& polyline) {
-    // TODO implement this
     std::vector<Eigen::Vector2d> outer_vertices;
     std::vector<std::vector<Eigen::Vector2d>> hole_vertices;
     // std::vector<collision::TriangleConstPtr> mesh_triangles;
@@ -304,7 +300,6 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
     return make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
 }
 
-//TODO marker
 vector<RectangleAABBPtr> reach::create_curvilinear_aabbs_from_cartesian_polylines(
         vector<Polyline> const& vec_polylines,
         CurvilinearCoordinateSystemPtr const& CLCS,
