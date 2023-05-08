@@ -34,8 +34,7 @@ class CollisionChecker:
 
     def _initialize(self):
         if self.config.planning.coordinate_system == "CART":
-            # self.cpp_collision_checker = self._create_cartesian_collision_checker()
-            self.cpp_collision_checker = self._create_cartesian_collision_checker_cpp()
+            self.cpp_collision_checker = self._create_cartesian_collision_checker()
 
         elif self.config.planning.coordinate_system == "CVLN":
             self.cpp_collision_checker = self._create_curvilinear_collision_checker()
@@ -44,20 +43,6 @@ class CollisionChecker:
             message = "Undefined coordinate system."
             util_logger.print_and_log_error(logger, message)
             raise Exception(message)
-
-    def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:
-        """
-        Creates a Cartesian collision checker.
-
-        The collision checker is created by feeding in the scenario with road boundaries.
-        """
-        scenario_cc = self.create_scenario_with_road_boundaries(self.config)
-        # parameter dictionary for inflation to consider the shape of the ego vehicle
-        dict_param = {"minkowski_sum_circle": True,
-                      "minkowski_sum_circle_radius": self.config.vehicle.ego.radius_inflation,
-                      "resolution": 5}
-
-        return self.create_cartesian_collision_checker_from_scenario(scenario_cc, params=dict_param)
 
     @staticmethod
     def create_scenario_with_road_boundaries(config: Configuration) -> Scenario:
@@ -109,7 +94,7 @@ class CollisionChecker:
 
         return collision_checker
 
-    def _create_cartesian_collision_checker_cpp(self) -> pycrcc.CollisionChecker:
+    def _create_cartesian_collision_checker(self) -> pycrcc.CollisionChecker:
         """
         Creates a Cartesian collision checker.
 
