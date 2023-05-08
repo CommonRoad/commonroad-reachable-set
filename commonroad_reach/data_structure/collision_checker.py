@@ -34,7 +34,8 @@ class CollisionChecker:
 
     def _initialize(self):
         if self.config.planning.coordinate_system == "CART":
-            self.cpp_collision_checker = self._create_cartesian_collision_checker()
+            # self.cpp_collision_checker = self._create_cartesian_collision_checker()
+            self.cpp_collision_checker = self._create_cartesian_collision_checker_cpp()
 
         elif self.config.planning.coordinate_system == "CVLN":
             self.cpp_collision_checker = self._create_curvilinear_collision_checker()
@@ -78,8 +79,8 @@ class CollisionChecker:
             scenario_cc.add_objects(scenario.obstacles)
 
         # add road boundary static object
-        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="aligned_triangulation",
-                                                                         axis=1)
+        object_road_boundary, _ = boundary.create_road_boundary_obstacle(scenario_cc, method="obb_rectangles",
+                                                                         width=2e-3)
         scenario_cc.add_objects(object_road_boundary)
 
         return scenario_cc
@@ -107,6 +108,31 @@ class CollisionChecker:
         collision_checker.add_collision_object(shape_group)
 
         return collision_checker
+
+    def _create_cartesian_collision_checker_cpp(self) -> pycrcc.CollisionChecker:
+        """
+        Creates a Cartesian collision checker.
+
+        The collision checker is created by adding a shape group containing occupancies of all static obstacles, and a
+        time variant object containing shape groups of occupancies of all dynamic obstacles at different steps.
+        """
+        scenario = self.config.scenario
+        lanelet_network = self.config.planning.lanelet_network
+
+        # static obstacles
+        list_obstacles_static = self.retrieve_static_obstacles(scenario, lanelet_network,
+                                                               self.config.reachable_set.consider_traffic)
+        list_vertices_polygons_static = self.obtain_vertices_of_polygons_from_static_obstacles(list_obstacles_static)
+
+        # dynamic obstacles
+        list_obstacles_dynamic = scenario.dynamic_obstacles
+        dict_time_to_list_vertices_polygons_dynamic = \
+            self.obtain_vertices_of_polygons_for_dynamic_obstacles(list_obstacles_dynamic,
+                                                                   self.config.reachable_set.consider_traffic)
+
+        return reach.create_cartesian_collision_checker(list_vertices_polygons_static,
+                                                        dict_time_to_list_vertices_polygons_dynamic,
+                                                        self.config.vehicle.ego.radius_inflation, 4)
 
     def _create_curvilinear_collision_checker(self) -> pycrcc.CollisionChecker:
         """
