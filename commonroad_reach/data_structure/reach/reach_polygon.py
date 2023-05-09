@@ -159,7 +159,7 @@ class ReachPolygon(ABC):
     @property
     def area(self) -> float:
         """
-        The are of the polygon
+        The area of the polygon
         """
         return self._shapely_polygon.area
 
