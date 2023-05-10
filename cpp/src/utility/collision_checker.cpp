@@ -14,6 +14,51 @@ BufferConfig::BufferConfig(double const& buffer_distance) :
         circle_strategy(bg::strategy::buffer::point_circle(points_per_circle)) {
 }
 
+CollisionCheckerPtr reach::create_cartesian_collision_checker(
+        vector<Polyline> const& vec_polylines_static,
+        map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        double const& radius_disc_vehicle,
+        int const& num_omp_threads) {
+
+    // set up buffer config for inflation (Minkwoski sum)
+    auto buffer_config = reach::BufferConfig(radius_disc_vehicle);
+
+    // shape group for all static obstacles
+    auto shape_group_static = make_shared<ShapeGroup>();
+    // TVO for all dynamic obstacles: at each step, the TVO contains a shape group of all dynamic AABBs
+    auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
+
+
+    // 1. process static obstacles - inflate each polyline and convert to collision Polygon
+    auto vec_polygons_CART_static = create_cartesian_polygons_from_polylines(
+            vec_polylines_static, num_omp_threads, buffer_config);
+
+    // add the static polygons to a static shape group
+    for (auto const& polygon: vec_polygons_CART_static) {
+        shape_group_static->addToGroup(polygon);
+    }
+
+    // 2. process dynamic obstacles - create a shape group for each time step and add inflated Polygons (from polylines) into it
+    for (auto const&[step, vec_polylines_dynamic]: map_step_to_vec_polylines_dynamic) {
+        auto vec_polygons_CART_dynamic = create_cartesian_polygons_from_polylines(
+                vec_polylines_dynamic, num_omp_threads, buffer_config);
+
+        auto shape_group = make_shared<ShapeGroup>();
+        for (auto const& polygon: vec_polygons_CART_dynamic) {
+            shape_group->addToGroup(polygon);
+        }
+        tvo_dynamic->appendObstacle(shape_group);
+    }
+
+    // create the collision checker
+    auto collision_checker = make_shared<collision::CollisionChecker>();
+    collision_checker->addCollisionObject(shape_group_static);
+    collision_checker->addCollisionObject(tvo_dynamic);
+
+    return collision_checker;
+}
+
+
 CollisionCheckerPtr reach::create_curvilinear_collision_checker(
         vector<Polyline> const& vec_polylines_static,
         map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
@@ -87,6 +132,52 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
     return collision_checker;
 }
 
+vector<collision::PolygonPtr> reach::create_cartesian_polygons_from_polylines(
+        vector<Polyline> const& vec_polylines,
+        int const& num_threads,
+        BufferConfig const& buffer_config) {
+
+    // initialize output vector of collision Polygons
+    vector<PolygonPtr> vec_polygons;
+    vec_polygons.reserve(vec_polylines.size());
+
+#pragma omp parallel num_threads(num_threads) default(none) shared(vec_polylines, buffer_config, vec_polygons)
+    {
+        vector<PolygonPtr> vec_polygons_thread;
+        vec_polygons_thread.reserve(vec_polylines.size());
+
+#pragma omp for nowait
+        for (auto const& polyline: vec_polylines) {
+            auto polygon_geometry = convert_polyline_to_geometry_polygon(polyline);
+            auto polygon_inflated = inflate_polygon(polygon_geometry, buffer_config);
+            auto polyline_inflated = convert_geometry_polygon_to_polyline(polygon_inflated);
+
+            if (polyline_inflated.size() >= 2) {
+                vec_polygons_thread.emplace_back(create_polygon_from_polyline(polyline_inflated));
+            }
+        }
+
+#pragma omp critical
+        vec_polygons.insert(vec_polygons.end(),
+                            std::make_move_iterator(vec_polygons_thread.begin()),
+                            std::make_move_iterator(vec_polygons_thread.end()));
+
+    }
+    return vec_polygons;
+}
+
+
+PolygonPtr reach::create_polygon_from_polyline(Polyline const& polyline) {
+    std::vector<Eigen::Vector2d> outer_vertices;
+    std::vector<std::vector<Eigen::Vector2d>> hole_vertices;
+    // std::vector<collision::TriangleConstPtr> mesh_triangles;
+
+    for (auto const& vertex: polyline) {
+        outer_vertices.push_back(Eigen::Vector2d(vertex[0], vertex[1]));
+    }
+
+    return std::make_shared<Polygon>(outer_vertices, hole_vertices, 0, collision::triangulation::TriangulationQuality());
+}
 
 tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
     reach::create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
@@ -208,7 +299,6 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
     // return (rasterized or unrasterized) static AABBs vector and rasterized dynamic AABBs map
     return make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
 }
-
 
 vector<RectangleAABBPtr> reach::create_curvilinear_aabbs_from_cartesian_polylines(
         vector<Polyline> const& vec_polylines,

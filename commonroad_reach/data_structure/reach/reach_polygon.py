@@ -156,6 +156,13 @@ class ReachPolygon(ABC):
         """
         return self._shapely_polygon.convex_hull
 
+    @property
+    def area(self) -> float:
+        """
+        The area of the polygon
+        """
+        return self._shapely_polygon.area
+
     def intersects(self, other_polygon: "ReachPolygon") -> bool:
         """
         Returns True if geometries intersect, else False

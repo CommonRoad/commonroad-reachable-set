@@ -8,6 +8,7 @@
 #include "collision/collision_checker.h"
 #include "collision/narrowphase/rectangle_aabb.h"
 #include "collision/narrowphase/rectangle_obb.h"
+#include "collision/narrowphase/polygon.h"
 
 #include "collision/time_variant_collision_object.h"
 #include "reachset/utility/geometry_definition.hpp"
@@ -97,4 +98,29 @@ void print_vertices_polygon(std::vector<Polyline> const& vec_polylines_static);
 
 /// Prints information of a collision checker
 void print_collision_checker(collision::CollisionCheckerPtr const& collision_checker);
+
+/// Creates a collision checker with obstacles in cartesian coordinate system.
+/// @param vec_polylines_static vector of polylines describing static obstacles
+/// @param map_step_to_vec_polylines_dynamic map from step to vector of polylines describing dynamic obstacles
+/// @param radius_disc_vehicle radius of the three discs approximating the occupancy of the vehicle
+/// @param num_omp_threads number of threads for parallel computing
+/// @return pointer to collision checker
+collision::CollisionCheckerPtr create_cartesian_collision_checker(
+        std::vector<Polyline> const& vec_polylines_static,
+        std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        double const& radius_disc_vehicle, int const& num_omp_threads);
+
+
+/// creates Cartesian collision polygons from a given polyline. The input polyline is inflated (Minkowski Sum) using
+/// Boost.Geometry's Buffer functions
+/// @param vec_polylines vector of polylines to be considered
+/// @param num_threads number of threads for parallel computing
+/// @param buffer_config buffer config used in Boost.Geometry library
+std::vector<collision::PolygonPtr> create_cartesian_polygons_from_polylines(
+        std::vector<Polyline> const& vec_polylines,
+        int const& num_threads,
+        BufferConfig const& buffer_config);
+
+// Creates an collision Polygon from the input Polyline.
+collision::PolygonPtr create_polygon_from_polyline(Polyline const& polyline);
 }
