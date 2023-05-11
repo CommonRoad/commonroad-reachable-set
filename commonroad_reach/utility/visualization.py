@@ -225,14 +225,12 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
     config = reach_interface.config
     x_min = y_min = np.infty
     x_max = y_max = -np.infty
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for step in range(reach_interface.step_start, reach_interface.step_end):
             for rectangle in reach_interface.drivable_area_at_step(step):
-                bounds = rectangle.bounds if backend == "PYTHON" else (rectangle.p_lon_min(), rectangle.p_lat_min(),
-                                                                       rectangle.p_lon_max(), rectangle.p_lat_max())
+                bounds = rectangle.bounds
                 x_min = min(x_min, bounds[0])
                 y_min = min(y_min, bounds[1])
                 x_max = max(x_max, bounds[2])
@@ -258,17 +256,16 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
 
 
 def draw_reachable_sets(list_nodes, config, renderer, draw_params: MPDrawParams):
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for node in list_nodes:
-            vertices = node.position_rectangle.vertices if backend == "PYTHON" else node.position_rectangle().vertices()
+            vertices = node.position_rectangle.vertices
             Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
 
     elif coordinate_system == "CVLN":
         for node in list_nodes:
-            position_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
+            position_rectangle = node.position_rectangle
             list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
             for polygon in list_polygons_cart:
@@ -276,12 +273,11 @@ def draw_reachable_sets(list_nodes, config, renderer, draw_params: MPDrawParams)
 
 
 def draw_drivable_area(list_rectangles, config, renderer, draw_params):
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for rect in list_rectangles:
-            vertices = rect.vertices if backend == "PYTHON" else rect.vertices()
+            vertices = rect.vertices
             Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
 
     elif coordinate_system == "CVLN":
@@ -588,7 +584,6 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
     """
     # get information from config
     coordinate_system = config.planning.coordinate_system
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
 
     # set colors
     face_color = palette[0]
@@ -596,7 +591,7 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
 
     if coordinate_system == "CART":
         for node in list_reach_nodes:
-            pos_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
+            pos_rectangle = node.position_rectangle
             z_values, vertices_3d = _compute_vertices_of_polyhedron(pos_rectangle, z_tuple)
             # render in 3D
             ax.scatter3D(z_values[:, 0], z_values[:, 1], z_values[:, 2], alpha=0.0)
@@ -610,7 +605,7 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
 
     elif coordinate_system == "CVLN":
         for node in list_reach_nodes:
-            pos_rectangle_cvln = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
+            pos_rectangle_cvln = node.position_rectangle
             list_pos_rectangle_cart = util_coordinate_system.convert_to_cartesian_polygons(pos_rectangle_cvln,
                                                                                            config.planning.CLCS, True)
             for pos_rectangle in list_pos_rectangle_cart:
@@ -635,18 +630,10 @@ def _compute_vertices_of_polyhedron(position_rectangle, z_tuple):
     z_max = z_tuple[1]
 
     # get vertices of position rectangle
-    if isinstance(position_rectangle, ReachPolygon):
-        # ReachPolygon Python data structure
-        x_min = position_rectangle.p_lon_min
-        x_max = position_rectangle.p_lon_max
-        y_min = position_rectangle.p_lat_min
-        y_max = position_rectangle.p_lat_max
-    else:
-        # ReachPolygon CPP data structure
-        x_min = position_rectangle.p_lon_min()
-        x_max = position_rectangle.p_lon_max()
-        y_min = position_rectangle.p_lat_min()
-        y_max = position_rectangle.p_lat_max()
+    x_min = position_rectangle.p_lon_min
+    x_max = position_rectangle.p_lon_max
+    y_min = position_rectangle.p_lat_min
+    y_max = position_rectangle.p_lat_max
 
     # z values for 3D visualization of reachable sets as polyhedron
     z_values = np.array([[x_min, y_min, z_min],
@@ -842,7 +829,7 @@ def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.Reachab
     if coordinate_system == "CART":
         for step in range(reachable_set.step_start, reachable_set.step_end):
             for rectangle in reachable_set.drivable_area_at_step(step):
-                bounds = (rectangle.p_lon_min(), rectangle.p_lat_min(), rectangle.p_lon_max(), rectangle.p_lat_max())
+                bounds = rectangle.bounds
                 x_min = min(x_min, bounds[0])
                 y_min = min(y_min, bounds[1])
                 x_max = max(x_max, bounds[2])
