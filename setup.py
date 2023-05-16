@@ -71,8 +71,8 @@ class CMakeBuild(build_ext):
             return None
 
         # pass version of current python binary
-        python_ver = platform.python_version()[0] + platform.python_version()[2]
-        cmake_args += ['-DPYTHON_VER=' + python_ver]
+        python_ver = platform.python_version().split(".")
+        cmake_args += ['-DPYTHON_VER=' + python_ver[0] + python_ver[1]]
 
         # add tests
         if 'ADD_TESTS' in os.environ:
