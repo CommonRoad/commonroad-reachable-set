@@ -62,6 +62,8 @@ public:
 
     inline double v_lat_max() const { return std::get<3>(this->box_lat()); }
 
+    inline bool is_empty() const { return polygon_lon->empty() || polygon_lat->empty(); }
+
     inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_parent() const { return this->_vec_nodes_parent; };
 
     inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_child() const { return this->_vec_nodes_child; };

@@ -51,6 +51,7 @@ void export_reach_node(py::module &m) {
             .def_property_readonly("p_lon_max", &ReachNode::p_lon_max)
             .def_property_readonly("p_lat_min", &ReachNode::p_lat_min)
             .def_property_readonly("p_lat_max", &ReachNode::p_lat_max)
+            .def_property_readonly("is_empty", &ReachNode::is_empty)
             .def_property_readonly("position_rectangle", &ReachNode::position_rectangle)
             .def_property_readonly("list_nodes_parent", &ReachNode::vec_nodes_parent)
             .def_property_readonly("list_nodes_child", &ReachNode::vec_nodes_child)
