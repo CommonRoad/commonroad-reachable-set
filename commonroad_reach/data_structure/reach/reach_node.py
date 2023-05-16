@@ -243,27 +243,38 @@ class ReachNode:
 
         return False
 
-    def intersect_in_position_domain(self, p_lon_min: float, p_lat_min: float, p_lon_max: float, p_lat_max: float):
+    def intersect_in_position_domain(self, p_lon_min: Optional[float] = None, p_lat_min: Optional[float] = None,
+                                     p_lon_max: Optional[float] = None, p_lat_max: Optional[float] = None):
         """
         Perform intersection in the position domain.
         """
-        self._polygon_lon = self.polygon_lon.intersect_halfspace(1, 0, p_lon_max)
-        self._polygon_lon = self.polygon_lon.intersect_halfspace(-1, 0, -p_lon_min)
-        self._polygon_lat = self.polygon_lat.intersect_halfspace(1, 0, p_lat_max)
-        self._polygon_lat = self.polygon_lat.intersect_halfspace(-1, 0, -p_lat_min)
+        if p_lon_max is not None:
+            self._polygon_lon = self.polygon_lon.intersect_halfspace(1, 0, p_lon_max)
+        if p_lon_min is not None:
+            self._polygon_lon = self.polygon_lon.intersect_halfspace(-1, 0, -p_lon_min)
+        if p_lat_max is not None:
+            self._polygon_lat = self.polygon_lat.intersect_halfspace(1, 0, p_lat_max)
+        if p_lat_min is not None:
+            self._polygon_lat = self.polygon_lat.intersect_halfspace(-1, 0, -p_lat_min)
 
-        self._bounds_lon = self._polygon_lon.bounds
-        self._bounds_lat = self._polygon_lat.bounds
-        self.update_position_rectangle()
+        if not self.is_empty:
+            self._bounds_lon = self._polygon_lon.bounds
+            self._bounds_lat = self._polygon_lat.bounds
+            self.update_position_rectangle()
 
-    def intersect_in_velocity_domain(self, v_lon_min: float, v_lat_min: float, v_lon_max: float, v_lat_max: float):
+    def intersect_in_velocity_domain(self, v_lon_min: Optional[float] = None, v_lat_min: Optional[float] = None,
+                                     v_lon_max: Optional[float] = None, v_lat_max: Optional[float] = None):
         """
         Perform intersection in the velocity domain.
         """
-        self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)
-        self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
-        self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
-        self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
+        if v_lon_max is not None:
+            self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)
+        if v_lon_min is not None:
+            self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
+        if v_lat_max is not None:
+            self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
+        if v_lat_min is not None:
+            self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
 
     @classmethod
     def reset_class_id_counter(cls):
