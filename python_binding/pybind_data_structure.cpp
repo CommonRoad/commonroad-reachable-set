@@ -58,6 +58,11 @@ void export_reach_node(py::module &m) {
             .def_readonly("step", &ReachNode::step)
             .def_readonly("polygon_lon", &ReachNode::polygon_lon)
             .def_readonly("polygon_lat", &ReachNode::polygon_lat)
+            .def("intersect_in_position_domain", &ReachNode::intersect_in_position_domain,
+                 py::arg("p_lon_min")=-std::numeric_limits<double>::infinity(),
+                 py::arg("p_lat_min")=-std::numeric_limits<double>::infinity(),
+                 py::arg("p_lon_max")=std::numeric_limits<double>::infinity(),
+                 py::arg("p_lat_max")=std::numeric_limits<double>::infinity())
             .def("__repr__", [](ReachNode const &node) {
                 return "(" + std::to_string(node.p_lon_min()) + ", " + std::to_string(node.p_lat_min())
                        + ", " + std::to_string(node.p_lon_max()) + ", " + std::to_string(node.p_lat_max()) + ")";
