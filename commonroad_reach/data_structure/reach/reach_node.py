@@ -276,6 +276,13 @@ class ReachNode:
         if v_lat_min is not None:
             self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
 
+    @property
+    def is_empty(self) -> bool:
+        """
+        Returns True iff the reach node is empty.
+        """
+        return self.polygon_lon is None or self.polygon_lat is None or self.polygon_lon.is_empty or self.polygon_lat.is_empty
+
     @classmethod
     def reset_class_id_counter(cls):
         cls.cnt_id = 0
