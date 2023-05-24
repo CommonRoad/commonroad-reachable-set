@@ -23,6 +23,7 @@ void export_reach_polygon(py::module& m) {
             .def("p_lat_max", &ReachPolygon::p_lat_max)
             .def("p_lon_center", &ReachPolygon::p_lon_center)
             .def("p_lat_center", &ReachPolygon::p_lat_center)
+            .def("bounding_box", &ReachPolygon::bounding_box)
             .def("vertices", [](ReachPolygon const& polygon) {
                 py::list list_tuples_vertices;
                 for (auto const& vertex: polygon.vertices()) {
