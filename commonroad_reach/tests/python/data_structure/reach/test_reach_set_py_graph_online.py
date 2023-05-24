@@ -97,9 +97,11 @@ def test_online_reach():
     name_scenario = "DEU_Offline-1_1_T-1"
     # name_scenario = "ARG_Carcarana-1_1_T-1"
     # name_scenario = "ZAM_Tjunction-1_313_T-1"
-    dt = 8
+    dt = 5
 
-    config = ConfigurationBuilder.build_configuration(name_scenario)
+    test_root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../.."))
+
+    config = ConfigurationBuilder.build_configuration(name_scenario, path_root=test_root_dir)
     config.update()
     config.reachable_set.mode_computation = 3
     config.reachable_set.size_grid = 0.3
