@@ -64,6 +64,12 @@ void export_reach_node(py::module &m) {
                  py::arg("p_lat_min")=-std::numeric_limits<double>::infinity(),
                  py::arg("p_lon_max")=std::numeric_limits<double>::infinity(),
                  py::arg("p_lat_max")=std::numeric_limits<double>::infinity())
+            .def("intersect_in_velocity_domain", &ReachNode::intersect_in_velocity_domain,
+                 py::arg("v_lon_min")=-std::numeric_limits<double>::infinity(),
+                 py::arg("v_lat_min")=-std::numeric_limits<double>::infinity(),
+                 py::arg("v_lon_max")=std::numeric_limits<double>::infinity(),
+                 py::arg("v_lat_max")=std::numeric_limits<double>::infinity())
+            .def("clone", &ReachNode::clone)
             .def("__repr__", [](ReachNode const &node) {
                 return "(" + std::to_string(node.p_lon_min()) + ", " + std::to_string(node.p_lat_min())
                        + ", " + std::to_string(node.p_lon_max()) + ", " + std::to_string(node.p_lat_max()) + ")";
