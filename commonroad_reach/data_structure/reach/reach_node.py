@@ -248,13 +248,13 @@ class ReachNode:
         """
         Perform intersection in the position domain.
         """
-        if p_lon_max is not None:
+        if p_lon_max is not None and not self.is_empty:
             self._polygon_lon = self.polygon_lon.intersect_halfspace(1, 0, p_lon_max)
-        if p_lon_min is not None:
+        if p_lon_min is not None and not self.is_empty:
             self._polygon_lon = self.polygon_lon.intersect_halfspace(-1, 0, -p_lon_min)
-        if p_lat_max is not None:
+        if p_lat_max is not None and not self.is_empty:
             self._polygon_lat = self.polygon_lat.intersect_halfspace(1, 0, p_lat_max)
-        if p_lat_min is not None:
+        if p_lat_min is not None and not self.is_empty:
             self._polygon_lat = self.polygon_lat.intersect_halfspace(-1, 0, -p_lat_min)
 
         if not self.is_empty:
@@ -267,13 +267,13 @@ class ReachNode:
         """
         Perform intersection in the velocity domain.
         """
-        if v_lon_max is not None:
+        if v_lon_max is not None and not self.is_empty:
             self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)
-        if v_lon_min is not None:
+        if v_lon_min is not None and not self.is_empty:
             self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
-        if v_lat_max is not None:
+        if v_lat_max is not None and not self.is_empty:
             self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
-        if v_lat_min is not None:
+        if v_lat_min is not None and not self.is_empty:
             self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
 
     @property
