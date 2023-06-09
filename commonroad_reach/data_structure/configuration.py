@@ -334,7 +334,8 @@ class VehicleConfiguration(ConfigurationBase):
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
                                                                     ref_point=config.planning.reference_point,
                                                                     dist_axle_rear=self.wb_rear_axle)
-
+            assert not (config.planning.reference_point == "REAR" and config.reachable_set.mode_inflation == 2), \
+                "Circumscribed inflation only supports reference point CENTER"
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,
                                                                                 self.radius_disc)
