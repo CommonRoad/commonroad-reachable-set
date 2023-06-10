@@ -8,8 +8,8 @@ import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from commonroad.geometry.shape import Polygon, Rectangle
-from commonroad.visualization.draw_params import MPDrawParams
+from commonroad.geometry.shape import Polygon, Rectangle, Circle
+from commonroad.visualization.draw_params import BaseParam, MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
@@ -21,6 +21,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
+from commonroad_reach.utility.configuration import compute_disc_radius_and_distance
 
 logger = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -900,3 +901,40 @@ def plot_collision_checker(reach_interface: ReachableSetInterface):
         rnd.ax.plot(curv_projection_domain_border[:, 0], curv_projection_domain_border[:, 1], zorder=100,
                     color='orange')
     plt.show()
+
+def draw_vehicle_and_three_circles(renderer: MPRenderer, reach_interface: ReachableSetInterface,
+                                   position: np.array, orientation: float, position_is_center: bool = True):
+
+    vehicle_config = reach_interface.config.vehicle.ego
+
+    rad, dist = compute_disc_radius_and_distance(
+        vehicle_config.length, vehicle_config.width,
+        ref_point="REAR", dist_axle_rear=vehicle_config.wb_rear_axle)
+
+    rotation_vector = np.array([np.cos(orientation), np.sin(orientation)])
+
+    if position_is_center:
+        center_position = position
+        rear_axle_pos = position - vehicle_config.wb_rear_axle * rotation_vector
+    else:
+        center_position = position + vehicle_config.wb_rear_axle * rotation_vector
+        rear_axle_pos = position
+
+    # ego rectangle
+    ego_shape = Rectangle(
+        length=vehicle_config.length, width=vehicle_config.width,
+        center=center_position, orientation=orientation)
+    renderer.draw_params.shape.facecolor = "red"
+    renderer.draw_params.shape.edgecolor = "red"
+    ego_shape.draw(renderer)
+
+    # visualize three circles
+    # set draw params
+    renderer.draw_params.shape.opacity = 1.
+    renderer.draw_params.shape.facecolor = "none"
+    renderer.draw_params.shape.edgecolor = "grey"
+
+    # draw
+    Circle(rad, rear_axle_pos).draw(renderer)
+    Circle(rad, rear_axle_pos + dist / 2 * rotation_vector).draw(renderer)
+    Circle(rad, rear_axle_pos + dist * rotation_vector).draw(renderer)
