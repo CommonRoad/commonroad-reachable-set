@@ -83,7 +83,6 @@ build-test-python:
 clang-tidy:
   stage: static-test
   script:
-    - git fetch origin feature_ci
     - mkdir build && cd build
     - cmake -DCRDC_DIR="$CRDC_DIR" -DPYTHON_VER="37" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     - cd ..
@@ -100,8 +99,8 @@ build-wheels-py:
     - develop
   when: manual
   script:
-    # Prepare build -> building from branch: feature_ci
-    - git clone -b feature_ci git@gitlab.lrz.de:cps/commonroad-reachable-set.git
+    # Prepare build -> building from branch: develop
+    - git clone -b develop git@gitlab.lrz.de:cps/commonroad-reachable-set.git
     - cd commonroad-reachable-set
     # Copy cpp standalone into commonroad-reach dir
     - cp ../pycrreach.*.so .
@@ -132,7 +131,7 @@ push-to-internal-registry:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest 
   when: manual
   only:
-  # Only use branch feature_ci to build
+  # Only use branch develop to build
     - develop
   script:
     # use python module twine and gitlab internal variables
