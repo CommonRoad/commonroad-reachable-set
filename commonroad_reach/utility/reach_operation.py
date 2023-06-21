@@ -621,7 +621,8 @@ def determine_connected_components(list_nodes_reach, exclude_small_area: bool = 
 
     :param list_nodes_reach: list of reach nodes
     :param exclude_small_area: excludes connected components with an area smaller than the threshold and if there are
-    more than 1 connected component at the current time step
+        more than 1 connected component at the current time step
+
     :return: list of connected reachable sets
     """
     from commonroad_reach.data_structure.reach.driving_corridor import ConnectedComponent

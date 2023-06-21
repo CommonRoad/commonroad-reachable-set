@@ -20,10 +20,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../../commonroad_rea
 
 project = "CommonRoad-Reach"
 copyright = "2022, Technical University of Munich, Cyber-Physical Systems Group"
-author = "Edmond Irani Liu, Gerald Würsching, Moritz Klishcat, Matthias Althoff"
+author = "Edmond Irani Liu, Gerald Würsching, Moritz Klischat, Matthias Althoff"
 
 # The full version, including alpha/beta/rc tags
-release = "1.0.0"
+release = "2022.3"
 
 
 # -- General configuration ---------------------------------------------------
