@@ -27,10 +27,20 @@ class ConfigurationBuilder:
         :return: built configuration
         """
         if path_root is None:
-            path_root = os.path.normpath(os.path.join(os.path.dirname(__file__), "../.."))
+            try:
+                path_root = os.path.normpath(os.path.join(os.path.dirname(__file__), "../.."))
+            except:
+                raise FileNotFoundError(f'The root directory of commonroad-reach was not found. We expect a directory that contains the follolwing directories from the gitlab repo of commonroad-reach: configurations, scenarios')
 
         if cls.path_root is None:
             cls.set_paths(path_root=path_root, dir_config=dir_config, dir_config_default=dir_config_default)
+            
+        
+        if('configurations' not in os.listdir(path_root)):
+            raise FileNotFoundError(f'root_path must contain a configurations subdir')
+        if('scenarios' not in os.listdir(path_root)):
+            raise FileNotFoundError(f'root_path must contain a scenarios subdir')
+        
 
         config_default = cls.construct_default_configuration()
         config_scenario = cls.construct_scenario_configuration(name_scenario)
