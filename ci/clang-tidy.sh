@@ -9,6 +9,9 @@ clang_tidy="clang-tidy"
 
 target_branch="develop"
 
+# get target branch
+git fetch origin/${target_branch}
+
 # Retrieve list of cpp-files that were changed in source branch with respect to target branch
 filelist=($(git diff origin/${target_branch} --name-only | grep ".cpp"))
 
