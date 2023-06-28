@@ -12,5 +12,5 @@ pytest>=6.2.2
 cython>=0.29.28
 setuptools>=62.1.0
 pyyaml>=5.3.1
-triangle==20200424
+triangle==20220202
 networkx>=2.6.3
