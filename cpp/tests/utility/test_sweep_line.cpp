@@ -113,10 +113,24 @@ TEST_CASE("merge rectangles with same lateral coordinates") {
     map_p_lon_to_vec_rectangles[1].emplace_back(make_shared<ReachPolygon>(1, 0, 2, 1));
     map_p_lon_to_vec_rectangles[2].emplace_back(make_shared<ReachPolygon>(2, 0, 3, 1));
     map_p_lon_to_vec_rectangles[3].emplace_back(make_shared<ReachPolygon>(3, 0, 4, 1));
+    map_p_lon_to_vec_rectangles[4].emplace_back(make_shared<ReachPolygon>(4, 0, 6, 1));
 
     auto vec_rectangles_merged = SweepLine::merge_rectangles_with_same_lateral_coordinates(map_p_lon_to_vec_rectangles);
 
-    CHECK(vec_rectangles_merged[0]->bounding_box() == make_tuple(0, 0, 4, 1));
+    REQUIRE_EQ(vec_rectangles_merged.size(), 1);
+    CHECK_EQ(vec_rectangles_merged[0]->bounding_box(), make_tuple(0, 0, 6, 1));
+}
+
+TEST_CASE("merge rectangles with same lateral coordinates disconnected") {
+    map<double, vector<ReachPolygonPtr>> map_p_lon_to_vec_rectangles;
+    map_p_lon_to_vec_rectangles[0].emplace_back(make_shared<ReachPolygon>(0, 0, 1, 1));
+    map_p_lon_to_vec_rectangles[2].emplace_back(make_shared<ReachPolygon>(2, 0, 3, 1));
+
+    auto vec_rectangles_merged = SweepLine::merge_rectangles_with_same_lateral_coordinates(map_p_lon_to_vec_rectangles);
+
+    REQUIRE_EQ(vec_rectangles_merged.size(), 2);
+    CHECK_EQ(vec_rectangles_merged[0]->bounding_box(), make_tuple(0, 0, 1, 1));
+    CHECK_EQ(vec_rectangles_merged[1]->bounding_box(), make_tuple(2, 0, 3, 1));
 }
 
 TEST_CASE("create partitioned rectangles from vertical segments") {

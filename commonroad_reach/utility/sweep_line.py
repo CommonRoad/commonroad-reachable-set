@@ -260,7 +260,8 @@ class SweepLine:
                 add_to_list = True
 
                 for rectangle_right in list_rectangles_right:
-                    if cls.rectangles_have_same_p_lat(rectangle_left, rectangle_right):
+                    if cls.rectangles_have_same_p_lat(rectangle_left, rectangle_right) and \
+                            rectangle_left.p_lon_max >= rectangle_right.p_lon_min:
                         list_rectangles_right.remove(rectangle_right)
                         list_rectangles_right.append(
                             ReachPolygon.from_rectangle_vertices(rectangle_left.p_lon_min, rectangle_left.p_lat_min,
