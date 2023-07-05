@@ -261,10 +261,7 @@ def test_point_mass_sample_containment(plot=False):
 
         if plot:
             # draw drivable area
-            if backend == "CPP":
-                vertices_rs = reach_interface.reachable_set_at_step(t_end)[0].position_rectangle().vertices()
-            else:
-                vertices_rs = reach_interface.reachable_set_at_step(t_end)[0].position_rectangle.vertices
+            vertices_rs = reach_interface.reachable_set_at_step(t_end)[0].position_rectangle.vertices
             polygon = Polygon(vertices_rs)
             x, y = polygon.exterior.xy
             ax1.plot(x, y)
@@ -274,7 +271,7 @@ def test_point_mass_sample_containment(plot=False):
             # draw lateral polygon
             poly_lat = reach_interface.reachable_set_at_step(t_end)[0].polygon_lat
             if backend == "CPP":
-                poly_lat_shapely = Polygon(poly_lat.vertices())
+                poly_lat_shapely = Polygon(poly_lat.vertices)
                 p_lat, v_lat = poly_lat_shapely.exterior.xy
             else:
                 p_lat, v_lat = poly_lat.exterior.xy
@@ -285,7 +282,7 @@ def test_point_mass_sample_containment(plot=False):
             # draw  longitudinal polygon
             poly_lon = reach_interface.reachable_set_at_step(t_end)[0].polygon_lon
             if backend == "CPP":
-                poly_lon_shapely = Polygon(poly_lon.vertices())
+                poly_lon_shapely = Polygon(poly_lon.vertices)
                 p_lon, v_lon = poly_lon_shapely.exterior.xy
             else:
                 p_lon, v_lon = poly_lon.exterior.xy

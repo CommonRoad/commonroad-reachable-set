@@ -224,7 +224,7 @@ class DrivingCorridorExtractor:
 
         else:
             list_terminal_set_polygons = [pycrreach.ReachPolygon(list_vertices_shape_terminal)]
-            list_position_rectangles = [node.position_rectangle() for node in list_nodes_reach]
+            list_position_rectangles = [node.position_rectangle for node in list_nodes_reach]
             dict_rectangle_adjacency = pycrreach.create_adjacency_dictionary_boost(list_terminal_set_polygons,
                                                                                    list_position_rectangles)
 
@@ -260,12 +260,7 @@ class DrivingCorridorExtractor:
 
         # determine parent reach nodes for each reach node within the current connected component
         set_nodes_reach_parent = set()
-        if self.backend == "CPP":
-            [set_nodes_reach_parent.update(reach_node.vec_nodes_parent())
-             for reach_node in cc_current.list_nodes_reach]
-
-        else:
-            [set_nodes_reach_parent.update(reach_node.list_nodes_parent) for reach_node in cc_current.list_nodes_reach]
+        [set_nodes_reach_parent.update(reach_node.list_nodes_parent) for reach_node in cc_current.list_nodes_reach]
 
         list_nodes_parent_filtered = list()
         if not corridor_lon and not dict_step_to_p_lon:

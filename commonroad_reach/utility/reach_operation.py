@@ -489,14 +489,8 @@ def compute_area_of_reach_nodes(list_nodes_reach: List[ReachNode]) -> float:
     if not list_nodes_reach:
         return area
 
-    if isinstance(list_nodes_reach[0], ReachNode):
-        for node in list_nodes_reach:
-            area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
-
-    else:
-        for node in list_nodes_reach:
-            area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
-
+    for node in list_nodes_reach:
+        area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
     return area
 
 
@@ -537,12 +531,7 @@ def lon_interval_connected_set(connected_set):
     Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions.
     """
     # get min and max values for each reachable set in the connected set
-    if type(connected_set[0]) == pycrreach.ReachNode:
-        # C++ backend
-        min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
-    else:
-        # Python backend
-        min_max_array = np.asarray([[reach_node.p_lon_min, reach_node.p_lon_max] for reach_node in connected_set])
+    min_max_array = np.asarray([[reach_node.p_lon_min, reach_node.p_lon_max] for reach_node in connected_set])
 
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
@@ -556,12 +545,7 @@ def lat_interval_connected_set(connected_set):
     Projects a connected set onto lateral position domain and returns min/max lateral positions.
     """
     # get min and max values for each reachable set in the connected set
-    if type(connected_set[0]) == pycrreach.ReachNode:
-        # C++ backend
-        min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
-    else:
-        # Python backend
-        min_max_array = np.asarray([[reach_node.p_lat_min, reach_node.p_lat_max] for reach_node in connected_set])
+    min_max_array = np.asarray([[reach_node.p_lat_min, reach_node.p_lat_max] for reach_node in connected_set])
 
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
@@ -575,14 +559,8 @@ def lon_velocity_interval_connected_set(connected_set):
     Projects a connected reachable set onto longitudinal velocity domain and returns min/max longitudinal velocities
     """
     # get min and max values for each reachable set in the connected set
-    if type(connected_set[0]) == pycrreach.ReachNode:
-        # C++ backend
-        min_max_array = np.asarray([[reach_node.polygon_lon.v_min(), reach_node.polygon_lon.v_max()]
-                                    for reach_node in connected_set])
-    else:
-        # Python backend
-        min_max_array = np.asarray([[reach_node.polygon_lon.v_min, reach_node.polygon_lon.v_max]
-                                    for reach_node in connected_set])
+    min_max_array = np.asarray([[reach_node.polygon_lon.v_min, reach_node.polygon_lon.v_max]
+                                for reach_node in connected_set])
 
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
@@ -599,16 +577,10 @@ def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrre
     """
     set_nodes_overlap = set()
 
-    if type(list_nodes_reach[0]) == pycrreach.ReachNode:
-        for node_reach in list_nodes_reach:
-            if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min() * 10.0 ** 2)) and \
-                    np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
-                set_nodes_overlap.add(node_reach)
-    else:
-        for node_reach in list_nodes_reach:
-            if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min * 10.0 ** 2)) and \
-                    np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
-                set_nodes_overlap.add(node_reach)
+    for node_reach in list_nodes_reach:
+        if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min * 10.0 ** 2)) and \
+                np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
+            set_nodes_overlap.add(node_reach)
 
     return list(set_nodes_overlap)
 
