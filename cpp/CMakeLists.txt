@@ -45,7 +45,6 @@ target_link_libraries(crreach PUBLIC
         ${CRDC_LIBRARY}
         fcl
         ccd
-        ${S11N_LIBRARY}
         yaml-cpp)
 
 # ========= building playground
