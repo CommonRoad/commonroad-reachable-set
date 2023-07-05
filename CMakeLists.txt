@@ -22,7 +22,6 @@ set(ccd_DIR ${CRDC_DIR}/build/temp.linux-x86_64-cpython-${PYTHON_VER}/dist/lib/c
 find_package(Eigen3 REQUIRED) # Eigen3
 find_package(ccd REQUIRED) # for collision checks
 find_package(fcl REQUIRED) # for collision checks
-find_library(S11N_LIBRARY s11n HINTS ${CRDC_DIR}/build/lib.linux-x86_64-cpython-${PYTHON_VER}/commonroad_dc) # for object serialization in C++
 # find_package(yaml-cpp REQUIRED) # for reading yaml files
 find_package(OpenMP REQUIRED) # for parallel computation
 if(ADD_TESTS)
