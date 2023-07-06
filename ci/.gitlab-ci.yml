@@ -52,7 +52,7 @@ build-standalone:
     - cmake --build . -- -j $BUILD_JOBS
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39]
+      - PYTHON_VER: [37, 38, 39, 310]
   artifacts:
     paths:
       - pycrreach.*.so
@@ -72,7 +72,7 @@ build-test-python:
     - pytest .
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39]
+      - PYTHON_VER: [37, 38, 39, 310]
   artifacts:
     paths:
       - ./doc/build
@@ -118,7 +118,7 @@ build-wheels-py:
     - auditwheel repair *.whl
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39]
+      - PYTHON_VER: [37, 38, 39, 310]
   artifacts:
     paths:
       - $CI_PROJECT_DIR/commonroad-reachable-set/dist

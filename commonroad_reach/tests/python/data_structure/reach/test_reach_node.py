@@ -88,3 +88,21 @@ def test_intersection_in_position_domain():
 
     node.intersect_in_position_domain(1, 8, 4, 20)
     assert node.position_rectangle.bounds == (1, 8, 4, 15)
+
+
+def test_intersection_in_position_domain_optionals():
+    polygon_lon = ReachPolygon.from_rectangle_vertices(0, 0, 5, 10)
+    polygon_lat = ReachPolygon.from_rectangle_vertices(7, -5, 15, 5)
+    node = ReachNode(polygon_lon, polygon_lat)
+
+    node.intersect_in_position_domain(p_lon_min=1)
+    assert node.position_rectangle.bounds == (1, 7, 5, 15)
+
+    node.intersect_in_position_domain(p_lat_min=8)
+    assert node.position_rectangle.bounds == (1, 8, 5, 15)
+
+    node.intersect_in_position_domain(p_lon_max=4)
+    assert node.position_rectangle.bounds == (1, 8, 4, 15)
+
+    node.intersect_in_position_domain(p_lat_max=20)
+    assert node.position_rectangle.bounds == (1, 8, 4, 15)

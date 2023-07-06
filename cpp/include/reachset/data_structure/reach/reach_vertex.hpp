@@ -20,6 +20,8 @@ struct Vertex {
 
     Vertex operator+(Vertex const& other) const { return Vertex{x + other.x, y + other.y}; }
 
+    bool operator==(Vertex const& other) const { return x == other.x && y == other.y; }
+
     /// Compares the angles of two vertices.
     static bool compare_angle(Vertex const& vertex1, Vertex const& vertex2);
 };

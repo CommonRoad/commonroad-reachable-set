@@ -62,6 +62,8 @@ public:
 
     inline double v_lat_max() const { return std::get<3>(this->box_lat()); }
 
+    inline bool is_empty() const { return polygon_lon->empty() || polygon_lat->empty(); }
+
     inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_parent() const { return this->_vec_nodes_parent; };
 
     inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_child() const { return this->_vec_nodes_child; };
@@ -94,8 +96,8 @@ public:
     }
 
     /// Intersects with the given rectangle in position domain.
-    inline void intersect_in_position_domain(double const& p_lon_min, double const& p_lat_min,
-                                             double const& p_lon_max, double const& p_lat_max) {
+    inline void intersect_in_position_domain(double const& p_lon_min=-std::numeric_limits<double>::infinity(), double const& p_lat_min=-std::numeric_limits<double>::infinity(),
+                                             double const& p_lon_max=std::numeric_limits<double>::infinity(), double const& p_lat_max=std::numeric_limits<double>::infinity()) {
         polygon_lon->intersect_halfspace(1, 0, p_lon_max);
         polygon_lon->intersect_halfspace(-1, 0, -p_lon_min);
         polygon_lat->intersect_halfspace(1, 0, p_lat_max);
@@ -103,8 +105,8 @@ public:
     }
 
     /// Intersects with the given velocities in velocity domain.
-    inline void intersect_in_velocity_domain(double const& v_lon_min, double const& v_lat_min,
-                                             double const& v_lon_max, double const& v_lat_max) {
+    inline void intersect_in_velocity_domain(double const& v_lon_min=-std::numeric_limits<double>::infinity(), double const& v_lat_min=-std::numeric_limits<double>::infinity(),
+                                             double const& v_lon_max=std::numeric_limits<double>::infinity(), double const& v_lat_max=std::numeric_limits<double>::infinity()) {
         polygon_lon->intersect_halfspace(0, 1, v_lon_max);
         polygon_lon->intersect_halfspace(0, -1, -v_lon_min);
         polygon_lat->intersect_halfspace(0, 1, v_lat_max);
