@@ -124,25 +124,59 @@ build-wheels-py:
       - $CI_PROJECT_DIR/commonroad-reachable-set/dist
 
 
-### deploy wheels internally using twine module ###
+### deploy wheels ###
+.install-twine: &install-twine
+  - *conda-init
+  - conda activate "cr39"
+  - python -m pip install --upgrade pip
+  - pip install twine
+
 push-to-internal-registry:
   # push built wheels to the internal GitLab PyPi registry
   stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest 
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   when: manual
   only:
   # Only use branch develop to build
     - develop
   script:
     # use python module twine and gitlab internal variables
-    - *conda-init
-    - conda activate "cr39"
-    - *python-prepare
-    - pip install twine
+    - *install-twine
     - cd commonroad-reachable-set
-    - git submodule update --init
-    - ls dist/
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url https://gitlab.lrz.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+  needs:
+    - job: build-wheels-py
+      artifacts: true
+
+
+push-to-external-pypi-test-registry:
+  # push built wheels to the external PyPi test registry
+  # at: https://test.pypi.org/project/commonroad-reach/
+  stage: deploy
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
+  when: manual
+  only:
+    - master
+  script:
+    - *install-twine
+    - cd cd commonroad-reachable-set
+    - TWINE_PASSWORD=${CR_PYPI_TEST_PASSWORD} TWINE_USERNAME=${CR_PYPI_TEST_USERNAME} python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+  needs:
+    - job: build-wheels-py
+      artifacts: true
+
+push-to-external-pypi-registry:
+  # push built wheels to the external PyPi registry
+  # at: https://pypi.org/project/commonroad-reach/
+  stage: deploy
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
+  when: manual
+  only:
+    - master
+  script:
+    - *install-twine
+    - cd commonroad-reachable-set
+    - TWINE_PASSWORD=${CR_PYPI_RELEASE_PASSWORD} TWINE_USERNAME=${CR_PYPI_RELEASE_USERNAME} python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
