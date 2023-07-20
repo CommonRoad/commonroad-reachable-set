@@ -53,7 +53,9 @@ def test_offline_reach():
     # name_scenario = "ZAM_Tjunction-1_313_T-1"
     dt = 5
 
-    config = ConfigurationBuilder.build_configuration(name_scenario)
+    test_root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../.."))
+
+    config = ConfigurationBuilder.build_configuration(name_scenario, path_root=test_root_dir)
     config.update()
     config.reachable_set.mode = 5
     config.planning.coordinate_system = "CART"
@@ -73,7 +75,9 @@ def test_offline_online_compatibility():
         name_scenario = "DEU_Offline-1_1_T-1"
         dt = 8
 
-        config = ConfigurationBuilder.build_configuration(name_scenario)
+        test_root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../.."))
+
+        config = ConfigurationBuilder.build_configuration(name_scenario, path_root=test_root_dir)
         config.update()
         reach_offline = PyGraphReachableSetOffline(config)
 
