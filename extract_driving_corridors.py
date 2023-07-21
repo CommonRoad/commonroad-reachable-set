@@ -1,3 +1,4 @@
+from typing import Optional
 from commonroad_reach.data_structure.configuration_builder import ConfigurationBuilder
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
 import commonroad_reach.utility.logger as util_logger
@@ -11,8 +12,11 @@ def main():
     # name_scenario = "USA_US101-6_1_T-1"
     # name_scenario = "ZAM_Intersection-1_1_T-1"
 
+    # ==== set root path: set to absolute path of commonroad-reachable-set
+    path_root: Optional[str] = None
+
     # ==== build configuration
-    config = ConfigurationBuilder.build_configuration(name_scenario)
+    config = ConfigurationBuilder(path_root=path_root).build_configuration(name_scenario)
     config.update()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()

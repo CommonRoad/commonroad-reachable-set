@@ -204,7 +204,7 @@ def test_point_mass_sample_containment(plot=False):
     vehicle_dynamics = VehicleDynamics.PM(VehicleType.BMW_320i)
 
     # reachable set
-    config = ConfigurationBuilder.build_configuration(name_scenario)
+    config = ConfigurationBuilder().build_configuration(name_scenario)
     config.update()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
