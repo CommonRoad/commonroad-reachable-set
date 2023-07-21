@@ -54,7 +54,7 @@ def test_reachable_set_computation_python_offline():
     name_scenario = "DEU_Offline-1_1_T-1"
     dt = 3
 
-    config = ConfigurationBuilder.build_configuration(name_scenario)
+    config = ConfigurationBuilder().build_configuration(name_scenario)
     config.update()
     [config.scenario.remove_obstacle(obs) for obs in config.scenario.obstacles]
     config.reachable_set.size_grid = 0.5

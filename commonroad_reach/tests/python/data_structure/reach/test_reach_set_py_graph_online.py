@@ -24,8 +24,9 @@ from commonroad_reach.data_structure.reach.reach_set_py_graph_online import PyGr
 def test_validate_configurations():
     name_scenario = "DEU_Offline-1_1_T-1"
 
-    offline_config = ConfigurationBuilder.build_configuration(name_scenario)
-    online_config = ConfigurationBuilder.build_configuration(name_scenario)
+    config_builder = ConfigurationBuilder()
+    offline_config = config_builder.build_configuration(name_scenario)
+    online_config = config_builder.build_configuration(name_scenario)
     with warnings.catch_warnings(record=True) as w:
         PyGraphReachableSetOnline._validate_configurations(online_config.reachable_set, online_config.vehicle,
                                                            offline_config.reachable_set, offline_config.vehicle)
@@ -55,7 +56,7 @@ def test_offline_reach():
 
     test_root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../.."))
 
-    config = ConfigurationBuilder.build_configuration(name_scenario, path_root=test_root_dir)
+    config = ConfigurationBuilder(path_root=test_root_dir).build_configuration(name_scenario)
     config.update()
     config.reachable_set.mode = 5
     config.planning.coordinate_system = "CART"
@@ -77,7 +78,7 @@ def test_offline_online_compatibility():
 
         test_root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../.."))
 
-        config = ConfigurationBuilder.build_configuration(name_scenario, path_root=test_root_dir)
+        config = ConfigurationBuilder(path_root=test_root_dir).build_configuration(name_scenario)
         config.update()
         reach_offline = PyGraphReachableSetOffline(config)
 
@@ -105,7 +106,7 @@ def test_online_reach():
 
     test_root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "../../.."))
 
-    config = ConfigurationBuilder.build_configuration(name_scenario, path_root=test_root_dir)
+    config = ConfigurationBuilder(path_root=test_root_dir).build_configuration(name_scenario)
     config.update()
     config.reachable_set.mode_computation = 3
     config.reachable_set.size_grid = 0.3
