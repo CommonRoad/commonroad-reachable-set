@@ -110,7 +110,7 @@ class Configuration:
         mode_repartition = dict_mode_repartition_to_string[self.reachable_set.mode_repartition]
         mode_inflation = dict_mode_inflation_to_string[self.reachable_set.mode_inflation]
 
-        string = "# ===== Configuration Summary ===== #\n"
+        string = "\n# ===== CommonRoad-Reach Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
         string += f"# \tdt: {self.planning.dt}\n"

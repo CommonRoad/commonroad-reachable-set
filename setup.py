@@ -13,6 +13,9 @@ from sysconfig import get_paths
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
+with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    readme = f.read()
+
 
 class CMakeExtension(Extension):
     name: str  # IDE somehow doesn't detect name without this line
@@ -119,6 +122,8 @@ setup(name='commonroad-reach', version=__version__,
       author='Cyber-Physical Systems Group, Technical University of Munich',
       author_email='commonroad@lists.lrz.de',
       license="BSD",
+      long_description_content_type='text/markdown',
+      long_description=readme,
       packages=find_packages(exclude=['commonroad_reach.tests']),
 
       ext_modules=[
@@ -148,6 +153,7 @@ setup(name='commonroad-reach', version=__version__,
                    "Programming Language :: Python :: 3.9",
                    "License :: OSI Approved :: BSD License",
                    "Operating System :: POSIX :: Linux",],
-      data_files=[],
+      data_files=[('.', ['LICENSE.txt'])],
       include_package_data=True,
+      package_data={'': ['*.yaml']}
       )
