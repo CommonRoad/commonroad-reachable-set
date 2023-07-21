@@ -98,11 +98,11 @@ The additional Python dependencies are listed in `requirements.txt`.
 
 Run the exemplary scripts to compute reachable sets and extract driving corridors.
 
-* To compute reachable sets, run ``commonroad_reach/compute_reachable_set.py``.
+* To compute reachable sets, run `compute_reachable_set.py`.
 
-- To extract driving corridors, run ``commonroad_reach/extract_driving_corridors.py``.
+* To extract driving corridors, run `extract_driving_corridors.py`.
 
-The outputs will be stored in the ``./output/`` folder. Default and scenario-specific configurations are stored in the ``./configurations/`` folder.
+The outputs will be stored in the `./output/` folder. Default and scenario-specific configurations are stored in the `./configurations/` folder.
 
 
 ## Documentation

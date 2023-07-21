@@ -16,7 +16,7 @@ def main():
     path_root: Optional[str] = None
 
     # ==== build configuration
-    config = ConfigurationBuilder.build_configuration(name_scenario, path_root)
+    config = ConfigurationBuilder(path_root=path_root).build_configuration(name_scenario)
     config.update()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
