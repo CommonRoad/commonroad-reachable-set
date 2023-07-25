@@ -31,7 +31,7 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
     ```
 
 2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
-descriptions below
+descriptions below. **You may need GCC-10 to build successfully.** Refer to the [README_FOR_DEVS](README_FOR_DEVS.md) on how to build the cpp code.
 
 
 ## Building from Source
