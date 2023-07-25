@@ -160,7 +160,7 @@ push-to-external-pypi-test-registry:
     - main
   script:
     - *install-twine
-    - cd cd commonroad-reachable-set
+    - cd commonroad-reachable-set
     - TWINE_PASSWORD=${CR_PYPI_TEST_PASSWORD} TWINE_USERNAME=${CR_PYPI_TEST_USERNAME} python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
