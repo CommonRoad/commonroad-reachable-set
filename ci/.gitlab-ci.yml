@@ -97,6 +97,7 @@ build-wheels-py:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   only: 
     - develop
+    - main
   when: manual
   script:
     # Prepare build -> building from branch: develop
@@ -156,7 +157,7 @@ push-to-external-pypi-test-registry:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   when: manual
   only:
-    - master
+    - main
   script:
     - *install-twine
     - cd cd commonroad-reachable-set
@@ -172,7 +173,7 @@ push-to-external-pypi-registry:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   when: manual
   only:
-    - master
+    - main
   script:
     - *install-twine
     - cd commonroad-reachable-set
@@ -184,7 +185,7 @@ push-to-external-pypi-registry:
 
 ### publish documentation ###
 pages:
-  # Push the latest documentation of the master branch to the GitLab Pages documentation
+  # Push the latest documentation of the main branch to the GitLab Pages documentation
   # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
   stage: publish
   before_script:
@@ -204,4 +205,4 @@ pages:
     name: Gitlab Pages
     url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
   only:
-    - master
+    - main
