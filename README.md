@@ -31,7 +31,7 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
     ```
 
 2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
-descriptions below. **You may need GCC-10 to build successfully.** Refer to the [README_FOR_DEVS](README_FOR_DEVS.md) on how to build the cpp code.
+descriptions below. **You may need GCC-10 to build successfully.**
 
 
 ## Building from Source
@@ -39,7 +39,7 @@ descriptions below. **You may need GCC-10 to build successfully.** Refer to the 
 The following third-party dependencies of the C++ code are only required for building the project from source!
 
 **Essential dependencies**:
-* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker) (version >= 2022.2.1)
+* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
 * [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
 * [OpenMP](https://www.openmp.org/)
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
@@ -60,7 +60,7 @@ The additional Python dependencies are listed in `requirements.txt`.
   $ pip install -r requirements.txt
   ```
 
-* Install [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker). Please refer to its [documentation](https://commonroad.in.tum.de/docs/commonroad-drivability-checker/sphinx/installation.html) for installation.
+* Install [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker). Please refer to its [documentation](https://cps.pages.gitlab.lrz.de/commonroad-drivability-checker/) for installation.
 
 * Install yaml-cpp and Doctest:
   ```bash
@@ -107,7 +107,7 @@ The outputs will be stored in the `./output/` folder. Default and scenario-speci
 
 ## Documentation
 
-The documentation of our toolbox is available on our website: https://commonroad.in.tum.de/docs/commonroad-reach/.
+The documentation of our toolbox is available on our website: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set/.
 
 In order to generate the documentation via Sphinx locally, run the following commands in the root directory:
 
