@@ -15,7 +15,8 @@ def main():
     # name_scenario = "ZAM_Intersection-1_1_T-1"
 
     # ==== build configuration
-    config = ConfigurationBuilder.build_configuration(name_scenario, path_root="/home/tmasc/temp_dev/commonroad-reachable-set_dev")
+    config_builder = ConfigurationBuilder(path_root="/home/tmasc/wheelbuilding/commonroad_moduls/commonroad-reachable-set-just-for-wheelbuild-push")
+    config = config_builder.build_configuration(name_scenario)
     config.update()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
