@@ -5,10 +5,14 @@
 1. Follow the instructions for building the code in the [readme](./README.md).
 2. If you are using Anaconda, make sure to select the correct Python environment in your IDE.
 
+
+
 ### Working with the C++ Code
+- prerequesits: **Note that you might need GCC-10 to build successfully.**
 
 While the [setup script](./setup.py) will build the C++ library automatically, for development purposes it is more convenient to build the code directly via CMake.
 In the following we assume that your Anaconda environment for CommonRoad-Reach is named `commonroad`.
+
 
 To build the code from the command line run (using Python version X.Y.Z):
 ```bash
