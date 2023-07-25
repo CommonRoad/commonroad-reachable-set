@@ -39,7 +39,7 @@ def minkowski_sum(polygon1: ReachPolygon, polygon2: ReachPolygon) -> Optional[Re
     list_vertices_sum = list(set(list_vertices_sum))
     list_vertices_sum = [(vertex.x, vertex.y) for vertex in list_vertices_sum]
 
-    return ReachPolygon.from_polygon(ReachPolygon(list_vertices_sum).convex_hull)
+    return ReachPolygon.from_polygon(ReachPolygon(list_vertices_sum).shapely_object.convex_hull)
 
 
 def sort_vertices_counterclockwise(list_vertices: List[Tuple]) -> List[Tuple[float, float]]:
@@ -152,3 +152,4 @@ def clamp(value: float, min_value: float, max_value: float):
 
     else:
         return value
+

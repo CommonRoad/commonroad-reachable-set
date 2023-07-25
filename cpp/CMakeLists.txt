@@ -32,28 +32,34 @@ set(REACH_SOURCE
         ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
         CACHE STRING "" FORCE)
 
-# ========= building playground
-# 1. create executables which uses the source files set above
-add_executable(example
-        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp
-        ${REACH_SOURCE})
+# ========= building library
+# 1. create library from source files above
+add_library(crreach STATIC ${REACH_SOURCE})
+# build position independent code so that we can link this in the Python bindings (builds shared lib)
+set_property(TARGET crreach PROPERTY POSITION_INDEPENDENT_CODE ON)
 # 2. include directories
-target_include_directories(example PRIVATE
+target_include_directories(crreach PUBLIC
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
-target_link_libraries(example PRIVATE
+target_link_libraries(crreach PUBLIC
         ${CRDC_LIBRARY}
         fcl
         ccd
-        ${S11N_LIBRARY}
-        yaml-cpp
+        yaml-cpp)
+
+# ========= building playground
+# 1. create executables which uses the source files set above
+add_executable(example
+        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp)
+# 2. link to external libraries
+target_link_libraries(example PRIVATE
+        crreach
         pybind11::embed)
 
 # ========= unit tests using Doctest
 if(ADD_TESTS)
     # 1. create target
     add_executable(doctest_runner
-            ${REACH_SOURCE}
             ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
 
             ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_polygon.cpp
@@ -67,13 +73,7 @@ if(ADD_TESTS)
             )
     # 2. include directories
     target_include_directories(doctest_runner PRIVATE
-            ${REACH_INCLUDE_DIR}
             ${CMAKE_CURRENT_LIST_DIR}/tests/)
     # 3. link to external libraries
-    target_link_libraries(doctest_runner
-            yaml-cpp
-            ${CRDC_LIBRARY}
-            fcl
-            ccd
-            ${S11N_LIBRARY})
+    target_link_libraries(doctest_runner crreach)
 endif()

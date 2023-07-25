@@ -14,16 +14,15 @@ endif()
 
 # ========= set variables
 # path to FCL installation in drivability checker
-set(fcl_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/cmake/fcl)
+set(fcl_DIR ${CRDC_DIR}/build/temp.linux-x86_64-cpython-${PYTHON_VER}/dist/lib/cmake/fcl)
 # path to CCD installation in drivability checker
-set(ccd_DIR ${CRDC_DIR}/build/temp.linux-x86_64-${PYTHON_VER}/dist/lib/ccd)
+set(ccd_DIR ${CRDC_DIR}/build/temp.linux-x86_64-cpython-${PYTHON_VER}/dist/lib/ccd)
 
 # ========= find necessary packages
 find_package(Eigen3 REQUIRED) # Eigen3
 find_package(ccd REQUIRED) # for collision checks
 find_package(fcl REQUIRED) # for collision checks
-find_library(S11N_LIBRARY s11n HINTS ${CRDC_DIR}/build/lib.linux-x86_64-${PYTHON_VER}/commonroad_dc) # for object serialization in C++
-find_package(yaml-cpp REQUIRED) # for reading yaml files
+# find_package(yaml-cpp REQUIRED) # for reading yaml files
 find_package(OpenMP REQUIRED) # for parallel computation
 if(ADD_TESTS)
     find_package(doctest REQUIRED) # testing with doctest

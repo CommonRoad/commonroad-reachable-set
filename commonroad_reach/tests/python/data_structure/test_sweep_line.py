@@ -109,8 +109,22 @@ def test_merge_rectangles_with_same_lateral_coordinates():
     dict_p_lon_to_list_rectangles = {0: [ReachPolygon.from_rectangle_vertices(0, 0, 1, 1)],
                                      1: [ReachPolygon.from_rectangle_vertices(1, 0, 2, 1)],
                                      2: [ReachPolygon.from_rectangle_vertices(2, 0, 3, 1)],
-                                     3: [ReachPolygon.from_rectangle_vertices(3, 0, 4, 1)]}
+                                     3: [ReachPolygon.from_rectangle_vertices(3, 0, 4, 1)],
+                                     4: [ReachPolygon.from_rectangle_vertices(4, 0, 6, 1)]}
 
     list_rectangles_merged = SweepLine.merge_rectangles_with_same_lateral_coordinates(dict_p_lon_to_list_rectangles)
 
-    assert list_rectangles_merged[0].bounds == (0, 0, 4, 1)
+    assert len(list_rectangles_merged) == 1
+    assert list_rectangles_merged[0].bounds == (0, 0, 6, 1)
+
+
+def test_merge_rectangles_with_same_lateral_coordinates_disconnected():
+    # we must not merge rectangles with same lateral coordinates, but gap in the longitudinal coordinates
+    dict_p_lon_to_list_rectangles = {0: [ReachPolygon.from_rectangle_vertices(0, 0, 1, 1)],
+                                     2: [ReachPolygon.from_rectangle_vertices(2, 0, 3, 1)]}
+
+    list_rectangles_merged = SweepLine.merge_rectangles_with_same_lateral_coordinates(dict_p_lon_to_list_rectangles)
+
+    assert len(list_rectangles_merged) == 2
+    assert list_rectangles_merged[0].bounds == (0, 0, 1, 1)
+    assert list_rectangles_merged[1].bounds == (2, 0, 3, 1)

@@ -89,10 +89,8 @@ def create_curvilinear_and_rasterized_aabb_from_shape(
 
         # find the intersection with the polygon of the obstacle
         polygon_intersection = polygon_obstacle_cart.intersection(polygon_partition_cart)
-        if polygon_intersection.is_empty:
+        if polygon_intersection is None:
             continue
-
-        polygon_intersection = ReachPolygon.from_polygon(polygon_intersection)
 
         # convert the vertices of the intersected polygon to CVLN and find the new lateral extremum coordinates
         list_p_lat = []
@@ -131,16 +129,7 @@ def convert_to_cartesian_polygons(rectangle_cvln, CLCS: pycrccosy.CurvilinearCoo
     If `split_wrt_angle` set to True, the converted rectangles will be further split into smaller ones if their
     upper and lower edges has a difference in angle greater than a threshold. This is to smoothen the plotting.
     """
-    if isinstance(rectangle_cvln, ReachPolygon):
-        return convert_to_cartesian_polygon(rectangle_cvln.bounds, CLCS, split_wrt_angle)
-
-    else:
-        p_lon_min = rectangle_cvln.p_lon_min()
-        p_lat_min = rectangle_cvln.p_lat_min()
-        p_lon_max = rectangle_cvln.p_lon_max()
-        p_lat_max = rectangle_cvln.p_lat_max()
-
-        return convert_to_cartesian_polygon((p_lon_min, p_lat_min, p_lon_max, p_lat_max), CLCS, split_wrt_angle)
+    return convert_to_cartesian_polygon(rectangle_cvln.bounds, CLCS, split_wrt_angle)
 
 
 def convert_to_cartesian_polygon(tuple_vertices, CLCS: pycrccosy.CurvilinearCoordinateSystem, split_wrt_angle) \

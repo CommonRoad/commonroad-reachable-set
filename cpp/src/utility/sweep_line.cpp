@@ -246,7 +246,8 @@ vector<ReachPolygonPtr> SweepLine::merge_rectangles_with_same_lateral_coordinate
             auto add_to_list = true;
 
             for (auto const& rectangle_right: vec_rectangles_right) {
-                if (rectangles_have_same_p_lat(rectangle_left, rectangle_right)) {
+                if (rectangles_have_same_p_lat(rectangle_left, rectangle_right) &&
+                    rectangle_left->p_lon_max() >= rectangle_right->p_lon_min()) {
                     auto it_end = std::remove(vec_rectangles_right.begin(), vec_rectangles_right.end(),
                                               rectangle_right);
                     vec_rectangles_right.erase(it_end, vec_rectangles_right.end());

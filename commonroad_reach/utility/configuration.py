@@ -117,7 +117,7 @@ def compute_inflation_radius(mode_inflation: int, length: float, width: float, r
 
     # Circumscribed circle (over-approximation of the shape of the ego vehicle)
     elif mode_inflation == 2:
-        return length / 2 if length > width else width / 2
+        return np.sqrt(length ** 2 + width ** 2) / 2
 
     # Three disc approximation of vehicle occupancy
     elif mode_inflation == 3:

@@ -1,12 +1,16 @@
-## CommonRoad-Reach: A Toolbox for Reachability Analysis of Automated Vehicles
+# CommonRoad-Reach: A Toolbox for Reachability Analysis of Automated Vehicles
 
-Reachability analysis has gained increasing popularity in motion planning and safeguarding of automated vehicles (AVs). While existing tools for reachability analysis mainly focus on general-purpose algorithms for formal verification of dynamical systems, a toolbox tailored to AV-specific applications is not yet available. The CommonRoad-Reach toolbox
+Reachability analysis has gained increasing popularity in motion planning and safeguarding of automated vehicles (AVs). 
+While existing tools for reachability analysis mainly focus on general-purpose algorithms for formal verification 
+of dynamical systems, a toolbox tailored to AV-specific applications is not yet available. 
+The CommonRoad-Reach toolbox
 
 - integrates different methods for computing reachable sets using polytopic set propagation and graph-based propagation;
 - provides Python and C++ implementations of the algorithms, thus offering convenient prototyping and real-time computation for the users; and
 - extracts driving corridors which can be used as planning constraints for motion planners.
 
-### System Requirements
+
+## System Requirements
 
 The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04. It should be compatible with later 
 versions. For building the code, the following minimum versions are required:
@@ -14,28 +18,41 @@ versions. For building the code, the following minimum versions are required:
   * **CMake**: version 3.15 or above.
   * **Pip**: version 21.3 or above
 
+We further recommend using [Anaconda](https://www.anaconda.com/) to manage your virtual python environment.
 
-### Third Party Libraries and Packages
 
-The C++ code depends on the following libraries: 
+## Installation options
+
+We provide two installation options for CommonRoad-Reach: Installation as a Python package or building from source.
+
+1. **Python Package**: Install the python package via `pip` in your Conda environment:
+    ```bash
+    $ pip install commonroad-reach
+    ```
+
+2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
+descriptions below
+
+
+## Building from Source
+### Third Party Dependencies
+The following third-party dependencies of the C++ code are only required for building the project from source!
 
 **Essential dependencies**:
-* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker) (version >= 2022.2)
+* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/drivability-checker) (version >= 2022.2.1)
 * [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
 * [OpenMP](https://www.openmp.org/)
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * [pybind11](https://github.com/pybind/pybind11)
-  
 
-**Optional dependencies**:
+**Optional dependencies (testing and documentation)**:
 * [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
 * [Doxygen](https://doxygen.nl/) (optional: for building documentation)
 
-The Python dependencies are listed in `requirements.txt`.
+The additional Python dependencies are listed in `requirements.txt`.
+
 
 ### Building the Code
-
-* `Optional:` We recommend using [Anaconda](https://www.anaconda.com/) to manage your virtual python environment.
 
 * Install Python dependencies:
 
@@ -66,7 +83,6 @@ The Python dependencies are listed in `requirements.txt`.
   ```
   This will build the python binding (pycrreach) required for collision checks and other C++-boosted computations.
 
-
 **Note**: 
 
   * Replace `"/path/to/commonroad-drivability-checker/"` with the path to the Drivability Checker folder on your machine.
@@ -74,30 +90,38 @@ The Python dependencies are listed in `requirements.txt`.
 
 **Optional:**
 
-- To add unit tests,  set variable `ADD_TESTS=ON` before the pip command.
+- To add unit tests,  set variable `ADD_TESTS=ON` before the `pip` command.
 - To build the code in Debug mode, set `debug=1` in the setup configuration file (`setup.cfg`).
 
-### Running the Code
+
+## Getting Started
 
 Run the exemplary scripts to compute reachable sets and extract driving corridors.
 
-* To compute reachable sets, run ``commonroad_reachset/compute_reachable_set.py``.
+* To compute reachable sets, run `compute_reachable_set.py`.
 
-- To extract driving corridors, run ``commonroad_reachset/extract_driving_corridors.py``.
+* To extract driving corridors, run `extract_driving_corridors.py`.
 
-The outputs will be stored in the ``./output/`` folder. Default and scenario-specific configurations are stored in the ``./configurations/`` folder.
+The outputs will be stored in the `./output/` folder. Default and scenario-specific configurations are stored in the `./configurations/` folder.
 
-### Doxygen Documentation
 
-Run the following command in the root directory to generate C++ documentation. 
+## Documentation
+
+The documentation of our toolbox is available on our website: https://commonroad.in.tum.de/docs/commonroad-reach/.
+
+In order to generate the documentation via Sphinx locally, run the following commands in the root directory:
 
 ```bash
-doxygen ./docs/Doxyfile
+$ pip install -r ./docs/requirements_doc.txt
+$ cd docs/Sphinx
+$ make html
 ```
 
-Doxygen documentation can be launched by browsing ``./docs/Doxygen/html/index.html/``.
+The documentation can then be launched by browsing ``./docs/Sphinx/build/html/index.html/``.
 
-### Citation
+
+## Citation
+If you use our toolbox for your research, please cite our [paper](https://mediatum.ub.tum.de/doc/1684928/1684928.pdf):
 
 ```text
 @InProceedings{iraniliu2022commonroad,

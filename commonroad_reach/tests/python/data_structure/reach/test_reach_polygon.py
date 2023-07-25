@@ -12,13 +12,13 @@ def test_creating_polygon_with_less_than_three_vertices_throws_exception():
 def test_has_correct_bounding_box_upon_initialization():
     list_vertices = [(0, 0), (5, -5), (10, 10)]
     polygon = ReachPolygon(list_vertices)
-    assert polygon.bounds == (0, -5, 10, 10)
+    assert polygon._bounds == (0, -5, 10, 10)
 
 
 def test_convexification():
     list_vertices = [(0, 0), (5, -5), (10, 10), (5, 2), (5, -2)]
     polygon = ReachPolygon(list_vertices)
-    polygon = ReachPolygon.from_polygon(polygon.convex_hull)
+    polygon = ReachPolygon.from_polygon(polygon.shapely_object.convex_hull)
 
     assert len(polygon.vertices) == 3
     list_vertices_expected = [(0, 0), (5, -5), (10, 10)]

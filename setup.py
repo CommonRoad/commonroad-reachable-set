@@ -13,6 +13,9 @@ from sysconfig import get_paths
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
+with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    readme = f.read()
+
 
 class CMakeExtension(Extension):
     name: str  # IDE somehow doesn't detect name without this line
@@ -71,7 +74,8 @@ class CMakeBuild(build_ext):
             return None
 
         # pass version of current python binary
-        cmake_args += ['-DPYTHON_VER=' + platform.python_version()[0:3]]
+        python_ver = platform.python_version().split(".")
+        cmake_args += ['-DPYTHON_VER=' + python_ver[0] + python_ver[1]]
 
         # add tests
         if 'ADD_TESTS' in os.environ:
@@ -109,28 +113,32 @@ class CMakeBuild(build_ext):
 setup(name='commonroad-reach', version=__version__,
       description='CommonRoad Reach: A Toolbox for Computing Reachable Sets of Automated Vehicles',
       keywords='autonomous automated vehicles driving motion planning',
-      url='https://commonroad.in.tum.de/',
+      url='https://commonroad.in.tum.de/tools/commonroad-reach',
       project_urls={
-          'Documentation': '',
-          'Forum': '',
-          'Source': ','
+          'Documentation': 'https://commonroad.in.tum.de/docs/commonroad-reach/',
+          'Forum': 'https://commonroad.in.tum.de/forum/c/comonroad-reach/19',
+          'Source': 'https://gitlab.lrz.de/tum-cps/commonroad-reach'
       },
       author='Cyber-Physical Systems Group, Technical University of Munich',
       author_email='commonroad@lists.lrz.de',
       license="BSD",
+      long_description_content_type='text/markdown',
+      long_description=readme,
       packages=find_packages(exclude=['commonroad_reach.tests']),
 
       ext_modules=[
           CMakeExtension("commonroad_reach"),
       ],
       cmdclass={"build_ext": CMakeBuild},
-
-      install_requires=["commonroad-io>=2022.3",
+      python_requires='>=3.7',
+      install_requires=["commonroad-io>=2023.1",
                         "commonroad-route-planner>=2022.3",
+                        "commonroad-drivability-checker>=2023.1",
+                        "cython>=0.29.28",
                         "omegaconf>=2.1.1",
-                        "setuptools>=50.3.2",
+                        "setuptools>=62.1.0",
                         "numpy>=1.19.2",
-                        "shapely>=1.7.0",
+                        "shapely>=2.0.0",
                         "enum34>=1.1.10",
                         "imageio>=2.9.0",
                         "seaborn>=0.10.0",
@@ -141,8 +149,11 @@ setup(name='commonroad-reach', version=__version__,
       extras_require={"tests": ["pytest>=3.8.0"]},
       classifiers=["Programming Language :: C++",
                    "Programming Language :: Python :: 3.7",
+                   "Programming Language :: Python :: 3.8",
+                   "Programming Language :: Python :: 3.9",
                    "License :: OSI Approved :: BSD License",
                    "Operating System :: POSIX :: Linux",],
-      data_files=[],
+      data_files=[('.', ['LICENSE.txt'])],
       include_package_data=True,
+      package_data={'': ['*.yaml']}
       )

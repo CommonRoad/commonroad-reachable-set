@@ -110,7 +110,7 @@ class Configuration:
         mode_repartition = dict_mode_repartition_to_string[self.reachable_set.mode_repartition]
         mode_inflation = dict_mode_inflation_to_string[self.reachable_set.mode_inflation]
 
-        string = "# ===== Configuration Summary ===== #\n"
+        string = "\n# ===== CommonRoad-Reach Configuration Summary ===== #\n"
         string += f"# {self.scenario.scenario_id}\n"
         string += "# Planning:\n"
         string += f"# \tdt: {self.planning.dt}\n"
@@ -321,19 +321,21 @@ class VehicleConfiguration(ConfigurationBase):
             # distances front/rear axle to vehicle center
             self.wb_front_axle = vehicle_parameters.a
             self.wb_rear_axle = vehicle_parameters.b
-            # wheelbase
-            self.wheelbase = self.wb_front_axle + self.wb_rear_axle
 
             # overwrite with parameters given by vehicle ID if they are explicitly provided in the *.yaml file
             for key, value in config_relevant.items():
                 if value is not None:
                     setattr(self, key, value)
 
+            # wheelbase
+            self.wheelbase = self.wb_front_axle + self.wb_rear_axle
+
             self.radius_disc, self.circle_distance = \
                 util_configuration.compute_disc_radius_and_distance(self.length, self.width,
                                                                     ref_point=config.planning.reference_point,
                                                                     dist_axle_rear=self.wb_rear_axle)
-
+            assert not (config.planning.reference_point == "REAR" and config.reachable_set.mode_inflation == 2), \
+                "Circumscribed inflation only supports reference point CENTER"
             self.radius_inflation = util_configuration.compute_inflation_radius(config.reachable_set.mode_inflation,
                                                                                 self.length, self.width,
                                                                                 self.radius_disc)

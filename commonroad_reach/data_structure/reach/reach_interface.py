@@ -1,6 +1,7 @@
 import logging
 import time
 from typing import List, Union
+from pathlib import Path
 
 from commonroad.geometry.shape import Shape
 
@@ -134,6 +135,13 @@ class ReachableSetInterface:
         time_computation = time.time() - time_start
 
         util_logger.print_and_log_info(logger, f"\tTook: \t{time_computation:.3f}s", verbose)
+
+        # Save config to output folder
+        if self.config.debug.save_config:
+            path_output = self.config.general.path_output
+            Path(path_output).mkdir(parents=True, exist_ok=True)
+            self.config.save(path_output, str(self.config.scenario.scenario_id))
+            util_logger.print_and_log_debug(logger, "\tConfiguration file saved.", verbose=True)
 
     def compute_drivable_area_at_step(self, step: int = 0):
         """

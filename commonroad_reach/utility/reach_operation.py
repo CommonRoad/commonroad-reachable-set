@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Union
 
 import numpy as np
+import networkx as nx
 
 logger = logging.getLogger(__name__)
 from math import ceil, floor
@@ -44,7 +45,7 @@ def create_zero_state_polygon(dt: float, a_min: float, a_max: float) -> ReachPol
         a, b, c = tuple_coefficients_lower
         polygon_intersected = polygon_intersected.intersect_halfspace(a, b, c)
 
-    return ReachPolygon.from_polygon(polygon_intersected)
+    return polygon_intersected
 
 
 def create_bounding_polygon(dt: float, a_min: float, a_max: float) -> ReachPolygon:
@@ -372,8 +373,8 @@ def construct_reach_node(rectangle_drivable_area: ReachPolygon,
     # iterate through adjacent propagated sets
     for idx_base_set_adjacent in list_idx_propagated_sets_adjacent:
         propagated_set_adjacent = list_propagated_set[idx_base_set_adjacent]
-        polygon_lon = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lon)
-        polygon_lat = ReachPolygon.from_polygon(propagated_set_adjacent.polygon_lat)
+        polygon_lon = propagated_set_adjacent.polygon_lon
+        polygon_lat = propagated_set_adjacent.polygon_lat
         # cut down to position range of the drivable area rectangle
         try:
             polygon_lon = polygon_lon.intersect_halfspace(1, 0, rectangle_drivable_area.p_lon_max)
@@ -488,14 +489,8 @@ def compute_area_of_reach_nodes(list_nodes_reach: List[ReachNode]) -> float:
     if not list_nodes_reach:
         return area
 
-    if isinstance(list_nodes_reach[0], ReachNode):
-        for node in list_nodes_reach:
-            area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
-
-    else:
-        for node in list_nodes_reach:
-            area += (node.p_lon_max() - node.p_lon_min()) * (node.p_lat_max() - node.p_lat_min())
-
+    for node in list_nodes_reach:
+        area += (node.p_lon_max - node.p_lon_min) * (node.p_lat_max - node.p_lat_min)
     return area
 
 
@@ -531,17 +526,12 @@ def connected_reachset_py(list_nodes_reach: List[ReachNode], num_digits: int):
     return dict_adjacency
 
 
-def lon_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
+def lon_interval_connected_set(connected_set):
     """
     Projects a connected set onto longitudinal position domain and returns min/max longitudinal positions.
     """
     # get min and max values for each reachable set in the connected set
-    if type(connected_set[0]) == pycrreach.ReachNode:
-        # C++ backend
-        min_max_array = np.asarray([[reach_node.p_lon_min(), reach_node.p_lon_max()] for reach_node in connected_set])
-    else:
-        # Python backend
-        min_max_array = np.asarray([[reach_node.p_lon_min, reach_node.p_lon_max] for reach_node in connected_set])
+    min_max_array = np.asarray([[reach_node.p_lon_min, reach_node.p_lon_max] for reach_node in connected_set])
 
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
@@ -550,17 +540,12 @@ def lon_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.Re
     return min_connected_set, max_connected_set
 
 
-def lat_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
+def lat_interval_connected_set(connected_set):
     """
     Projects a connected set onto lateral position domain and returns min/max lateral positions.
     """
     # get min and max values for each reachable set in the connected set
-    if type(connected_set[0]) == pycrreach.ReachNode:
-        # C++ backend
-        min_max_array = np.asarray([[reach_node.p_lat_min(), reach_node.p_lat_max()] for reach_node in connected_set])
-    else:
-        # Python backend
-        min_max_array = np.asarray([[reach_node.p_lat_min, reach_node.p_lat_max] for reach_node in connected_set])
+    min_max_array = np.asarray([[reach_node.p_lat_min, reach_node.p_lat_max] for reach_node in connected_set])
 
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
@@ -569,19 +554,13 @@ def lat_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.Re
     return min_connected_set, max_connected_set
 
 
-def lon_velocity_interval_connected_set(connected_set: List[Union[ReachNode, pycrreach.ReachNode]]):
+def lon_velocity_interval_connected_set(connected_set):
     """
     Projects a connected reachable set onto longitudinal velocity domain and returns min/max longitudinal velocities
     """
     # get min and max values for each reachable set in the connected set
-    if type(connected_set[0]) == pycrreach.ReachNode:
-        # C++ backend
-        min_max_array = np.asarray([[reach_node.polygon_lon.v_min(), reach_node.polygon_lon.v_max()]
-                                    for reach_node in connected_set])
-    else:
-        # Python backend
-        min_max_array = np.asarray([[reach_node.polygon_lon.v_min, reach_node.polygon_lon.v_max]
-                                    for reach_node in connected_set])
+    min_max_array = np.asarray([[reach_node.polygon_lon.v_min, reach_node.polygon_lon.v_max]
+                                for reach_node in connected_set])
 
     # get minimum and maximum value for the connected set
     min_connected_set = np.min(min_max_array[:, 0])
@@ -598,15 +577,57 @@ def determine_overlapping_nodes_with_lon_pos(list_nodes_reach: List[Union[pycrre
     """
     set_nodes_overlap = set()
 
-    if type(list_nodes_reach[0]) == pycrreach.ReachNode:
-        for node_reach in list_nodes_reach:
-            if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min() * 10.0 ** 2)) and \
-                    np.greater_equal(np.ceil(node_reach.p_lon_max() * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
-                set_nodes_overlap.add(node_reach)
-    else:
-        for node_reach in list_nodes_reach:
-            if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min * 10.0 ** 2)) and \
-                    np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
-                set_nodes_overlap.add(node_reach)
+    for node_reach in list_nodes_reach:
+        if np.greater_equal(round(p_lon * 10.0 ** 2), np.floor(node_reach.p_lon_min * 10.0 ** 2)) and \
+                np.greater_equal(np.ceil(node_reach.p_lon_max * 10.0 ** 2), round(p_lon * 10.0 ** 2)):
+            set_nodes_overlap.add(node_reach)
 
     return list(set_nodes_overlap)
+
+
+def determine_connected_components(list_nodes_reach, exclude_small_area: bool = False):
+    """
+    Determines and returns the connected reachable sets in the position domain.
+
+    Connected components are sorted according to a heuristic (area of connected reachable sets).
+
+    :param list_nodes_reach: list of reach nodes
+    :param exclude_small_area: excludes connected components with an area smaller than the threshold and if there are
+        more than 1 connected component at the current time step
+
+    :return: list of connected reachable sets
+    """
+    from commonroad_reach.data_structure.reach.driving_corridor import ConnectedComponent
+
+    num_digits = 2
+
+    if type(list_nodes_reach[0]) == pycrreach.ReachNode:
+        overlap = pycrreach.connected_reachset_boost(list_nodes_reach, num_digits)
+    else:
+        overlap = connected_reachset_py(list_nodes_reach, num_digits)
+
+    # adjacency list: list with tuples, e.g., (0, 1) representing that node 0 and node 1 are connected
+    adjacency = []
+    for v in overlap.values():
+        adjacency += v
+
+    list_connected_component = list()
+    # create graph with nodes = reach nodes and edges = adjacency status
+    graph = nx.Graph()
+    graph.add_nodes_from(list(range(len(list_nodes_reach))))
+    graph.add_edges_from(adjacency)
+
+    for set_indices_nodes_reach_connected in nx.connected_components(graph):
+        list_nodes_reach_in_cc = [list_nodes_reach[idx] for idx in set_indices_nodes_reach_connected]
+        connected_component = ConnectedComponent(list_nodes_reach_in_cc)
+
+        # todo: add threshold to config?
+        if exclude_small_area and len(set_indices_nodes_reach_connected) >= 2 and connected_component.area < 0.05:
+            continue
+
+        list_connected_component.append(connected_component)
+
+    # sort connected components based on their areas
+    list_connected_component.sort(key=lambda cc: cc.area, reverse=True)
+
+    return list_connected_component

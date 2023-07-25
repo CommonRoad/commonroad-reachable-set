@@ -81,5 +81,22 @@ TEST_CASE("position rectangle") {
         node.intersect_in_position_domain(1, 8, 4, 20);
         CHECK(node.position_rectangle()->bounding_box() == tuple(1, 8, 4, 15));
     }
+
+    // reset node
+    node = ReachNode(0, polygon_lon, polygon_lat);
+    SUBCASE("intersection in position domain with infinite bounds") {
+        double inf = std::numeric_limits<double>::infinity();
+        node.intersect_in_position_domain(1, -inf, inf, inf);
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 7, 5, 15));
+
+        node.intersect_in_position_domain(-inf, 8, inf, inf);
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 8, 5, 15));
+
+        node.intersect_in_position_domain(-inf, -inf, 4, inf);
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 8, 4, 15));
+
+        node.intersect_in_position_domain(-inf, -inf, inf, 20);
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 8, 4, 15));
+    }
 }
 }

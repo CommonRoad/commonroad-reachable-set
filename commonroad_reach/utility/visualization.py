@@ -8,8 +8,8 @@ import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from commonroad.geometry.shape import Polygon, Rectangle
-from commonroad.visualization.draw_params import MPDrawParams
+from commonroad.geometry.shape import Polygon, Rectangle, Circle
+from commonroad.visualization.draw_params import BaseParam, MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
@@ -21,6 +21,7 @@ from commonroad_reach.data_structure.reach.reach_interface import ReachableSetIn
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
+from commonroad_reach.utility.configuration import compute_disc_radius_and_distance
 
 logger = logging.getLogger(__name__)
 logging.getLogger('PIL').setLevel(logging.WARNING)
@@ -118,11 +119,6 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
 
     util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
 
-    # todo: move this to config file
-    if config.debug.save_config:
-        config.save(path_output, str(scenario.scenario_id))
-        util_logger.print_and_log_debug(logger, "\tConfiguration file saved.", verbose=False)
-
 
 def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
                                      step_start: int = 0, step_end: int = 0, steps: List[int] = None,
@@ -210,6 +206,7 @@ def generate_default_drawing_parameters(config: Configuration) -> MPDrawParams:
 
     draw_params.dynamic_obstacle.draw_icon = config.debug.draw_icons
     draw_params.dynamic_obstacle.trajectory.draw_trajectory = True
+    draw_params.dynamic_obstacle.occupancy.draw_occupancies = False
     draw_params.lanelet_network.lanelet.show_label = config.debug.draw_lanelet_labels
     draw_params.planning_problem.initial_state.state.draw_arrow = False
     draw_params.planning_problem.initial_state.state.radius = 0.5
@@ -228,14 +225,12 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
     config = reach_interface.config
     x_min = y_min = np.infty
     x_max = y_max = -np.infty
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for step in range(reach_interface.step_start, reach_interface.step_end):
             for rectangle in reach_interface.drivable_area_at_step(step):
-                bounds = rectangle.bounds if backend == "PYTHON" else (rectangle.p_lon_min(), rectangle.p_lat_min(),
-                                                                       rectangle.p_lon_max(), rectangle.p_lat_max())
+                bounds = rectangle.bounds
                 x_min = min(x_min, bounds[0])
                 y_min = min(y_min, bounds[1])
                 x_max = max(x_max, bounds[2])
@@ -261,17 +256,16 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
 
 
 def draw_reachable_sets(list_nodes, config, renderer, draw_params: MPDrawParams):
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for node in list_nodes:
-            vertices = node.position_rectangle.vertices if backend == "PYTHON" else node.position_rectangle().vertices()
+            vertices = node.position_rectangle.vertices
             Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
 
     elif coordinate_system == "CVLN":
         for node in list_nodes:
-            position_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
+            position_rectangle = node.position_rectangle
             list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
                                                                                       config.planning.CLCS, True)
             for polygon in list_polygons_cart:
@@ -279,12 +273,11 @@ def draw_reachable_sets(list_nodes, config, renderer, draw_params: MPDrawParams)
 
 
 def draw_drivable_area(list_rectangles, config, renderer, draw_params):
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
         for rect in list_rectangles:
-            vertices = rect.vertices if backend == "PYTHON" else rect.vertices()
+            vertices = rect.vertices
             Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
 
     elif coordinate_system == "CVLN":
@@ -448,10 +441,11 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
     """
     Draws full driving corridor in 2D and (optionally) visualizes planned trajectory within the corridor.
     """
-    util_logger.print_and_log_info(logger, "* Plotting full 2D driving corridor ...")
     # set ups
     config = reach_interface.config
     scenario = config.scenario
+
+    util_logger.print_and_log_info(logger, "* Plotting full 2D driving corridor ...", verbose=config.debug.verbose_info)
 
     planning_problem = config.planning_problem
 
@@ -590,7 +584,6 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
     """
     # get information from config
     coordinate_system = config.planning.coordinate_system
-    backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"
 
     # set colors
     face_color = palette[0]
@@ -598,7 +591,7 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
 
     if coordinate_system == "CART":
         for node in list_reach_nodes:
-            pos_rectangle = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
+            pos_rectangle = node.position_rectangle
             z_values, vertices_3d = _compute_vertices_of_polyhedron(pos_rectangle, z_tuple)
             # render in 3D
             ax.scatter3D(z_values[:, 0], z_values[:, 1], z_values[:, 2], alpha=0.0)
@@ -612,7 +605,7 @@ def _render_reachable_sets_3d(list_reach_nodes, ax, z_tuple, config, palette):
 
     elif coordinate_system == "CVLN":
         for node in list_reach_nodes:
-            pos_rectangle_cvln = node.position_rectangle if backend == "PYTHON" else node.position_rectangle()
+            pos_rectangle_cvln = node.position_rectangle
             list_pos_rectangle_cart = util_coordinate_system.convert_to_cartesian_polygons(pos_rectangle_cvln,
                                                                                            config.planning.CLCS, True)
             for pos_rectangle in list_pos_rectangle_cart:
@@ -637,18 +630,10 @@ def _compute_vertices_of_polyhedron(position_rectangle, z_tuple):
     z_max = z_tuple[1]
 
     # get vertices of position rectangle
-    if isinstance(position_rectangle, ReachPolygon):
-        # ReachPolygon Python data structure
-        x_min = position_rectangle.p_lon_min
-        x_max = position_rectangle.p_lon_max
-        y_min = position_rectangle.p_lat_min
-        y_max = position_rectangle.p_lat_max
-    else:
-        # ReachPolygon CPP data structure
-        x_min = position_rectangle.p_lon_min()
-        x_max = position_rectangle.p_lon_max()
-        y_min = position_rectangle.p_lat_min()
-        y_max = position_rectangle.p_lat_max()
+    x_min = position_rectangle.p_lon_min
+    x_max = position_rectangle.p_lon_max
+    y_min = position_rectangle.p_lat_min
+    y_max = position_rectangle.p_lat_max
 
     # z values for 3D visualization of reachable sets as polyhedron
     z_values = np.array([[x_min, y_min, z_min],
@@ -844,7 +829,7 @@ def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.Reachab
     if coordinate_system == "CART":
         for step in range(reachable_set.step_start, reachable_set.step_end):
             for rectangle in reachable_set.drivable_area_at_step(step):
-                bounds = (rectangle.p_lon_min(), rectangle.p_lat_min(), rectangle.p_lon_max(), rectangle.p_lat_max())
+                bounds = rectangle.bounds
                 x_min = min(x_min, bounds[0])
                 y_min = min(y_min, bounds[1])
                 x_max = max(x_max, bounds[2])
@@ -903,3 +888,40 @@ def plot_collision_checker(reach_interface: ReachableSetInterface):
         rnd.ax.plot(curv_projection_domain_border[:, 0], curv_projection_domain_border[:, 1], zorder=100,
                     color='orange')
     plt.show()
+
+def draw_vehicle_and_three_circles(renderer: MPRenderer, reach_interface: ReachableSetInterface,
+                                   position: np.array, orientation: float, position_is_center: bool = True):
+
+    vehicle_config = reach_interface.config.vehicle.ego
+
+    rad, dist = compute_disc_radius_and_distance(
+        vehicle_config.length, vehicle_config.width,
+        ref_point="REAR", dist_axle_rear=vehicle_config.wb_rear_axle)
+
+    rotation_vector = np.array([np.cos(orientation), np.sin(orientation)])
+
+    if position_is_center:
+        center_position = position
+        rear_axle_pos = position - vehicle_config.wb_rear_axle * rotation_vector
+    else:
+        center_position = position + vehicle_config.wb_rear_axle * rotation_vector
+        rear_axle_pos = position
+
+    # ego rectangle
+    ego_shape = Rectangle(
+        length=vehicle_config.length, width=vehicle_config.width,
+        center=center_position, orientation=orientation)
+    renderer.draw_params.shape.facecolor = "red"
+    renderer.draw_params.shape.edgecolor = "red"
+    ego_shape.draw(renderer)
+
+    # visualize three circles
+    # set draw params
+    renderer.draw_params.shape.opacity = 1.
+    renderer.draw_params.shape.facecolor = "none"
+    renderer.draw_params.shape.edgecolor = "grey"
+
+    # draw
+    Circle(rad, rear_axle_pos).draw(renderer)
+    Circle(rad, rear_axle_pos + dist / 2 * rotation_vector).draw(renderer)
+    Circle(rad, rear_axle_pos + dist * rotation_vector).draw(renderer)

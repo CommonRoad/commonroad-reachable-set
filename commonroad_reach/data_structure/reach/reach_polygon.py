@@ -3,13 +3,14 @@ from abc import ABC
 from typing import List, Tuple, Union
 
 import numpy as np
-from shapely.geometry import Polygon, MultiPolygon
+from shapely import Point
+from shapely.geometry import Polygon
 import commonroad_reach.utility.logger as util_logger
 
 logger = logging.getLogger(__name__)
 
 
-class ReachPolygon(Polygon, ABC):
+class ReachPolygon(ABC):
     """
     Polygon class that constitutes reach nodes and position rectangles.
 
@@ -30,14 +31,22 @@ class ReachPolygon(Polygon, ABC):
             if fix_vertices and not np.allclose(list_vertices[0], list_vertices[-1]):
                 list_vertices.append(list_vertices[0])
 
-        super(ReachPolygon, self).__init__(list_vertices)
-        self._bounds = self.bounds
+        self._shapely_polygon = Polygon(list_vertices)
+        self._bounds = self._shapely_polygon.bounds
 
     def __repr__(self):
         return f"ReachPolygon({self._bounds[0]:.4}, {self._bounds[1]:.4}, {self._bounds[2]:.4}, {self._bounds[3]:.4})"
 
     def __str__(self):
         return f"{self._bounds}"
+
+    @property
+    def shapely_object(self) -> Polygon:
+        return self._shapely_polygon
+
+    @property
+    def bounds(self) -> List:
+        return self._bounds
 
     @property
     def p_min(self):
@@ -121,15 +130,8 @@ class ReachPolygon(Polygon, ABC):
         """
         Returns the list of vertices of the polygon.
         """
-        if isinstance(self, Polygon):
-            list_x, list_y = self.exterior.coords.xy
-
-        elif isinstance(self, MultiPolygon):
-            list_x = []
-            list_y = []
-            for polygon in self:
-                list_x.extend(polygon.exterior.coords.xy[0])
-                list_y.extend(polygon.exterior.coords.xy[1])
+        if isinstance(self._shapely_polygon, Polygon):
+            list_x, list_y = self._shapely_polygon.exterior.coords.xy
 
         else:
             message = "Polygon type error."
@@ -140,12 +142,45 @@ class ReachPolygon(Polygon, ABC):
 
         return list_vertices[:-1]
 
+    @property
+    def is_empty(self):
+        """
+        True if the set of points in this polygon is empty, else False
+        """
+        return self._shapely_polygon.is_empty
+
+    @property
+    def convex_hull(self) -> Polygon:
+        """
+        The convex hull of the polygon
+        """
+        return self._shapely_polygon.convex_hull
+
+    @property
+    def area(self) -> float:
+        """
+        The area of the polygon
+        """
+        return self._shapely_polygon.area
+
+    def intersects(self, other_polygon: "ReachPolygon") -> bool:
+        """
+        Returns True if geometries intersect, else False
+        """
+        return self._shapely_polygon.intersects(other_polygon._shapely_polygon)
+
+    def contains(self, point: Point) -> bool:
+        """
+        Returns True if the geometry contains the other, else False
+        """
+        return self._shapely_polygon.contains(point)
+
     def clone(self, convexify: bool) -> "ReachPolygon":
         """
         Returns a cloned (and convexified) polygon.
         """
         if convexify:
-            return ReachPolygon.from_polygon(self.convex_hull)
+            return ReachPolygon.from_polygon(self._shapely_polygon.convex_hull)
 
         else:
             return ReachPolygon(self.vertices)
@@ -157,11 +192,22 @@ class ReachPolygon(Polygon, ABC):
         assert not (a == 0 and b == 0), "Halfspace parameters are not valid."
 
         polygon_halfspace = self.construct_halfspace_polygon(a, b, c, self._bounds)
-        polygon_intersected = self.intersection(polygon_halfspace)
+        polygon_intersected = self._shapely_polygon.intersection(polygon_halfspace)
 
         if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
             return ReachPolygon.from_polygon(polygon_intersected)
+        else:
+            return None
 
+    def intersection(self, other_polygon: "ReachPolygon") -> Union["ReachPolygon", None]:
+        """
+        Computes intersection of a reach polygon with another reach polygon.
+        If polygons intersect, resulting intersection is returned as a reach polygon, else None.
+        """
+        polygon_intersected = self._shapely_polygon.intersection(other_polygon._shapely_polygon)
+
+        if isinstance(polygon_intersected, Polygon) and not polygon_intersected.is_empty:
+            return ReachPolygon.from_polygon(polygon_intersected)
         else:
             return None
 
@@ -187,17 +233,10 @@ class ReachPolygon(Polygon, ABC):
         return ReachPolygon(list_vertices)
 
     @staticmethod
-    def get_vertices(polygon: Union[Polygon, "ReachPolygon"]) -> List[Tuple[np.ndarray, np.ndarray]]:
+    def get_vertices(polygon: Polygon) -> List[Tuple[np.ndarray, np.ndarray]]:
         """Returns the list of vertices of the polygon."""
-        if isinstance(polygon, Polygon) or isinstance(polygon, ReachPolygon):
+        if isinstance(polygon, Polygon):
             list_x, list_y = polygon.exterior.coords.xy
-
-        elif isinstance(polygon, MultiPolygon):
-            list_x = []
-            list_y = []
-            for plg in polygon:
-                list_x.extend(plg.exterior.coords.xy[0])
-                list_y.extend(plg.exterior.coords.xy[1])
 
         else:
             message = "Polygon type error."
@@ -277,4 +316,5 @@ class ReachPolygon(Polygon, ABC):
 
                 list_vertices.append(vertex_new)
 
-        return ReachPolygon(list_vertices)
+        return Polygon(list_vertices)
+
