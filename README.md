@@ -31,10 +31,15 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
     ```
 
 2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
-descriptions below. **You may need GCC-10 to build successfully.**
+descriptions below.
 
 
 ## Building from Source
+
+> **Note:** Currently there appears to be a bug with boost geometry and newer versions of GCC (this seems to start with version 11.4).
+> A workaround until this is fixed is to use an older version of GCC (we suggest GCC 10).
+> To do so, indicate the path to the older version of GCC in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
+
 ### Third Party Dependencies
 The following third-party dependencies of the C++ code are only required for building the project from source!
 
