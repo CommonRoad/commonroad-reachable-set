@@ -217,8 +217,10 @@ class ReachNode:
         Returns a copy translated by input offsets.
         """
         return ReachNode(
-            ReachPolygon.from_polygon(affinity.translate(self.polygon_lon, xoff=p_lon_off, yoff=v_lon_off)),
-            ReachPolygon.from_polygon(affinity.translate(self.polygon_lat, xoff=p_lat_off, yoff=v_lat_off)),
+            ReachPolygon.from_polygon(
+                affinity.translate(self.polygon_lon.shapely_object, xoff=p_lon_off, yoff=v_lon_off)),
+            ReachPolygon.from_polygon(
+                affinity.translate(self.polygon_lat.shapely_object, xoff=p_lat_off, yoff=v_lat_off)),
             step=self.step)
 
     def add_parent_node(self, node_parent: "ReachNode"):
