@@ -15,6 +15,15 @@ private:
     std::vector<std::shared_ptr<ReachNode>> _vec_nodes_parent;
     std::vector<std::shared_ptr<ReachNode>> _vec_nodes_child;
 
+    /// Check whether it is necessary to perform a halfspace intersection given current and target bounds.
+    /// @param current current bound of the polygon
+    /// @param target target bound of the polygon
+    /// @param is_max if true, current and target bound are treated as maximal bounds, otherwise as minimal bounds.
+    /// @returns true iff the halfspace intersection is necessary.
+    static inline bool _is_halfspace_intersection_necessary(double current, double target, bool is_max) {
+        return is_max ? target < current : target > current;
+    };
+
 public:
     ReachNode() = default;
 
@@ -98,19 +107,35 @@ public:
     /// Intersects with the given rectangle in position domain.
     inline void intersect_in_position_domain(double const& p_lon_min=-std::numeric_limits<double>::infinity(), double const& p_lat_min=-std::numeric_limits<double>::infinity(),
                                              double const& p_lon_max=std::numeric_limits<double>::infinity(), double const& p_lat_max=std::numeric_limits<double>::infinity()) {
-        polygon_lon->intersect_halfspace(1, 0, p_lon_max);
-        polygon_lon->intersect_halfspace(-1, 0, -p_lon_min);
-        polygon_lat->intersect_halfspace(1, 0, p_lat_max);
-        polygon_lat->intersect_halfspace(-1, 0, -p_lat_min);
+        if (_is_halfspace_intersection_necessary(this->p_lon_max(), p_lon_max, true)) {
+            polygon_lon->intersect_halfspace(1, 0, p_lon_max);
+        }
+        if (_is_halfspace_intersection_necessary(this->p_lon_min(), p_lon_min, false)) {
+            polygon_lon->intersect_halfspace(-1, 0, -p_lon_min);
+        }
+        if (_is_halfspace_intersection_necessary(this->p_lat_max(), p_lat_max, true)) {
+            polygon_lat->intersect_halfspace(1, 0, p_lat_max);
+        }
+        if (_is_halfspace_intersection_necessary(this->p_lat_min(), p_lat_min, false)) {
+            polygon_lat->intersect_halfspace(-1, 0, -p_lat_min);
+        }
     }
 
     /// Intersects with the given velocities in velocity domain.
     inline void intersect_in_velocity_domain(double const& v_lon_min=-std::numeric_limits<double>::infinity(), double const& v_lat_min=-std::numeric_limits<double>::infinity(),
                                              double const& v_lon_max=std::numeric_limits<double>::infinity(), double const& v_lat_max=std::numeric_limits<double>::infinity()) {
-        polygon_lon->intersect_halfspace(0, 1, v_lon_max);
-        polygon_lon->intersect_halfspace(0, -1, -v_lon_min);
-        polygon_lat->intersect_halfspace(0, 1, v_lat_max);
-        polygon_lat->intersect_halfspace(0, -1, -v_lat_min);
+        if (_is_halfspace_intersection_necessary(this->v_lon_max(), v_lon_max, true)) {
+            polygon_lon->intersect_halfspace(0, 1, v_lon_max);
+        }
+        if (_is_halfspace_intersection_necessary(this->v_lon_min(), v_lon_min, false)) {
+            polygon_lon->intersect_halfspace(0, -1, -v_lon_min);
+        }
+        if (_is_halfspace_intersection_necessary(this->v_lat_max(), v_lat_max, true)) {
+            polygon_lat->intersect_halfspace(0, 1, v_lat_max);
+        }
+        if (_is_halfspace_intersection_necessary(this->v_lat_min(), v_lat_min, false)) {
+            polygon_lat->intersect_halfspace(0, -1, -v_lat_min);
+        }
     }
 
     bool add_parent_node(std::shared_ptr<ReachNode> const& node_parent);
