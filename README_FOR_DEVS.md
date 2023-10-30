@@ -8,7 +8,6 @@
 
 
 ### Working with the C++ Code
-- prerequesits: **Note that you might need GCC-10 to build successfully.**
 
 While the [setup script](./setup.py) will build the C++ library automatically, for development purposes it is more convenient to build the code directly via CMake.
 In the following we assume that your Anaconda environment for CommonRoad-Reach is named `commonroad`.

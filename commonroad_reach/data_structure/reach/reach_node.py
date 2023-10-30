@@ -217,8 +217,10 @@ class ReachNode:
         Returns a copy translated by input offsets.
         """
         return ReachNode(
-            ReachPolygon.from_polygon(affinity.translate(self.polygon_lon, xoff=p_lon_off, yoff=v_lon_off)),
-            ReachPolygon.from_polygon(affinity.translate(self.polygon_lat, xoff=p_lat_off, yoff=v_lat_off)),
+            ReachPolygon.from_polygon(
+                affinity.translate(self.polygon_lon.shapely_object, xoff=p_lon_off, yoff=v_lon_off)),
+            ReachPolygon.from_polygon(
+                affinity.translate(self.polygon_lat.shapely_object, xoff=p_lat_off, yoff=v_lat_off)),
             step=self.step)
 
     def add_parent_node(self, node_parent: "ReachNode"):
@@ -248,13 +250,13 @@ class ReachNode:
         """
         Perform intersection in the position domain.
         """
-        if p_lon_max is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.p_lon_max, p_lon_max, is_max=True):
             self._polygon_lon = self.polygon_lon.intersect_halfspace(1, 0, p_lon_max)
-        if p_lon_min is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.p_lon_min, p_lon_min, is_max=False):
             self._polygon_lon = self.polygon_lon.intersect_halfspace(-1, 0, -p_lon_min)
-        if p_lat_max is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.p_lat_max, p_lat_max, is_max=True):
             self._polygon_lat = self.polygon_lat.intersect_halfspace(1, 0, p_lat_max)
-        if p_lat_min is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.p_lat_min, p_lat_min, is_max=False):
             self._polygon_lat = self.polygon_lat.intersect_halfspace(-1, 0, -p_lat_min)
 
         if not self.is_empty:
@@ -267,14 +269,29 @@ class ReachNode:
         """
         Perform intersection in the velocity domain.
         """
-        if v_lon_max is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.v_lon_max, v_lon_max, is_max=True):
             self._polygon_lon = self.polygon_lon.intersect_halfspace(0, 1, v_lon_max)
-        if v_lon_min is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.v_lon_min, v_lon_min, is_max=False):
             self._polygon_lon = self.polygon_lon.intersect_halfspace(0, -1, -v_lon_min)
-        if v_lat_max is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.v_lat_max, v_lat_max, is_max=True):
             self._polygon_lat = self.polygon_lat.intersect_halfspace(0, 1, v_lat_max)
-        if v_lat_min is not None and not self.is_empty:
+        if self._is_halfspace_intersection_necessary(self.v_lat_min, v_lat_min, is_max=False):
             self._polygon_lat = self.polygon_lat.intersect_halfspace(0, -1, -v_lat_min)
+
+    def _is_halfspace_intersection_necessary(self, current: float, target: Optional[float], *,
+                                             is_max: bool) -> bool:
+        """
+        Check whether it is necessary to perform a halfspace intersection given current and target bounds.
+
+        :param current: current bound of the polygon
+        :param target: target bound of the polygon
+        :param is_max: if True, current and target bound are treated as maximal bounds, otherwise as minimal bounds.
+        :returns: True iff the halfspace intersection is necessary.
+        """
+        if is_max:
+            return not self.is_empty and target is not None and current > target
+        else:
+            return not self.is_empty and target is not None and current < target
 
     @property
     def is_empty(self) -> bool:

@@ -161,7 +161,7 @@ push-to-external-pypi-test-registry:
   script:
     - *install-twine
     - cd commonroad-reachable-set
-    - TWINE_PASSWORD=${CR_PYPI_TEST_PASSWORD} TWINE_USERNAME=${CR_PYPI_TEST_USERNAME} python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+    - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
@@ -177,7 +177,7 @@ push-to-external-pypi-registry:
   script:
     - *install-twine
     - cd commonroad-reachable-set
-    - TWINE_PASSWORD=${CR_PYPI_RELEASE_PASSWORD} TWINE_USERNAME=${CR_PYPI_RELEASE_USERNAME} python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+    - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true

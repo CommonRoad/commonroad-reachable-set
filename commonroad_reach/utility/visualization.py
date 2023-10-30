@@ -854,22 +854,23 @@ def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.Reachab
         return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
 
 
-def plot_scenario_with_projection_domain(reach_interface: ReachableSetInterface):
+def plot_scenario_with_projection_domain(config: Configuration):
     """
     Plots scenario including projection domain of the curvilinear coordinate system used by reach_interface
+    :param config: Configuration object of the ReachInterface
     """
     rnd = MPRenderer(figsize=(20, 10))
     draw_param = MPDrawParams()
     draw_param.time_begin = 0
 
-    reach_interface.config.scenario.draw(rnd, draw_param)
+    config.scenario.draw(rnd, draw_param)
     rnd.render()
 
-    if reach_interface.config.planning.coordinate_system == "CVLN":
-        rnd.ax.plot(reach_interface.config.planning.reference_path[:, 0],
-                    reach_interface.config.planning.reference_path[:, 1],
+    if config.planning.coordinate_system == "CVLN":
+        rnd.ax.plot(config.planning.reference_path[:, 0],
+                    config.planning.reference_path[:, 1],
                     color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
-        proj_domain_border = np.asarray(reach_interface.config.planning.CLCS.projection_domain())
+        proj_domain_border = np.asarray(config.planning.CLCS.projection_domain())
         rnd.ax.plot(proj_domain_border[:, 0], proj_domain_border[:, 1], zorder=100, color='orange')
     plt.show()
 
