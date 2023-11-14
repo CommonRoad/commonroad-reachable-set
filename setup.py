@@ -66,20 +66,9 @@ class CMakeBuild(build_ext):
             "-DPYTHON_EXECUTABLE=" + python_executable,
         ]
 
-        # get path to the drivability checker root
-        if 'CRDC_DIR' in os.environ:
-            cmake_args += ['-DCRDC_DIR=' + os.environ['CRDC_DIR']]
-        else:
-            warnings.warn('\t\t\t Please specify the path to the drivability checker root folder!')
-            return None
-
-        # pass version of current python binary
-        python_ver = platform.python_version().split(".")
-        cmake_args += ['-DPYTHON_VER=' + python_ver[0] + python_ver[1]]
-
         # add tests
         if 'ADD_TESTS' in os.environ:
-            cmake_args += ['DADD_TESTS=' + os.environ['ADD_TESTS']]
+            cmake_args += ['-DADD_TESTS=' + os.environ['ADD_TESTS']]
         else:
             cmake_args += ['-DADD_TESTS=OFF']
 
@@ -90,7 +79,7 @@ class CMakeBuild(build_ext):
 
         # number of Build Jobs
         if 'BUILD_JOBS' in os.environ:
-            build_args += ['--'] + ['-j'] + [os.environ['BUILD_JOBS']]
+            build_args += ['--', '-j', os.environ['BUILD_JOBS']]
 
         print(cmake_args)
         print(build_args)

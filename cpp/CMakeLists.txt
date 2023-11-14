@@ -1,19 +1,6 @@
-# set include & library paths variables for external commonroad libraries
-set(CRDC_INCLUDE
-        ${CRDC_DIR}/cpp/collision/include # drivability checker
-        ${CRDC_DIR}/cpp/geometry/include) # curvilinear collision checker
-
-set(CRDC_LIBRARY
-        ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
-        ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
-        ${CRDC_DIR}/commonroad_dc/libgpc.a # curvilinear collision checker
-        CACHE STRING "" FORCE)
-
 # set a variable to hold all relevant include directories
 set(REACH_INCLUDE_DIR
         ${CMAKE_CURRENT_LIST_DIR}/include
-        ${CRDC_INCLUDE}
-        ${EIGEN3_INCLUDE_DIR}
         CACHE STRING "" FORCE)
 
 # set a variable to hold all relevant cpp source files of reachable sets
@@ -35,17 +22,16 @@ set(REACH_SOURCE
 # ========= building library
 # 1. create library from source files above
 add_library(crreach STATIC ${REACH_SOURCE})
-# build position independent code so that we can link this in the Python bindings (builds shared lib)
-set_property(TARGET crreach PROPERTY POSITION_INDEPENDENT_CODE ON)
 # 2. include directories
 target_include_directories(crreach PUBLIC
         ${REACH_INCLUDE_DIR})
 # 3. link to external libraries
 target_link_libraries(crreach PUBLIC
-        ${CRDC_LIBRARY}
-        fcl
-        ccd
-        yaml-cpp)
+        Eigen3::Eigen
+        crcc
+        crccosy
+        yaml-cpp
+        OpenMP::OpenMP_CXX)
 
 # ========= building playground
 # 1. create executables which uses the source files set above
