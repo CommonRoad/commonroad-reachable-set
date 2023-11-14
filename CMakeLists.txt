@@ -30,9 +30,9 @@ if(ADD_TESTS)
     find_package(doctest REQUIRED) # testing with doctest
 endif()
 
+include(ExternalPybind)
 include(ExternalDrivabilityChecker)
 
 # ========= add sub directories
-add_subdirectory(external/pybind11) # pybind header
 add_subdirectory(cpp) # reachable set
 add_subdirectory(python_binding)  # python binding for reachable set
