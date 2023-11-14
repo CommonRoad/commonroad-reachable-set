@@ -23,14 +23,14 @@ stages:
   - deploy
   - publish
 
-image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci          # default image -> built docker 
-
 variables:
-  CRDC_DIR: /dc   # Commonroad-Drivability-Checker, installed via CI-Docker
   BUILD_JOBS: 4
+  CONDA_ENV_PREFIX: commonroad-py
 
-before_script:
-  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
+default:
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci-fc
+  before_script:
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
 .conda-init: &conda-init
   - conda init bash
@@ -40,19 +40,25 @@ before_script:
   - python -m pip install --upgrade pip
   - pip install -r ./requirements.txt
 
+.python-versions: &python-versions
+  - "3.7"
+  - "3.8"
+  - "3.9"
+  - "3.10"
+
 ### build C++ library ###
 build-standalone:
   stage: compile
   script:
     - *conda-init
-    - conda activate "cr$PYTHON_VER"
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
     - mkdir build-debug && cd build-debug
-    - cmake -DCRDC_DIR="$CRDC_DIR" -DPYTHON_VER="$PYTHON_VER" -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build . -- -j $BUILD_JOBS
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39, 310]
+      - PYTHON_VER: *python-versions
   artifacts:
     paths:
       - pycrreach.*.so
@@ -64,7 +70,7 @@ build-test-python:
   stage: build-test-python
   before_script:
     - *conda-init
-    - conda activate "cr$PYTHON_VER"
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
   script:
     - cp pycrreach.*.so commonroad_reach
@@ -72,7 +78,7 @@ build-test-python:
     - pytest .
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39, 310]
+      - PYTHON_VER: *python-versions
   artifacts:
     paths:
       - ./doc/build
@@ -84,7 +90,7 @@ clang-tidy:
   stage: static-test
   script:
     - mkdir build && cd build
-    - cmake -DCRDC_DIR="$CRDC_DIR" -DPYTHON_VER="37" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     - cd ..
     - bash ./ci/clang-tidy.sh
   needs: []
@@ -119,7 +125,7 @@ build-wheels-py:
     - auditwheel repair *.whl
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39, 310]
+      - PYTHON_VER: *python-versions
   artifacts:
     paths:
       - $CI_PROJECT_DIR/commonroad-reachable-set/dist
@@ -190,7 +196,7 @@ pages:
   stage: publish
   before_script:
     - *conda-init
-    - conda activate cr37
+    - conda activate "${CONDA_ENV_PREFIX}3.7"
     - *python-prepare
   script:
     - cp pycrreach.*.so commonroad_reach
