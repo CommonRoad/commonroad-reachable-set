@@ -23,7 +23,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../) # output directory o
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ========= find necessary packages
-find_package(yaml-cpp REQUIRED) # for reading yaml files
+#find_package(yaml-cpp REQUIRED) # for reading yaml files
 find_package(OpenMP REQUIRED) # for parallel computation
 find_package(Eigen3 REQUIRED)
 if(ADD_TESTS)

@@ -30,7 +30,7 @@ target_link_libraries(crreach PUBLIC
         Eigen3::Eigen
         crcc
         crccosy
-        yaml-cpp
+#        yaml-cpp
         OpenMP::OpenMP_CXX)
 
 # ========= building playground
