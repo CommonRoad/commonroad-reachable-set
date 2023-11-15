@@ -82,7 +82,7 @@ The additional Python dependencies are listed in `requirements.txt`.
 
 **Optional:**
 
-- To add unit tests, add the flag `--config-settings=cmake.define.ADD_TESTS=ON"` to the `pip` command.
+- To add unit tests, add the flag `--config-settings=cmake.define.ADD_TESTS=ON` to the `pip` command.
 - To build the code in Debug mode, add the flag `--config-settings=cmake.build-type="Debug"` to the `pip` command.
 - See [here](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#configuring-cmake-arguments-and-defines) for further information on configuring CMake arguments via our build system (`scikit-build-core`).
 
@@ -91,6 +91,11 @@ With both optional steps, the `pip` command looks as follows:
 ```bash
 pip install -v . --config-settings=cmake.build-type="Debug" --config-settings=cmake.define.ADD_TESTS=ON
 ```
+
+> **Note**: `scikit-build-core` uses `ninja` for building the C++ extension by default.
+> Thus, the build is automatically parallelized using all available CPU cores.
+> If you want to explicitly configure the number of build jobs, you can do so by passing the flag `--config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS` to the `pip` command, where `$BUILD_JOBS` is the number of parallel jobs to use.
+> See [here](https://scikit-build-core.readthedocs.io/en/latest/faqs.html#multithreaded-builds) for further details.
 
 
 ## Getting Started
