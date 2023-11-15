@@ -61,19 +61,17 @@ build-standalone:
       - PYTHON_VER: *python-versions
   artifacts:
     paths:
-      - pycrreach.*.so
+      - commonroad_reach/pycrreach.*.so
     expire_in: 30 minutes
 
 
 ### build test python ###
 build-test-python:
   stage: build-test-python
-  before_script:
+  script:
     - *conda-init
     - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
-  script:
-    - cp pycrreach.*.so commonroad_reach
     - cd commonroad_reach/tests
     - pytest .
   parallel:
@@ -109,8 +107,9 @@ build-wheels-py:
     - *conda-init
     - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
-    - python setup.py sdist         # source distribution: create .tar file
-    - python setup.py bdist_wheel   # build distribution: create .whl file    -> contains platform specific .dll etc.
+    - pip install build
+    - python -m build --sdist  # source distribution: create .tar.gz file
+    - python -m build --wheel  # binary distribution: create .whl file --> contains platform specific .so files etc.
     # Audit python wheels --> also needed to link the generated .so from the cpp package!
     - cd dist
     - auditwheel show *.whl
@@ -184,12 +183,10 @@ pages:
   # Push the latest documentation of the main branch to the GitLab Pages documentation
   # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
   stage: publish
-  before_script:
+  script:
     - *conda-init
     - conda activate "${CONDA_ENV_PREFIX}3.7"
     - *python-prepare
-  script:
-    - cp pycrreach.*.so commonroad_reach
     - pip install -r ./docs/requirements_doc.txt
     - cd docs/Sphinx
     - make html
