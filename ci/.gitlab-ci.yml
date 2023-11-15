@@ -16,16 +16,12 @@
 
 
 stages:
-  - static-test
+  - static-check
   - compile
-  - build-test-python
+  - test
   - build-wheels
   - deploy
   - publish
-
-variables:
-  BUILD_JOBS: 4
-  CONDA_ENV_PREFIX: commonroad-py
 
 default:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci-fc
@@ -45,10 +41,11 @@ default:
   - "3.8"
   - "3.9"
   - "3.10"
+  - "3.11"
 
-### static test ###
+### static checks ###
 clang-tidy:
-  stage: static-test
+  stage: static-check
   script:
     - mkdir build && cd build
     - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
@@ -57,7 +54,7 @@ clang-tidy:
   needs: [ ]
 
 ### build C++ library ###
-build-standalone:
+compile-cpp:
   stage: compile
   script:
     - *conda-init
@@ -73,11 +70,12 @@ build-standalone:
     paths:
       - commonroad_reach/pycrreach.*.so
     expire_in: 30 minutes
+  needs: [ ]
 
 
 ### build test python ###
 build-test-python:
-  stage: build-test-python
+  stage: test
   script:
     - *conda-init
     - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
@@ -88,7 +86,7 @@ build-test-python:
     matrix:
       - PYTHON_VER: *python-versions
   needs:
-    - job: build-standalone
+    - job: compile-cpp
       artifacts: true
 
 ### build wheels ###
@@ -168,7 +166,6 @@ push-to-external-pypi-registry:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual
-
 
 ### publish documentation ###
 pages:

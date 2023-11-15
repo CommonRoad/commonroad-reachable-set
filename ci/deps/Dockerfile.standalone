@@ -19,6 +19,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # create conda environments for python versions
-ARG PY_VERSIONS="3.7 3.8 3.9 3.10"
-ARG CONDA_ENV_PREFIX="commonroad-py"
+ARG PY_VERSIONS="3.7 3.8 3.9 3.10 3.11"
+ENV CONDA_ENV_PREFIX="commonroad-py"
 RUN for PY_VERSION in $PY_VERSIONS; do conda create -n "$CONDA_ENV_PREFIX$PY_VERSION" python=$PY_VERSION; done
