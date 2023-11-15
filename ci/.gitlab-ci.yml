@@ -23,6 +23,9 @@ stages:
   - deploy
   - publish
 
+variables:
+  BUILD_JOBS: 4
+
 default:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci-fc
   before_script:
@@ -72,9 +75,20 @@ compile-cpp:
     expire_in: 30 minutes
   needs: [ ]
 
+compile-via-pip-install:
+  stage: compile
+  script:
+    - *conda-init
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
+    - *python-prepare
+    - pip install -v . --config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS
+  parallel:
+    matrix:
+      - PYTHON_VER: *python-versions
+  needs: [ ]
 
-### build test python ###
-build-test-python:
+### test python ###
+run-pytest:
   stage: test
   script:
     - *conda-init
