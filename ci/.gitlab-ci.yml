@@ -72,7 +72,7 @@ build-test-python:
     - *conda-init
     - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
-    - cd commonroad_reach/tests
+    - cd tests
     - pytest .
   parallel:
     matrix:
