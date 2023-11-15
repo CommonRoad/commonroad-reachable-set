@@ -1,5 +1,5 @@
 FROM quay.io/pypa/manylinux2014_x86_64
-# note manylinux is based on CentOs based and not Ubuntu!
+# note manylinux is based on CentOS and not on Ubuntu
 
 # install enterprise linux + third-party libraries
 # note that some of them are named differently than under Ubuntu
@@ -13,14 +13,13 @@ RUN yum update && \
 
 WORKDIR /root
 
-# boost
+# boost (the yum version on CentOS 7 is too old)
 RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz -O boost_1_65_1.tar.gz && \
     tar -xzf boost_1_65_1.tar.gz && \
     cd boost_1_65_1 && \
     ./bootstrap.sh && \
     ./b2 install --with-thread --with-test --with-filesystem && \
     cd ..
-
 
 # Anaconda
 # Install miniconda
