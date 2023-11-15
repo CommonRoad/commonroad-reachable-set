@@ -1,7 +1,18 @@
-# ========= minimum settings
-cmake_minimum_required(VERSION 3.20..3.26) # minimum required version of CMake
-project(reach) # project name
-option(ADD_TESTS "unit tests" OFF) # flag to add unit tests
+cmake_minimum_required(VERSION 3.20..3.26)
+
+if(SKBUILD)
+    set(REACH_VERSION ${SKBUILD_PROJECT_VERSION})
+else()
+    set(REACH_VERSION 2023.1.1)
+endif()
+
+project(reach
+        LANGUAGES CXX
+        VERSION ${REACH_VERSION}
+        HOMEPAGE_URL "https://commonroad.in.tum.de/tools/commonroad-reach"
+        DESCRIPTION "C++ extension for the commonroad-reach Python package")
+
+option(ADD_TESTS "Build unit tests" OFF) # flag to add unit tests
 
 # CMP0135 - URL download timestamp
 if(POLICY CMP0135)
@@ -16,7 +27,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/external) # add 
 set(CMAKE_CXX_STANDARD 17) # c++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON) # c++ standard
 set(CMAKE_CXX_EXTENSIONS OFF) # turn off compiler extensions
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../) # output directory of built libraries
 
 # Necessary for Python modules: never build as shared library
 # IMPORTANT: This must be set before finding the necessary packages
