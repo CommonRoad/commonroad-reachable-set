@@ -46,6 +46,16 @@ default:
   - "3.9"
   - "3.10"
 
+### static test ###
+clang-tidy:
+  stage: static-test
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    - cd ..
+    - bash ./ci/clang-tidy.sh
+  needs: [ ]
+
 ### build C++ library ###
 build-standalone:
   stage: compile
@@ -77,32 +87,15 @@ build-test-python:
   parallel:
     matrix:
       - PYTHON_VER: *python-versions
-  artifacts:
-    paths:
-      - ./doc/build
-    expire_in: 30 minutes
-
-
-### static test ###
-clang-tidy:
-  stage: static-test
-  script:
-    - mkdir build && cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-    - cd ..
-    - bash ./ci/clang-tidy.sh
-  needs: []
-
+  needs:
+    - job: build-standalone
+      artifacts: true
 
 ### build wheels ###
 # Currently using development branch of cr-drivability checker
 build-wheels-py:
   stage: build-wheels
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
-#  only:
-#    - develop
-#    - main
-  when: manual
   script:
     - *conda-init
     - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
@@ -121,7 +114,8 @@ build-wheels-py:
     paths:
       - $CI_PROJECT_DIR/dist
   needs: [ ]
-
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
 
 ### deploy wheels ###
 .install-twine: &install-twine
@@ -134,10 +128,6 @@ push-to-internal-registry:
   # push built wheels to the internal GitLab PyPi registry
   stage: deploy
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
-  when: manual
-  only:
-  # Only use branch develop to build
-    - develop
   script:
     # use python module twine and gitlab internal variables
     - *install-twine
@@ -145,37 +135,39 @@ push-to-internal-registry:
   needs:
     - job: build-wheels-py
       artifacts: true
-
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: manual
 
 push-to-external-pypi-test-registry:
   # push built wheels to the external PyPi test registry
   # at: https://test.pypi.org/project/commonroad-reach/
   stage: deploy
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
-  when: manual
-  only:
-    - main
   script:
     - *install-twine
     - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
 
 push-to-external-pypi-registry:
   # push built wheels to the external PyPi registry
   # at: https://pypi.org/project/commonroad-reach/
   stage: deploy
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
-  when: manual
-  only:
-    - main
   script:
     - *install-twine
     - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
 
 
 ### publish documentation ###
@@ -197,5 +189,5 @@ pages:
   environment:
     name: Gitlab Pages
     url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
-  only:
-    - main
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
