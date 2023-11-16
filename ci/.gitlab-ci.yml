@@ -24,7 +24,7 @@ stages:
   - publish
 
 variables:
-  BUILD_JOBS: 4
+  BUILD_JOBS: 20
 
 default:
   image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci
