@@ -27,7 +27,7 @@ variables:
   BUILD_JOBS: 4
 
 default:
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci-fc
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci
   before_script:
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
@@ -107,7 +107,7 @@ run-pytest:
 # Currently using development branch of cr-drivability checker
 build-wheels-py:
   stage: build-wheels
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   script:
     - *conda-init
     - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
@@ -139,7 +139,7 @@ build-wheels-py:
 push-to-internal-registry:
   # push built wheels to the internal GitLab PyPi registry
   stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   script:
     # use python module twine and gitlab internal variables
     - *install-twine
@@ -155,7 +155,7 @@ push-to-external-pypi-test-registry:
   # push built wheels to the external PyPi test registry
   # at: https://test.pypi.org/project/commonroad-reach/
   stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   script:
     - *install-twine
     - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
@@ -170,7 +170,7 @@ push-to-external-pypi-registry:
   # push built wheels to the external PyPi registry
   # at: https://pypi.org/project/commonroad-reach/
   stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:fc
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
   script:
     - *install-twine
     - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
