@@ -16,21 +16,20 @@
 
 
 stages:
+  - static-check
   - compile
-  - build-test-python
-  - static-test
+  - test
   - build-wheels
   - deploy
   - publish
 
-image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci          # default image -> built docker 
-
 variables:
-  CRDC_DIR: /dc   # Commonroad-Drivability-Checker, installed via CI-Docker
-  BUILD_JOBS: 4
+  BUILD_JOBS: 20
 
-before_script:
-  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
+default:
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci
+  before_script:
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
 .conda-init: &conda-init
   - conda init bash
@@ -40,95 +39,100 @@ before_script:
   - python -m pip install --upgrade pip
   - pip install -r ./requirements.txt
 
+.python-versions: &python-versions
+  - "3.7"
+  - "3.8"
+  - "3.9"
+  - "3.10"
+#  - "3.11"
+
+### static checks ###
+clang-tidy:
+  stage: static-check
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    - cd ..
+    - bash ./ci/clang-tidy.sh
+  needs: [ ]
+
 ### build C++ library ###
-build-standalone:
+compile-cpp:
   stage: compile
   script:
     - *conda-init
-    - conda activate "cr$PYTHON_VER"
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
     - mkdir build-debug && cd build-debug
-    - cmake -DCRDC_DIR="$CRDC_DIR" -DPYTHON_VER="$PYTHON_VER" -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build . -- -j $BUILD_JOBS
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39, 310]
+      - PYTHON_VER: *python-versions
   artifacts:
     paths:
-      - pycrreach.*.so
+      - commonroad_reach/pycrreach.*.so
     expire_in: 30 minutes
+  needs: [ ]
 
-
-### build test python ###
-build-test-python:
-  stage: build-test-python
-  before_script:
-    - *conda-init
-    - conda activate "cr$PYTHON_VER"
-    - *python-prepare
+compile-via-pip-install:
+  stage: compile
   script:
-    - cp pycrreach.*.so commonroad_reach
-    - cd commonroad_reach/tests
+    - *conda-init
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
+    - *python-prepare
+    - pip install -v . --config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS
+  parallel:
+    matrix:
+      - PYTHON_VER: *python-versions
+  needs: [ ]
+
+### test python ###
+run-pytest:
+  stage: test
+  script:
+    - *conda-init
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
+    - *python-prepare
+    - cd tests
     - pytest .
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39, 310]
-  artifacts:
-    paths:
-      - ./doc/build
-    expire_in: 30 minutes
-
-
-### static test ###
-clang-tidy:
-  stage: static-test
-  script:
-    - mkdir build && cd build
-    - cmake -DCRDC_DIR="$CRDC_DIR" -DPYTHON_VER="37" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-    - cd ..
-    - bash ./ci/clang-tidy.sh
-  needs: []
-
+      - PYTHON_VER: *python-versions
+  needs:
+    - job: compile-cpp
+      artifacts: true
 
 ### build wheels ###
 # Currently using development branch of cr-drivability checker
 build-wheels-py:
   stage: build-wheels
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  only: 
-    - develop
-    - main
-  when: manual
   script:
-    # Prepare build -> building from branch: develop
-    - git clone -b develop git@gitlab.lrz.de:cps/commonroad-reachable-set.git
-    - cd commonroad-reachable-set
-    # Copy cpp standalone into commonroad-reach dir
-    - cp ../pycrreach.*.so .
-    # Update git submodules
-    - git submodule update --init
-    # Create distribution
     - *conda-init
-    - conda activate "cr$PYTHON_VER"
+    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
     - *python-prepare
-    - python setup.py sdist         # source distribution: create .tar file
-    - python setup.py bdist_wheel   # build distribution: create .whl file    -> contains platform specific .dll etc.
+    - pip install build
+    - python -m build --sdist  # source distribution: create .tar.gz file
+    - python -m build --wheel  # binary distribution: create .whl file --> contains platform specific .so files etc.
     # Audit python wheels --> also needed to link the generated .so from the cpp package!
     - cd dist
     - auditwheel show *.whl
     - auditwheel repair *.whl
   parallel:
     matrix:
-      - PYTHON_VER: [37, 38, 39, 310]
+      - PYTHON_VER: *python-versions
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/commonroad-reachable-set/dist
-
+      - $CI_PROJECT_DIR/dist
+  needs: [ ]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
 
 ### deploy wheels ###
 .install-twine: &install-twine
   - *conda-init
-  - conda activate "cr39"
+  - conda activate "${CONDA_ENV_PREFIX}3.9"
   - python -m pip install --upgrade pip
   - pip install twine
 
@@ -136,64 +140,56 @@ push-to-internal-registry:
   # push built wheels to the internal GitLab PyPi registry
   stage: deploy
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  when: manual
-  only:
-  # Only use branch develop to build
-    - develop
   script:
     # use python module twine and gitlab internal variables
     - *install-twine
-    - cd commonroad-reachable-set
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url https://gitlab.lrz.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
-
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: manual
 
 push-to-external-pypi-test-registry:
   # push built wheels to the external PyPi test registry
   # at: https://test.pypi.org/project/commonroad-reach/
   stage: deploy
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  when: manual
-  only:
-    - main
   script:
     - *install-twine
-    - cd commonroad-reachable-set
     - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
 
 push-to-external-pypi-registry:
   # push built wheels to the external PyPi registry
   # at: https://pypi.org/project/commonroad-reach/
   stage: deploy
   image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  when: manual
-  only:
-    - main
   script:
     - *install-twine
-    - cd commonroad-reachable-set
     - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
   needs:
     - job: build-wheels-py
       artifacts: true
-
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
 
 ### publish documentation ###
 pages:
   # Push the latest documentation of the main branch to the GitLab Pages documentation
   # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
   stage: publish
-  before_script:
-    - *conda-init
-    - conda activate cr37
-    - *python-prepare
   script:
-    - cp pycrreach.*.so commonroad_reach
+    - *conda-init
+    - conda activate "${CONDA_ENV_PREFIX}3.7"
+    - *python-prepare
     - pip install -r ./docs/requirements_doc.txt
     - cd docs/Sphinx
     - make html
@@ -204,5 +200,5 @@ pages:
   environment:
     name: Gitlab Pages
     url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
-  only:
-    - main
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
