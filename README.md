@@ -97,6 +97,8 @@ pip install -v . --config-settings=cmake.build-type="Debug" --config-settings=cm
 > If you want to explicitly configure the number of build jobs, you can do so by passing the flag `--config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS` to the `pip` command, where `$BUILD_JOBS` is the number of parallel jobs to use.
 > See [here](https://scikit-build-core.readthedocs.io/en/latest/faqs.html#multithreaded-builds) for further details.
 
+> **Note**: Building the package in Debug mode (see above) significantly increases the computation time of the C++ backend. Please make sure you are building in Release mode (default setting) if you require fast computations. 
+
 
 ## Getting Started
 
