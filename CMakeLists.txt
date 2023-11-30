@@ -1,45 +1,48 @@
-# ========= minimum settings
-cmake_minimum_required(VERSION 3.15) # minimum required version of CMake
-project(reach) # project name
-option(ADD_TESTS "unit tests" OFF) # flag to add unit tests
+cmake_minimum_required(VERSION 3.20..3.26)
 
-# ========= check for required variables
-if(NOT DEFINED PYTHON_VER)
-    message(FATAL_ERROR "Please specify the python version via -DPYTHON_VER=")
+if(SKBUILD)
+    set(REACH_VERSION ${SKBUILD_PROJECT_VERSION})
+else()
+    set(REACH_VERSION 2023.1.1)
 endif()
 
-if(NOT DEFINED CRDC_DIR) # path to drivability checker
-    message(FATAL_ERROR "Please specify the path to drivability checker via -DCRDC_DIR=")
+project(reach
+        LANGUAGES CXX
+        VERSION ${REACH_VERSION}
+        HOMEPAGE_URL "https://commonroad.in.tum.de/tools/commonroad-reach"
+        DESCRIPTION "C++ extension for the commonroad-reach Python package")
+
+option(ADD_TESTS "Build unit tests" OFF) # flag to add unit tests
+
+# CMP0135 - URL download timestamp
+if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
 endif()
 
-# ========= set variables
-# path to FCL installation in drivability checker
-set(fcl_DIR ${CRDC_DIR}/build/temp.linux-x86_64-cpython-${PYTHON_VER}/dist/lib/cmake/fcl)
-# path to CCD installation in drivability checker
-set(ccd_DIR ${CRDC_DIR}/build/temp.linux-x86_64-cpython-${PYTHON_VER}/dist/lib/ccd)
-
-# ========= find necessary packages
-find_package(Eigen3 REQUIRED) # Eigen3
-find_package(ccd REQUIRED) # for collision checks
-find_package(fcl REQUIRED) # for collision checks
-# find_package(yaml-cpp REQUIRED) # for reading yaml files
-find_package(OpenMP REQUIRED) # for parallel computation
-if(ADD_TESTS)
-    find_package(doctest REQUIRED) # testing with doctest
-endif()
+# make FetchContent available
+include(FetchContent)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/external) # add path to cmake files for external packages
 
 # ========= general settings
 set(CMAKE_CXX_STANDARD 17) # c++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON) # c++ standard
 set(CMAKE_CXX_EXTENSIONS OFF) # turn off compiler extensions
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}") # enable parallel computation
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}") # enable parallel computation
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}") # enable parallel computation
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0") # for profiling
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0") # for profiling
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../) # output directory of built libraries
+
+# Necessary for Python modules: never build as shared library
+# IMPORTANT: This must be set before finding the necessary packages
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# ========= find necessary packages
+#find_package(yaml-cpp REQUIRED) # for reading yaml files
+find_package(OpenMP REQUIRED) # for parallel computation
+find_package(Eigen3 REQUIRED)
+if(ADD_TESTS)
+    find_package(doctest REQUIRED) # testing with doctest
+endif()
+
+include(ExternalPybind)
+include(ExternalDrivabilityChecker)
 
 # ========= add sub directories
-add_subdirectory(external/pybind11) # pybind header
 add_subdirectory(cpp) # reachable set
 add_subdirectory(python_binding)  # python binding for reachable set

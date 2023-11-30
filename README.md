@@ -12,8 +12,9 @@ The CommonRoad-Reach toolbox
 
 ## System Requirements
 
-The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04. It should be compatible with later 
-versions. For building the code, the following minimum versions are required:
+The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04 and Ubuntu 22.04.
+It should be compatible with later versions.
+For building the code, the following minimum versions are required:
   * **GCC and G++**: version 9 or above
   * **CMake**: version 3.15 or above.
   * **Pip**: version 21.3 or above
@@ -27,7 +28,7 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
 
 1. **Python Package**: Install the python package via `pip` in your Conda environment:
     ```bash
-    $ pip install commonroad-reach
+    pip install commonroad-reach
     ```
 
 2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
@@ -59,44 +60,44 @@ The additional Python dependencies are listed in `requirements.txt`.
 
 ### Building the Code
 
-* Install Python dependencies:
-
+* Install Boost, yaml-cppy and Doctest:
   ```bash
-  $ pip install -r requirements.txt
-  ```
-
-* Install [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker). Please refer to its [documentation](https://cps.pages.gitlab.lrz.de/commonroad-drivability-checker/) for installation.
-
-* Install yaml-cpp and Doctest:
-  ```bash
-  $ sudo apt update
-  $ sudo apt install libyaml-cpp-dev
-  $ sudo apt install doctest-dev
+  sudo apt-get update
+  sudo apt-get install libboost-all-dev libyaml-cpp-dev doctest-dev
   ```
 
 * Install/upgrade OpenMP:
-
   ```bash
-  $ sudo apt-get install libomp-dev
-  $ sudo apt upgrade libomp-dev
+  sudo apt-get install libomp-dev
+  sudo apt-get upgrade libomp-dev
   ```
 
 * Build the package and install it to your conda environment via pip command:
-
   ```bash
-  $ CRDC_DIR="/path/to/commonroad-drivability-checker/" pip install -v .
+  pip install -v .
   ```
-  This will build the python binding (pycrreach) required for collision checks and other C++-boosted computations.
+  This will build the Python binding (pycrreach) required for collision checks and other C++-boosted computations.
 
-**Note**: 
-
-  * Replace `"/path/to/commonroad-drivability-checker/"` with the path to the Drivability Checker folder on your machine.
-  * The `-v` flag (verbose) prints information about the build progress
+> **Note**: The `-v` flag (verbose) prints information about the build progress
 
 **Optional:**
 
-- To add unit tests,  set variable `ADD_TESTS=ON` before the `pip` command.
-- To build the code in Debug mode, set `debug=1` in the setup configuration file (`setup.cfg`).
+- To add unit tests, add the flag `--config-settings=cmake.define.ADD_TESTS=ON` to the `pip` command.
+- To build the code in Debug mode, add the flag `--config-settings=cmake.build-type="Debug"` to the `pip` command.
+- See [here](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#configuring-cmake-arguments-and-defines) for further information on configuring CMake arguments via our build system (`scikit-build-core`).
+
+With both optional steps, the `pip` command looks as follows:
+
+```bash
+pip install -v . --config-settings=cmake.build-type="Debug" --config-settings=cmake.define.ADD_TESTS=ON
+```
+
+> **Note**: `scikit-build-core` uses `ninja` for building the C++ extension by default.
+> Thus, the build is automatically parallelized using all available CPU cores.
+> If you want to explicitly configure the number of build jobs, you can do so by passing the flag `--config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS` to the `pip` command, where `$BUILD_JOBS` is the number of parallel jobs to use.
+> See [here](https://scikit-build-core.readthedocs.io/en/latest/faqs.html#multithreaded-builds) for further details.
+
+> **Note**: Building the package in Debug mode (see above) significantly increases the computation time of the C++ backend. Please make sure you are building in Release mode (default setting) if you require fast computations. 
 
 
 ## Getting Started
@@ -117,9 +118,9 @@ The documentation of our toolbox is available on our website: https://cps.pages.
 In order to generate the documentation via Sphinx locally, run the following commands in the root directory:
 
 ```bash
-$ pip install -r ./docs/requirements_doc.txt
-$ cd docs/Sphinx
-$ make html
+pip install -r ./docs/requirements_doc.txt
+cd docs/Sphinx
+make html
 ```
 
 The documentation can then be launched by browsing ``./docs/Sphinx/build/html/index.html/``.
@@ -138,3 +139,6 @@ If you use our toolbox for your research, please cite our [paper](https://mediat
    }
 ```
 
+## Development
+
+If you want to set up a local development environment, please refer to the [README_FOR_DEVS](./README_FOR_DEVS.md).
