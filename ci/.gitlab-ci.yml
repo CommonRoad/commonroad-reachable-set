@@ -27,7 +27,7 @@ variables:
   BUILD_JOBS: 20
 
 default:
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:ci
+  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:2.0
   before_script:
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
