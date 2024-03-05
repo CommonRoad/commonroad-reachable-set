@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Ensure dependencies are available
+find_dependency(OpenMP)
+
+if(@INSTALL_Eigen3_FROM_SYSTEM@)
+    find_dependency(Eigen3 @Eigen3_VERSION@)
+endif()
+
+if(@INSTALL_yaml-cpp_FROM_SYSTEM@)
+    find_dependency(yaml-cpp @yaml-cpp_VERSION@)
+endif()
+
+# Add targets
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+check_required_components("@PROJECT_NAME@")
