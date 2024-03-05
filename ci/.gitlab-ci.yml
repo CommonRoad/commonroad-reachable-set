@@ -49,8 +49,26 @@ clang-tidy:
   needs: [ ]
 
 ### build C++ library ###
+.cache-build-dir:
+  cache: &cache_dependency_archives
+    key: cache-dependency-archives
+    paths:
+      - build/_deps/*-subbuild/*-populate-prefix/src/*.{tar*,zip}
+    policy: pull
+
+generate-cache:
+  stage: compile
+  cache:
+    <<: *cache_dependency_archives
+    policy: push
+  script:
+    - cmake -G "Ninja Multi-Config" -S . -B build -DFETCHCONTENT_QUIET:BOOL=OFF
+  needs: []
+
 build-gcc:
   stage: compile
+  cache:
+    <<: *cache_dependency_archives
   variables:
     CC: gcc
     CXX: g++
@@ -58,6 +76,19 @@ build-gcc:
     - cmake -G "Ninja Multi-Config" -S . -B build
     - cmake --build build --config Release
   needs: [ ]
+
+build-test:
+  stage: compile
+  cache:
+    <<: *cache_dependency_archives
+  script:
+    - cmake -G "Ninja Multi-Config" -S . -B build
+    - cmake --build build --config RelWithDebInfo --target crreach_test
+  needs: []
+  artifacts:
+    paths:
+      - build
+    expire_in: 30 minutes
 
 #compile-via-pip-install:
 #  stage: compile
@@ -71,7 +102,15 @@ build-gcc:
 #      - PYTHON_VER: *python-versions
 #  needs: [ ]
 
-#### test python ###
+#### tests ###
+run-doctest:
+  stage: test
+  script:
+    - build/crreach_test
+  needs:
+    - job: build-test
+      artifacts: true
+
 #run-pytest:
 #  stage: test
 #  script:
