@@ -237,6 +237,9 @@ find_package(OpenMP)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/external)
 
+# We have custom logic to check for system Boost, therefore we include ExternalBoost unconditionally
+include(ExternalBoost)
+
 if(CMAKE_SUPPORTS_TRY_FIND_PACKAGE)
     if(SKBUILD_SELF_CONTAINED)
         set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
