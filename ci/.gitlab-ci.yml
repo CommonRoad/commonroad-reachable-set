@@ -31,14 +31,6 @@ default:
   before_script:
     - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
-.conda-init: &conda-init
-  - conda init bash
-  - source ~/.bashrc
-
-.python-prepare: &python-prepare
-  - python -m pip install --upgrade pip
-  - pip install -r ./requirements.txt
-
 .python-versions: &python-versions
   - "3.7"
   - "3.8"
@@ -57,147 +49,140 @@ clang-tidy:
   needs: [ ]
 
 ### build C++ library ###
-compile-cpp:
+build-gcc:
   stage: compile
+  variables:
+    CC: gcc
+    CXX: g++
   script:
-    - *conda-init
-    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
-    - mkdir build-debug && cd build-debug
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - cmake --build . -- -j $BUILD_JOBS
-  parallel:
-    matrix:
-      - PYTHON_VER: *python-versions
-  artifacts:
-    paths:
-      - commonroad_reach/pycrreach.*.so
-    expire_in: 30 minutes
+    - cmake -G "Ninja Multi-Config" -S . -B build
+    - cmake --build build --config Release
   needs: [ ]
 
-compile-via-pip-install:
-  stage: compile
-  script:
-    - *conda-init
-    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
-    - *python-prepare
-    - pip install -v . --config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS
-  parallel:
-    matrix:
-      - PYTHON_VER: *python-versions
-  needs: [ ]
+#compile-via-pip-install:
+#  stage: compile
+#  script:
+#    - *conda-init
+#    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
+#    - *python-prepare
+#    - pip install -v . --config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS
+#  parallel:
+#    matrix:
+#      - PYTHON_VER: *python-versions
+#  needs: [ ]
 
-### test python ###
-run-pytest:
-  stage: test
-  script:
-    - *conda-init
-    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
-    - *python-prepare
-    - cd tests
-    - pytest .
-  parallel:
-    matrix:
-      - PYTHON_VER: *python-versions
-  needs:
-    - job: compile-cpp
-      artifacts: true
-
-### build wheels ###
-# Currently using development branch of cr-drivability checker
-build-wheels-py:
-  stage: build-wheels
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  script:
-    - *conda-init
-    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
-    - *python-prepare
-    - pip install build
-    - python -m build --sdist  # source distribution: create .tar.gz file
-    - python -m build --wheel  # binary distribution: create .whl file --> contains platform specific .so files etc.
-    # Audit python wheels --> also needed to link the generated .so from the cpp package!
-    - cd dist
-    - auditwheel show *.whl
-    - auditwheel repair *.whl
-  parallel:
-    matrix:
-      - PYTHON_VER: *python-versions
-  artifacts:
-    paths:
-      - $CI_PROJECT_DIR/dist
-  needs: [ ]
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
-
-### deploy wheels ###
-.install-twine: &install-twine
-  - *conda-init
-  - conda activate "${CONDA_ENV_PREFIX}3.9"
-  - python -m pip install --upgrade pip
-  - pip install twine
-
-push-to-internal-registry:
-  # push built wheels to the internal GitLab PyPi registry
-  stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  script:
-    # use python module twine and gitlab internal variables
-    - *install-twine
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url https://gitlab.lrz.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
-  needs:
-    - job: build-wheels-py
-      artifacts: true
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: manual
-
-push-to-external-pypi-test-registry:
-  # push built wheels to the external PyPi test registry
-  # at: https://test.pypi.org/project/commonroad-reach/
-  stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  script:
-    - *install-twine
-    - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
-  needs:
-    - job: build-wheels-py
-      artifacts: true
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-
-push-to-external-pypi-registry:
-  # push built wheels to the external PyPi registry
-  # at: https://pypi.org/project/commonroad-reach/
-  stage: deploy
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-  script:
-    - *install-twine
-    - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
-  needs:
-    - job: build-wheels-py
-      artifacts: true
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-
-### publish documentation ###
-pages:
-  # Push the latest documentation of the main branch to the GitLab Pages documentation
-  # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
-  stage: publish
-  script:
-    - *conda-init
-    - conda activate "${CONDA_ENV_PREFIX}3.7"
-    - *python-prepare
-    - pip install -r ./docs/requirements_doc.txt
-    - cd docs/Sphinx
-    - make html
-    - mv ./build/html ../../public
-  artifacts:
-    paths:
-      - public
-  environment:
-    name: Gitlab Pages
-    url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+#### test python ###
+#run-pytest:
+#  stage: test
+#  script:
+#    - *conda-init
+#    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
+#    - *python-prepare
+#    - cd tests
+#    - pytest .
+#  parallel:
+#    matrix:
+#      - PYTHON_VER: *python-versions
+#  needs:
+#    - job: compile-cpp
+#      artifacts: true
+#
+#### build wheels ###
+## Currently using development branch of cr-drivability checker
+#build-wheels-py:
+#  stage: build-wheels
+#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
+#  script:
+#    - *conda-init
+#    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
+#    - *python-prepare
+#    - pip install build
+#    - python -m build --sdist  # source distribution: create .tar.gz file
+#    - python -m build --wheel  # binary distribution: create .whl file --> contains platform specific .so files etc.
+#    # Audit python wheels --> also needed to link the generated .so from the cpp package!
+#    - cd dist
+#    - auditwheel show *.whl
+#    - auditwheel repair *.whl
+#  parallel:
+#    matrix:
+#      - PYTHON_VER: *python-versions
+#  artifacts:
+#    paths:
+#      - $CI_PROJECT_DIR/dist
+#  needs: [ ]
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
+#
+#### deploy wheels ###
+#.install-twine: &install-twine
+#  - *conda-init
+#  - conda activate "${CONDA_ENV_PREFIX}3.9"
+#  - python -m pip install --upgrade pip
+#  - pip install twine
+#
+#push-to-internal-registry:
+#  # push built wheels to the internal GitLab PyPi registry
+#  stage: deploy
+#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
+#  script:
+#    # use python module twine and gitlab internal variables
+#    - *install-twine
+#    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url https://gitlab.lrz.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+#  needs:
+#    - job: build-wheels-py
+#      artifacts: true
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "develop"
+#      when: manual
+#
+#push-to-external-pypi-test-registry:
+#  # push built wheels to the external PyPi test registry
+#  # at: https://test.pypi.org/project/commonroad-reach/
+#  stage: deploy
+#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
+#  script:
+#    - *install-twine
+#    - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+#  needs:
+#    - job: build-wheels-py
+#      artifacts: true
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
+#      when: manual
+#
+#push-to-external-pypi-registry:
+#  # push built wheels to the external PyPi registry
+#  # at: https://pypi.org/project/commonroad-reach/
+#  stage: deploy
+#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
+#  script:
+#    - *install-twine
+#    - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
+#  needs:
+#    - job: build-wheels-py
+#      artifacts: true
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
+#      when: manual
+#
+#### publish documentation ###
+#pages:
+#  # Push the latest documentation of the main branch to the GitLab Pages documentation
+#  # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
+#  stage: publish
+#  script:
+#    - *conda-init
+#    - conda activate "${CONDA_ENV_PREFIX}3.7"
+#    - *python-prepare
+#    - pip install -r ./docs/requirements_doc.txt
+#    - cd docs/Sphinx
+#    - make html
+#    - mv ./build/html ../../public
+#  artifacts:
+#    paths:
+#      - public
+#  environment:
+#    name: Gitlab Pages
+#    url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == "main"
