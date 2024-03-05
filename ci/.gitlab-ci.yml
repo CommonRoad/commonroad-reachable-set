@@ -106,7 +106,7 @@ build-wheel:
   stage: build-wheels
   # Use the privileged runner as required for Docker-in-Docker (dind)
   tags:
-    - dind
+    - wheel
   image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
   # make a docker daemon available for cibuildwheel to use
   services:
