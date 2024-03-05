@@ -60,9 +60,10 @@ target_link_libraries(crreach
 
 target_link_libraries(crreach
         PUBLIC
+        Eigen3::Eigen
+        Boost::headers
         crcc
         crccosy
-        Eigen3::Eigen
 )
 
 target_precompile_headers(crreach
