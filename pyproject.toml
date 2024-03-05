@@ -53,6 +53,7 @@ test = [
 docs = [
     "Sphinx>=4.5.0",
     "sphinx-autodoc-typehints>=1.18.1",
+    "sphinx-rtd-theme>=2.0.0",
     "m2r2>=0.3.0",
 ]
 
