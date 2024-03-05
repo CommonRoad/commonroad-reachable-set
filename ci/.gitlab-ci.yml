@@ -166,7 +166,8 @@ run-pytest:
   stage: test
   image: python:${JOB_PYTHON_VERSION}-slim-bullseye
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git
+    # we need build-essential, since Polygon3 (dependency of the drivability checker) has to be compiled from source
+    - apt-get update && apt-get install -y --no-install-recommends git build-essential
     - *update-git-config
   script:
     - python -m pip install --find-links=wheelhouse/ commonroad-reach[test]
