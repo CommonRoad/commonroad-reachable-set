@@ -79,4 +79,5 @@ build-verbosity = 1
 # Skip tests on musllinux due to missing wheels
 test-skip = "*i686 *-musllinux*"
 test-extras = ["test"]
-test-command = "python -m pytest {package}/tests/python"
+# use --import-mode=append to test the installed package and not the source
+test-command = "python -m pytest {package}/tests --import-mode append"
