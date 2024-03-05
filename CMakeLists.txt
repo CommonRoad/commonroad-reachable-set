@@ -179,7 +179,13 @@ cmake_dependent_option(CRREACH_BUILD_TESTS
 
 option(BUILD_SHARED_LIBS "Build reach as a shared library" ON)
 
-option(REACH_BUILD_SHARED_LIBS "Build using shared libraries" ${BUILD_SHARED_LIBS})
+option(CRREACH_BUILD_SHARED_LIBS "Build using shared libraries" ${BUILD_SHARED_LIBS})
+
+cmake_dependent_option(CRREACH_BUILD_EXECUTABLE
+        "Build executable"
+        ${CRREACH_BUILD_EXTRAS_DEFAULT}
+        "NOT SKBUILD"
+        OFF)
 
 set(CMAKE_SUPPORTS_TRY_FIND_PACKAGE OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24.0)
