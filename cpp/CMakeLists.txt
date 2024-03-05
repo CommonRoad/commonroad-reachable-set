@@ -54,7 +54,6 @@ target_include_directories(crreach
 
 target_link_libraries(crreach
         PRIVATE
-        yaml-cpp::yaml-cpp
         OpenMP::OpenMP_CXX
 )
 
@@ -62,6 +61,7 @@ target_link_libraries(crreach
         PUBLIC
         Eigen3::Eigen
         Boost::headers
+        yaml-cpp::yaml-cpp
         crcc
         crccosy
 )
