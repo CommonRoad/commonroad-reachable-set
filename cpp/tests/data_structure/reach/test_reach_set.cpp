@@ -1,8 +1,8 @@
-#include "../../test_utility.hpp"
+#include "tests/test_utility.hpp"
 
 TEST_SUITE("TestContinuousReachabilityAnalysis") {
 TEST_CASE("initialization") {
-    auto config = Configuration::load_configuration("../../configurations/test_cpp.yaml");
+    auto config = Configuration::load_configuration("configurations/test_cpp.yaml");
     auto reach_set = ReachableSet(config);
     auto drivable_area = reach_set.drivable_area_at_step(0);
 

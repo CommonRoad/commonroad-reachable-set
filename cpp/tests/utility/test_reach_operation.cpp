@@ -28,7 +28,7 @@ TEST_CASE("zero-state polygon has correct vertices") {
 }
 
 TEST_CASE("propagate polygon returns correct vertices") {
-    auto config = Configuration::load_configuration("../../configurations/test_cpp.yaml");
+    auto config = Configuration::load_configuration("configurations/test_cpp.yaml");
     config->planning().dt = 2.0;
     config->vehicle().ego.v_lon_min = 0;
     config->vehicle().ego.v_lon_max = 20;
