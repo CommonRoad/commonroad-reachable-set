@@ -69,5 +69,14 @@ build-dir = "build/{wheel_tag}"
 
 cmake.minimum-version = "3.24"
 
-[tool.scikit-build.cmake.define]
-ADD_TESTS = "OFF"
+[tool.cibuildwheel]
+# Skip PyPy
+skip = "pp*"
+archs = ["auto"]
+environment = { PIP_DISABLE_PIP_VERSION_CHECK="1" }
+build-verbosity = 1
+
+# Skip tests on musllinux due to missing wheels
+test-skip = "*i686 *-musllinux*"
+test-extras = ["test"]
+test-command = "python -m pytest {package}/tests/python"

@@ -18,8 +18,8 @@
 stages:
   - static-check
   - compile
-  - test
   - build-wheels
+  - test
   - deploy
   - publish
 
@@ -63,7 +63,7 @@ generate-cache:
     policy: push
   script:
     - cmake -G "Ninja Multi-Config" -S . -B build -DFETCHCONTENT_QUIET:BOOL=OFF
-  needs: []
+  needs: [ ]
 
 build-gcc:
   stage: compile
@@ -84,11 +84,66 @@ build-test:
   script:
     - cmake -G "Ninja Multi-Config" -S . -B build
     - cmake --build build --config RelWithDebInfo --target crreach_test
-  needs: []
+  needs: [ ]
   artifacts:
     paths:
       - build
     expire_in: 30 minutes
+
+build-sdist:
+  stage: build-wheels
+  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  script:
+    - python3 --version
+    - python3 -m build --sdist
+  needs: [ ]
+  artifacts:
+    paths:
+      - dist/*.tar.gz
+    expire_in: 30 minutes
+
+build-wheel:
+  stage: build-wheels
+  # Use the privileged runner as required for Docker-in-Docker (dind)
+  tags:
+    - wheel
+  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  # make a docker daemon available for cibuildwheel to use
+  services:
+    - name: docker:20.10-dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    # See https://github.com/docker-library/docker/pull/166
+    DOCKER_TLS_CERTDIR: ""
+    CIBW_BEFORE_ALL: "git config --global url.\"https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de//\".insteadOf \"git@gitlab.lrz.de:\" && git config --global url.\"https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/\".insteadOf \"ssh://git@gitlab.lrz.de\""
+    # NOTE: The following variables correspond to the default values.
+    # They are specified here so that it is possible to override them using
+    # Gitlab push options or in the UI when running a manual pipeline.
+    #
+    # For example, use git push -o ci.variable="CIBW_BUILD_VERBOSITY=1"
+    # to make cibuildwheel verbose in the pipeline created for the pushed commit.
+    CIBW_BUILD_VERBOSITY: 1
+    CIBW_TEST_SKIP: "*i686 *-musllinux*"
+    # We only use the artifacts (sdist/wheels) from previous jobs, so skip all Git operations
+    GIT_STRATEGY: none
+  script:
+    - cibuildwheel dist/*.tar.gz
+  needs:
+    - job: build-sdist
+      artifacts: true
+  artifacts:
+    paths:
+      - wheelhouse/*.whl
+    expire_in: 30 minutes
+  rules:
+    # Fallback rule when we're not building wheels for a tag or a main branch:
+    # In that case, build only a single wheel to speed up the pipeline
+    - when: on_success
+      variables:
+        CIBW_BUILD: "cp310-manylinux_x86_64"
 
 #compile-via-pip-install:
 #  stage: compile
