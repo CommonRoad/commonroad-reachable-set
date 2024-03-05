@@ -166,47 +166,20 @@ run-doctest:
     - job: build-test
       artifacts: true
 
-#run-pytest:
-#  stage: test
-#  script:
-#    - *conda-init
-#    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
-#    - *python-prepare
-#    - cd tests
-#    - pytest .
-#  parallel:
-#    matrix:
-#      - PYTHON_VER: *python-versions
-#  needs:
-#    - job: compile-cpp
-#      artifacts: true
-#
-#### build wheels ###
-## Currently using development branch of cr-drivability checker
-#build-wheels-py:
-#  stage: build-wheels
-#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-#  script:
-#    - *conda-init
-#    - conda activate "$CONDA_ENV_PREFIX$PYTHON_VER"
-#    - *python-prepare
-#    - pip install build
-#    - python -m build --sdist  # source distribution: create .tar.gz file
-#    - python -m build --wheel  # binary distribution: create .whl file --> contains platform specific .so files etc.
-#    # Audit python wheels --> also needed to link the generated .so from the cpp package!
-#    - cd dist
-#    - auditwheel show *.whl
-#    - auditwheel repair *.whl
-#  parallel:
-#    matrix:
-#      - PYTHON_VER: *python-versions
-#  artifacts:
-#    paths:
-#      - $CI_PROJECT_DIR/dist
-#  needs: [ ]
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
-#
+run-pytest:
+  stage: test
+  image: python:${JOB_PYTHON_VERSION}-slim-bullseye
+  script:
+    - python -m pip install --find-links=wheelhouse/ commonroad-reach[test]
+    # use --import-mode=append to test the installed package and not the source
+    - python -m pytest tests --import-mode append
+  needs:
+    - job: build-wheel
+      artifacts: true
+  parallel:
+    matrix:
+      - JOB_PYTHON_VERSION: *python-versions
+
 #### deploy wheels ###
 #.install-twine: &install-twine
 #  - *conda-init
