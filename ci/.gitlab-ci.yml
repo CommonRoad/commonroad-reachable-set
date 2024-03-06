@@ -170,7 +170,11 @@ run-pytest:
     - apt-get update && apt-get install -y --no-install-recommends git build-essential
     - *update-git-config
   script:
-    - python -m pip install --find-links=wheelhouse/ commonroad-reach[test]
+    # install requirements and package separately to make sure that the package is installed from the wheel and not from PyPI
+    - pip install pip-tools
+    - pip-compile --extra=test -o requirements_test.txt pyproject.toml
+    - pip install -r requirements_test.txt
+    - pip install --no-index --find-links=wheelhouse/ commonroad-reach[test]
     # use --import-mode=append to test the installed package and not the source
     - python -m pytest tests --import-mode append
   needs:
