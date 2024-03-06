@@ -175,8 +175,9 @@ run-pytest:
     - pip-compile --extra=test -o requirements_test.txt pyproject.toml
     - pip install -r requirements_test.txt
     - pip install --no-index --find-links=wheelhouse/ commonroad-reach[test]
+    - cd tests
     # use --import-mode=append to test the installed package and not the source
-    - python -m pytest tests --import-mode append
+    - pytest --import-mode append
   needs:
     - job: build-wheel
       artifacts: true
