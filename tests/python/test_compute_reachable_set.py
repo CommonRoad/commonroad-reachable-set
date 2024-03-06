@@ -42,6 +42,13 @@ def test_reachable_set_computation_cpp_cart(config: Configuration):
 def test_reachable_set_computation_python_online(config: Configuration):
     config.reachable_set.mode_computation = 3
     config.planning.coordinate_system = "CART"
+    import os
+    import pathlib
+    print(config.general.path_offline_data)
+    print("Files in offline_data:")
+    for dirpath, dirname, filenames in os.walk(f"{pathlib.Path(__file__).parent.parent.resolve()}"):
+        for filename in filenames:
+            print(f"{dirpath}: {filename}")
 
     reach_interface = ReachableSetInterface(config)
     reach_interface.compute_reachable_sets(1, 3)
