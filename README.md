@@ -12,11 +12,11 @@ The CommonRoad-Reach toolbox
 
 ## System Requirements
 
-The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04 and Ubuntu 22.04.
+The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04, 20.04 and 22.04.
 It should be compatible with later versions.
 For building the code, the following minimum versions are required:
-  * **GCC and G++**: version 9 or above
-  * **CMake**: version 3.15 or above.
+  * **GCC and G++**: version 10 or above
+  * **CMake**: version 3.20 or above.
   * **Pip**: version 21.3 or above
 
 We further recommend using [Anaconda](https://www.anaconda.com/) to manage your virtual python environment.
@@ -72,7 +72,7 @@ The additional Python dependencies are listed in `requirements.txt`.
   sudo apt-get upgrade libomp-dev
   ```
 
-* Build the package and install it to your conda environment via pip command:
+* Build the package and install it to your conda environment via pip command.
   ```bash
   pip install -v .
   ```
