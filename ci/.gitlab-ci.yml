@@ -148,10 +148,10 @@ build-wheel:
       variables:
         CIBW_BUILD: "*"
     # Fallback rule when we're not building wheels for a tag or a main branch:
-    # In that case, build only a single wheel to speed up the pipeline
+    # In that case, build only manylinux wheels to speed up the pipeline
     - when: on_success
       variables:
-        CIBW_BUILD: "cp310-manylinux_x86_64"
+        CIBW_BUILD: "*-manylinux_x86_64"
 
 #### tests ###
 run-doctest:
