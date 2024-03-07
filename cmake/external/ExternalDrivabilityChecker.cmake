@@ -8,15 +8,13 @@ add_library(pthread ALIAS Threads::Threads)
 FetchContent_Declare(
     crdc
     GIT_REPOSITORY  git@gitlab.lrz.de:cps/commonroad-drivability-checker.git
-    GIT_TAG         c5663b1a3bd8d11bdf5462f1471062bb312e8ccb
+    GIT_TAG         f0905d3aeeb1d62584d67a73604601f5c948f3f2
     #GIT_TAG        development
 )
 
 FetchContent_MakeAvailable(crdc)
 
 set_property(DIRECTORY ${crdc_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL ON)
-
-set(BUILD_S11N FALSE CACHE BOOL "" FORCE)
 
 mark_as_advanced(
     ADD_MODULE_GEOMETRY

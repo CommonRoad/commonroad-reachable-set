@@ -14,6 +14,16 @@ project(reach
 
 option(ADD_TESTS "Build unit tests" OFF) # flag to add unit tests
 
+# CMP0077 (3.13) - option() honors normal variables.
+# Relevant for Eigen3
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+# CMP0126 (3.21) - Removal of normal variables by set(CACHE)
+if(POLICY CMP0126)
+    cmake_policy(SET CMP0126 NEW)
+endif()
+
+
 # CMP0135 - URL download timestamp
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
