@@ -7,7 +7,7 @@ add_library(pthread ALIAS Threads::Threads)
 
 FetchContent_Declare(
     crdc
-    GIT_REPOSITORY  git@gitlab.lrz.de:cps/commonroad-drivability-checker.git
+    GIT_REPOSITORY  https://github.com/CommonRoad/commonroad-drivability-checker.git
     GIT_TAG         f0905d3aeeb1d62584d67a73604601f5c948f3f2
     #GIT_TAG        development
 )
