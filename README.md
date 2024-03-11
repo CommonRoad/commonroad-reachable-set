@@ -12,7 +12,7 @@ The CommonRoad-Reach toolbox
 
 ## System Requirements
 
-The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04, 20.04 and 22.04.
+The software is written in Python 3.10 and C++17, and was tested on Ubuntu 18.04, 20.04 and 22.04.
 It should be compatible with later versions.
 For building the code, the following minimum versions are required:
   * **GCC and G++**: version 10 or above
