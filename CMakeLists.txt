@@ -170,7 +170,6 @@ cmake_dependent_option(CRREACH_BUILD_DOXYGEN
         "Doxygen_FOUND;NOT SKBUILD"
         OFF)
 
-# TODO Maybe involve BUILD_TESTING here?
 cmake_dependent_option(CRREACH_BUILD_TESTS
         "Build tests"
         ${CRREACH_BUILD_EXTRAS_DEFAULT}

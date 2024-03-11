@@ -67,7 +67,7 @@ build-backend = "scikit_build_core.build"
 [tool.scikit-build]
 wheel.packages = ["commonroad_reach"]
 build-dir = "build/{wheel_tag}"
-
+install.components = ["pycrreach"]
 cmake.minimum-version = "3.24"
 
 [tool.cibuildwheel]

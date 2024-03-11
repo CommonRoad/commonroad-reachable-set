@@ -43,12 +43,12 @@ if(SKBUILD)
 
     install(TARGETS ${python_module_name}
             LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/commonroad_reach
-            COMPONENT PythonModules
+            COMPONENT ${python_module_name}
     )
 
     add_custom_target(install-python-modules-${python_module_name}
             ${CMAKE_COMMAND}
-            -DCMAKE_INSTALL_COMPONENT=PythonModules
+            -DCMAKE_INSTALL_COMPONENT=${python_module_name}
             -P "${PROJECT_BINARY_DIR}/cmake_install.cmake"
             DEPENDS ${python_module_name}
     )
