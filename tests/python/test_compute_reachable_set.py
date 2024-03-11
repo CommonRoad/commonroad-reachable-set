@@ -45,7 +45,7 @@ def test_reachable_set_computation_python_online(config: Configuration):
     import os
     import pathlib
     print(config.general.path_offline_data)
-    print("Files in offline_data:")
+    print("Files in tests directory:")
     for dirpath, dirname, filenames in os.walk(f"{pathlib.Path(__file__).parent.parent.resolve()}"):
         for filename in filenames:
             print(f"{dirpath}: {filename}")

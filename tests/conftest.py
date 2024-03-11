@@ -12,7 +12,9 @@ from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
 
 @pytest.fixture
 def config():
-    return _open_config("DEU_Test-1_1_T-1")
+    config = _open_config("DEU_Test-1_1_T-1")
+    config.general.path_offline_data = str(pathlib.Path(__file__).parent.joinpath("precomputed_offline_data").resolve())
+    return config
 
 
 @pytest.fixture
