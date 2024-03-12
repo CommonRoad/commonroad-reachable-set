@@ -184,6 +184,27 @@ run-pytest:
     matrix:
       - JOB_PYTHON_VERSION: *python-versions
 
+test-editable-install:
+  stage: test
+  image: python:${JOB_PYTHON_VERSION}-slim-bullseye
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends
+      git build-essential ninja-build
+      libgl1 libglib2.0-0
+      libomp-dev libboost-all-dev libeigen3-dev libyaml-cpp-dev pybind11-dev doctest-dev doxygen
+    - *update-git-config
+  script:
+    - pip install pip-tools
+    - pip-compile --extra=build -o requirements_build.txt pyproject.toml
+    - pip install -r requirements_build.txt
+    - pip install -v --no-build-isolation --config-settings=editable.rebuild=true -e .[test]
+    - pytest tests
+  needs: [ ]
+  parallel:
+    matrix:
+      - JOB_PYTHON_VERSION: *python-versions
+
 #### deploy wheels ###
 #.install-twine: &install-twine
 #  - *conda-init

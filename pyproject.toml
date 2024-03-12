@@ -60,6 +60,7 @@ build = [
     "pybind11~=2.11.1",
     "pathspec>=0.12.1",
     "pyproject-metadata>=0.7.1",
+    "cmake>=3.24",
 ]
 
 [build-system]

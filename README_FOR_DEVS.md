@@ -17,6 +17,7 @@ While most of these dependencies are added automatically during the build proces
 
 **Manual installation optional:**
 - [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
+- [Eigen3](https://eigen.tuxfamily.org/)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 - [pybind11](https://github.com/pybind/pybind11)
 
@@ -32,7 +33,7 @@ The additional Python dependencies are listed in `pyproject.toml`.
 1. Install C++ dependencies:
   ```bash
   sudo apt-get update
-  sudo apt-get install libomp-dev libboost-all-dev libyaml-cpp-dev pybind11-dev doctest-dev doxygen
+  sudo apt-get install libomp-dev libboost-all-dev libeigen3-dev libyaml-cpp-dev pybind11-dev doctest-dev doxygen
   ```
 
 2. Build the package and install it to your conda environment via pip command.
