@@ -5,6 +5,10 @@ find_package(Threads REQUIRED)
 # Required for LINK_LIBRARIES_ONLY_TARGETS (gtest links directly to pthread)
 add_library(pthread ALIAS Threads::Threads)
 
+# Disable pybind dependency of drivability checker
+set(ADD_PYTHON_BINDINGS OFF)
+set(BUILD_PYBIND11 OFF)
+
 FetchContent_Declare(
     crdc
     GIT_REPOSITORY  https://github.com/CommonRoad/commonroad-drivability-checker.git

@@ -76,6 +76,7 @@ target_precompile_headers(crreach
 add_library(CommonRoadReach::crreach ALIAS crreach)
 
 if(CRREACH_BUILD_EXECUTABLE)
+        include(ExternalPybind)
         add_executable(crreach_example src/example.cpp)
         target_link_libraries(crreach_example PRIVATE
                 crreach
