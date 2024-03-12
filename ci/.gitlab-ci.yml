@@ -206,56 +206,74 @@ test-editable-install:
       - JOB_PYTHON_VERSION: *python-versions
 
 #### deploy wheels ###
-#.install-twine: &install-twine
-#  - *conda-init
-#  - conda activate "${CONDA_ENV_PREFIX}3.9"
-#  - python -m pip install --upgrade pip
-#  - pip install twine
-#
-#push-to-internal-registry:
-#  # push built wheels to the internal GitLab PyPi registry
-#  stage: deploy
-#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-#  script:
-#    # use python module twine and gitlab internal variables
-#    - *install-twine
-#    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url https://gitlab.lrz.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
-#  needs:
-#    - job: build-wheels-py
-#      artifacts: true
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == "develop"
-#      when: manual
-#
-#push-to-external-pypi-test-registry:
-#  # push built wheels to the external PyPi test registry
-#  # at: https://test.pypi.org/project/commonroad-reach/
-#  stage: deploy
-#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-#  script:
-#    - *install-twine
-#    - TWINE_PASSWORD=${CR_PYPI_TEST_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
-#  needs:
-#    - job: build-wheels-py
-#      artifacts: true
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == "main"
-#      when: manual
-#
-#push-to-external-pypi-registry:
-#  # push built wheels to the external PyPi registry
-#  # at: https://pypi.org/project/commonroad-reach/
-#  stage: deploy
-#  image: $CI_REGISTRY/cps/commonroad-reachable-set/manylinux_wheelbuild:latest
-#  script:
-#    - *install-twine
-#    - TWINE_PASSWORD=${CR_PYPI_RELEASE_API_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/wheelhouse/* dist/commonroad-reach-*.tar.gz --verbose
-#  needs:
-#    - job: build-wheels-py
-#      artifacts: true
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == "main"
-#      when: manual
+upload-wheel-internal:
+  stage: deploy
+  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  variables:
+    TWINE_USERNAME: gitlab-ci-token
+    TWINE_PASSWORD: ${CI_JOB_TOKEN}
+    TWINE_REPOSITORY_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
+    UPLOAD_WHEELS: "0"
+    # We only use the artifacts (sdist/wheels) from previous jobs, so skip all Git operations
+    GIT_STRATEGY: none
+  script:
+    - twine upload dist/*.tar.gz wheelhouse/*.whl
+  needs:
+    - job: build-sdist
+      artifacts: true
+    - job: build-wheel
+      artifacts: true
+  rules:
+    # Disable job for merge request pipelines (imitate default job behaviour)
+    - *skip_merge_request_pipeline
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: manual
+    # Also upload wheels if the UPLOAD_WHEELS was manually set to true
+    # For example, use git push -o ci.variable="UPLOAD_WHEELS=1" to test this
+    - if: $UPLOAD_WHEELS == "1"
+
+upload-wheel-external-test:
+  stage: deploy
+  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: ${CR_PYPI_TEST_API_TOKEN}
+    TWINE_REPOSITORY: testpypi
+    # We only use the artifacts (sdist/wheels) from previous jobs, so skip all Git operations
+    GIT_STRATEGY: none
+  script:
+    - twine upload dist/*.tar.gz wheelhouse/*.whl
+  needs:
+    - job: build-sdist
+      artifacts: true
+    - job: build-wheel
+      artifacts: true
+  rules:
+    # Disable job for merge request pipelines (imitate default job behaviour)
+    - *skip_merge_request_pipeline
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+
+upload-wheel-external-release:
+  stage: deploy
+  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: ${CR_PYPI_RELEASE_API_TOKEN}
+    # We only use the artifacts (sdist/wheels) from previous jobs, so skip all Git operations
+    GIT_STRATEGY: none
+  script:
+    - twine upload dist/*.tar.gz wheelhouse/*.whl
+  needs:
+    - job: build-sdist
+      artifacts: true
+    - job: build-wheel
+      artifacts: true
+  rules:
+    # Disable job for merge request pipelines (imitate default job behaviour)
+    - *skip_merge_request_pipeline
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
 
 ### publish documentation ###
 pages:
