@@ -1,3 +1,81 @@
+## Building from Source
+
+> **Note:** Currently there appears to be a bug with boost geometry and newer versions of GCC (this seems to start with version 11.4).
+> A workaround until this is fixed is to use an older version of GCC (we suggest GCC 10).
+> To do so, indicate the path to the older version of GCC in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
+
+### Third-Party Dependencies
+
+The following third-party dependencies of the C++ code are only required for building the project from source!
+While most of these dependencies are added automatically during the build process, you can install them manually via your package manager to speed up the build process.
+
+**Manual installation required:**
+* [OpenMP](https://www.openmp.org/)
+
+**Manual installation recommended to speed up the build:**
+* [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
+
+**Manual installation optional:**
+* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
+* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+* [pybind11](https://github.com/pybind/pybind11)
+
+**Optional dependencies:**
+* [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
+* [Doxygen](https://doxygen.nl/) (optional: for building documentation)
+
+The additional Python dependencies are listed in `pyproject.toml`.
+
+
+### Building the Code
+
+1. Install C++ dependencies:
+  ```bash
+  sudo apt-get update
+  sudo apt-get install libboost-all-dev libyaml-cpp-dev libomp-dev doctest-dev doxygen
+  ```
+
+2. Build the package and install it to your conda environment via pip command.
+  ```bash
+  pip install -v .
+  ```
+  This will build the Python binding (pycrreach) required for collision checks and other C++-boosted computations.
+
+> **Note**: The `-v` flag (verbose) prints information about the build progress
+
+**Optional:**
+
+- To build the code in Debug mode, add the flag `--config-settings=cmake.build-type="Debug"` to the `pip` command.
+- See [here](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#configuring-cmake-arguments-and-defines) for further information on configuring CMake arguments via our build system (`scikit-build-core`).
+
+> **Note**: `scikit-build-core` uses `ninja` for building the C++ extension by default.
+> Thus, the build is automatically parallelized using all available CPU cores.
+> If you want to explicitly configure the number of build jobs, you can do so by passing the flag `--config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS` to the `pip` command, where `$BUILD_JOBS` is the number of parallel jobs to use.
+> See [here](https://scikit-build-core.readthedocs.io/en/latest/faqs.html#multithreaded-builds) for further details.
+
+> **Note**: Building the package in Debug mode (see above) significantly increases the computation time of the C++ backend. Please make sure you are building in Release mode (default setting) if you require fast computations.
+
+## Editable Install (experimental)
+
+1. Install the third-party C++ dependencies as described [above](#third-party-dependencies).
+
+2. Install the Python build dependencies:
+```bash
+pip install -r requirements_build.txt
+```
+
+3. Build the package and install it in editable mode with automatic rebuilds.
+```bash
+pip install -v --no-build-isolation --config-settings=editable.rebuild=true -e .
+```
+Note that this is considered experimental by `scikit-build-core` and is subject to change.
+For more information, please see the [documentation](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#editable-installs) of `scikit-build-core`.
+Flags:
+- `-v` (verbose) prints information about the build progress
+- `--no-build-isolation` disables build isolation, which means the build runs in your local environment
+- `--config-settings=editable.rebuild=true` enables automatic rebuilds when the source code changes (see the caveats in the documentation of `scikit-build-core`)
+- `-e` (editable) installs the package in editable mode
+
 ## Setting up a Local Development Environment
 
 ### Working with the Python Code

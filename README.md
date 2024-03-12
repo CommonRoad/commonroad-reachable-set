@@ -31,67 +31,8 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
     pip install commonroad-reach
     ```
 
-2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
-descriptions below.
-
-
-## Building from Source
-
-> **Note:** Currently there appears to be a bug with boost geometry and newer versions of GCC (this seems to start with version 11.4).
-> A workaround until this is fixed is to use an older version of GCC (we suggest GCC 10).
-> To do so, indicate the path to the older version of GCC in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
-
-### Third Party Dependencies
-
-The following third-party dependencies of the C++ code are only required for building the project from source!
-While most of these dependencies are added automatically during the build process, you can install them manually via your package manager to speed up the build process.
-
-**Manual installation required:**
-* [OpenMP](https://www.openmp.org/)
-
-**Manual installation recommended to speed up the build:**
-* [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
-
-**Manual installation optional:**
-* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-* [pybind11](https://github.com/pybind/pybind11)
-
-**Optional dependencies:**
-* [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
-* [Doxygen](https://doxygen.nl/) (optional: for building documentation)
-
-The additional Python dependencies are listed in `pyproject.toml`.
-
-
-### Building the Code
-
-* Install C++ dependencies:
-  ```bash
-  sudo apt-get update
-  sudo apt-get install libboost-all-dev libyaml-cpp-dev libomp-dev doctest-dev doxygen
-  ```
-
-* Build the package and install it to your conda environment via pip command.
-  ```bash
-  pip install -v .
-  ```
-  This will build the Python binding (pycrreach) required for collision checks and other C++-boosted computations.
-
-> **Note**: The `-v` flag (verbose) prints information about the build progress
-
-**Optional:**
-
-- To build the code in Debug mode, add the flag `--config-settings=cmake.build-type="Debug"` to the `pip` command.
-- See [here](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#configuring-cmake-arguments-and-defines) for further information on configuring CMake arguments via our build system (`scikit-build-core`).
-
-> **Note**: `scikit-build-core` uses `ninja` for building the C++ extension by default.
-> Thus, the build is automatically parallelized using all available CPU cores.
-> If you want to explicitly configure the number of build jobs, you can do so by passing the flag `--config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS` to the `pip` command, where `$BUILD_JOBS` is the number of parallel jobs to use.
-> See [here](https://scikit-build-core.readthedocs.io/en/latest/faqs.html#multithreaded-builds) for further details.
-
-> **Note**: Building the package in Debug mode (see above) significantly increases the computation time of the C++ backend. Please make sure you are building in Release mode (default setting) if you require fast computations. 
-
+2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the [README_FOR_DEVS](./README_FOR_DEVS.md).
+This option is only recommended for advanced users and those who are looking to contribute to the development of CommonRoad-Reach.
 
 ## Getting Started
 
@@ -131,7 +72,3 @@ If you use our toolbox for your research, please cite our [paper](https://mediat
       year      = {2022},
    }
 ```
-
-## Development
-
-If you want to set up a local development environment, please refer to the [README_FOR_DEVS](./README_FOR_DEVS.md).
