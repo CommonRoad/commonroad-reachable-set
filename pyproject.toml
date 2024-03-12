@@ -71,7 +71,7 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 wheel.packages = ["commonroad_reach"]
-build-dir = "build/{wheel_tag}"
+build-dir = "build/{build_type}_{wheel_tag}"
 install.components = ["pycrreach"]
 
 minimum-version = "0.8"
