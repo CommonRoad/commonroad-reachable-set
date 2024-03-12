@@ -42,7 +42,7 @@ if(SKBUILD)
     target_link_libraries(${python_module_name} PRIVATE crreach)
 
     install(TARGETS ${python_module_name}
-            LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/commonroad_reach
+            LIBRARY DESTINATION commonroad_reach
             COMPONENT ${python_module_name}
     )
 
