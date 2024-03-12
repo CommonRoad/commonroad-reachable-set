@@ -41,6 +41,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.23.0)
             INTERFACE
             FILE_SET crreach_headers
             TYPE HEADERS
+            BASE_DIRS include
             FILES ${CRREACH_HDR_FILES})
 endif()
 

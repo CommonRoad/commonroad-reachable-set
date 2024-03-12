@@ -12,7 +12,7 @@ set(export_name ${PROJECT_NAME}_Targets)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.23.0)
     install(TARGETS crreach
             EXPORT ${export_name}
-            FILE_SET crreach_headers DESTINATION include
+            FILE_SET crreach_headers
             LIBRARY ARCHIVE RUNTIME)
 else()
     install(TARGETS crreach
