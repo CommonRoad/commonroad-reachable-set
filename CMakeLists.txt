@@ -176,15 +176,21 @@ cmake_dependent_option(CRREACH_BUILD_TESTS
         "NOT SKBUILD"
         OFF)
 
-option(BUILD_SHARED_LIBS "Build reach as a shared library" ON)
-
-option(CRREACH_BUILD_SHARED_LIBS "Build using shared libraries" ${BUILD_SHARED_LIBS})
-
 cmake_dependent_option(CRREACH_BUILD_EXECUTABLE
         "Build executable"
         ${CRREACH_BUILD_EXTRAS_DEFAULT}
         "NOT SKBUILD"
         OFF)
+
+cmake_dependent_option(CRREACH_BUILD_PYTHON_BINDINGS
+        "Build Python bindings"
+        ${CRREACH_BUILD_EXTRAS_DEFAULT}
+        "NOT SKBUILD"
+        ON)
+
+option(BUILD_SHARED_LIBS "Build reach as a shared library" ON)
+
+option(CRREACH_BUILD_SHARED_LIBS "Build using shared libraries" ${BUILD_SHARED_LIBS})
 
 set(CMAKE_SUPPORTS_TRY_FIND_PACKAGE OFF)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24.0)
@@ -289,9 +295,11 @@ include(ExternalDrivabilityChecker)
 add_subdirectory(cpp)
 
 # Add subdirectory for the Python bindings
-add_subdirectory(python_binding)
+if(CRREACH_BUILD_PYTHON_BINDINGS)
+    add_subdirectory(python_binding)
+endif()
 
-## Doxygen
+# Doxygen
 if(CRREACH_BUILD_DOXYGEN)
     include(extras/Doxygen)
 endif()
