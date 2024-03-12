@@ -56,6 +56,12 @@ docs = [
     "sphinx-rtd-theme>=2.0.0",
     "m2r2>=0.3.0",
 ]
+build = [
+    "scikit-build-core~=0.8.0",
+    "pybind11~=2.11.1",
+    "pathspec>=0.12.1",
+    "pyproject-metadata>=0.7.1",
+]
 
 [build-system]
 requires = [
@@ -68,13 +74,15 @@ build-backend = "scikit_build_core.build"
 wheel.packages = ["commonroad_reach"]
 build-dir = "build/{wheel_tag}"
 install.components = ["pycrreach"]
-cmake.minimum-version = "3.24"
+
+minimum-version = "0.8"
+cmake.version = ">=3.24"
 
 [tool.cibuildwheel]
 # Skip PyPy
 skip = "pp*"
 archs = ["auto"]
-environment = { PIP_DISABLE_PIP_VERSION_CHECK="1" }
+environment = { PIP_DISABLE_PIP_VERSION_CHECK = "1" }
 build-verbosity = 1
 
 # Skip tests on musllinux due to missing wheels
