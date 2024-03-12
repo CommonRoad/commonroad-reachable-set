@@ -1,4 +1,4 @@
-#include "tests/test_utility.hpp"
+#include "test_utility.hpp"
 
 TEST_SUITE("TestContinuousReachabilityAnalysis") {
 TEST_CASE("initialization") {
