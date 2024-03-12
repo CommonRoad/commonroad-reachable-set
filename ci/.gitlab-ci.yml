@@ -244,7 +244,9 @@ pages:
   stage: publish
   image: python:3.10-slim-bullseye
   script:
-    - pip install -r ./docs/requirements_doc.txt
+    - pip install pip-tools
+    - pip-compile --extra=docs -o requirements_docs.txt pyproject.toml
+    - pip install -r requirements_docs.txt
     - cd docs/Sphinx
     - make html
     - mv ./build/html ../../public
