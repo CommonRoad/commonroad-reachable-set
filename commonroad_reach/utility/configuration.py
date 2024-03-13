@@ -140,7 +140,7 @@ def compute_initial_state_cart(config) -> Tuple:
     Computes the initial state of the ego vehicle given a planning problem in the Cartesian coordinate system.
     """
     planning_problem = config.planning_problem
-    state_initial = config.planning.state_initial if config.planning.state_initial else planning_problem.initial_state
+    state_initial = planning_problem.initial_state
     wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = state_initial.position
@@ -163,7 +163,7 @@ def compute_initial_state_cart(config) -> Tuple:
     return (x, y), (v_x, v_y), o
 
 
-def compute_initial_state_cvln(config, state_initial: State = None) -> Tuple:
+def compute_initial_state_cvln(config) -> Tuple:
     """
     Computes the initial state of the ego vehicle given a planning problem or a state in a curvilinear coordinate system.
 
@@ -173,10 +173,9 @@ def compute_initial_state_cvln(config, state_initial: State = None) -> Tuple:
         is the curvature of the reference path
 
     :param config: configuration file
-    :param state_initial: initial state to overwrite the one from the planning problem
     """
     planning_problem = config.planning_problem
-    state_initial = state_initial if state_initial else planning_problem.initial_state
+    state_initial = planning_problem.initial_state
     wb_rear_axle = config.vehicle.ego.wb_rear_axle
 
     x, y = state_initial.position
