@@ -49,7 +49,6 @@ class Configuration:
 
     def update(self, scenario: Scenario = None, planning_problem_set: PlanningProblemSet = None,
                planning_problem: PlanningProblem = None, idx_planning_problem: int = 0,
-               state_initial: State = None, goal_region: GoalRegion = None,
                CLCS: CurvilinearCoordinateSystem = None, list_ids_lanelets: List[int] = None):
         """
         Updates configuration based on the given attributes.
@@ -57,9 +56,10 @@ class Configuration:
         Possible ways of completing the configuration:
 
             1. Empty attributes: loads scenario and planning problem (set) from the xml files, computes route and CLCS
-            2. Scenario + planning problem (set) (+ initial state): computes route and CLCS
-            3. Scenario + initial state + goal region: computes route and CLCS
-            4. Scenario + initial state + CLCS: retrieve reference path from CLCS
+            2. Scenario + planning problem (set): retrieves initial state from planning problem,
+                                                  computes reference path and CLCS
+            3. Scenario + planning problem + CLCS: retrieves initial state from planning problem,
+                                                   retrieves reference path from CLCS
 
         Additionally, a list of lanelet IDs (e.g., from a given route) can be passed to restrict the reachable set
         computation a-priori to a desired set of lanelets.
@@ -67,8 +67,7 @@ class Configuration:
         # patterns that do not require loading scenario and planning problem from xml files.
         if scenario and (planning_problem_set or
                          planning_problem or
-                         (state_initial and goal_region) or
-                         (state_initial and CLCS)):
+                         (planning_problem and CLCS)):
             pass
 
         else:
@@ -83,8 +82,6 @@ class Configuration:
 
         self.planning_problem = planning_problem
 
-        self.planning.state_initial = state_initial
-        self.planning.goal_region = goal_region
         self.planning.CLCS = CLCS
         self.planning.list_ids_lanelets = list_ids_lanelets
         self.planning.update_configuration(self)
@@ -443,8 +440,6 @@ class PlanningConfiguration(ConfigurationBase):
         self.o_initial = None
 
         # related to specific planning problem
-        self.state_initial = None
-        self.goal_region = None
         self.route = None
         self.reference_path = None
         self.lanelet_network = None
@@ -484,8 +479,7 @@ class PlanningConfiguration(ConfigurationBase):
         self.lanelet_network = scenario.lanelet_network if not self.list_ids_lanelets \
             else util_general.create_lanelet_network_from_ids(scenario.lanelet_network, self.list_ids_lanelets)
 
-        self.step_start = planning_problem.initial_state.time_step \
-            if not self.state_initial else self.state_initial.time_step
+        self.step_start = planning_problem.initial_state.time_step
 
         assert round(self.dt * 100) % round(scenario.dt * 100) == 0, \
             f"Value of dt ({self.dt}) should be a multiple of scenario dt ({scenario.dt})."
@@ -511,10 +505,8 @@ class PlanningConfiguration(ConfigurationBase):
 
             else:
                 # plans a route from the initial lanelet to the goal lanelet, set curvilinear coordinate system
-                route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
-                                             planning_problem=planning_problem,
-                                             state_initial=self.state_initial,
-                                             goal_region=self.goal_region)
+                route_planner = RoutePlanner(scenario=scenario,
+                                             planning_problem=planning_problem)
                 candidate_holder = route_planner.plan_routes()
                 route = candidate_holder.retrieve_first_route()
 
@@ -525,7 +517,7 @@ class PlanningConfiguration(ConfigurationBase):
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
                     self.reference_path = np.array(self.CLCS.reference_path())
 
-            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config, self.state_initial)
+            p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
             self.p_lon_initial, self.p_lat_initial = p_initial
             self.v_lon_initial, self.v_lat_initial = v_initial
