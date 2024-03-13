@@ -176,12 +176,6 @@ cmake_dependent_option(CRREACH_BUILD_TESTS
         "NOT SKBUILD"
         OFF)
 
-cmake_dependent_option(CRREACH_BUILD_EXECUTABLE
-        "Build executable"
-        ${CRREACH_BUILD_EXTRAS_DEFAULT}
-        "NOT SKBUILD"
-        OFF)
-
 option(CRREACH_BUILD_PYTHON_BINDINGS
         "Build Python bindings"
         ${CRREACH_BUILD_EXTRAS_DEFAULT})

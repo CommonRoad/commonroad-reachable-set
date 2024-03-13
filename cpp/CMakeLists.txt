@@ -76,15 +76,6 @@ target_precompile_headers(crreach
 
 add_library(CommonRoadReach::crreach ALIAS crreach)
 
-if(CRREACH_BUILD_EXECUTABLE)
-        include(ExternalPybind)
-        add_executable(crreach_example src/example.cpp)
-        target_link_libraries(crreach_example PRIVATE
-                crreach
-                pybind11::embed
-        )
-endif()
-
 foreach(target IN ITEMS crreach)
     # this adds many warnings to the build. They usually help to find some bugs
     # TODO: Check whether each warning flag is actually supported by the compiler before adding it
