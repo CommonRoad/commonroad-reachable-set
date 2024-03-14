@@ -290,6 +290,7 @@ pages:
     - pip install pip-tools
     - pip-compile --extra=docs -o requirements_docs.txt pyproject.toml
     - pip install -r requirements_docs.txt
+    - pip install commonroad-reach
     - cd docs/Sphinx
     - make html
     - mv ./build/html ../../public
