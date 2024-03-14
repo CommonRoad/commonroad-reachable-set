@@ -283,6 +283,9 @@ pages:
   # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
   stage: publish
   image: python:3.10-slim-bullseye
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git
+    - *update-git-config
   script:
     - pip install pip-tools
     - pip-compile --extra=docs -o requirements_docs.txt pyproject.toml
