@@ -78,7 +78,9 @@ build-test:
   needs: [ ]
   artifacts:
     paths:
-      - build
+      - build/RelWithDebInfo/crreach_test
+      - build/**/*.so
+      - build/**/*.so.*
     expire_in: 30 minutes
 
 ### build wheels ###
