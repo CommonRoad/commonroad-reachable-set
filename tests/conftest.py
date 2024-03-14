@@ -1,7 +1,5 @@
 """Shared fixtures"""
-import os
 import pathlib
-import sys
 
 import pytest
 
@@ -11,13 +9,22 @@ from commonroad_reach.data_structure.reach.reach_node import ReachNode
 from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.data_structure.reach.reach_set_py import PyReachableSet
 
-sys.path.append(os.getcwd())
-
 
 @pytest.fixture
 def config():
+    config = _open_config("DEU_Test-1_1_T-1")
+    config.general.path_offline_data = str(pathlib.Path(__file__).parent.joinpath("precomputed_offline_data").resolve())
+    return config
+
+
+@pytest.fixture
+def config_offline():
+    return _open_config("DEU_Offline-1_1_T-1")
+
+
+def _open_config(name_scenario: str) -> Configuration:
     path_root = str(pathlib.Path(__file__).parent.resolve())
-    config = ConfigurationBuilder(path_root=path_root).build_configuration("DEU_Test-1_1_T-1")
+    config = ConfigurationBuilder(path_root=path_root).build_configuration(name_scenario)
     config.update()
     return config
 

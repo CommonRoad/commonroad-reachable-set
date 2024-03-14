@@ -185,7 +185,7 @@ def test_create_base_set_from_position_region():
         assert base_set_adapted.polygon_lat.contains(Point(vertex))
 
 
-def test_point_mass_sample_containment(plot=False):
+def test_point_mass_sample_containment(config: Configuration,plot=False):
     """Visualizes whether the reachable sets (lon/lat polygons) contain the propagated samples of the PM model"""
 
     def _simulate_state(vehicle_dynamics, current_state, input_state, dt, ego_params):
@@ -197,15 +197,10 @@ def test_point_mass_sample_containment(plot=False):
         else:
             return state_simulated_next
 
-    # scenario
-    name_scenario = "DEU_Test-1_1_T-1"
-
     # point mass dynamics
     vehicle_dynamics = VehicleDynamics.PM(VehicleType.BMW_320i)
 
     # reachable set
-    config = ConfigurationBuilder().build_configuration(name_scenario)
-    config.update()
     util_logger.initialize_logger(config)
     config.print_configuration_summary()
     backend = "CPP" if config.reachable_set.mode_computation == 2 else "PYTHON"

@@ -5,6 +5,10 @@ find_package(Threads REQUIRED)
 # Required for LINK_LIBRARIES_ONLY_TARGETS (gtest links directly to pthread)
 add_library(pthread ALIAS Threads::Threads)
 
+# Disable pybind dependency of drivability checker
+set(ADD_PYTHON_BINDINGS OFF)
+set(BUILD_PYBIND11 OFF)
+
 # option to use locally installed source directory of CRDC
 # root directory of local CRDC should be at the same level as root directory of commonroad-reachable-set
 option(LOCAL_CRDC "Use local version of Drivability Checker" OFF)

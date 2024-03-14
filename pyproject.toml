@@ -35,7 +35,6 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX :: Linux",
 ]
@@ -53,20 +52,41 @@ test = [
 docs = [
     "Sphinx>=4.5.0",
     "sphinx-autodoc-typehints>=1.18.1",
+    "sphinx-rtd-theme>=2.0.0",
     "m2r2>=0.3.0",
+]
+build = [
+    "scikit-build-core~=0.8.0",
+    "pybind11~=2.11.1",
+    "pathspec>=0.12.1",
+    "pyproject-metadata>=0.7.1",
+    "cmake>=3.24",
 ]
 
 [build-system]
 requires = [
-    "scikit-build-core~=0.4.7",
-    "pybind11~=2.10.0",
+    "scikit-build-core~=0.8.0",
+    "pybind11~=2.11.1",
 ]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 wheel.packages = ["commonroad_reach"]
-build-dir = "build/{wheel_tag}"
-cmake.targets = ["pycrreach"]
+build-dir = "build/{build_type}_{wheel_tag}"
+install.components = ["pycrreach"]
 
-[tool.scikit-build.cmake.define]
-ADD_TESTS = "OFF"
+minimum-version = "0.8"
+cmake.version = ">=3.24"
+
+[tool.cibuildwheel]
+# Skip PyPy
+skip = "pp*"
+archs = ["auto"]
+environment = { PIP_DISABLE_PIP_VERSION_CHECK = "1" }
+build-verbosity = 1
+
+# Skip tests on musllinux due to missing wheels
+test-skip = "*i686 *-musllinux*"
+test-extras = ["test"]
+# use --import-mode=append to test the installed package and not the source
+test-command = "python -m pytest {package}/tests --import-mode append"

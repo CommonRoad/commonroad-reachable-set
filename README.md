@@ -12,7 +12,7 @@ The CommonRoad-Reach toolbox
 
 ## System Requirements
 
-The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04, 20.04 and 22.04.
+The software is written in Python 3.10 and C++17, and was tested on Ubuntu 18.04, 20.04 and 22.04.
 It should be compatible with later versions.
 For building the code, the following minimum versions are required:
   * **GCC and G++**: version 10 or above
@@ -31,74 +31,8 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
     pip install commonroad-reach
     ```
 
-2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
-descriptions below.
-
-
-## Building from Source
-
-> **Note:** Currently there appears to be a bug with boost geometry and newer versions of GCC (this seems to start with version 11.4).
-> A workaround until this is fixed is to use an older version of GCC (we suggest GCC 10).
-> To do so, indicate the path to the older version of GCC in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
-
-### Third Party Dependencies
-The following third-party dependencies of the C++ code are only required for building the project from source!
-
-**Essential dependencies**:
-* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
-* [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
-* [OpenMP](https://www.openmp.org/)
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-* [pybind11](https://github.com/pybind/pybind11)
-
-**Optional dependencies (testing and documentation)**:
-* [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
-* [Doxygen](https://doxygen.nl/) (optional: for building documentation)
-
-The additional Python dependencies are listed in `requirements.txt`.
-
-
-### Building the Code
-
-* Install Boost, yaml-cppy and Doctest:
-  ```bash
-  sudo apt-get update
-  sudo apt-get install libboost-all-dev libyaml-cpp-dev doctest-dev
-  ```
-
-* Install/upgrade OpenMP:
-  ```bash
-  sudo apt-get install libomp-dev
-  sudo apt-get upgrade libomp-dev
-  ```
-
-* Build the package and install it to your conda environment via pip command.
-  ```bash
-  pip install -v .
-  ```
-  This will build the Python binding (pycrreach) required for collision checks and other C++-boosted computations.
-
-> **Note**: The `-v` flag (verbose) prints information about the build progress
-
-**Optional:**
-
-- To add unit tests, add the flag `--config-settings=cmake.define.ADD_TESTS=ON` to the `pip` command.
-- To build the code in Debug mode, add the flag `--config-settings=cmake.build-type="Debug"` to the `pip` command.
-- See [here](https://scikit-build-core.readthedocs.io/en/latest/configuration.html#configuring-cmake-arguments-and-defines) for further information on configuring CMake arguments via our build system (`scikit-build-core`).
-
-With both optional steps, the `pip` command looks as follows:
-
-```bash
-pip install -v . --config-settings=cmake.build-type="Debug" --config-settings=cmake.define.ADD_TESTS=ON
-```
-
-> **Note**: `scikit-build-core` uses `ninja` for building the C++ extension by default.
-> Thus, the build is automatically parallelized using all available CPU cores.
-> If you want to explicitly configure the number of build jobs, you can do so by passing the flag `--config-settings=cmake.define.CMAKE_BUILD_PARALLEL_LEVEL=$BUILD_JOBS` to the `pip` command, where `$BUILD_JOBS` is the number of parallel jobs to use.
-> See [here](https://scikit-build-core.readthedocs.io/en/latest/faqs.html#multithreaded-builds) for further details.
-
-> **Note**: Building the package in Debug mode (see above) significantly increases the computation time of the C++ backend. Please make sure you are building in Release mode (default setting) if you require fast computations. 
-
+2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the [README_FOR_DEVS](./README_FOR_DEVS.md).
+This option is only recommended for advanced users and those who are looking to contribute to the development of CommonRoad-Reach.
 
 ## Getting Started
 
@@ -138,7 +72,3 @@ If you use our toolbox for your research, please cite our [paper](https://mediat
       year      = {2022},
    }
 ```
-
-## Development
-
-If you want to set up a local development environment, please refer to the [README_FOR_DEVS](./README_FOR_DEVS.md).
