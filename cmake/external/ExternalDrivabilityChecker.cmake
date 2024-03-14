@@ -9,11 +9,16 @@ add_library(pthread ALIAS Threads::Threads)
 set(ADD_PYTHON_BINDINGS OFF)
 set(BUILD_PYBIND11 OFF)
 
-# option to use locally installed source directory of CRDC
-# root directory of local CRDC should be at the same level as root directory of commonroad-reachable-set
-option(LOCAL_CRDC "Use local version of Drivability Checker" OFF)
+# Option to use locally installed source directory of CRDC
+# Use only for development purposes
+# Root directory of local CRDC should be at the same level as root directory of commonroad-reachable-set
+option(CRREACH_LOCAL_CRDC "Use local version of Drivability Checker" OFF)
 
-if (LOCAL_CRDC)
+mark_as_advanced(
+    CRREACH_LOCAL_CRDC
+)
+
+if (CRREACH_LOCAL_CRDC)
     message(STATUS "Using local source directory of CRDC")
 
     FetchContent_Declare(
