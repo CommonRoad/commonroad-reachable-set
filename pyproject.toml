@@ -5,7 +5,7 @@ readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.8,<3.11"
 license = { file = "LICENSE.txt" }
 authors = [
-    { name = "Cyber-Physical Systems Group, Technical University of Munich", email = "commonroad@lists.lrz.de" }
+    { name = "Cyber-Physical Systems Group - Technical University of Munich", email = "commonroad@lists.lrz.de" }
 ]
 description = "A Toolbox for Computing Reachable Sets of Automated Vehicles"
 keywords = [
