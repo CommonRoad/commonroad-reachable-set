@@ -151,7 +151,7 @@ build-wheel:
     # In that case, build only manylinux wheels to speed up the pipeline
     - when: on_success
       variables:
-        CIBW_BUILD: "*"
+        CIBW_BUILD: "*-manylinux_x86_64"
 
 #### tests ###
 run-doctest:
