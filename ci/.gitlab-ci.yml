@@ -284,7 +284,7 @@ pages:
   stage: publish
   image: python:3.10-slim-bullseye
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git
+    - apt-get update && apt-get install -y --no-install-recommends git make
     - *update-git-config
   script:
     - pip install -r docs/requirements_doc.txt
