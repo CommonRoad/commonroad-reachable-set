@@ -1,7 +1,7 @@
 #pragma once
 
 #include <omp.h>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "reachset/utility/shared_include.hpp"
 
 #include "geometry/curvilinear_coordinate_system.h"

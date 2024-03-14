@@ -218,7 +218,7 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
     bool any_inside = false;
 
     auto inside = [&a, &b, &c, &any_inside, this](std::size_t i) {
-        bool ret = (a * vec_vertices[i].x + b * vec_vertices[i].y < c);
+        bool ret = (a * vec_vertices[i].x + b * vec_vertices[i].y <= c);
         if (ret) { any_inside = true; }
         return ret;
     };
@@ -287,6 +287,7 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
         vertices_new.push_back(get_vertex_with_cyclic_index(q + i));
     }
 
+    // add intersection points with halfspace
     vertices_new.emplace_back(intersection(vec_vertices[r], vec_vertices[rr]));
     vertices_new.emplace_back(intersection(vec_vertices[q], vec_vertices[qq]));
 

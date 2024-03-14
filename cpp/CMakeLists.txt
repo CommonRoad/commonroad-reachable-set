@@ -1,79 +1,89 @@
-# set include & library paths variables for external commonroad libraries
-set(CRDC_INCLUDE
-        ${CRDC_DIR}/cpp/collision/include # drivability checker
-        ${CRDC_DIR}/cpp/geometry/include) # curvilinear collision checker
+set(CRREACH_SRC_FILES
+        src/data_structure/reach/reach_vertex.cpp
+        src/data_structure/reach/reach_polygon.cpp
+        src/data_structure/reach/reach_node.cpp
+        src/data_structure/reach/reach_line.cpp
 
-set(CRDC_LIBRARY
-        ${CRDC_DIR}/commonroad_dc/libcrcc.a # drivability checker
-        ${CRDC_DIR}/commonroad_dc/libcrccosy.a # curvilinear collision checker
-        ${CRDC_DIR}/commonroad_dc/libgpc.a # curvilinear collision checker
-        CACHE STRING "" FORCE)
+        src/data_structure/configuration.cpp
+        src/data_structure/segment_tree.cpp
+        src/data_structure/reach/reach_set.cpp
 
-# set a variable to hold all relevant include directories
-set(REACH_INCLUDE_DIR
-        ${CMAKE_CURRENT_LIST_DIR}/include
-        ${CRDC_INCLUDE}
-        ${EIGEN3_INCLUDE_DIR}
-        CACHE STRING "" FORCE)
+        src/utility/lut_longitudinal_enlargement.cpp
+        src/utility/enlargement.cpp
+        src/utility/collision_checker.cpp
+        src/utility/reach_operation.cpp
+        src/utility/sweep_line.cpp
+)
 
-# set a variable to hold all relevant cpp source files of reachable sets
-set(REACH_SOURCE
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_vertex.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_polygon.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_node.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_line.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/configuration.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/segment_tree.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/data_structure/reach/reach_set.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/lut_longitudinal_enlargement.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/enlargement.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/collision_checker.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/reach_operation.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/utility/sweep_line.cpp
-        CACHE STRING "" FORCE)
+set(CRREACH_HDR_FILES
+        include/reachset/data_structure/reach/reach_vertex.hpp
+        include/reachset/data_structure/reach/reach_polygon.hpp
+        include/reachset/data_structure/reach/reach_node.hpp
+        include/reachset/data_structure/reach/reach_line.hpp
 
-# ========= building library
-# 1. create library from source files above
-add_library(crreach STATIC ${REACH_SOURCE})
-# build position independent code so that we can link this in the Python bindings (builds shared lib)
-set_property(TARGET crreach PROPERTY POSITION_INDEPENDENT_CODE ON)
-# 2. include directories
-target_include_directories(crreach PUBLIC
-        ${REACH_INCLUDE_DIR})
-# 3. link to external libraries
-target_link_libraries(crreach PUBLIC
-        ${CRDC_LIBRARY}
-        fcl
-        ccd
-        yaml-cpp)
+        include/reachset/data_structure/configuration.hpp
+        include/reachset/data_structure/segment_tree.hpp
+        include/reachset/data_structure/reach/reach_set.hpp
 
-# ========= building playground
-# 1. create executables which uses the source files set above
-add_executable(example
-        ${CMAKE_CURRENT_LIST_DIR}/src/example.cpp)
-# 2. link to external libraries
-target_link_libraries(example PRIVATE
-        crreach
-        pybind11::embed)
+        include/reachset/utility/lut_longitudinal_enlargement.hpp
+        include/reachset/utility/enlargement.hpp
+        include/reachset/utility/collision_checker.hpp
+        include/reachset/utility/reach_operation.hpp
+        include/reachset/utility/sweep_line.hpp
+)
 
-# ========= unit tests using Doctest
-if(ADD_TESTS)
-    # 1. create target
-    add_executable(doctest_runner
-            ${CMAKE_CURRENT_LIST_DIR}/tests/test_utility.cpp
+add_library(crreach ${CRREACH_SRC_FILES})
 
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_polygon.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_node.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/reach/test_reach_set.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/data_structure/test_segment_tree.cpp
+target_sources(crreach PRIVATE ${CRREACH_HDR_FILES})
 
-            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_reach_operation.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_sweep_line.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/tests/utility/test_collision_checker.cpp
-            )
-    # 2. include directories
-    target_include_directories(doctest_runner PRIVATE
-            ${CMAKE_CURRENT_LIST_DIR}/tests/)
-    # 3. link to external libraries
-    target_link_libraries(doctest_runner crreach)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.23.0)
+    target_sources(crreach
+            INTERFACE
+            FILE_SET crreach_headers
+            TYPE HEADERS
+            BASE_DIRS include
+            FILES ${CRREACH_HDR_FILES})
 endif()
+
+set_property(TARGET crreach PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+target_include_directories(crreach
+        PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/cpp/include>
+)
+
+target_link_libraries(crreach
+        PRIVATE
+        OpenMP::OpenMP_CXX
+)
+
+target_link_libraries(crreach
+        PUBLIC
+        Eigen3::Eigen
+        Boost::headers
+        yaml-cpp::yaml-cpp
+        crcc
+        crccosy
+)
+
+target_precompile_headers(crreach
+        PUBLIC
+        $<BUILD_INTERFACE:<Eigen/Dense$<ANGLE-R>>
+        $<BUILD_INTERFACE:<boost/geometry/geometry.hpp$<ANGLE-R>>
+        $<BUILD_INTERFACE:<geometry/curvilinear_coordinate_system.h$<ANGLE-R>>
+)
+
+add_library(CommonRoadReach::crreach ALIAS crreach)
+
+foreach(target IN ITEMS crreach)
+    # this adds many warnings to the build. They usually help to find some bugs
+    # TODO: Check whether each warning flag is actually supported by the compiler before adding it
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+        target_compile_options(${target} PRIVATE -Wall -Wextra -Wconversion
+                -pedantic -Wfatal-errors -Wno-unused-parameter)
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        target_compile_options(${target} PRIVATE /W3)
+    endif()
+endforeach()

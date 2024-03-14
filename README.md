@@ -12,10 +12,11 @@ The CommonRoad-Reach toolbox
 
 ## System Requirements
 
-The software is written in Python 3.7 and C++17, and was tested on Ubuntu 18.04. It should be compatible with later 
-versions. For building the code, the following minimum versions are required:
-  * **GCC and G++**: version 9 or above
-  * **CMake**: version 3.15 or above.
+The software is written in Python 3.10 and C++17, and was tested on Ubuntu 18.04, 20.04 and 22.04.
+It should be compatible with later versions.
+For building the code, the following minimum versions are required:
+  * **GCC and G++**: version 10 or above
+  * **CMake**: version 3.20 or above.
   * **Pip**: version 21.3 or above
 
 We further recommend using [Anaconda](https://www.anaconda.com/) to manage your virtual python environment.
@@ -27,77 +28,11 @@ We provide two installation options for CommonRoad-Reach: Installation as a Pyth
 
 1. **Python Package**: Install the python package via `pip` in your Conda environment:
     ```bash
-    $ pip install commonroad-reach
+    pip install commonroad-reach
     ```
 
-2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the
-descriptions below.
-
-
-## Building from Source
-
-> **Note:** Currently there appears to be a bug with boost geometry and newer versions of GCC (this seems to start with version 11.4).
-> A workaround until this is fixed is to use an older version of GCC (we suggest GCC 10).
-> To do so, indicate the path to the older version of GCC in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
-
-### Third Party Dependencies
-The following third-party dependencies of the C++ code are only required for building the project from source!
-
-**Essential dependencies**:
-* [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
-* [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
-* [OpenMP](https://www.openmp.org/)
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-* [pybind11](https://github.com/pybind/pybind11)
-
-**Optional dependencies (testing and documentation)**:
-* [Doctest](https://github.com/doctest/doctest) (optional: for building unit tests)
-* [Doxygen](https://doxygen.nl/) (optional: for building documentation)
-
-The additional Python dependencies are listed in `requirements.txt`.
-
-
-### Building the Code
-
-* Install Python dependencies:
-
-  ```bash
-  $ pip install -r requirements.txt
-  ```
-
-* Install [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker). Please refer to its [documentation](https://cps.pages.gitlab.lrz.de/commonroad-drivability-checker/) for installation.
-
-* Install yaml-cpp and Doctest:
-  ```bash
-  $ sudo apt update
-  $ sudo apt install libyaml-cpp-dev
-  $ sudo apt install doctest-dev
-  ```
-
-* Install/upgrade OpenMP:
-
-  ```bash
-  $ sudo apt-get install libomp-dev
-  $ sudo apt upgrade libomp-dev
-  ```
-
-* Build the package and install it to your conda environment via pip command:
-
-  ```bash
-  $ CRDC_DIR="/path/to/commonroad-drivability-checker/" pip install -v .
-  ```
-  This will build the python binding (pycrreach) required for collision checks and other C++-boosted computations.
-
-**Note**: 
-
-  * Replace `"/path/to/commonroad-drivability-checker/"` with the path to the Drivability Checker folder on your machine.
-  * The `-v` flag (verbose) prints information about the build progress
-
-**Optional:**
-
-- To add unit tests,  set variable `ADD_TESTS=ON` before the `pip` command.
-- To build the code in Debug mode, set `debug=1` in the setup configuration file (`setup.cfg`).
-
+2. **Build from source**: To build the project from source and install it in your Conda environment, please refer to the [README_FOR_DEVS](./README_FOR_DEVS.md).
+This option is only recommended for advanced users and those who are looking to contribute to the development of CommonRoad-Reach.
 
 ## Getting Started
 
@@ -117,9 +52,9 @@ The documentation of our toolbox is available on our website: https://cps.pages.
 In order to generate the documentation via Sphinx locally, run the following commands in the root directory:
 
 ```bash
-$ pip install -r ./docs/requirements_doc.txt
-$ cd docs/Sphinx
-$ make html
+pip install -r ./docs/requirements_doc.txt
+cd docs/Sphinx
+make html
 ```
 
 The documentation can then be launched by browsing ``./docs/Sphinx/build/html/index.html/``.
@@ -137,4 +72,3 @@ If you use our toolbox for your research, please cite our [paper](https://mediat
       year      = {2022},
    }
 ```
-
