@@ -290,7 +290,7 @@ pages:
     - pip install pip-tools
     - pip-compile --extra=docs -o requirements_docs.txt pyproject.toml
     - pip install -r requirements_docs.txt
-    - pip install commonroad-reach
+    - pip install --no-index --find-links=wheelhouse/ commonroad-reach[docs]
     - cd docs/Sphinx
     - make html
     - mv ./build/html ../../public
@@ -300,7 +300,9 @@ pages:
   environment:
     name: Gitlab Pages
     url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
-  needs: [ ]
+  needs:
+    - job: build-wheel
+      artifacts: true
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
       when: manual
