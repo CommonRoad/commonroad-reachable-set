@@ -283,10 +283,14 @@ pages:
   # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
   stage: publish
   image: python:3.10-slim-bullseye
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git build-essential libgl1 libglib2.0-0 graphviz
+    - *update-git-config
   script:
     - pip install pip-tools
     - pip-compile --extra=docs -o requirements_docs.txt pyproject.toml
     - pip install -r requirements_docs.txt
+    - pip install --no-index --find-links=wheelhouse/ commonroad-reach[docs]
     - cd docs/Sphinx
     - make html
     - mv ./build/html ../../public
@@ -296,5 +300,9 @@ pages:
   environment:
     name: Gitlab Pages
     url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
+  needs:
+    - job: build-wheel
+      artifacts: true
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
