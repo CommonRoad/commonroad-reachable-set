@@ -56,7 +56,7 @@ def test_reachable_set_computation_python_online(config: Configuration):
 
 def test_reachable_set_computation_python_offline(config_offline: Configuration):
     # ensure pickled data can be parsed by online reachability
-    dt = 3
+    dt = 5
     [config_offline.scenario.remove_obstacle(obs) for obs in config_offline.scenario.obstacles]
     config_offline.reachable_set.size_grid = 0.5
     reach_offline = PyGraphReachableSetOffline(config_offline)
