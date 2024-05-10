@@ -505,7 +505,7 @@ class PlanningConfiguration(ConfigurationBase):
 
             else:
                 # plans a route from the initial lanelet to the goal lanelet, set curvilinear coordinate system
-                route_planner = RoutePlanner(scenario=scenario,
+                route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
                                              planning_problem=planning_problem)
                 candidate_holder = route_planner.plan_routes()
                 route = candidate_holder.retrieve_first_route()
