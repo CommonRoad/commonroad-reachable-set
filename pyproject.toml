@@ -1,6 +1,6 @@
 [project]
 name = "commonroad-reach"
-version = "2024.1.1"
+version = "2024.1.2"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.8,<3.12"
 license = { file = "LICENSE.txt" }
@@ -16,7 +16,7 @@ keywords = [
 ]
 dependencies = [
     "commonroad-io>=2023.1",
-    "commonroad-route-planner>=2024.1.1",
+    "commonroad-route-planner>=2024.2.0",
     "commonroad-drivability-checker>=2024.1",
     "cython>=0.29.28",
     "imageio>=2.9.0",
