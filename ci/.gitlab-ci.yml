@@ -20,7 +20,7 @@ stages:
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.lrz.de/".insteadOf "git@gitlab.lrz.de:"
 
 default:
-  image: $CI_REGISTRY/cps/commonroad-reachable-set/deps:2.0
+  image: $CI_REGISTRY/cps/commonroad/commonroad-reachable-set/deps:2.0
   before_script:
     - *update-git-config
 
@@ -281,7 +281,7 @@ upload-wheel-external-release:
 ### publish documentation ###
 pages:
   # Push the latest documentation of the main branch to the GitLab Pages documentation
-  # at https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
+  # at https://cps.pages.gitlab.lrz.de/commonroad/commonroad-reachable-set
   stage: publish
   image: python:3.10-slim-bullseye
   before_script:
@@ -300,7 +300,7 @@ pages:
       - public
   environment:
     name: Gitlab Pages
-    url: https://cps.pages.gitlab.lrz.de/commonroad-reachable-set
+    url: $CI_PAGES_URL
   needs:
     - job: build-wheel
       artifacts: true
