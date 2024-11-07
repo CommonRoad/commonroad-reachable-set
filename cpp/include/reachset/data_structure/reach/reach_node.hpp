@@ -12,8 +12,8 @@ namespace reach {
 class ReachNode {
 private:
     static int cnt_id;
-    std::vector<std::shared_ptr<ReachNode>> _vec_nodes_parent;
-    std::vector<std::shared_ptr<ReachNode>> _vec_nodes_child;
+    std::vector<std::weak_ptr<ReachNode>> _vec_nodes_parent;
+    std::vector<std::weak_ptr<ReachNode>> _vec_nodes_child;
 
     /// Check whether it is necessary to perform a halfspace intersection given current and target bounds.
     /// @param current current bound of the polygon
@@ -73,9 +73,23 @@ public:
 
     inline bool is_empty() const { return polygon_lon->empty() || polygon_lat->empty(); }
 
-    inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_parent() const { return this->_vec_nodes_parent; };
+    inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_parent() const { 
+        std::vector<std::shared_ptr<ReachNode>> vec_nodes_parent_shared;
+        for (auto const& elem : this->_vec_nodes_parent)
+        {
+            vec_nodes_parent_shared.emplace_back(elem.lock());
+        }
+        return vec_nodes_parent_shared;
+    };
 
-    inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_child() const { return this->_vec_nodes_child; };
+    inline std::vector<std::shared_ptr<ReachNode>> vec_nodes_child() const { 
+        std::vector<std::shared_ptr<ReachNode>> vec_nodes_child_shared;
+        for (auto const& elem : this->_vec_nodes_child)
+        {
+            vec_nodes_child_shared.emplace_back(elem.lock());
+        }
+        return vec_nodes_child_shared;
+    };
 
     /// Rectangle representing the projection of the node onto the position domain.
     inline ReachPolygonPtr position_rectangle() const {
@@ -83,11 +97,11 @@ public:
                                               p_lon_max(), p_lat_max());
     }
 
-    inline void assign_parent_nodes(std::vector<std::shared_ptr<ReachNode>> const& vec_nodes_parent) {
+    inline void assign_parent_nodes(std::vector<std::weak_ptr<ReachNode>> const& vec_nodes_parent) {
         _vec_nodes_parent = vec_nodes_parent;
     }
 
-    void assign_child_nodes(std::vector<std::shared_ptr<ReachNode>> const& vec_nodes_child) {
+    void assign_child_nodes(std::vector<std::weak_ptr<ReachNode>> const& vec_nodes_child) {
         _vec_nodes_child = vec_nodes_child;
     }
 
