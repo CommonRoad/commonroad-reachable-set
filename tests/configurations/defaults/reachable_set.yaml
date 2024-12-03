@@ -33,7 +33,7 @@ prune_nodes_not_reaching_final_step: true
 # if set to True, small components (area below a threshold) are excluded in the driving corridor extraction
 exclude_small_components_corridor: false
 # name of the pickle file of the offline computation
-name_pickle_offline: offline_nt5_CART_amax6.0_vmax30.0_ms6_dx0.5_ver2024.1.2.pickle
+name_pickle_offline: offline_nt5_CART_amax6.0_vmax30.0_ms6_dx0.5_ver2024.1.3.pickle
 # number of multi-steps for graph-based propagation
 n_multi_steps: 6
 # number of threads for C++ backend
