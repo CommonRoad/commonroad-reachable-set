@@ -15,19 +15,19 @@ keywords = [
     "reachability analysis",
 ]
 dependencies = [
-    "commonroad-io>=2023.1",
-    "commonroad-route-planner>=2024.2.0",
-    "commonroad-drivability-checker>=2024.1",
-    "cython>=0.29.28",
-    "imageio>=2.9.0",
-    "matplotlib>=3.3.3",
-    "networkx>=2.5",
-    "numpy>=1.19.2",
-    "omegaconf>=2.1.1",
-    "opencv-python>=4.5",
-    "scipy>=1.4.1",
-    "seaborn>=0.10.0",
-    "shapely>=2.0.0",
+    "commonroad-io~=2024.1",
+    "commonroad-route-planner~=2024.2",
+    "commonroad-drivability-checker~=2024.1",
+    "cython~=3.0",
+    "imageio~=2.9",
+    "matplotlib~=3.3",
+    "networkx~=3.0",
+    "numpy~=1.19",
+    "omegaconf~=2.1",
+    "opencv-python~=4.5",
+    "scipy~=1.4",
+    "seaborn~=0.10",
+    "shapely~=2.0",
 ]
 
 classifiers = [
