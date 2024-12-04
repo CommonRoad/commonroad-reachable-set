@@ -16,7 +16,7 @@ While most of these dependencies are added automatically during the build proces
 - [Boost.Geometry](https://www.boost.org/doc/libs/1_79_0/libs/geometry/doc/html/index.html)
 
 **Manual installation optional:**
-- [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker) (version >= 2023.1)
+- [CommonRoad Drivability Checker](https://commonroad.in.tum.de/tools/drivability-checker)
 - [Eigen3](https://eigen.tuxfamily.org/)
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 - [pybind11](https://github.com/pybind/pybind11)
