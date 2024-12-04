@@ -192,7 +192,8 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
                 auto base_set_propagated = make_shared<ReachNode>(node->step,
                                                                   polygon_lon_propagated,
                                                                   polygon_lat_propagated);
-                base_set_propagated->vec_nodes_source.emplace_back(node);
+                std::weak_ptr<ReachNode> node_weak_ptr = node;
+                base_set_propagated->vec_nodes_source.emplace_back(node_weak_ptr);
                 vec_base_sets_propagated_thread.emplace_back(base_set_propagated);
             }
             catch (std::exception& e) {

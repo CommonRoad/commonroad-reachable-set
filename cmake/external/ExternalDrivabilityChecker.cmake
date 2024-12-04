@@ -32,8 +32,7 @@ else()
     FetchContent_Declare(
         crdc
         GIT_REPOSITORY  https://github.com/CommonRoad/commonroad-drivability-checker.git
-        GIT_TAG         5649d79ac50943a4b47a9fe5d05adbaae5de506e
-        #GIT_TAG        development
+        GIT_TAG        3f46edb6af3fecc0fc3e281190928ff7d5599337
     )
 
 endif()
