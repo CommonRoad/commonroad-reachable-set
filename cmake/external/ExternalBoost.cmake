@@ -10,7 +10,7 @@ endif()
 message(STATUS "Boost - falling back to external version")
 
 FetchContent_Declare(boost_src
-        URL https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
+        URL https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.gz
         URL_HASH SHA256=4b2136f98bdd1f5857f1c3dea9ac2018effe65286cf251534b6ae20cc45e1847
 )
 FetchContent_MakeAvailable(boost_src)
