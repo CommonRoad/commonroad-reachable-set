@@ -472,6 +472,25 @@ class PlanningConfiguration(ConfigurationBase):
         self.v_lon_initial = v_initial[0]
         self.v_lat_initial = v_initial[1]
 
+    def set_initial_states(
+            self,
+            step_initial: float,
+            pos_initial: Tuple[float, float],
+            vel_initial: Tuple[float, float],
+            theta_initial: Optional[float] = None
+        ) -> None:
+        """
+        Sets the following attributes of the initial state required for reach. set computation
+        :param step_initial: initial time step
+        :param pos_initial: initial position as Tuple of [p_lon, p_lat]
+        :param vel_initial: initial velocity as Tuple of [v_lon, v_lat]
+        :param theta_initial: initial orientation as float (Optional, only for Cartesian computation)
+        """
+        self.step_start = step_initial
+        self.p_initial = pos_initial
+        self.v_initial = vel_initial
+        self.o_initial = theta_initial
+
     def update_configuration(self, config: Configuration):
         scenario = config.scenario
         planning_problem = config.planning_problem
@@ -479,7 +498,7 @@ class PlanningConfiguration(ConfigurationBase):
         self.lanelet_network = scenario.lanelet_network if not self.list_ids_lanelets \
             else util_general.create_lanelet_network_from_ids(scenario.lanelet_network, self.list_ids_lanelets)
 
-        self.step_start = planning_problem.initial_state.time_step
+        step_start = planning_problem.initial_state.time_step
 
         assert round(self.dt * 100) % round(scenario.dt * 100) == 0, \
             f"Value of dt ({self.dt}) should be a multiple of scenario dt ({scenario.dt})."
@@ -487,9 +506,7 @@ class PlanningConfiguration(ConfigurationBase):
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
 
-            self.p_lon_initial, self.p_lat_initial = p_initial
-            self.v_lon_initial, self.v_lat_initial = v_initial
-            self.o_initial = o_initial
+            self.set_initial_states(step_start, p_initial, v_initial, o_initial)
 
             v_max = config.vehicle.ego.v_max
             assert -v_max <= self.v_lon_initial <= v_max, \
@@ -519,8 +536,7 @@ class PlanningConfiguration(ConfigurationBase):
 
             p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
-            self.p_lon_initial, self.p_lat_initial = p_initial
-            self.v_lon_initial, self.v_lat_initial = v_initial
+            self.set_initial_states(step_start, p_initial, v_initial)
 
             assert config.vehicle.ego.v_lon_min <= self.v_lon_initial <= config.vehicle.ego.v_lon_max, \
                 f"Initial longitudinal velocity {self.v_lon_initial} exceeds valid velocity interval " \
