@@ -281,7 +281,11 @@ else()
     include(ExternalYamlCpp)
 endif()
 
+# commonroad drivablity checker
 include(ExternalDrivabilityChecker)
+
+# commonroad curvilinear coordinate system
+include(ExternalCLCS)
 
 # Add subdirectory for the main library
 add_subdirectory(cpp)

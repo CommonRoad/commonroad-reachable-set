@@ -31,8 +31,9 @@ else()
 
     FetchContent_Declare(
         crdc
+        # TODO: temporary use of development branch -> change to release tag after merge to main
         GIT_REPOSITORY  https://github.com/CommonRoad/commonroad-drivability-checker.git
-        GIT_TAG        3f46edb6af3fecc0fc3e281190928ff7d5599337
+        GIT_TAG        9213527fed11532bd7cb21bdebeaec70e3bb50a4
     )
 
 endif()
@@ -42,7 +43,6 @@ FetchContent_MakeAvailable(crdc)
 set_property(DIRECTORY ${crdc_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL ON)
 
 mark_as_advanced(
-    ADD_MODULE_GEOMETRY
     ADD_MODULE_COLLISION
     ADD_TRIANGLE
     BUILD_S11N
