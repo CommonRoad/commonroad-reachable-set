@@ -1,7 +1,7 @@
 from typing import List
 
 import commonroad_dc.pycrcc as pycrcc
-import commonroad_dc.pycrccosy as pycrccosy
+import commonroad_clcs.pycrccosy as pycrccosy
 import numpy as np
 from commonroad.geometry.shape import ShapeGroup, Shape, Rectangle, Circle
 from commonroad_dc.collision.collision_detection.minkowski_sum import minkowski_sum_circle

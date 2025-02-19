@@ -14,8 +14,8 @@ from commonroad.planning.planning_problem import PlanningProblem, PlanningProble
 from commonroad.common.solution import VehicleType
 from commonroad_reach import pycrreach
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
-from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
-from commonroad_dc.geometry.util import resample_polyline
+from commonroad_clcs.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_clcs.util import resample_polyline
 from commonroad_route_planner.route_planner import RoutePlanner
 
 import commonroad_reach.utility.logger as util_logger
