@@ -3,24 +3,29 @@ import copy
 import logging
 from typing import Optional, Union, Tuple, List
 import yaml
-from omegaconf import ListConfig, DictConfig
 
+from omegaconf import ListConfig, DictConfig
 import numpy as np
+
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.trajectory import State
 from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.common.solution import VehicleType
-from commonroad_reach import pycrreach
+
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
+
 from commonroad_clcs.pycrccosy import CurvilinearCoordinateSystem
 from commonroad_clcs.util import resample_polyline
+
 from commonroad_route_planner.route_planner import RoutePlanner
+from commonroad_route_planner.reference_path_planner import ReferencePathPlanner
 
 import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.utility import configuration as util_configuration
 from commonroad_reach.utility import general as util_general
+from commonroad_reach import pycrreach
 
 logger = logging.getLogger(__name__)
 
@@ -521,16 +526,23 @@ class PlanningConfiguration(ConfigurationBase):
                 self.reference_path = np.array(self.CLCS.reference_path())
 
             else:
+                # TODO remove this logic from the configuration object
                 # plans a route from the initial lanelet to the goal lanelet, set curvilinear coordinate system
-                route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
-                                             planning_problem=planning_problem)
-                candidate_holder = route_planner.plan_routes()
-                route = candidate_holder.retrieve_first_route()
+                route_planner = RoutePlanner(
+                    lanelet_network=scenario.lanelet_network,
+                    planning_problem=planning_problem
+                )
+                routes = route_planner.plan_routes()
 
-                if route:
-                    self.route = route
-                    ref_path_mod = resample_polyline(route.reference_path, 0.5)
-                    self.reference_path = ref_path_mod
+                if routes:
+                    ref_path_planner = ReferencePathPlanner(
+                        lanelet_network=scenario.lanelet_network,
+                        planning_problem=planning_problem,
+                        routes=routes
+                    )
+                    ref_path_object = ref_path_planner.plan_shortest_reference_path()
+                    ref_path = ref_path_object.reference_path
+                    self.reference_path = resample_polyline(ref_path, 0.5)
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
                     self.reference_path = np.array(self.CLCS.reference_path())
 
