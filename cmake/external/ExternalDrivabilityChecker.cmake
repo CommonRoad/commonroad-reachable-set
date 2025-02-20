@@ -31,9 +31,9 @@ else()
 
     FetchContent_Declare(
         crdc
-        # TODO: temporary use of development branch -> change to release tag after merge to main
+        # Release tag v2025.1
         GIT_REPOSITORY  https://github.com/CommonRoad/commonroad-drivability-checker.git
-        GIT_TAG        9213527fed11532bd7cb21bdebeaec70e3bb50a4
+        GIT_TAG        3a0b267d1c4796745d8507dbe93584d486282b4c
     )
 
 endif()
