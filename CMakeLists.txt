@@ -56,6 +56,10 @@ endif()
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
+# Compile command database is required for Clang-assisted parsing in Doxygen
+# TODO: Set this conditionally
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
     set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 endif()
@@ -146,10 +150,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_LINK_LIBRARIES_ONLY_TARGETS ON)
 
 set(CMAKE_MESSAGE_CONTEXT_SHOW ON)
-
-# Compile command database is required for Clang-assisted parsing in Doxygen
-# TODO: Set this conditionally
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 # Ensure executables are in the top level directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
