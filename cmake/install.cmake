@@ -64,22 +64,19 @@ install(EXPORT ${export_name}
         DESTINATION ${crreach_install_cmakedir}
         )
 
-# Export is disabled by default because it can cause issues with FetchContent in surprising ways
-set(_enable_package_export FALSE)
-
 if(_enable_package_export)
     # Export target configuration (allows find_package to find local build tree without
     # first installing it)
     export(EXPORT ${export_name}
             FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
             NAMESPACE ${PROJECT_NAME}::
-            )
-elseif(TARGET eigen)
-    # Workaround for required Eigen export
-    export(TARGETS eigen
-            FILE ${PROJECT_BINARY_DIR}/eigen-export-private.cmake
-            NAMESPACE ${PROJECT_NAME}_private::
-            )
+    )
+    #elseif(TARGET eigen)
+    #    # Workaround for required Eigen export
+    #    export(TARGETS eigen
+    #            FILE ${PROJECT_BINARY_DIR}/eigen-export-private.cmake
+    #            NAMESPACE ${PROJECT_NAME}_private::
+    #            )
 endif()
 
 # Required for export()
@@ -89,11 +86,14 @@ foreach(foreign_target yaml-cpp::yaml-cpp Eigen3::Eigen)
         set(foreign_target ${aliased_target})
     endif()
 
+    # check if target is imported (i.e., not built locally)
     get_target_property(target_imported ${foreign_target} IMPORTED)
-    if(NOT target_imported)
+    # check if target is already exported (i.e., in another export set) to avoid duplicated exports
+    get_target_property(target_exported ${foreign_target} EXPORT_NAME)
+    if(NOT target_imported AND NOT target_exported)
         message(VERBOSE "Exporting ${foreign_target} because it is built locally")
         install(TARGETS ${foreign_target}
-            EXPORT ${export_name}
-            LIBRARY ARCHIVE RUNTIME)
+                EXPORT ${export_name}
+                LIBRARY ARCHIVE RUNTIME)
     endif()
 endforeach()
