@@ -2,9 +2,11 @@ import os
 from typing import Tuple, Dict
 from collections import defaultdict
 
-import commonroad_dc.pycrccosy as pycrccosy
-from commonroad.scenario.trajectory import State
-from commonroad_dc.geometry.util import compute_orientation_from_polyline, compute_pathlength_from_polyline
+import commonroad_clcs.pycrccosy as pycrccosy
+from commonroad_clcs.util import (
+    compute_orientation_from_polyline,
+    compute_pathlength_from_polyline
+)
 import numpy as np
 
 np.seterr(divide='ignore', invalid='ignore')

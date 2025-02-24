@@ -3,24 +3,29 @@ import copy
 import logging
 from typing import Optional, Union, Tuple, List
 import yaml
-from omegaconf import ListConfig, DictConfig
 
+from omegaconf import ListConfig, DictConfig
 import numpy as np
+
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.trajectory import State
 from commonroad.planning.goal import GoalRegion
 from commonroad.planning.planning_problem import PlanningProblem, PlanningProblemSet
 from commonroad.common.solution import VehicleType
-from commonroad_reach import pycrreach
+
 from commonroad_dc.feasibility.vehicle_dynamics import VehicleParameterMapping
-from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
-from commonroad_dc.geometry.util import resample_polyline
+
+from commonroad_clcs.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_clcs.util import resample_polyline
+
 from commonroad_route_planner.route_planner import RoutePlanner
+from commonroad_route_planner.reference_path_planner import ReferencePathPlanner
 
 import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.utility import configuration as util_configuration
 from commonroad_reach.utility import general as util_general
+from commonroad_reach import pycrreach
 
 logger = logging.getLogger(__name__)
 
@@ -472,6 +477,25 @@ class PlanningConfiguration(ConfigurationBase):
         self.v_lon_initial = v_initial[0]
         self.v_lat_initial = v_initial[1]
 
+    def set_initial_states(
+            self,
+            step_initial: float,
+            pos_initial: Tuple[float, float],
+            vel_initial: Tuple[float, float],
+            theta_initial: Optional[float] = None
+        ) -> None:
+        """
+        Sets the following attributes of the initial state required for reach. set computation
+        :param step_initial: initial time step
+        :param pos_initial: initial position as Tuple of [p_lon, p_lat]
+        :param vel_initial: initial velocity as Tuple of [v_lon, v_lat]
+        :param theta_initial: initial orientation as float (Optional, only for Cartesian computation)
+        """
+        self.step_start = step_initial
+        self.p_initial = pos_initial
+        self.v_initial = vel_initial
+        self.o_initial = theta_initial
+
     def update_configuration(self, config: Configuration):
         scenario = config.scenario
         planning_problem = config.planning_problem
@@ -479,7 +503,7 @@ class PlanningConfiguration(ConfigurationBase):
         self.lanelet_network = scenario.lanelet_network if not self.list_ids_lanelets \
             else util_general.create_lanelet_network_from_ids(scenario.lanelet_network, self.list_ids_lanelets)
 
-        self.step_start = planning_problem.initial_state.time_step
+        step_start = planning_problem.initial_state.time_step
 
         assert round(self.dt * 100) % round(scenario.dt * 100) == 0, \
             f"Value of dt ({self.dt}) should be a multiple of scenario dt ({scenario.dt})."
@@ -487,9 +511,7 @@ class PlanningConfiguration(ConfigurationBase):
         if self.coordinate_system == "CART":
             p_initial, v_initial, o_initial = util_configuration.compute_initial_state_cart(config)
 
-            self.p_lon_initial, self.p_lat_initial = p_initial
-            self.v_lon_initial, self.v_lat_initial = v_initial
-            self.o_initial = o_initial
+            self.set_initial_states(step_start, p_initial, v_initial, o_initial)
 
             v_max = config.vehicle.ego.v_max
             assert -v_max <= self.v_lon_initial <= v_max, \
@@ -504,23 +526,29 @@ class PlanningConfiguration(ConfigurationBase):
                 self.reference_path = np.array(self.CLCS.reference_path())
 
             else:
+                # TODO remove this logic from the configuration object
                 # plans a route from the initial lanelet to the goal lanelet, set curvilinear coordinate system
-                route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
-                                             planning_problem=planning_problem)
-                candidate_holder = route_planner.plan_routes()
-                route = candidate_holder.retrieve_first_route()
+                route_planner = RoutePlanner(
+                    lanelet_network=scenario.lanelet_network,
+                    planning_problem=planning_problem
+                )
+                routes = route_planner.plan_routes()
 
-                if route:
-                    self.route = route
-                    ref_path_mod = resample_polyline(route.reference_path, 0.5)
-                    self.reference_path = ref_path_mod
+                if routes:
+                    ref_path_planner = ReferencePathPlanner(
+                        lanelet_network=scenario.lanelet_network,
+                        planning_problem=planning_problem,
+                        routes=routes
+                    )
+                    ref_path_object = ref_path_planner.plan_shortest_reference_path()
+                    ref_path = ref_path_object.reference_path
+                    self.reference_path = resample_polyline(ref_path, 0.5)
                     self.CLCS = util_configuration.create_curvilinear_coordinate_system(self.reference_path)
                     self.reference_path = np.array(self.CLCS.reference_path())
 
             p_initial, v_initial = util_configuration.compute_initial_state_cvln(config)
 
-            self.p_lon_initial, self.p_lat_initial = p_initial
-            self.v_lon_initial, self.v_lat_initial = v_initial
+            self.set_initial_states(step_start, p_initial, v_initial)
 
             assert config.vehicle.ego.v_lon_min <= self.v_lon_initial <= config.vehicle.ego.v_lon_max, \
                 f"Initial longitudinal velocity {self.v_lon_initial} exceeds valid velocity interval " \
