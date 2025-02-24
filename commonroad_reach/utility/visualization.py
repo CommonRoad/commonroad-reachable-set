@@ -223,8 +223,8 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
     :return:
     """
     config = reach_interface.config
-    x_min = y_min = np.infty
-    x_max = y_max = -np.infty
+    x_min = y_min = np.inf
+    x_max = y_max = -np.inf
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
@@ -822,8 +822,8 @@ def compute_plot_limits_from_reachable_sets_cpp(reachable_set: pycrreach.Reachab
     :param margin: additional margin for the plot limits.
     :return:
     """
-    x_min = y_min = np.infty
-    x_max = y_max = -np.infty
+    x_min = y_min = np.inf
+    x_max = y_max = -np.inf
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
