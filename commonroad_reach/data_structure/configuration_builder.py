@@ -8,7 +8,7 @@ from omegaconf import OmegaConf, ListConfig, DictConfig
 import commonroad_reach.utility.logger as util_logger
 from commonroad_reach.data_structure.configuration import Configuration
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class ConfigurationBuilder:

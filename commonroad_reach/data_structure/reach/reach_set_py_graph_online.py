@@ -23,7 +23,7 @@ from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 from commonroad_reach.data_structure.regular_grid import RegularGrid
 import commonroad_reach.utility.logger as util_logger
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class PyGraphReachableSetOnline(ReachableSet):

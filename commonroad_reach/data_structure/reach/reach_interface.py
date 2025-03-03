@@ -11,7 +11,7 @@ from commonroad_reach.data_structure.reach.driving_corridor_extractor import Dri
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 import commonroad_reach.utility.logger as util_logger
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class ReachableSetInterface:

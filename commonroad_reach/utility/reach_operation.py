@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 import networkx as nx
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 from math import ceil, floor
 from typing import List, Tuple
 

@@ -5,7 +5,7 @@ from collections import defaultdict
 from commonroad_reach.data_structure.configuration import Configuration
 import commonroad_reach.utility.logger as util_logger
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class ReachableSet(ABC):

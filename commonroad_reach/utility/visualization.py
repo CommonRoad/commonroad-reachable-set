@@ -23,7 +23,7 @@ from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.utility.configuration import compute_disc_radius_and_distance
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 logging.getLogger('PIL').setLevel(logging.WARNING)
 logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
 
@@ -301,7 +301,7 @@ def save_fig(save_gif: bool, path_output: str, time_step: int, identifier: str =
         plt.savefig(path_figure, format="svg", bbox_inches="tight", transparent=False)
 
     if verbose:
-        print("\tSaving", path_figure)
+        util_logger.print_and_log_info(logger, f"\tSaving {path_figure}")
 
 
 def make_gif(path: str, prefix: str, steps: Union[range, List[int]],
