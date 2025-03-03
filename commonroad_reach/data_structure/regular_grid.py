@@ -12,7 +12,7 @@ import commonroad_dc.pycrcc as pycrcc
 from commonroad_reach.data_structure.configuration import PlanningConfiguration
 from commonroad_reach.utility.util_py_grid_online_reach import convert_cart2pixel_coordinates_c, get_vertices_from_rect
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 USE_COLLISION = True
 CONVEX_SHAPE = True
 

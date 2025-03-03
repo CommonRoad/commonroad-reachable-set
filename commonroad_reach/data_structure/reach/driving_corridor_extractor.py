@@ -13,7 +13,7 @@ from commonroad_reach.utility import geometry as util_geometry
 from commonroad_reach.utility import logger as util_logger
 from commonroad_reach.utility import reach_operation as util_reach_operation
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class DrivingCorridorExtractor:
