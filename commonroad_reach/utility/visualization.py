@@ -2,7 +2,7 @@ import logging
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Optional
 
 import imageio
 import matplotlib.pyplot as plt
@@ -13,12 +13,13 @@ from commonroad.visualization.draw_params import BaseParam, MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
+from commonroad_clcs import pycrccosy
+
 import commonroad_reach.utility.logger as util_logger
 from commonroad_reach import pycrreach
 from commonroad_reach.data_structure.configuration import Configuration
 from commonroad_reach.data_structure.reach.driving_corridor import DrivingCorridor
 from commonroad_reach.data_structure.reach.reach_interface import ReachableSetInterface
-from commonroad_reach.data_structure.reach.reach_polygon import ReachPolygon
 from commonroad_reach.utility import coordinate_system as util_coordinate_system
 from commonroad_reach.utility.general import create_lanelet_network_from_ids
 from commonroad_reach.utility.configuration import compute_disc_radius_and_distance
@@ -26,6 +27,16 @@ from commonroad_reach.utility.configuration import compute_disc_radius_and_dista
 logger = logging.getLogger("REACH_LOGGER")
 logging.getLogger('PIL').setLevel(logging.WARNING)
 logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+
+
+# ***************
+# color settings
+# ***************
+REACH_COLOR_PALETTE = sns.color_palette("GnBu_d", 3)
+REACH_COLOR_SETTINGS: dict = {
+    "facecolor": REACH_COLOR_PALETTE[0],
+    "edgecolor": (REACH_COLOR_PALETTE[0][0] * 0.75, REACH_COLOR_PALETTE[0][1] * 0.75, REACH_COLOR_PALETTE[0][2] * 0.75)
+}
 
 
 def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, figsize: Tuple = None,
@@ -45,13 +56,9 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
 
     figsize = figsize if figsize else (25, 15)
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-    palette = sns.color_palette("GnBu_d", 3)
-    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
 
     # generate default drawing parameters
     draw_params = generate_default_drawing_parameters(config)
-    draw_params.shape.facecolor = palette[0]
-    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reach_interface.step_start
     step_end = step_end or reach_interface.step_end
@@ -137,13 +144,9 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
 
     figsize = figsize if figsize else (25, 15)
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-    palette = sns.color_palette("GnBu_d", 3)
-    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
 
     # generate default drawing parameters
     draw_params = generate_default_drawing_parameters(config)
-    draw_params.shape.facecolor = palette[0]
-    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reach_interface.step_start
     step_end = step_end or reach_interface.step_end
@@ -202,14 +205,20 @@ def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, fig
 
 
 def generate_default_drawing_parameters(config: Configuration) -> MPDrawParams:
+    """Creates default drawing parameters for visualization functions"""
     draw_params = MPDrawParams()
 
+    # default settings for CR scenario
     draw_params.dynamic_obstacle.draw_icon = config.debug.draw_icons
     draw_params.dynamic_obstacle.trajectory.draw_trajectory = True
     draw_params.dynamic_obstacle.occupancy.draw_occupancies = False
     draw_params.lanelet_network.lanelet.show_label = config.debug.draw_lanelet_labels
     draw_params.planning_problem.initial_state.state.draw_arrow = False
     draw_params.planning_problem.initial_state.state.radius = 0.5
+
+    # default face color and edge color of reach polygons
+    draw_params.shape.facecolor = REACH_COLOR_SETTINGS["facecolor"]
+    draw_params.shape.edgecolor = REACH_COLOR_SETTINGS["edgecolor"]
 
     return draw_params
 
@@ -255,21 +264,63 @@ def compute_plot_limits_from_reachable_sets(reach_interface: ReachableSetInterfa
         return [x_min - margin, x_max + margin, y_min - margin, y_max + margin]
 
 
-def draw_reachable_sets(list_nodes, config, renderer, draw_params: MPDrawParams):
+def draw_reachable_sets_cart(
+    list_nodes: List,
+    renderer: MPRenderer,
+    draw_params: Optional[MPDrawParams] = None
+) -> None:
+    """Draws Cartesian reachable sets in Cartesian coordinates"""
+    # use default colors if draw params not given
+    if draw_params is None:
+        draw_params = MPDrawParams()
+        draw_params.shape.facecolor = REACH_COLOR_SETTINGS["facecolor"]
+        draw_params.shape.edgecolor = REACH_COLOR_SETTINGS["edgecolor"]
+
+    # draw reachable sets as CR polygons
+    for node in list_nodes:
+        vertices = node.position_rectangle.vertices
+        Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
+
+
+def draw_reachable_sets_cvln(
+    list_nodes: List,
+    renderer: MPRenderer,
+    clcs: pycrccosy.CurvilinearCoordinateSystem,
+    draw_params: Optional[MPDrawParams] = None
+) -> None:
+    """Draws Curvilinear reachable sets in Cartesian coordinates. Sets are transformed before drawing."""
+    # use default colors if draw params not given
+    if draw_params is None:
+        draw_params = MPDrawParams()
+        draw_params.shape.facecolor = REACH_COLOR_SETTINGS["facecolor"]
+        draw_params.shape.edgecolor = REACH_COLOR_SETTINGS["edgecolor"]
+
+    # transforms CLVN polygons to CART and draw reachable sets as CR polygons
+    for node in list_nodes:
+        position_rectangle = node.position_rectangle
+        list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(
+            position_rectangle,
+            clcs,
+            True
+        )
+        for polygon in list_polygons_cart:
+            Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params)
+
+
+def draw_reachable_sets(
+    list_nodes: List,
+    config: Configuration,
+    renderer: MPRenderer,
+    draw_params: MPDrawParams
+):
+    """Draw a list of reachable sets on the given renderer object"""
     coordinate_system = config.planning.coordinate_system
 
     if coordinate_system == "CART":
-        for node in list_nodes:
-            vertices = node.position_rectangle.vertices
-            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
+        draw_reachable_sets_cart(list_nodes, renderer, draw_params)
 
     elif coordinate_system == "CVLN":
-        for node in list_nodes:
-            position_rectangle = node.position_rectangle
-            list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(position_rectangle,
-                                                                                      config.planning.CLCS, True)
-            for polygon in list_polygons_cart:
-                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params)
+        draw_reachable_sets_cvln(list_nodes, renderer, config.planning.CLCS, draw_params)
 
 
 def draw_drivable_area(list_rectangles, config, renderer, draw_params):
@@ -352,13 +403,9 @@ def plot_scenario_with_driving_corridor(driving_corridor: DrivingCorridor, dc_id
 
     figsize = (25, 15)
     plot_limits = config.debug.plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-    palette = sns.color_palette("GnBu_d", 3)
-    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
 
     # generate default drawing parameters
     draw_params = generate_default_drawing_parameters(config)
-    draw_params.shape.facecolor = palette[0]
-    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reach_interface.step_start
     step_end = step_end or reach_interface.step_end
@@ -449,14 +496,8 @@ def draw_driving_corridor_2d(driving_corridor: DrivingCorridor, dc_id: int, reac
 
     planning_problem = config.planning_problem
 
-    # set color
-    palette = sns.color_palette("GnBu_d", 3)
-    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
-
     # generate default drawing parameters
     draw_params = generate_default_drawing_parameters(config)
-    draw_params.shape.facecolor = palette[0]
-    draw_params.shape.edgecolor = edge_color
 
     # create output directory
     path_output = config.general.path_output
@@ -737,13 +778,9 @@ def plot_scenario_with_reachable_sets_cpp(reachable_set: pycrreach.ReachableSet,
 
     figsize = figsize if figsize else (25, 15)
     plot_limits = plot_limits or compute_plot_limits_from_reachable_sets_cpp(reachable_set, config)
-    palette = sns.color_palette("GnBu_d", 3)
-    edge_color = (palette[0][0] * 0.75, palette[0][1] * 0.75, palette[0][2] * 0.75)
 
     # generate default drawing parameters
     draw_params = generate_default_drawing_parameters(config)
-    draw_params.shape.facecolor = palette[0]
-    draw_params.shape.edgecolor = edge_color
 
     step_start = step_start or reachable_set.step_start
     step_end = step_end or reachable_set.step_end
