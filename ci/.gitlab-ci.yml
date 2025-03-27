@@ -86,7 +86,7 @@ build-test:
 ### build wheels ###
 build-sdist:
   stage: build-wheels
-  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  image: $CI_REGISTRY/tum-cps/commonroad-docker/wheelenv:2025.2
   script:
     - python3 --version
     - python3 -m build --sdist
@@ -109,7 +109,7 @@ build-wheel:
   # Use the privileged runner as required for Docker-in-Docker (dind)
   tags:
     - wheel
-  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  image: $CI_REGISTRY/tum-cps/commonroad-docker/wheelenv:2025.2
   # make a docker daemon available for cibuildwheel to use
   services:
     - name: docker:20.10-dind
@@ -189,7 +189,7 @@ run-pytest:
 #### deploy wheels ###
 upload-wheel-internal:
   stage: deploy
-  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  image: $CI_REGISTRY/tum-cps/commonroad-docker/wheelenv:2025.2
   variables:
     TWINE_USERNAME: gitlab-ci-token
     TWINE_PASSWORD: ${CI_JOB_TOKEN}
@@ -215,7 +215,7 @@ upload-wheel-internal:
 
 upload-wheel-external-test:
   stage: deploy
-  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  image: $CI_REGISTRY/tum-cps/commonroad-docker/wheelenv:2025.2
   variables:
     TWINE_USERNAME: __token__
     TWINE_PASSWORD: ${CR_PYPI_TEST_API_TOKEN}
@@ -237,7 +237,7 @@ upload-wheel-external-test:
 
 upload-wheel-external-release:
   stage: deploy
-  image: $CI_REGISTRY/cps/rapid-prototyping-setup/wheelenv:1.0
+  image: $CI_REGISTRY/tum-cps/commonroad-docker/wheelenv:2025.2
   variables:
     TWINE_USERNAME: __token__
     TWINE_PASSWORD: ${CR_PYPI_RELEASE_API_TOKEN}
