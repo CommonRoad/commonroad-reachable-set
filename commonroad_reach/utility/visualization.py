@@ -127,83 +127,6 @@ def plot_scenario_with_reachable_sets(reach_interface: ReachableSetInterface, fi
     util_logger.print_and_log_info(logger, "\tReachable sets plotted.")
 
 
-def plot_scenario_with_drivable_area(reach_interface: ReachableSetInterface, figsize: Tuple = None,
-                                     step_start: int = 0, step_end: int = 0, steps: List[int] = None,
-                                     plot_limits: Union[List] = None, path_output: str = None,
-                                     save_gif: bool = True, duration: float = None):
-    """
-    Plots scenario with drivable areas.
-    """
-    config = reach_interface.config
-    scenario = config.scenario
-    planning_problem = config.planning_problem
-    ref_path = config.planning.reference_path
-
-    path_output = path_output or config.general.path_output
-    Path(path_output).mkdir(parents=True, exist_ok=True)
-
-    figsize = figsize if figsize else (25, 15)
-    plot_limits = plot_limits or compute_plot_limits_from_reachable_sets(reach_interface)
-
-    # generate default drawing parameters
-    draw_params = generate_default_drawing_parameters(config)
-
-    step_start = step_start or reach_interface.step_start
-    step_end = step_end or reach_interface.step_end
-    if steps:
-        steps = [step for step in steps if step <= step_end + 1]
-    else:
-        steps = range(step_start, step_end + 1)
-    duration = duration if duration else config.planning.dt
-
-    util_logger.print_and_log_info(logger, "* Plotting drivable area...")
-    renderer = MPRenderer(plot_limits=plot_limits, figsize=figsize) if config.debug.save_plots else None
-    for step in steps:
-        time_step = step * round(config.planning.dt / config.scenario.dt)
-        if config.debug.save_plots:
-            # clear previous plot
-            plt.cla()
-        else:
-            # create new figure
-            plt.figure(figsize=figsize)
-            renderer = MPRenderer(plot_limits=plot_limits)
-
-        # plot scenario and planning problem
-        draw_params.time_begin = time_step
-        scenario.draw(renderer, draw_params)
-
-        if config.debug.draw_planning_problem:
-            planning_problem.draw(renderer, draw_params)
-
-        list_nodes = reach_interface.drivable_area_at_step(step)
-        draw_drivable_area(list_nodes, config, renderer, draw_params)
-
-        # plot reference path
-        if config.debug.draw_ref_path and ref_path is not None:
-            renderer.ax.plot(ref_path[:, 0], ref_path[:, 1],
-                             color='g', marker='.', markersize=1, zorder=19, linewidth=2.0)
-
-        # settings and adjustments
-        plt.rc("axes", axisbelow=True)
-        ax = plt.gca()
-        ax.set_aspect("equal")
-        ax.set_title(f"$t = {time_step / 10.0:.1f}$ [s]", fontsize=28)
-        ax.set_xlabel(f"$s$ [m]", fontsize=28)
-        ax.set_ylabel("$d$ [m]", fontsize=28)
-        plt.margins(0, 0)
-        renderer.render()
-
-        if config.debug.save_plots:
-            save_fig(save_gif, path_output, time_step, "drivable_area", verbose=(step % 5 == 0))
-        else:
-            plt.show()
-
-    if config.debug.save_plots and save_gif:
-        make_gif(path_output, "png_reachset_", steps, str(scenario.scenario_id), duration=duration)
-
-    util_logger.print_and_log_info(logger, "\tDrivable area plotted.")
-
-
 def generate_default_drawing_parameters(config: Configuration) -> MPDrawParams:
     """Creates default drawing parameters for visualization functions"""
     draw_params = MPDrawParams()
@@ -321,21 +244,6 @@ def draw_reachable_sets(
 
     elif coordinate_system == "CVLN":
         draw_reachable_sets_cvln(list_nodes, renderer, config.planning.CLCS, draw_params)
-
-
-def draw_drivable_area(list_rectangles, config, renderer, draw_params):
-    coordinate_system = config.planning.coordinate_system
-
-    if coordinate_system == "CART":
-        for rect in list_rectangles:
-            vertices = rect.vertices
-            Polygon(vertices=np.array(vertices)).draw(renderer, draw_params)
-
-    elif coordinate_system == "CVLN":
-        for rect in list_rectangles:
-            list_polygons_cart = util_coordinate_system.convert_to_cartesian_polygons(rect, config.planning.CLCS, True)
-            for polygon in list_polygons_cart:
-                Polygon(vertices=np.array(polygon.vertices)).draw(renderer, draw_params)
 
 
 def save_fig(save_gif: bool, path_output: str, time_step: int, identifier: str = "reach", verbose: bool = True):
