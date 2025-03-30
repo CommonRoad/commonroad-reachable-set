@@ -132,7 +132,7 @@ build-wheel:
     # We only use the artifacts (sdist/wheels) from previous jobs, so skip all Git operations
     GIT_STRATEGY: none
   script:
-    - cibuildwheel dist/*.tar.gz
+    - pipx run 'cibuildwheel == 2.*' dist/*.tar.gz
   needs:
     - job: build-sdist
       artifacts: true
