@@ -146,7 +146,7 @@ build-wheel:
     # Also routinely build all wheels for the default branch as well as develop (commits on these branches are infrequent)
     - if: *full_wheel_build_condition
       variables:
-        CIBW_BUILD: "*"
+        CIBW_BUILD: "*-manylinux_x86_64"
     # Fallback rule when we're not building wheels for a tag or a main branch:
     # In that case, build only manylinux wheels to speed up the pipeline
     - when: on_success
