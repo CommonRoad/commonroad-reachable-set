@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from commonroad.geometry.shape import Polygon, Rectangle, Circle
-from commonroad.visualization.draw_params import BaseParam, MPDrawParams
+from commonroad.visualization.draw_params import MPDrawParams, ShapeParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, PolyCollection
 
@@ -835,8 +835,14 @@ def plot_collision_checker(reach_interface: ReachableSetInterface):
                     color='orange')
     plt.show()
 
-def draw_vehicle_and_three_circles(renderer: MPRenderer, reach_interface: ReachableSetInterface,
-                                   position: np.array, orientation: float, position_is_center: bool = True):
+def draw_vehicle_and_three_circles(
+    renderer: MPRenderer,
+    reach_interface: ReachableSetInterface,
+    position: np.array,
+    orientation: float,
+    position_is_center: bool = True
+) -> None:
+    """Function draws ego vehicle together with its three circle occupancy approximation"""
 
     vehicle_config = reach_interface.config.vehicle.ego
 
@@ -853,7 +859,7 @@ def draw_vehicle_and_three_circles(renderer: MPRenderer, reach_interface: Reacha
         center_position = position + vehicle_config.wb_rear_axle * rotation_vector
         rear_axle_pos = position
 
-    # ego rectangle
+    # draw ego rectangle
     ego_shape = Rectangle(
         length=vehicle_config.length, width=vehicle_config.width,
         center=center_position, orientation=orientation)
@@ -861,13 +867,49 @@ def draw_vehicle_and_three_circles(renderer: MPRenderer, reach_interface: Reacha
     renderer.draw_params.shape.edgecolor = "red"
     ego_shape.draw(renderer)
 
-    # visualize three circles
-    # set draw params
-    renderer.draw_params.shape.opacity = 1.
-    renderer.draw_params.shape.facecolor = "none"
-    renderer.draw_params.shape.edgecolor = "grey"
+    # draw three circle
+    draw_three_disc_occupancy(
+        rear_axle_pos,
+        orientation,
+        rad,
+        dist,
+        renderer
+    )
 
-    # draw
-    Circle(rad, rear_axle_pos).draw(renderer)
-    Circle(rad, rear_axle_pos + dist / 2 * rotation_vector).draw(renderer)
-    Circle(rad, rear_axle_pos + dist * rotation_vector).draw(renderer)
+
+def draw_three_disc_occupancy(
+        pos_ego_rear_axle: np.ndarray,
+        theta_ego: float,
+        disc_radius: float,
+        disc_distance: float,
+        renderer: MPRenderer,
+) -> None:
+    """
+    Function draws three disc approximation of ego vehicle occupancy for a given ego vehicle state.
+    :pos_ego_rear_axle: position [x,y] of the ego vehicle at the rear axle as numpy array
+    :theta_ego: orientation of the ego vehicle
+    :disc_radius: radius of the approximating discs
+    :disc_distance: distance between centers of first and third disc
+    """
+    # centers of discs
+    center1 = pos_ego_rear_axle
+    center2 = pos_ego_rear_axle + [(disc_distance / 2) * np.cos(theta_ego),
+                                   (disc_distance / 2) * np.sin(theta_ego)]
+    center3 = pos_ego_rear_axle + [disc_distance * np.cos(theta_ego),
+                                   disc_distance * np.sin(theta_ego)]
+
+    # create disc circles
+    disc1 = Circle(disc_radius, center1)
+    disc2 = Circle(disc_radius, center2)
+    disc3 = Circle(disc_radius, center3)
+
+    # set draw params
+    draw_params_circle = ShapeParams()
+    draw_params_circle.facecolor = "grey"
+    draw_params_circle.edgecolor = "grey"
+    draw_params_circle.opacity = 0.3
+
+    # draw discs
+    disc1.draw(renderer, draw_params=draw_params_circle)
+    disc2.draw(renderer, draw_params=draw_params_circle)
+    disc3.draw(renderer, draw_params=draw_params_circle)
