@@ -6,7 +6,7 @@
 # The cmake_minimum_required(VERSION) command implicitly invokes the cmake_policy(VERSION)
 # command to specify that the current project code is written for the given range of CMake versions.
 # Source: https://cmake.org/cmake/help/v3.25/command/cmake_minimum_required.html
-cmake_minimum_required(VERSION 3.20..3.27)
+cmake_minimum_required(VERSION 3.20..3.31)
 
 if(SKBUILD)
     set(CRREACH_VERSION ${SKBUILD_PROJECT_VERSION})
