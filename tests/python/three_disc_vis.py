@@ -1,6 +1,8 @@
 from commonroad.visualization.mp_renderer import MPRenderer
-from commonroad.visualization.draw_params import ShapeParams
-from commonroad.scenario.obstacle import StaticObstacle, ObstacleType
+from commonroad.visualization.draw_params import ShapeParams, DynamicObstacleParams
+from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
+from commonroad.scenario.trajectory import Trajectory
+from commonroad.prediction.prediction import TrajectoryPrediction
 from commonroad.geometry.shape import Rectangle, Circle
 from commonroad.scenario.state import InitialState
 from vehiclemodels.parameters_vehicle2 import parameters_vehicle2
@@ -20,11 +22,20 @@ rear_axle_pos = init_pos - [params.b, 0]
 front_axle_pos = init_pos + [params.a, 0]
 
 # create static obstacle
-static_obstacle_id = 1
-static_obstacle_type = ObstacleType.PARKED_VEHICLE
-static_obstacle_shape = Rectangle(width=params.w, length=params.l)
-static_obstacle_initial_state = InitialState(position=init_pos, orientation=0.0, time_step=0)
-static_obstacle = StaticObstacle(static_obstacle_id, static_obstacle_type, static_obstacle_shape, static_obstacle_initial_state)
+dynamic_obstacle_id = 1
+dynamic_obstacle_type = ObstacleType.PARKED_VEHICLE
+dynamic_obstacle_shape = Rectangle(width=params.w, length=params.l)
+dynamic_obstacle_initial_state = InitialState(position=init_pos, orientation=0.0, time_step=0)
+dynamic_obstacle_traj = Trajectory(0, [dynamic_obstacle_initial_state])
+dynamic_obstacle_pred = TrajectoryPrediction(dynamic_obstacle_traj, dynamic_obstacle_initial_state)
+
+dynamic_obstacle = DynamicObstacle(
+    obstacle_id=dynamic_obstacle_id,
+    obstacle_type=dynamic_obstacle_type,
+    prediction=dynamic_obstacle_pred,
+    obstacle_shape=dynamic_obstacle_shape,
+    initial_state=dynamic_obstacle_initial_state
+)
 
 # disc radius computation
 rad, dist = compute_disc_radius_and_distance(params.l, params.w, ref_point=reference_point, dist_axle_rear=params.b)
@@ -51,9 +62,12 @@ draw_params_circle.facecolor = "grey"
 draw_params_circle.edgecolor = "grey"
 draw_params_circle.opacity = 0.5
 
+dyn_obs_params = DynamicObstacleParams()
+dyn_obs_params.draw_icon =True
+
 # plot
 rnd = MPRenderer(figsize=(25, 10))
-static_obstacle.draw(rnd)
+dynamic_obstacle.draw(rnd, draw_params=dyn_obs_params)
 disc1.draw(rnd, draw_params=draw_params_circle)
 disc2.draw(rnd, draw_params=draw_params_circle)
 disc3.draw(rnd, draw_params=draw_params_circle)
