@@ -1,56 +1,59 @@
-include(utils/EnsureStatic)
-
-# Sanity check: Ensure we are building all dependencies as static libraries
-if(SKBUILD)
-    if(SKBUILD_SELF_CONTAINED)
-        # If we are building all dependencies ourselves, then they should
-        # all be static.
-
-        ensure_all_static(crreach)
-    else()
-        # If we are partially using system libraries, then only the crreach library
-        # itself has to be static.
-
-        ensure_static(crreach)
-    endif()
-endif()
-
-# add pybind module
-if(SKBUILD)
-    find_package(pybind11 2.7.0 QUIET)
-    message(STATUS "The project is built using scikit-build")
-else()
-    include(ExternalPybind)
-    message(STATUS "Adding Python interface for compilation only")
-endif()
-
-add_library(crreach_python OBJECT
+set(python_module_name pycrreach)
+set(install_destination commonroad_reach)
+nanobind_add_module(${python_module_name} MODULE
         pybind.hpp
         pybind.cpp
         pybind_data_structure.cpp
+        pybind_reachset.cpp
         pybind_utility.cpp
-        pybind_reachset.cpp)
-target_link_libraries(crreach_python PRIVATE crreach pybind11::module)
-set_property(TARGET crreach_python PROPERTY POSITION_INDEPENDENT_CODE ON)
+)
+target_link_libraries(${python_module_name} PRIVATE crreach)
 
-if(SKBUILD)
-    set(python_module_name pycrreach)
-    pybind11_add_module(${python_module_name} MODULE $<TARGET_OBJECTS:crreach_python>)
+install(TARGETS ${python_module_name}
+        LIBRARY DESTINATION ${install_destination}
+        COMPONENT ${python_module_name}
+)
 
-    target_link_libraries(${python_module_name} PRIVATE crreach)
+add_custom_target(install-python-modules-${python_module_name}
+        ${CMAKE_COMMAND}
+        -DCMAKE_INSTALL_COMPONENT=${python_module_name}
+        -P "${PROJECT_BINARY_DIR}/cmake_install.cmake"
+        DEPENDS ${python_module_name}
+)
 
-    install(TARGETS ${python_module_name}
-            LIBRARY DESTINATION commonroad_reach
+target_precompile_headers(nanobind-static
+        PUBLIC
+        <nanobind/nanobind.h>
+)
+
+if (SKBUILD)
+    # only add Python typing stubs if we are building with scikit-build, otherwise, Python dependencies might be missing
+    nanobind_add_stub(
+            ${python_module_name}_stub
+            MODULE ${python_module_name}
+            OUTPUT ${python_module_name}.pyi
+            PYTHON_PATH $<TARGET_FILE_DIR:${python_module_name}>
+            DEPENDS ${python_module_name}
+            MARKER_FILE py.typed
+            VERBOSE
+    )
+
+    install(FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/${python_module_name}.pyi
+            ${CMAKE_CURRENT_BINARY_DIR}/py.typed
+            DESTINATION ${install_destination}
             COMPONENT ${python_module_name}
     )
 
-    add_custom_target(install-python-modules-${python_module_name}
-            ${CMAKE_COMMAND}
-            -DCMAKE_INSTALL_COMPONENT=${python_module_name}
-            -P "${PROJECT_BINARY_DIR}/cmake_install.cmake"
-            DEPENDS ${python_module_name}
-    )
-
-    # include(utils/CheckRuntimeDependencies)
-    # check_python_runtime_dependencies(${python_module_name})
-endif(SKBUILD)
+    # Sanity check: Ensure we are building all dependencies as static libraries
+    include(utils/EnsureStatic)
+    if (SKBUILD_SELF_CONTAINED)
+        # If we are building all dependencies ourselves, then they should
+        # all be static.
+        ensure_all_static(crcc)
+    else ()
+        # If we are partially using system libraries, then only the crcc library
+        # itself has to be static.
+        ensure_static(crcc)
+    endif ()
+endif ()

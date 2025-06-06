@@ -7,7 +7,7 @@ from shapely import Point
 from shapely.geometry import Polygon
 import commonroad_reach.utility.logger as util_logger
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class ReachPolygon(ABC):

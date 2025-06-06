@@ -27,7 +27,7 @@ from commonroad_reach.utility import configuration as util_configuration
 from commonroad_reach.utility import general as util_general
 from commonroad_reach import pycrreach
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class Configuration:

@@ -2,7 +2,7 @@ import logging
 
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 import commonroad_reach.pycrreach as reach
 from commonroad_reach.data_structure.collision_checker import CollisionChecker

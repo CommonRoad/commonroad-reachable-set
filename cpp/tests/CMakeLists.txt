@@ -1,4 +1,4 @@
-set(CRREACH_TEST_SRC_FILES
+set(CR_REACH_TEST_SRC_FILES
         test_utility.cpp
 
         data_structure/reach/test_reach_polygon.cpp
@@ -13,8 +13,8 @@ set(CRREACH_TEST_SRC_FILES
 
 
 # Create executable for test
-if (CRREACH_BUILD_TESTS)
-    add_executable(crreach_test ${CRREACH_TEST_SRC_FILES})
+if (CR_REACH_BUILD_TESTS)
+    add_executable(crreach_test ${CR_REACH_TEST_SRC_FILES})
 
     target_include_directories(crreach_test PRIVATE .)
 

@@ -11,7 +11,7 @@ from commonroad_reach.data_structure.reach.driving_corridor_extractor import Dri
 from commonroad_reach.data_structure.reach.reach_set import ReachableSet
 import commonroad_reach.utility.logger as util_logger
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("REACH_LOGGER")
 
 
 class ReachableSetInterface:
@@ -116,8 +116,6 @@ class ReachableSetInterface:
         """
         Computes reachable sets between the given start and end steps.
         """
-        util_logger.print_and_log_info(logger, "* Computing reachable sets...", verbose)
-
         if not self._reach:
             util_logger.print_and_log_warning(logger, "Reachable set is not initialized, aborting computation.")
             return None
@@ -128,6 +126,16 @@ class ReachableSetInterface:
         if not (0 < step_start <= step_end):
             util_logger.print_and_log_warning(logger, "Steps for computation are invalid, aborting computation.")
             return None
+
+        # print initial state
+        util_logger.print_and_log_info(logger, "* Reach Initial State...", verbose)
+        init_state_msg = f"\tTime step: {self.config.planning.step_start}\n"
+        init_state_msg += f"\tPosition (lon/lat): {self.config.planning.p_initial}\n"
+        init_state_msg += f"\tVelocity (lon/lat): {self.config.planning.v_initial}"
+        for line in init_state_msg.split("\n"):
+            util_logger.print_and_log_info(logger, line)
+
+        util_logger.print_and_log_info(logger, "* Computing reachable sets...", verbose)
 
         time_start = time.time()
         self._reach.compute(step_start, step_end)
