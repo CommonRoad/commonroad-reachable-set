@@ -1,9 +1,6 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/eigen.h>
-#include <pybind11/numpy.h>
+#include <nanobind/nanobind.h>
 
 #include "reachset/utility/shared_include.hpp"
 #include "reachset/utility/shared_using.hpp"
@@ -16,20 +13,18 @@
 
 #include "reachset/utility/collision_checker.hpp"
 
-namespace py = pybind11;
+void export_data_structures(nanobind::module_& m);
 
-void export_data_structures(py::module& m);
+void export_utility(nanobind::module_& m);
 
-void export_utility(py::module& m);
-
-void export_reach(py::module& m);
+void export_reach(nanobind::module_& m);
 
 // ----
 
-void export_configuration(py::module& m);
+void export_configuration(nanobind::module_& m);
 
-void export_reach_polygon(py::module& m);
+void export_reach_polygon(nanobind::module_& m);
 
-void export_reach_node(py::module& m);
+void export_reach_node(nanobind::module_& m);
 
-void export_reachable_set(py::module& m);
+void export_reachable_set(nanobind::module_& m);

@@ -1,8 +1,13 @@
 ## Building from Source
 
-> **Note:** Currently there appears to be a bug with boost geometry and newer versions of GCC (this seems to start with version 11.4).
-> A workaround until this is fixed is to use an older version of GCC (we suggest GCC 10).
-> To do so, indicate the path to the older version of GCC in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
+> **Note:** If you want to use this package with the PyPI versions of its dependencies, you need to compile it using GCC 10 (which is the compiler we use to create the PyPI wheels).
+> Otherwise, nanobind will not be able to detect the Python bindings of the dependencies correctly (see [here](https://nanobind.readthedocs.io/en/latest/faq.html#how-can-i-avoid-conflicts-with-other-projects-using-nanobind)).
+> To do so, indicate the path to GCC 10 in the `CXX` environment variable before building the code (e.g. `export CXX=/usr/bin/g++-10`).
+> Note that you need to start with a fresh build directory if you change the compiler, as CMake caches the compiler used for the build.
+> Alternatively, if you cannot use GCC 10 for some reason, you can install the following packages from source using the compiler of your choice:
+> [commonroad-clcs](https://github.com/CommonRoad/commonroad-clcs),
+> [commonroad-drivability-checker](https://github.com/CommonRoad/commonroad-drivability-checker).
+> Make sure to use the correct versions of these packages as specified in the `pyproject.toml` file.
 
 ### Third-Party Dependencies
 
@@ -62,8 +67,12 @@ The additional Python dependencies are listed in `pyproject.toml`.
 
 2. Install the Python build dependencies (required to make `--no-build-isolation` work in the next step):
 ```bash
-pip install -r requirements_build.txt
+pip install "scikit-build-core~=0.11.0" "nanobind~=2.2.0" "pathspec>=0.12.1" "pyproject-metadata>=0.7.1" "typing_extensions~=4.12.2" "cmake (>=3.24, <4.0)"
 ```
+
+> **Note:** The versions of the dependencies might have changed from the time of writing this README. Please check the
+> optional build dependencies in the [`pyproject.toml`](../pyproject.toml) file for the latest versions.
+
 
 3. Build the package and install it in editable mode with automatic rebuilds.
 ```bash
