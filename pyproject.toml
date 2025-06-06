@@ -55,6 +55,7 @@ docs = [
     "sphinx-autodoc-typehints>=1.18.1",
     "sphinx-rtd-theme>=2.0.0",
     "m2r2>=0.3.0",
+    "docutils>=0.18.1,<0.21",
 ]
 build = [
     "scikit-build-core~=0.8.0",
