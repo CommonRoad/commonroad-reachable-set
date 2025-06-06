@@ -2,7 +2,7 @@
 name = "commonroad-reach"
 version = "2025.1.0"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE.txt" }
 authors = [
     { name = "Cyber-Physical Systems Group - Technical University of Munich", email = "commonroad@lists.lrz.de" }
@@ -17,8 +17,8 @@ keywords = [
 dependencies = [
     "commonroad-io~=2024.1",
     "commonroad-route-planner~=2025.1.0",
-    "commonroad-drivability-checker~=2025.1",
-    "commonroad-clcs~=2025.1",
+    "commonroad-drivability-checker~=2025.3.0",
+    "commonroad-clcs~=2025.2.0",
     "cython~=3.0",
     "imageio~=2.9",
     "matplotlib~=3.3",
@@ -33,9 +33,10 @@ dependencies = [
 
 classifiers = [
     "Programming Language :: C++",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX :: Linux",
 ]
@@ -58,17 +59,19 @@ docs = [
     "docutils>=0.18.1,<0.21",
 ]
 build = [
-    "scikit-build-core~=0.8.0",
-    "pybind11~=2.11.1",
+    "scikit-build-core~=0.11.0",
+    "nanobind~=2.2.0",
     "pathspec>=0.12.1",
     "pyproject-metadata>=0.7.1",
+    "typing_extensions~=4.12.2",
     "cmake (>=3.24, <4.0)",
 ]
 
 [build-system]
 requires = [
-    "scikit-build-core~=0.8.0",
-    "pybind11~=2.12.0",
+    "scikit-build-core~=0.11.0",
+    "nanobind~=2.2.0",
+    "typing_extensions~=4.12.2",
     "cmake (>=3.24, <4.0)",
 ]
 build-backend = "scikit_build_core.build"
@@ -80,6 +83,9 @@ install.components = ["pycrreach"]
 
 minimum-version = "0.8"
 cmake.version = ">=3.24"
+
+[tool.scikit-build.cmake.define]
+CR_REACH_BUILD_PYTHON_BINDINGS = "ON"
 
 [tool.cibuildwheel]
 # Skip PyPy

@@ -1,4 +1,4 @@
-set(CRREACH_SRC_FILES
+set(CR_REACH_SRC_FILES
         src/data_structure/reach/reach_vertex.cpp
         src/data_structure/reach/reach_polygon.cpp
         src/data_structure/reach/reach_node.cpp
@@ -15,7 +15,7 @@ set(CRREACH_SRC_FILES
         src/utility/sweep_line.cpp
 )
 
-set(CRREACH_HDR_FILES
+set(CR_REACH_HDR_FILES
         include/reachset/data_structure/reach/reach_vertex.hpp
         include/reachset/data_structure/reach/reach_polygon.hpp
         include/reachset/data_structure/reach/reach_node.hpp
@@ -32,18 +32,18 @@ set(CRREACH_HDR_FILES
         include/reachset/utility/sweep_line.hpp
 )
 
-add_library(crreach ${CRREACH_SRC_FILES})
+add_library(crreach ${CR_REACH_SRC_FILES})
 
-target_sources(crreach PRIVATE ${CRREACH_HDR_FILES})
+target_sources(crreach PRIVATE ${CR_REACH_HDR_FILES})
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.23.0)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.23.0)
     target_sources(crreach
             INTERFACE
             FILE_SET crreach_headers
             TYPE HEADERS
             BASE_DIRS include
-            FILES ${CRREACH_HDR_FILES})
-endif()
+            FILES ${CR_REACH_HDR_FILES})
+endif ()
 
 set_property(TARGET crreach PROPERTY POSITION_INDEPENDENT_CODE ON)
 
@@ -62,9 +62,10 @@ target_link_libraries(crreach
         PUBLIC
         Eigen3::Eigen
         Boost::headers
+        Boost::geometry
         yaml-cpp::yaml-cpp
-        crcc
-        crccosy
+        CommonRoadDC::crcc
+        CommonRoadCLCS::crccosy
 )
 
 target_precompile_headers(crreach
@@ -76,14 +77,16 @@ target_precompile_headers(crreach
 
 add_library(CommonRoadReach::crreach ALIAS crreach)
 
-foreach(target IN ITEMS crreach)
-    # this adds many warnings to the build. They usually help to find some bugs
-    # TODO: Check whether each warning flag is actually supported by the compiler before adding it
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-        target_compile_options(${target} PRIVATE -Wall -Wextra -Wconversion
-                -pedantic -Wfatal-errors -Wno-unused-parameter)
-    endif()
-    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        target_compile_options(${target} PRIVATE /W3)
-    endif()
-endforeach()
+if (${PROJECT_NAME}_IS_TOP_LEVEL)
+    foreach (target IN ITEMS crreach)
+        # this adds many warnings to the build. They usually help to find some bugs
+        # TODO: Check whether each warning flag is actually supported by the compiler before adding it
+        if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+            target_compile_options(${target} PRIVATE -Wall -Wextra -Wconversion
+                    -pedantic -Wfatal-errors -Wno-unused-parameter)
+        endif ()
+        if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            target_compile_options(${target} PRIVATE /W3)
+        endif ()
+    endforeach ()
+endif ()
