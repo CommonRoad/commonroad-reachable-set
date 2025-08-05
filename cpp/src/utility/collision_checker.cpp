@@ -1,5 +1,4 @@
 #include "reachset/utility/collision_checker.hpp"
-#include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 using namespace collision;
@@ -15,8 +14,8 @@ BufferConfig::BufferConfig(double const& buffer_distance) :
 }
 
 CollisionCheckerPtr reach::create_cartesian_collision_checker(
-        vector<Polyline> const& vec_polylines_static,
-        map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        std::vector<Polyline> const& vec_polylines_static,
+        std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         double const& radius_disc_vehicle,
         int const& num_omp_threads) {
 
@@ -24,9 +23,9 @@ CollisionCheckerPtr reach::create_cartesian_collision_checker(
     auto buffer_config = reach::BufferConfig(radius_disc_vehicle);
 
     // shape group for all static obstacles
-    auto shape_group_static = make_shared<ShapeGroup>();
+    auto shape_group_static = std::make_shared<ShapeGroup>();
     // TVO for all dynamic obstacles: at each step, the TVO contains a shape group of all dynamic AABBs
-    auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
+    auto tvo_dynamic = std::make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
 
 
     // 1. process static obstacles - inflate each polyline and convert to collision Polygon
@@ -43,7 +42,7 @@ CollisionCheckerPtr reach::create_cartesian_collision_checker(
         auto vec_polygons_CART_dynamic = create_cartesian_polygons_from_polylines(
                 vec_polylines_dynamic, num_omp_threads, buffer_config);
 
-        auto shape_group = make_shared<ShapeGroup>();
+        auto shape_group = std::make_shared<ShapeGroup>();
         for (auto const& polygon: vec_polygons_CART_dynamic) {
             shape_group->addToGroup(polygon);
         }
@@ -51,7 +50,7 @@ CollisionCheckerPtr reach::create_cartesian_collision_checker(
     }
 
     // create the collision checker
-    auto collision_checker = make_shared<collision::CollisionChecker>();
+    auto collision_checker = std::make_shared<collision::CollisionChecker>();
     collision_checker->addCollisionObject(shape_group_static);
     collision_checker->addCollisionObject(tvo_dynamic);
 
@@ -60,8 +59,8 @@ CollisionCheckerPtr reach::create_cartesian_collision_checker(
 
 
 CollisionCheckerPtr reach::create_curvilinear_collision_checker(
-        vector<Polyline> const& vec_polylines_static,
-        map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        std::vector<Polyline> const& vec_polylines_static,
+        std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         CurvilinearCoordinateSystemPtr const& CLCS,
         double const& radius_disc_vehicle,
         int const& num_omp_threads,
@@ -72,9 +71,9 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
     auto buffer_config = reach::BufferConfig(radius_disc_vehicle);
 
     // shape group for all static obstacles
-    auto shape_group_static = make_shared<ShapeGroup>();
+    auto shape_group_static = std::make_shared<ShapeGroup>();
     // TVO for all dynamic obstacles: at each step, the TVO contains a shape group of all dynamic AABBs
-    auto tvo_dynamic = make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
+    auto tvo_dynamic = std::make_shared<TimeVariantCollisionObject>(map_step_to_vec_polylines_dynamic.cbegin()->first);
 
     if (not rasterize_obstacles) {
         // no rasterization: obstacles are overapproximated by one AABB after conversion to CVLN
@@ -93,7 +92,7 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
             auto vec_aabb_CVLN_dynamic = create_curvilinear_aabbs_from_cartesian_polylines(
                     vec_polylines_dynamic, CLCS, num_omp_threads, buffer_config);
 
-            auto shape_group = make_shared<ShapeGroup>();
+            auto shape_group = std::make_shared<ShapeGroup>();
             for (auto const& aabb: vec_aabb_CVLN_dynamic) {
                 shape_group->addToGroup(aabb);
             }
@@ -116,7 +115,7 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
 
         // add dynamic AABBs to dynamic shape group
         for (auto const&[step, vec_aabb_CVLN_dynamic]: map_step_to_vec_aabb_CVLN_dynamic) {
-            auto shape_group = make_shared<ShapeGroup>();
+            auto shape_group = std::make_shared<ShapeGroup>();
             for (auto const& aabb: vec_aabb_CVLN_dynamic) {
                 shape_group->addToGroup(aabb);
             }
@@ -125,25 +124,25 @@ CollisionCheckerPtr reach::create_curvilinear_collision_checker(
     }
 
     // create the collision checker
-    auto collision_checker = make_shared<collision::CollisionChecker>();
+    auto collision_checker = std::make_shared<collision::CollisionChecker>();
     collision_checker->addCollisionObject(shape_group_static);
     collision_checker->addCollisionObject(tvo_dynamic);
 
     return collision_checker;
 }
 
-vector<collision::PolygonPtr> reach::create_cartesian_polygons_from_polylines(
-        vector<Polyline> const& vec_polylines,
+std::vector<collision::PolygonPtr> reach::create_cartesian_polygons_from_polylines(
+        std::vector<Polyline> const& vec_polylines,
         int const& num_threads,
         BufferConfig const& buffer_config) {
 
     // initialize output vector of collision Polygons
-    vector<PolygonPtr> vec_polygons;
+    std::vector<PolygonPtr> vec_polygons;
     vec_polygons.reserve(vec_polylines.size());
 
 #pragma omp parallel num_threads(num_threads) default(none) shared(vec_polylines, buffer_config, vec_polygons)
     {
-        vector<PolygonPtr> vec_polygons_thread;
+        std::vector<PolygonPtr> vec_polygons_thread;
         vec_polygons_thread.reserve(vec_polylines.size());
 
 #pragma omp for nowait
@@ -179,10 +178,10 @@ PolygonPtr reach::create_polygon_from_polyline(Polyline const& polyline) {
     return std::make_shared<Polygon>(outer_vertices, hole_vertices, 0, collision::triangulation::TriangulationQuality());
 }
 
-tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
+std::tuple<std::vector<RectangleAABBPtr>, std::map<int, std::vector<RectangleAABBPtr>>>
     reach::create_curvilinear_aabbs_from_cartesian_polylines_rasterized(
-        vector<Polyline> const& vec_polylines_static,
-        map<int, vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
+        std::vector<Polyline> const& vec_polylines_static,
+        std::map<int, std::vector<Polyline>> const& map_step_to_vec_polylines_dynamic,
         CurvilinearCoordinateSystemPtr const& CLCS,
         int const& num_threads,
         BufferConfig const& buffer_config,
@@ -193,8 +192,8 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
     auto proj_domain_geometry_polygon = convert_polyline_to_geometry_polygon(proj_domain_polyline);
 
     // create output vector / map
-    vector<RectangleAABBPtr> vec_aabbs_static;
-    map<int, vector<RectangleAABBPtr>> map_step_to_vec_aabbs_dynamic;
+    std::vector<RectangleAABBPtr> vec_aabbs_static;
+    std::map<int, std::vector<RectangleAABBPtr>> map_step_to_vec_aabbs_dynamic;
 
     // inputs/outputs for rasterization function
     std::vector<Polyline> polylines_list_out;
@@ -280,7 +279,7 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
 
     // add rasterized dynamic AABBs to output
     for (int i = 1; i<transformed_polygon_rasterized.size(); i++) {
-        vector<RectangleAABBPtr> vec_aabbs_dynamic;
+        std::vector<RectangleAABBPtr> vec_aabbs_dynamic;
         vec_aabbs_dynamic.reserve(transformed_polygon_rasterized[i].size());
         for (auto polyline_CVLN: transformed_polygon_rasterized[i]) {
             vec_aabbs_dynamic.emplace_back(create_aabb_from_polyline(polyline_CVLN));
@@ -288,30 +287,30 @@ tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>>
         map_step_to_vec_aabbs_dynamic.insert({i, vec_aabbs_dynamic});
     }
 
-    // tuple<vector<RectangleAABBPtr>, map<int, vector<RectangleAABBPtr>>> out_tuple;
+    // std::tuple<vector<RectangleAABBPtr>, std::map<int, std::vector<RectangleAABBPtr>>> out_tuple;
 
     // if (rasterize_static) {
-    //     out_tuple = make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
+    //     out_tuple = std::make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
     // } else {
-    //     out_tuple = make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
+    //     out_tuple = std::make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
     // }
 
     // return (rasterized or unrasterized) static AABBs vector and rasterized dynamic AABBs map
-    return make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
+    return std::make_tuple(vec_aabbs_static, map_step_to_vec_aabbs_dynamic);
 }
 
-vector<RectangleAABBPtr> reach::create_curvilinear_aabbs_from_cartesian_polylines(
-        vector<Polyline> const& vec_polylines,
+std::vector<RectangleAABBPtr> reach::create_curvilinear_aabbs_from_cartesian_polylines(
+        std::vector<Polyline> const& vec_polylines,
         CurvilinearCoordinateSystemPtr const& CLCS,
         int const& num_threads,
         BufferConfig const& buffer_config) {
 
-    vector<RectangleAABBPtr> vec_aabbs;
+    std::vector<RectangleAABBPtr> vec_aabbs;
     vec_aabbs.reserve(vec_polylines.size());
 
 #pragma omp parallel num_threads(num_threads) default(none) shared(vec_polylines, buffer_config, CLCS, vec_aabbs)
     {
-        vector<RectangleAABBPtr> vec_aabbs_thread;
+        std::vector<RectangleAABBPtr> vec_aabbs_thread;
         vec_aabbs_thread.reserve(vec_polylines.size());
 
 #pragma omp for nowait
@@ -337,7 +336,7 @@ vector<RectangleAABBPtr> reach::create_curvilinear_aabbs_from_cartesian_polyline
 
 GeometryPolygon reach::convert_polyline_to_geometry_polygon(Polyline const& polyline) {
     // prepare a vector of Boost.Geometry points
-    vector<GeometryPoint> vec_points_geometry;
+    std::vector<GeometryPoint> vec_points_geometry;
     vec_points_geometry.reserve(polyline.size());
     for (auto const& vertex: polyline) {
         vec_points_geometry.emplace_back(GeometryPoint{vertex.x(), vertex.y()});
@@ -386,9 +385,9 @@ RectangleAABBPtr reach::create_aabb_from_polyline(Polyline const& polyline) {
     return create_aabb_from_coordinates(p_lon_min, p_lat_min, p_lon_max, p_lat_max);
 }
 
-tuple<double, double, double, double> reach::obtain_extremum_coordinates_of_polyline(Polyline const& polyline) {
-    vector<double> vec_p_lon;
-    vector<double> vec_p_lat;
+std::tuple<double, double, double, double> reach::obtain_extremum_coordinates_of_polyline(Polyline const& polyline) {
+    std::vector<double> vec_p_lon;
+    std::vector<double> vec_p_lat;
 
     for (auto const& vertex: polyline) {
         vec_p_lon.emplace_back(vertex.x());
@@ -400,7 +399,7 @@ tuple<double, double, double, double> reach::obtain_extremum_coordinates_of_poly
     auto p_lon_max = std::max_element(vec_p_lon.cbegin(), vec_p_lon.cend());
     auto p_lat_max = std::max_element(vec_p_lat.cbegin(), vec_p_lat.cend());
 
-    return make_tuple(*p_lon_min, *p_lat_min, *p_lon_max, *p_lat_max);
+    return {*p_lon_min, *p_lat_min, *p_lon_max, *p_lat_max};
 }
 
 RectangleAABBPtr reach::create_aabb_from_coordinates(double const& p_lon_min, double const& p_lat_min,
@@ -414,11 +413,11 @@ RectangleAABBPtr reach::create_aabb_from_coordinates(double const& p_lon_min, do
                                            Eigen::Vector2d(center_lon, center_lat));
 }
 
-void reach::print_vertices_polygon(vector<Polyline> const& vec_polylines_static) {
+void reach::print_vertices_polygon(std::vector<Polyline> const& vec_polylines_static) {
     for (auto const& polyline: vec_polylines_static) {
-        cout << "New polyline" << endl;
+        std::cout << "New polyline" << std::endl;
         for (auto const& vertex: polyline) {
-            cout << "(" << vertex.x() << ", " << vertex.y() << ")" << endl;
+            std::cout << "(" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
         }
     }
 }
@@ -428,13 +427,13 @@ void reach::print_collision_checker(CollisionCheckerPtr const& collision_checker
 
     for (auto const& obs: vec_obstacles) {
         if (obs->getCollisionObjectClass() == collision::OBJ_CLASS_TVOBSTACLE) {
-            cout << "TVO:" << endl;
+            std::cout << "TVO:" << std::endl;
             for (int step = 0; step < 10; ++step) {
                 auto obj_at_time = obs->timeSlice(step, obs);
                 auto aabb = obj_at_time->getAABB();
-                cout << aabb->r_x() << ", " << aabb->r_y() << endl;
+                std::cout << aabb->r_x() << ", " << aabb->r_y() << std::endl;
 
-                cout << "\t" << step << ": " << aabb->center_x() << ", " << aabb->center_y() << endl;
+                std::cout << "\t" << step << ": " << aabb->center_x() << ", " << aabb->center_y() << std::endl;
             }
         }
     }

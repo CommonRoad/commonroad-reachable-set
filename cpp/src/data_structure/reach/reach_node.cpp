@@ -1,7 +1,6 @@
 #include "reachset/data_structure/reach/reach_node.hpp"
 
 #include <utility>
-#include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 

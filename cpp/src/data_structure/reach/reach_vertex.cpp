@@ -1,5 +1,4 @@
 #include "reachset/data_structure/reach/reach_vertex.hpp"
-#include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 

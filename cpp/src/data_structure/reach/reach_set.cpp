@@ -1,7 +1,6 @@
 #include "reachset/data_structure/reach/reach_set.hpp"
 
 #include <utility>
-#include "reachset/utility/shared_using.hpp"
 #include "reachset/utility/reach_operation.hpp"
 
 using namespace reach;
@@ -25,11 +24,11 @@ void ReachableSet::_initialize() {
     _initialize_zero_state_polygons();
 }
 
-vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
-    vector<ReachPolygonPtr> vec_polygon;
+std::vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
+    std::vector<ReachPolygonPtr> vec_polygon;
 
     auto tuple_vertices = generate_tuple_vertices_position_rectangle_initial(config);
-    vec_polygon.emplace_back(make_shared<ReachPolygon>(std::get<0>(tuple_vertices),
+    vec_polygon.emplace_back(std::make_shared<ReachPolygon>(std::get<0>(tuple_vertices),
                                                        std::get<1>(tuple_vertices),
                                                        std::get<2>(tuple_vertices),
                                                        std::get<3>(tuple_vertices)));
@@ -37,13 +36,13 @@ vector<ReachPolygonPtr> ReachableSet::_construct_initial_drivable_area() const {
 }
 
 std::vector<ReachNodePtr> ReachableSet::_construct_initial_reachable_set() const {
-    vector<ReachNodePtr> vec_node;
+    std::vector<ReachNodePtr> vec_node;
 
     auto [tuple_vertices_polygon_lon, tuple_vertices_polygon_lat] =
             generate_tuples_vertices_polygons_initial(config);
-    auto polygon_lon = make_shared<ReachPolygon>(tuple_vertices_polygon_lon);
-    auto polygon_lat = make_shared<ReachPolygon>(tuple_vertices_polygon_lat);
-    vec_node.emplace_back(make_shared<ReachNode>(config->planning().step_start, polygon_lon, polygon_lat));
+    auto polygon_lon = std::make_shared<ReachPolygon>(tuple_vertices_polygon_lon);
+    auto polygon_lat = std::make_shared<ReachPolygon>(tuple_vertices_polygon_lat);
+    vec_node.emplace_back(std::make_shared<ReachNode>(config->planning().step_start, polygon_lon, polygon_lat));
 
     return vec_node;
 }
@@ -84,8 +83,8 @@ void ReachableSet::compute(int step_start, int step_end) {
 void ReachableSet::_compute_drivable_area_at_step(int const& step) {
     auto reachable_set_previous = map_step_to_reachable_set[step - 1];
     if (reachable_set_previous.empty()) {
-        map_step_to_drivable_area[step] = vector<ReachPolygonPtr>{};
-        map_step_to_base_set_propagated[step] = vector<ReachNodePtr>{};
+        map_step_to_drivable_area[step] = std::vector<ReachPolygonPtr>{};
+        map_step_to_base_set_propagated[step] = std::vector<ReachNodePtr>{};
         return;
     }
 
@@ -93,7 +92,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
 
     auto vec_rectangles_projected = project_base_sets_to_position_domain(vec_base_sets_propagated);
 
-    vector<ReachPolygonPtr> drivable_area_collision_free{};
+    std::vector<ReachPolygonPtr> drivable_area_collision_free{};
     // repartition, then collision check
     if (config->reachable_set().mode_repartition == 1) {
         auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
@@ -115,7 +114,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
         }
         // collision check, then repartition
     } else if (config->reachable_set().mode_repartition == 2) {
-        vector<ReachPolygonPtr> vec_rectangles_collision_free{};
+        std::vector<ReachPolygonPtr> vec_rectangles_collision_free{};
         if (config->reachable_set().mode_inflation != 3) {
             vec_rectangles_collision_free = check_collision_and_split_rectangles(
                     step, collision_checker,
@@ -138,7 +137,7 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
         auto vec_rectangles_repartitioned = create_repartitioned_rectangles(
                 vec_rectangles_projected, config->reachable_set().size_grid);
 
-        vector<ReachPolygonPtr> vec_rectangles_collision_free{};
+        std::vector<ReachPolygonPtr> vec_rectangles_collision_free{};
         if (config->reachable_set().mode_inflation != 3) {
             vec_rectangles_collision_free = check_collision_and_split_rectangles(
                     step, collision_checker,
@@ -164,14 +163,14 @@ void ReachableSet::_compute_drivable_area_at_step(int const& step) {
     map_step_to_base_set_propagated[step] = vec_base_sets_propagated;
 }
 
-vector<ReachNodePtr> ReachableSet::_propagate_reachable_set(vector<ReachNodePtr> const& vec_nodes) {
-    vector<ReachNodePtr> vec_base_sets_propagated;
+std::vector<ReachNodePtr> ReachableSet::_propagate_reachable_set(std::vector<ReachNodePtr> const& vec_nodes) {
+    std::vector<ReachNodePtr> vec_base_sets_propagated;
     vec_base_sets_propagated.reserve(vec_nodes.size());
 
 #pragma omp parallel num_threads(config->reachable_set().num_threads) \
 default(none) shared(vec_nodes, vec_base_sets_propagated)
     {
-        vector<ReachNodePtr> vec_base_sets_propagated_thread;
+        std::vector<ReachNodePtr> vec_base_sets_propagated_thread;
         vec_base_sets_propagated_thread.reserve(vec_nodes.size());
 
 #pragma omp for nowait
@@ -189,7 +188,7 @@ default(none) shared(vec_nodes, vec_base_sets_propagated)
                                                                 config->vehicle().ego.v_lat_min,
                                                                 config->vehicle().ego.v_lat_max);
 
-                auto base_set_propagated = make_shared<ReachNode>(node->step,
+                auto base_set_propagated = std::make_shared<ReachNode>(node->step,
                                                                   polygon_lon_propagated,
                                                                   polygon_lat_propagated);
                 std::weak_ptr<ReachNode> node_weak_ptr = node;
@@ -217,7 +216,7 @@ void ReachableSet::_compute_reachable_set_at_step(int const& step) {
     auto num_threads = config->reachable_set().num_threads;
 
     if (drivable_area.empty()) {
-        map_step_to_reachable_set[step] = vector<ReachNodePtr>{};
+        map_step_to_reachable_set[step] = std::vector<ReachNodePtr>{};
         return;
     }
 
@@ -237,7 +236,7 @@ void ReachableSet::prune_nodes_not_reaching_final_step() {
         auto vec_nodes = reachable_set_at_step(step);
         cnt_nodes_before_pruning += vec_nodes.size();
 
-        vector<int> vec_idx_nodes_to_be_deleted{};
+        std::vector<int> vec_idx_nodes_to_be_deleted{};
         for (int idx_node = 0; idx_node < vec_nodes.size(); idx_node++) {
             // discard the node if it has no child node
             auto node = vec_nodes[idx_node];
@@ -250,8 +249,8 @@ void ReachableSet::prune_nodes_not_reaching_final_step() {
             }
         }
         // discard nodes without a child
-        vector<ReachPolygonPtr> vec_drivable_area_updated{};
-        vector<ReachNodePtr> vec_reachable_set_updated{};
+        std::vector<ReachPolygonPtr> vec_drivable_area_updated{};
+        std::vector<ReachNodePtr> vec_reachable_set_updated{};
         for (int idx_node = 0; idx_node < vec_nodes.size(); idx_node++) {
             auto result = std::find(vec_idx_nodes_to_be_deleted.begin(),
                                     vec_idx_nodes_to_be_deleted.end(),
@@ -270,6 +269,6 @@ void ReachableSet::prune_nodes_not_reaching_final_step() {
     }
 
     _pruned = true;
-    // cout << "\t#Nodes before pruning: \t" << cnt_nodes_before_pruning << endl;
-    // cout << "\t#Nodes after pruning: \t" << cnt_nodes_after_pruning << endl;
+    // std::cout << "\t#Nodes before pruning: \t" << cnt_nodes_before_pruning << std::endl;
+    // std::cout << "\t#Nodes after pruning: \t" << cnt_nodes_after_pruning << std::endl;
 }

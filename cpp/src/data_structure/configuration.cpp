@@ -1,12 +1,11 @@
 #include "reachset/data_structure/configuration.hpp"
-#include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 
 GeneralConfiguration::GeneralConfiguration(YAML::Node const& node) {
     auto node_general = node["general"];
 
-    name_scenario = node_general["name_scenario"].as<string>();
+    name_scenario = node_general["name_scenario"].as<std::string>();
     path_scenario = path_scenarios + name_scenario + ".xml";
 }
 
@@ -82,12 +81,12 @@ PlanningConfiguration::PlanningConfiguration(YAML::Node const& node) {
 
     id_lanelet_initial = 0;
 
-    auto _coordinate_system = node_planning["coordinate_system"].as<string>();
+    auto _coordinate_system = node_planning["coordinate_system"].as<std::string>();
     if (_coordinate_system == "CVLN") coordinate_system = CoordinateSystem::CARTESIAN;
     else if (_coordinate_system == "CART") coordinate_system = CoordinateSystem::CURVILINEAR;
     else throw std::invalid_argument("<PlanningConfiguration> Invalid coordinate system.");
 
-    auto _reference_point = node_planning["reference_point"].as<string>();
+    auto _reference_point = node_planning["reference_point"].as<std::string>();
     if (_reference_point == "CENTER") reference_point = ReferencePoint::CENTER;
     else if (_reference_point == "REAR") reference_point = ReferencePoint::REAR;
     else throw std::invalid_argument("<PlanningConfiguration> Invalid reference point.");
@@ -117,8 +116,8 @@ Configuration::Configuration(YAML::Node const& node) {
     config_debug = DebugConfiguration(node);
 }
 
-ConfigurationPtr Configuration::load_configuration(string const& file_yaml) {
+ConfigurationPtr Configuration::load_configuration(std::string const& file_yaml) {
     YAML::Node node = YAML::LoadFile(file_yaml);
     auto config = Configuration(node);
-    return make_shared<Configuration>(node);
+    return std::make_shared<Configuration>(node);
 }

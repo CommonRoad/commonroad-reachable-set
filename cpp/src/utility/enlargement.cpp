@@ -73,7 +73,7 @@ static std::tuple<double, double> computeLateralEnlargement(
         const double y_hi) {
 
     auto dy = [](const double l, const double r) {
-        return sqrt(pow(r, 2) + pow(l, 2)) - r;
+        return std::sqrt(std::pow(r, 2) + std::pow(l, 2)) - r;
     };
 
     double dy_lo, dy_hi;

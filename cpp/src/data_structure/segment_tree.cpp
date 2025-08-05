@@ -1,5 +1,4 @@
 #include "reachset/data_structure/segment_tree.hpp"
-#include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 
@@ -18,11 +17,11 @@ bool CounterTreeNode::operator==(CounterTreeNode const& other) const {
 }
 
 void CounterTreeNode::create_left_child() {
-    child_left = make_shared<CounterTreeNode>(low, mid);
+    child_left = std::make_shared<CounterTreeNode>(low, mid);
 }
 
 void CounterTreeNode::create_right_child() {
-    child_right = make_shared<CounterTreeNode>(mid, high);
+    child_right = std::make_shared<CounterTreeNode>(mid, high);
 }
 
 void CounterTreeNode::activate() {
@@ -62,7 +61,7 @@ CounterSegmentTree::CounterSegmentTree(double const& low, double const& high) {
     if (low > high)
         throw std::logic_error("<CounterSegmentTree> Low is greater than high.");
 
-    node_root = make_shared<CounterTreeNode>(low, high);
+    node_root = std::make_shared<CounterTreeNode>(low, high);
 }
 
 void CounterSegmentTree::activate(double const& low, double const& high) {
@@ -118,11 +117,11 @@ void CounterSegmentTree::deactivate_children(double const& low, double const& hi
         deactivate_node(low, high, node->child_right);
 }
 
-vector<CounterTreeNodePtr> CounterSegmentTree::get_active_nodes() const {
+std::vector<CounterTreeNodePtr> CounterSegmentTree::get_active_nodes() const {
     return get_active_nodes(node_root);
 }
 
-vector<CounterTreeNodePtr>
+std::vector<CounterTreeNodePtr>
 CounterSegmentTree::get_active_nodes(CounterTreeNodePtr const& node) const {
     if (node->status == TreeNodeStatus::ACTIVE)
         return {node};
@@ -131,7 +130,7 @@ CounterSegmentTree::get_active_nodes(CounterTreeNodePtr const& node) const {
         return {};
 
     else {
-        vector<CounterTreeNodePtr> vec_nodes_active_left, vec_nodes_active_right;
+        std::vector<CounterTreeNodePtr> vec_nodes_active_left, vec_nodes_active_right;
 
         if (node->child_left != nullptr)
             vec_nodes_active_left = get_active_nodes(node->child_left);
@@ -147,8 +146,8 @@ CounterSegmentTree::get_active_nodes(CounterTreeNodePtr const& node) const {
     }
 }
 
-stack<double> CounterSegmentTree::get_stack_of_active_intervals() const {
-    stack<double> stack_intervals;
+std::stack<double> CounterSegmentTree::get_stack_of_active_intervals() const {
+    std::stack<double> stack_intervals;
     auto vec_nodes_active = get_active_nodes();
 
     for (auto const& node: vec_nodes_active) {
@@ -169,7 +168,7 @@ void CounterSegmentTree::print_active_nodes() const {
 
 void CounterSegmentTree::visit_node(CounterTreeNodePtr const& node) const {
     if (node->status == TreeNodeStatus::ACTIVE)
-        cout << "Active Node: [" << node->low << ", " << node->high << "]" << endl;
+        std::cout << "Active Node: [" << node->low << ", " << node->high << "]" << std::endl;
     else {
         if (node->child_left != nullptr)
             visit_node(node->child_left);
@@ -179,15 +178,15 @@ void CounterSegmentTree::visit_node(CounterTreeNodePtr const& node) const {
     }
 }
 
-stack<double> CounterSegmentTree::get_stack_of_non_active_intervals(double const& low, double const& high) const {
-    stack<double> stack_intervals;
+std::stack<double> CounterSegmentTree::get_stack_of_non_active_intervals(double const& low, double const& high) const {
+    std::stack<double> stack_intervals;
     get_stack_of_non_active_intervals(low, high, node_root, stack_intervals);
 
     return stack_intervals;
 }
 
 void CounterSegmentTree::get_stack_of_non_active_intervals(double const& low, double const& high,
-                                                           CounterTreeNodePtr const& node, stack<double>& stack) const {
+                                                           CounterTreeNodePtr const& node, std::stack<double>& stack) const {
     if (node->status == TreeNodeStatus::ACTIVE) return;
 
     else if (node->status == TreeNodeStatus::NONACTIVE and node->enclosed_by_interval(low, high))
@@ -198,7 +197,7 @@ void CounterSegmentTree::get_stack_of_non_active_intervals(double const& low, do
 
 }
 
-void CounterSegmentTree::add_node_interval_to_stack(double const& low, double const& high, stack<double>& stack) {
+void CounterSegmentTree::add_node_interval_to_stack(double const& low, double const& high, std::stack<double>& stack) {
     if (not stack.empty() and stack.top() == low)
         stack.pop();
     else
@@ -209,7 +208,7 @@ void CounterSegmentTree::add_node_interval_to_stack(double const& low, double co
 
 void CounterSegmentTree::non_active_intervals_in_children(double const& low, double const& high,
                                                           CounterTreeNodePtr const& node,
-                                                          stack<double>& stack) const {
+                                                          std::stack<double>& stack) const {
     if (low < node->mid) {
         if (node->child_left != nullptr) {
             get_stack_of_non_active_intervals(low, high, node->child_left, stack);
@@ -250,11 +249,11 @@ bool ToggleTreeNode::operator==(ToggleTreeNode const& other) const {
 }
 
 void ToggleTreeNode::create_left_child(TreeNodeStatus const& status) {
-    child_left = make_shared<ToggleTreeNode>(low, mid, status);
+    child_left = std::make_shared<ToggleTreeNode>(low, mid, status);
 }
 
 void ToggleTreeNode::create_right_child(TreeNodeStatus const& status) {
-    child_right = make_shared<ToggleTreeNode>(mid, high, status);
+    child_right = std::make_shared<ToggleTreeNode>(mid, high, status);
 }
 
 void ToggleTreeNode::toggle() {
@@ -293,7 +292,7 @@ bool ToggleTreeNode::enclosed_by_interval(double const& low, double const& high)
 }
 
 ToggleSegmentTree::ToggleSegmentTree(double const& low, double const& high) :
-        node_root(make_shared<ToggleTreeNode>(low, high)) {}
+        node_root(std::make_shared<ToggleTreeNode>(low, high)) {}
 
 void ToggleSegmentTree::toggle(double const& low, double const& high) {
     if (low > high)
@@ -343,7 +342,7 @@ ToggleSegmentTree::get_active_nodes(std::shared_ptr<ToggleTreeNode> const& node)
         return {};
 
     else {
-        vector<ToggleTreeNodePtr> vec_nodes_active_left, vec_nodes_active_right;
+        std::vector<ToggleTreeNodePtr> vec_nodes_active_left, vec_nodes_active_right;
 
         if (node->child_left != nullptr)
             vec_nodes_active_left = get_active_nodes(node->child_left);
@@ -360,7 +359,7 @@ ToggleSegmentTree::get_active_nodes(std::shared_ptr<ToggleTreeNode> const& node)
 }
 
 std::stack<double> ToggleSegmentTree::get_stack_of_active_intervals() const {
-    stack<double> stack_intervals;
+    std::stack<double> stack_intervals;
     auto vec_nodes_active = get_active_nodes();
 
     for (auto const& node: vec_nodes_active) {
@@ -381,7 +380,7 @@ void ToggleSegmentTree::print_active_nodes() const {
 
 void ToggleSegmentTree::visit_node(std::shared_ptr<ToggleTreeNode> const& node) const {
     if (node->status == TreeNodeStatus::ACTIVE)
-        cout << "Active Node: [" << node->low << ", " << node->high << "]" << endl;
+        std::cout << "Active Node: [" << node->low << ", " << node->high << "]" << std::endl;
     else {
         if (node->child_left != nullptr)
             visit_node(node->child_left);

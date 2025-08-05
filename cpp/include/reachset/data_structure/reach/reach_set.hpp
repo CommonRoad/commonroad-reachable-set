@@ -57,7 +57,7 @@ public:
     inline std::vector<ReachPolygonPtr> drivable_area_at_step(int const& step) {
         if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), step)
             == _vec_steps_computed.end()) {
-            cout << "Given step " << step << "for drivable area retrieval is out of range." << endl;
+            std::cout << "Given step " << step << "for drivable area retrieval is out of range." << std::endl;
             return {};
         } else return map_step_to_drivable_area[step];
     }
@@ -65,7 +65,7 @@ public:
     inline std::vector<ReachNodePtr> reachable_set_at_step(int const& step) {
         if (find(_vec_steps_computed.begin(), _vec_steps_computed.end(), step)
             == _vec_steps_computed.end()) {
-            cout << "Given step " << step << "for reachable set retrieval is out of range." << endl;
+            std::cout << "Given step " << step << "for reachable set retrieval is out of range." << std::endl;
             return {};
         } else return map_step_to_reachable_set[step];
     }
@@ -75,5 +75,5 @@ public:
     void prune_nodes_not_reaching_final_step();
 };
 
-using ReachableSetPtr = shared_ptr<ReachableSet>;
+using ReachableSetPtr = std::shared_ptr<ReachableSet>;
 }
