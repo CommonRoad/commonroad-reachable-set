@@ -12,7 +12,7 @@ TEST_CASE("initialization") {
         auto p_lat_min = -0.01;
         auto p_lat_max = 0.01;
 
-        vector<tuple<double, double>> vec_vertices_expected = {{p_lon_min, p_lat_min},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{p_lon_min, p_lat_min},
                                                                {p_lon_min, p_lat_max},
                                                                {p_lon_max, p_lat_min},
                                                                {p_lon_max, p_lat_max}};

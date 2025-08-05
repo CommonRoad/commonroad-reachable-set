@@ -1,5 +1,4 @@
 #include "reachset/data_structure/reach/reach_polygon.hpp"
-#include "reachset/utility/shared_using.hpp"
 
 using namespace reach;
 
@@ -7,7 +6,7 @@ ReachPolygon::ReachPolygon() {
     _sorting_state = unsorted;
 }
 
-ReachPolygon::ReachPolygon(vector<Vertex> const& vec_vertices) {
+ReachPolygon::ReachPolygon(std::vector<Vertex> const& vec_vertices) {
     if (vec_vertices.size() < 3)
         throw std::invalid_argument("A polygon requires at least 3 vertices.");
 
@@ -18,7 +17,7 @@ ReachPolygon::ReachPolygon(vector<Vertex> const& vec_vertices) {
     _sorting_state = unsorted;
 }
 
-ReachPolygon::ReachPolygon(vector<tuple<double, double>> const& vec_vertices) {
+ReachPolygon::ReachPolygon(std::vector<std::tuple<double, double>> const& vec_vertices) {
     if (vec_vertices.size() < 3)
         throw std::invalid_argument("A polygon requires at least 3 vertices.");
 
@@ -31,7 +30,7 @@ ReachPolygon::ReachPolygon(vector<tuple<double, double>> const& vec_vertices) {
 
 ReachPolygon::ReachPolygon(double const& p_lon_min, double const& p_lat_min,
                            double const& p_lon_max, double const& p_lat_max) {
-    vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
+    std::vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
                                      Vertex{p_lon_max, p_lat_min},
                                      Vertex{p_lon_max, p_lat_max},
                                      Vertex{p_lon_min, p_lat_max}};
@@ -44,7 +43,7 @@ ReachPolygon::ReachPolygon(double const& p_lon_min, double const& p_lat_min,
 
 ReachPolygon::ReachPolygon(std::tuple<double, double, double, double> const& tuple_coordinates) {
     auto[p_lon_min, p_lat_min, p_lon_max, p_lat_max] = tuple_coordinates;
-    vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
+    std::vector<Vertex> vec_vertices_temp{Vertex{p_lon_min, p_lat_min},
                                      Vertex{p_lon_max, p_lat_min},
                                      Vertex{p_lon_max, p_lat_max},
                                      Vertex{p_lon_min, p_lat_max}};
@@ -55,7 +54,7 @@ ReachPolygon::ReachPolygon(std::tuple<double, double, double, double> const& tup
     _sorting_state = ccw;
 }
 
-ReachPolygon::ReachPolygon(vector<ReachPolygonPtr> const& vec_polygons) {
+ReachPolygon::ReachPolygon(std::vector<ReachPolygonPtr> const& vec_polygons) {
     auto num_vertices = vec_vertices.size();
     for (auto const& polygon: vec_polygons) {
         num_vertices += polygon->vec_vertices.size();
@@ -109,13 +108,13 @@ void ReachPolygon::_remove_duplicated_vertices() {
 
 void ReachPolygon::print_info() const {
     auto num_vertices = vec_vertices.size();
-    cout << "==============" << endl;
-    cout << "# of vertices: " << num_vertices << endl;
-    cout << "bounding box: " << p_lon_min() << ", " << p_lat_min() << ", " << p_lon_max() << ", " << p_lat_max()
-         << endl;
+    std::cout << "==============" << std::endl;
+    std::cout << "# of vertices: " << num_vertices << std::endl;
+    std::cout << "bounding box: " << p_lon_min() << ", " << p_lat_min() << ", " << p_lon_max() << ", " << p_lat_max()
+         << std::endl;
 
     for (auto const& vec: vec_vertices) {
-        cout << "(" << vec.x << ", " << vec.y << ")" << endl;
+        std::cout << "(" << vec.x << ", " << vec.y << ")" << std::endl;
     }
 }
 
@@ -153,7 +152,7 @@ void ReachPolygon::sort_vertices_bottom_left_first() {
     }
 
     // swap all elements
-    vector<Vertex> vertices_swap;
+    std::vector<Vertex> vertices_swap;
     vertices_swap.resize(vec_vertices.size());
     for (int i = 0; i < vec_vertices.size(); i++) {
         vertices_swap[i] = get_vertex_with_cyclic_index(min_i + i);
@@ -179,7 +178,7 @@ void ReachPolygon::convexify() {
     };
 
     int k = 0;
-    vector<Vertex> hull(2 * vec_vertices.size());
+    std::vector<Vertex> hull(2 * vec_vertices.size());
 
     // Build lower hull
     for (auto& vertex: vec_vertices) {
@@ -210,7 +209,7 @@ void ReachPolygon::convexify() {
 /// The new polygon is constructed using the vertices[r..q] plus the two intersections point with the halfspace.
 void ReachPolygon::intersect_halfspace(double a, double b, double c) {
     if (a == 0 and b == 0) {
-        cout << "Halfspace parameters are invalid." << endl;
+        std::cout << "Halfspace parameters are invalid." << std::endl;
         return;
     }
     if (vec_vertices.empty()) { return; }
@@ -281,7 +280,7 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
     // This is not correct if the polyhedron has only two vertices, but
     // "removeDuplicateVec2" corrects this.
     size_t n = (r >= q ? r - q + 1 : r + vec_vertices.size() - q + 1);
-    vector<Vertex> vertices_new;
+    std::vector<Vertex> vertices_new;
     vertices_new.reserve(n + 2);
     for (size_t i = 0; i < n; i++) {
         vertices_new.push_back(get_vertex_with_cyclic_index(q + i));
@@ -301,8 +300,8 @@ void ReachPolygon::intersect_halfspace(double a, double b, double c) {
 void ReachPolygon::minkowski_sum(std::shared_ptr<ReachPolygon> const& polygon_other) {
     if (this->empty() or polygon_other->empty()) return;
 
-    auto polygon_sum = make_shared<ReachPolygon>();
-    vector<tuple<double, double>> vec_vertices_sum;
+    auto polygon_sum = std::make_shared<ReachPolygon>();
+    std::vector<std::tuple<double, double>> vec_vertices_sum;
     // prepare for summation by convexify and sorting the vertices of the polygons
     sort_vertices_bottom_left_first();
 

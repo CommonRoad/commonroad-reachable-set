@@ -1,7 +1,6 @@
 #pragma once
 
 #include "reachset/utility/shared_include.hpp"
-#include "reachset/utility/shared_using.hpp"
 #include "reachset/utility/lut_longitudinal_enlargement.hpp"
 #include <yaml-cpp/yaml.h>
 #include "geometry/curvilinear_coordinate_system.h"
@@ -24,9 +23,9 @@ enum class ReferencePoint {
 
 /// Struct storing general configurations.
 struct GeneralConfiguration {
-    string name_scenario{};
-    string path_scenarios{};
-    string path_scenario{};
+    std::string name_scenario{};
+    std::string path_scenarios{};
+    std::string path_scenario{};
 
     GeneralConfiguration() = default;
 

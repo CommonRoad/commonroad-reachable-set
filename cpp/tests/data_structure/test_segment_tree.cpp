@@ -12,7 +12,7 @@ TEST_CASE("CounterSegmentTree") {
         tree.activate(5, 15);
 
         auto vec_nodes_active = tree.get_active_nodes();
-        vector<CounterTreeNode> vec_nodes_unwrapped;
+        std::vector<CounterTreeNode> vec_nodes_unwrapped;
         vec_nodes_unwrapped.reserve(vec_nodes_active.size());
         for (auto const& node:vec_nodes_active)
             vec_nodes_unwrapped.emplace_back(*node);
@@ -27,7 +27,7 @@ TEST_CASE("CounterSegmentTree") {
         tree.activate(15, 20);
 
         auto vec_nodes_active = tree.get_active_nodes();
-        vector<CounterTreeNode> vec_nodes_unwrapped;
+        std::vector<CounterTreeNode> vec_nodes_unwrapped;
         vec_nodes_unwrapped.reserve(vec_nodes_active.size());
         for (auto const& node:vec_nodes_active)
             vec_nodes_unwrapped.emplace_back(*node);

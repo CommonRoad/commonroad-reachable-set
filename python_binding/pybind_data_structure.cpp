@@ -17,7 +17,7 @@ void export_data_structures(nb::module_ &m) {
 
 void export_reach_polygon(nb::module_ &m) {
     nb::class_<ReachPolygon>(m, "ReachPolygon")
-            .def(nb::init<vector<tuple<double, double>> const &>(),
+            .def(nb::init<std::vector<std::tuple<double, double>> const &>(),
                  "vec_vertices"_a)
             .def_prop_ro("p_min", &ReachPolygon::p_min)
             .def_prop_ro("p_max", &ReachPolygon::p_max)

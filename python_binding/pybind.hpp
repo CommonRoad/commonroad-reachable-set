@@ -3,7 +3,6 @@
 #include <nanobind/nanobind.h>
 
 #include "reachset/utility/shared_include.hpp"
-#include "reachset/utility/shared_using.hpp"
 #include "reachset/data_structure/reach/reach_polygon.hpp"
 
 #include "reachset/data_structure/reach/reach_node.hpp"

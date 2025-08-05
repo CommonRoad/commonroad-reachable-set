@@ -101,8 +101,8 @@ std::vector<ReachPolygonPtr> check_collision_and_split_rectangles(int const& ste
                                                                   ReferencePoint reference_point);
 
 /// Returns the bounding box of polygons
-tuple<double, double, double, double>
-obtain_extremum_coordinates_of_polygons(vector<ReachPolygonPtr> const& vec_polygons);
+std::tuple<double, double, double, double>
+obtain_extremum_coordinates_of_polygons(std::vector<ReachPolygonPtr> const& vec_polygons);
 
 /// Returns the bounding box of rectangles
 collision::RectangleAABB obtain_bounding_box_of_rectangles(std::vector<ReachPolygonPtr> const& vec_rectangles);
@@ -111,7 +111,7 @@ collision::RectangleAABB obtain_bounding_box_of_rectangles(std::vector<ReachPoly
 RectangleAABBPtr convert_reach_polygon_to_collision_aabb(ReachPolygonPtr const& rectangle);
 
 /// Converts an axis-aligned bounding box to a ReachPolygon.
-vector<ReachPolygonPtr> convert_collision_aabbs_to_reach_polygons(vector<RectangleAABBPtr> const& vec_rectangles);
+std::vector<ReachPolygonPtr> convert_collision_aabbs_to_reach_polygons(std::vector<RectangleAABBPtr> const& vec_rectangles);
 
 /// Recursively creates a list of collision-free rectangles.
 std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerPtr const& collision_checker,
@@ -131,7 +131,7 @@ std::vector<RectangleAABBPtr> create_collision_free_rectangles(CollisionCheckerP
 
 /// Returns the squared diagonal of the rectangle.
 inline double diagonal_squared(RectangleAABBPtr const& rectangle) {
-    return 4 * pow(rectangle->r_x(), 2) + 4 * pow(rectangle->r_y(), 2);
+    return 4 * std::pow(rectangle->r_x(), 2) + 4 * std::pow(rectangle->r_y(), 2);
 }
 
 /// Returns two rectangles each of which is a half of the initial rectangle.
@@ -145,7 +145,7 @@ std::vector<ReachNodePtr> construct_reach_nodes(std::vector<ReachPolygonPtr> con
                                                 int const& num_threads);
 
 /// Creates a map indicating the adjacency (overlapping) status of two lists of rectangles.
-std::unordered_map<int, vector<int>> create_adjacency_map(std::vector<ReachPolygonPtr> const& vec_rectangles_a,
+std::unordered_map<int, std::vector<int>> create_adjacency_map(std::vector<ReachPolygonPtr> const& vec_rectangles_a,
                                                           std::vector<ReachPolygonPtr> const& vec_rectangles_b);
 
 /// Returns a reach node constructed from the propagated base sets.

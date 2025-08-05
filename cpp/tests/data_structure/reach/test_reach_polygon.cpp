@@ -2,30 +2,30 @@
 
 TEST_SUITE("TestReachPolygon") {
 TEST_CASE("creating polygons with less than three vertices throws exception") {
-    vector<tuple<double, double>> vec_vertices = {{0,  0},
+    std::vector<std::tuple<double, double>> vec_vertices = {{0,  0},
                                                   {10, 10}};
     CHECK_THROWS(ReachPolygon{vec_vertices});
 }
 
 TEST_CASE("has correct bounding box upon initialization") {
-    vector<tuple<double, double>> vec_vertices = {{0,  0},
+    std::vector<std::tuple<double, double>> vec_vertices = {{0,  0},
                                                   {5,  -5},
                                                   {10, 10}};
     auto polygon = ReachPolygon{vec_vertices};
-    CHECK(polygon.bounding_box() == tuple(0, -5, 10, 10));
+    CHECK(polygon.bounding_box() == std::tuple(0, -5, 10, 10));
 }
 
 TEST_CASE("has correct bounding box after inserting new vertex") {
-    vector<tuple<double, double>> vec_vertices = {{0,  0},
+    std::vector<std::tuple<double, double>> vec_vertices = {{0,  0},
                                                   {5,  -5},
                                                   {10, 10}};
     auto polygon = ReachPolygon{vec_vertices};
     polygon.add_vertex(20, -10);
-    CHECK(polygon.bounding_box() == tuple(0, -10, 20, 10));
+    CHECK(polygon.bounding_box() == std::tuple(0, -10, 20, 10));
 }
 
 TEST_CASE("convexification") {
-    vector<tuple<double, double>> vec_vertices = {{0,  0},
+    std::vector<std::tuple<double, double>> vec_vertices = {{0,  0},
                                                   {5,  -5},
                                                   {10, 10},
                                                   {5,  2},
@@ -33,7 +33,7 @@ TEST_CASE("convexification") {
     auto polygon = ReachPolygon{vec_vertices};
     polygon.convexify();
 
-    vector<tuple<double, double>> vec_vertices_expected = {{0,  0},
+    std::vector<std::tuple<double, double>> vec_vertices_expected = {{0,  0},
                                                            {5,  -5},
                                                            {10, 10}};
     for (auto& vertex_expected: vec_vertices_expected) {
@@ -43,7 +43,7 @@ TEST_CASE("convexification") {
 }
 
 TEST_CASE("linear mapping") {
-    vector<tuple<double, double>> vec_vertices = {{10, 0},
+    std::vector<std::tuple<double, double>> vec_vertices = {{10, 0},
                                                   {30, 0},
                                                   {30, 20,},
                                                   {10, 20}};
@@ -51,7 +51,7 @@ TEST_CASE("linear mapping") {
 
     polygon.linear_mapping(1, 0.1, 0, 1);
 
-    vector<tuple<double, double>> vec_vertices_expected = {{10, 0},
+    std::vector<std::tuple<double, double>> vec_vertices_expected = {{10, 0},
                                                            {30, 0},
                                                            {32, 20},
                                                            {12, 20}};
@@ -62,10 +62,10 @@ TEST_CASE("linear mapping") {
 
 TEST_CASE("minkowski sum") {
     SUBCASE("test case 1") {
-        vector<tuple<double, double>> vec_vertices = {{-1, -1},
+        std::vector<std::tuple<double, double>> vec_vertices = {{-1, -1},
                                                       {1,  -1},
                                                       {0,  1}};
-        auto poly1 = make_shared<ReachPolygon>(vec_vertices);
+        auto poly1 = std::make_shared<ReachPolygon>(vec_vertices);
         poly1->convexify();
 
         vec_vertices = {{3, -1},
@@ -77,7 +77,7 @@ TEST_CASE("minkowski sum") {
 
         poly2.minkowski_sum(poly1);
 
-        vector<tuple<double, double>> vec_vertices_expected = {{2, -2},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{2, -2},
                                                                {6, -2},
                                                                {6, 0},
                                                                {5, 2},
@@ -90,11 +90,11 @@ TEST_CASE("minkowski sum") {
     }
 
     SUBCASE("test case 2") {
-        vector<tuple<double, double>> vec_vertices = {{10, 0},
+        std::vector<std::tuple<double, double>> vec_vertices = {{10, 0},
                                                       {30, 0},
                                                       {70, 20,},
                                                       {50, 20}};
-        auto poly1 = make_shared<ReachPolygon>(vec_vertices);
+        auto poly1 = std::make_shared<ReachPolygon>(vec_vertices);
         poly1->convexify();
 
         vec_vertices = {{4,  4},
@@ -108,7 +108,7 @@ TEST_CASE("minkowski sum") {
 
         poly2.minkowski_sum(poly1);
 
-        vector<tuple<double, double>> vec_vertices_expected = {{6,  -4},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{6,  -4},
                                                                {26, -4},
                                                                {70, 18.},
                                                                {74, 22.},
@@ -123,14 +123,14 @@ TEST_CASE("minkowski sum") {
 }
 
 TEST_CASE("intersect halfspace - general case") {
-    vector<tuple<double, double>> vec_vertices = {{10, 0},
+    std::vector<std::tuple<double, double>> vec_vertices = {{10, 0},
                                                   {30, 0},
                                                   {30, 20,},
                                                   {10, 20}};
     auto p = ReachPolygon{vec_vertices};
     // first cut
     p.intersect_halfspace(1, -1, 20);
-    vector<tuple<double, double>> vec_vertices_expected = {{20, 0},
+    std::vector<std::tuple<double, double>> vec_vertices_expected = {{20, 0},
                                                            {30, 10}};
     for (auto& vertex_expected: vec_vertices_expected) {
         CHECK(vertex_in_vertices(vertex_expected, p.vertices()));
@@ -163,7 +163,7 @@ TEST_CASE("intersect halfspace - general case") {
 }
 
 TEST_CASE("intersect halfspace - special case") {
-    vector<tuple<double, double>> vec_vertices = {{10,  -10},
+    std::vector<std::tuple<double, double>> vec_vertices = {{10,  -10},
                                                   {10,  10},
                                                   {-10, 10,},
                                                   {-10, -10}};
@@ -172,7 +172,7 @@ TEST_CASE("intersect halfspace - special case") {
     SUBCASE("vertical halfspace: ax <= c, b = 0 and a > 0") {
         // first cut
         p.intersect_halfspace(2, 0, 10);
-        vector<tuple<double, double>> vec_vertices_expected = {{5,   -10},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{5,   -10},
                                                                {-10, -10},
                                                                {-10, 10},
                                                                {5,   10}};
@@ -204,7 +204,7 @@ TEST_CASE("intersect halfspace - special case") {
     SUBCASE("vertical halfspace: ax <= c, b = 0 and a < 0") {
         // first cut
         p.intersect_halfspace(-2, 0, 10);
-        vector<tuple<double, double>> vec_vertices_expected = {{10, -10},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{10, -10},
                                                                {-5, -10},
                                                                {-5, 10},
                                                                {10, 10}};
@@ -236,7 +236,7 @@ TEST_CASE("intersect halfspace - special case") {
     SUBCASE("horizontal halfspace: by <= c, a = 0 and b > 0") {
         // first cut
         p.intersect_halfspace(0, 2, 10);
-        vector<tuple<double, double>> vec_vertices_expected = {{-10, -10},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{-10, -10},
                                                                {-10, 5},
                                                                {-10, 5},
                                                                {10,  -10}};
@@ -268,7 +268,7 @@ TEST_CASE("intersect halfspace - special case") {
     SUBCASE("horizontal halfspace: by <= c, a = 0 and b < 0") {
         // first cut
         p.intersect_halfspace(0, -2, 10);
-        vector<tuple<double, double>> vec_vertices_expected = {{-10, -5},
+        std::vector<std::tuple<double, double>> vec_vertices_expected = {{-10, -5},
                                                                {-10, 10},
                                                                {10,  10},
                                                                {10,  -5}};

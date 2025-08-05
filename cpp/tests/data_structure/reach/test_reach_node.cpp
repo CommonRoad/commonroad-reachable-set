@@ -17,8 +17,8 @@ TEST_CASE("node initialization") {
 
 TEST_CASE("add/remove parent/child nodes") {
     auto node = ReachNode(0, nullptr, nullptr);
-    auto node_parent = make_shared<ReachNode>(0, nullptr, nullptr);
-    auto node_child = make_shared<ReachNode>(1, nullptr, nullptr);
+    auto node_parent = std::make_shared<ReachNode>(0, nullptr, nullptr);
+    auto node_child = std::make_shared<ReachNode>(1, nullptr, nullptr);
 
     SUBCASE("removing valid parent node returns true") {
         node.add_parent_node(node_parent);
@@ -58,12 +58,12 @@ TEST_CASE("add/remove parent/child nodes") {
 
 TEST_CASE("position rectangle") {
     ReachNode::reset_id_counter();
-    auto polygon_lon = make_shared<ReachPolygon>(0, 0, 5, 10);
-    auto polygon_lat = make_shared<ReachPolygon>(7, -5, 15, 5);
+    auto polygon_lon = std::make_shared<ReachPolygon>(0, 0, 5, 10);
+    auto polygon_lat = std::make_shared<ReachPolygon>(7, -5, 15, 5);
     auto node = ReachNode(0, polygon_lon, polygon_lat);
 
     SUBCASE("has correct position rectangle") {
-        CHECK(node.position_rectangle()->bounding_box() == tuple(0, 7, 5, 15));
+        CHECK(node.position_rectangle()->bounding_box() == std::tuple(0, 7, 5, 15));
     }
 
     SUBCASE("has correct vertices") {
@@ -79,7 +79,7 @@ TEST_CASE("position rectangle") {
 
     SUBCASE("intersection in position domain") {
         node.intersect_in_position_domain(1, 8, 4, 20);
-        CHECK(node.position_rectangle()->bounding_box() == tuple(1, 8, 4, 15));
+        CHECK(node.position_rectangle()->bounding_box() == std::tuple(1, 8, 4, 15));
     }
 
     // reset node
@@ -87,16 +87,16 @@ TEST_CASE("position rectangle") {
     SUBCASE("intersection in position domain with infinite bounds") {
         double inf = std::numeric_limits<double>::infinity();
         node.intersect_in_position_domain(1, -inf, inf, inf);
-        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 7, 5, 15));
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), std::tuple(1, 7, 5, 15));
 
         node.intersect_in_position_domain(-inf, 8, inf, inf);
-        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 8, 5, 15));
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), std::tuple(1, 8, 5, 15));
 
         node.intersect_in_position_domain(-inf, -inf, 4, inf);
-        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 8, 4, 15));
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), std::tuple(1, 8, 4, 15));
 
         node.intersect_in_position_domain(-inf, -inf, inf, 20);
-        REQUIRE_EQ(node.position_rectangle()->bounding_box(), tuple(1, 8, 4, 15));
+        REQUIRE_EQ(node.position_rectangle()->bounding_box(), std::tuple(1, 8, 4, 15));
     }
 }
 }

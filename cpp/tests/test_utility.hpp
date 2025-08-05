@@ -9,7 +9,6 @@
 
 #include "reachset/utility/reach_operation.hpp"
 #include "reachset/utility/sweep_line.hpp"
-#include "reachset/utility/shared_using.hpp"
 #include "reachset/utility/collision_checker.hpp"
 
 #include "reachset/data_structure/reach/reach_set.hpp"
@@ -26,7 +25,7 @@ bool event_in_events(SweepLine::Event const& event, std::vector<SweepLine::Event
 
 bool segment_in_segments(ReachLine const& segment, std::vector<ReachLine> const& vec_segments);
 
-bool bound_in_bounds(tuple<double, double, double, double> const& bound,
-                     std::vector<tuple<double, double, double, double>> vec_bounds);
+bool bound_in_bounds(std::tuple<double, double, double, double> const& bound,
+                     std::vector<std::tuple<double, double, double, double>> vec_bounds);
 
 bool vertex_within_polygon(std::tuple<double, double> const& tuple_vertex, ReachPolygonPtr const& polygon);
