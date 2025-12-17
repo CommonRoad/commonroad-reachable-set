@@ -5,7 +5,6 @@
 #include "reachset/data_structure/reach/reach_node.hpp"
 #include "reachset/data_structure/configuration.hpp"
 #include "collision/collision_checker.h"
-#include <omp.h>
 
 using CollisionCheckerPtr = collision::CollisionCheckerPtr;
 

@@ -1,6 +1,6 @@
 [project]
 name = "commonroad-reach"
-version = "2025.2.0"
+version = "2025.2.1"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10,<3.12"
 license = { file = "LICENSE.txt" }
@@ -15,20 +15,20 @@ keywords = [
     "reachability analysis",
 ]
 dependencies = [
-    "commonroad-io~=2024.1",
-    "commonroad-route-planner~=2025.1.0",
-    "commonroad-drivability-checker~=2025.3.0",
-    "commonroad-clcs~=2025.2.0",
-    "cython~=3.0",
-    "imageio~=2.9",
-    "matplotlib~=3.3",
-    "networkx~=3.0",
-    "numpy>=1.19, <3.0",
-    "omegaconf~=2.1",
-    "opencv-python~=4.5",
-    "scipy~=1.4",
-    "seaborn~=0.10",
-    "shapely~=2.0",
+    "commonroad-io>=2024.1",
+    "commonroad-route-planner>=2025.1.0",
+    "commonroad-drivability-checker>=2025.4.0",
+    "commonroad-clcs>=2025.2.0",
+    "cython>=3.0",
+    "imageio>=2.9",
+    "matplotlib>=3.3",
+    "networkx>=3.0",
+    "numpy>=1.19",
+    "omegaconf>=2.1",
+    "opencv-python>=4.5",
+    "scipy>=1.4",
+    "seaborn>=0.10",
+    "shapely>=2.0",
 ]
 
 classifiers = [
@@ -54,7 +54,7 @@ docs = [
     "sphinx-autodoc-typehints>=1.18.1",
     "sphinx-rtd-theme>=2.0.0",
     "m2r2>=0.3.0",
-    "docutils>=0.18.1,<0.21",
+    "docutils (>=0.18.1, <0.21)",
 ]
 build = [
     "scikit-build-core~=0.11.0",

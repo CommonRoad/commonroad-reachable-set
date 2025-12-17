@@ -28,9 +28,9 @@ else ()
     FetchContent_Declare(
             CommonRoadDC
             SYSTEM
-            # Release tag v2025.3.0
+            # Release tag v2025.4.0
             GIT_REPOSITORY https://github.com/CommonRoad/commonroad-drivability-checker.git
-            GIT_TAG 54e33feac3b5c377dd7d5192901530ea88848fbc
+            GIT_TAG 7127f2e7f960632b3d7ff7805936a1e91b677569
     )
 
 endif ()

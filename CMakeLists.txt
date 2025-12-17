@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.20..3.31)
 if (SKBUILD)
     set(CR_REACH_VERSION ${SKBUILD_PROJECT_VERSION})
 else ()
-    set(CR_REACH_VERSION 2025.2.0)
+    set(CR_REACH_VERSION 2025.2.1)
 endif ()
 
 # Define project
@@ -51,9 +51,56 @@ if (NOT SKBUILD)
     set(CMAKE_VERIFY_INTERFACE_HEADER_SETS ON)
 endif ()
 
+# Ugly hack to make CMake discover libomp from Homebrew on Github Actions
+if (APPLE)
+    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+        set(MAC_LIBOMP_PATH /opt/homebrew/opt/libomp)
+    else ()
+        set(MAC_LIBOMP_PATH /usr/local/opt/libomp)
+    endif ()
+
+    if (NOT EXISTS ${MAC_LIBOMP_PATH})
+        message(FATAL_ERROR "could not find OpenMP path!")
+    endif ()
+
+    list(APPEND CMAKE_PREFIX_PATH ${MAC_LIBOMP_PATH})
+
+    message(STATUS "OpenMP prefix: ${MAC_LIBOMP_PATH}")
+
+    find_path(_omp_include_dir
+            NAMES omp.h
+            PATHS ${_omp_path}/include
+            REQUIRED
+    )
+    message(STATUS "OpenMP include dir: ${_omp_include_dir}")
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_${_lang}_COMPILER_ID MATCHES "AppleClang")
+        foreach (_lang IN ITEMS C CXX)
+            set(OpenMP_${_lang}_LIB_NAMES "omp")
+            set(OpenMP_${_lang}_FLAGS "-Xclang -fopenmp")
+            set(OpenMP_${_lang}_INCLUDE_DIR ${MAC_LIBOMP_PATH}/include)
+        endforeach ()
+    endif ()
+
+    find_library(OpenMP_omp_LIBRARY
+            NAMES omp
+            PATHS ${MAC_LIBOMP_PATH}/lib
+    )
+
+    set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON)
+endif ()
+
 # Disable PCH on platforms other than Clang on Linux (spotty support)
 if (NOT LINUX OR NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR DEFINED ENV{CIBUILDWHEEL})
     set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON)
+endif ()
+
+if (APPLE)
+    # Disable shared libraries on apple --> Causes linker error with omp
+    message(STATUS "Setting BUILD_SHARED_LIBS=OFF on MacOS")
+    set(BUILD_SHARED_LIBS OFF)
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GNU_SOURCE=1")
 endif ()
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)

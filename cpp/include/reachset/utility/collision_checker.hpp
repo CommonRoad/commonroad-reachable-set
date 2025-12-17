@@ -1,6 +1,5 @@
 #pragma once
 
-#include <omp.h>
 #include <Eigen/Dense>
 #include "reachset/utility/shared_include.hpp"
 
