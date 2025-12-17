@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.20..3.31)
 if (SKBUILD)
     set(CR_REACH_VERSION ${SKBUILD_PROJECT_VERSION})
 else ()
-    set(CR_REACH_VERSION 2025.2.0)
+    set(CR_REACH_VERSION 2025.2.1)
 endif ()
 
 # Define project
