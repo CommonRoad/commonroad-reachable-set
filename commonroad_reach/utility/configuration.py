@@ -196,7 +196,7 @@ def compute_initial_state_cvln(config) -> Tuple:
     reference_path = config.planning.reference_path
     ref_orientation = compute_orientation_from_polyline(reference_path)
     ref_path_length = compute_pathlength_from_polyline(reference_path)
-    orientation_interpolated = np.interp(p_lon, ref_path_length, ref_orientation)
+    orientation_interpolated = np.interp(p_lon, ref_path_length, np.unwrap(ref_orientation))
 
     v_lon = v * np.cos(orientation - orientation_interpolated)
     v_lat = v * np.sin(orientation - orientation_interpolated)
